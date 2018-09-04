@@ -1,2 +1,227 @@
-# ONEFlux
-Open Network-Enabled Flux processing pipeline
+# ONEFlux Processing Pipeline
+
+ONEFlux (Open Network-Enabled Flux processing pipeline) is an eddy covariance data processing software package implementing multiple steps to process half-hourly (or hourly) fluxes.
+
+In particular, ONEFlux implements friction velocity threshold estimation methods and uncertainty estimates from multiple threshold levels, gap-filling of micrometeorological and fluxes variables, partitioning of CO2 fluxes into ecosystem respiration and primary production, uncertainty estimates, among others.
+
+The current version of the code is compatible with the version used to create the FLUXNET2015 dataset.
+
+The pipeline controlling code for this software uses **Python version 2.7** (the code should work with Python version 3.5 or later, but was not fully tested with these versions).
+
+**(THIS IS A LIMITED TESTING VERSION, PLEASE SEE [CAVEATS LIST](#caveats-and-known-limitations) BELOW.)** This iteration of the code is not fully in line with open source/free software development practices, but we intend to steadily move in that direction.
+
+
+## Implemented steps
+
+The steps implemented in the ONEFlux processing pipeline are detailed in the [data processing description page](http://fluxnet.fluxdata.org/data/fluxnet2015-dataset/data-processing/) of the [FLUXNET2015 dataset](http://fluxnet.fluxdata.org/data/fluxnet2015-dataset/data-processing/).
+
+The outputs of each of these steps is saved to a sub-directories of a directory containing the data for a site. The structure of these output folders includes:
+
+- **`01_qc_visual/`**: output of QA/QC procedures and visual inspection of data; _this is the main input for the ONEFlux pipeline_.
+- **`02_qc_auto/`**: output of data preparation procedures for next steps and automated flagging of data based on quality tests (this step is implemented in C, and source available under `../ONEFlux/oneflux_steps/qc_auto/`).
+- (*step 03* is part of a secondary visual inspection and not included in this codebase)
+- **`04_ustar_mp/`**: output of the Moving Point detection method for USTAR threshold estimation (this step is implemented in C, and source available under `../ONEFlux/oneflux_steps/ustar_mp/`).
+- **`05_ustar_cp/`**: output of the Change Point detection method for USTAR threshold estimation (this step is implemented in MATLAB, and source available under `../ONEFlux/oneflux_steps/ustar_cp/`).
+- **`06_meteo_era/`**: output of the downscaling of micromet data using the ERA-Interim dataset (this step is _optional_ and is currently not part of this codebase).
+- **`07_meteo_proc/`**: output of the micromet processing step, including gap-filling (this step is implemented in C, and source available under `../ONEFlux/oneflux_steps/meteo_proc/`).
+- **`08_nee_proc/`**: output of the NEE processing step, including gap-filling (this step is implemented in C, and source available under `../ONEFlux/oneflux_steps/nee_proc/`).
+- **`09_energy_proc/`**: output of the energy (LE and H) processing step, including gap-filling (this step is implemented in C, and source available under `../ONEFlux/oneflux_steps/energy_proc/`).
+- **`10_nee_partition_nt/`**: output of the NEE partitioning, nighttime method (this step is implemented in Python, and source available under `../ONEFlux/oneflux/`).
+- **`11_nee_partition_dt/`**: output of the NEE partitioning, daytime method (this step is implemented in Python, and source available under `../ONEFlux/oneflux/`).
+- **`12_ure_input/`**: output of the preparation of input for the uncertainty estimation step (this step is implemented in Python, and source available under `../ONEFlux/oneflux/`).
+- **`12_ure/`**: output of the uncertainty estimation step (this step is implemented in C, and source available under `../ONEFlux/oneflux_steps/ure/`).
+- **`99_fluxnet2015/`**: final output of the pipeline with combined products from previous steps (this step is implemented in Python, and source available under `../ONEFlux/oneflux/`).
+
+
+## Building and installing
+
+A installation script is available in the form of a Makefile, which can be used in Linux (x86-64) systems; versions for Windows and Mac are planned but not available at this time.
+
+Running the command `$ make` in the source code folder will install all required Python dependencies, compile all C modules and install them in the user home directory under `~/bin/oneflux/` (gcc version 4.8 or later is required to compile the C modules), and will also copy to the same destination an executable compiled version of a Matlab code (see below how to install MCR and run this code). Also note that the Python modules for ONEFlux will not be installed, so the source code will need to be used directly to configure paths and call the main pipeline execution.
+
+
+### Installing MCR to run compiled MATLAB code
+
+A compiled version of the MATLAB code for the Change Point detection method for USTAR threshold estimation is available (under `../ONEFlux/oneflux_steps/ustar_cp/bin/`) and is copied into the executables directory along with the compiled version of the steps implemented in C. (_currently only a version for Linux x86-64 environment is available_)
+
+To run this MATLAB compiled code, it is necessary to install the MATLAB Compiler Runtime toolset. It can be downloaded in the [MCR page](https://www.mathworks.com/products/compiler/matlab-runtime.html). **Version 2018a is required** (this version was used to compile the code). Follow the instructions in the download page to install MCR.
+
+The path to the newly installed MCR environment (e.g., `~/bin/matlab/v94/`) is a necessary input to the pipeline execution if this step is to be executed.
+
+
+
+## Running
+
+Run Python using the file runoneflux.py with the following parameters:
+
+```
+usage: runoneflux.py [-h] [--perc [PERC [PERC ...]]]
+                     [--prod [PROD [PROD ...]]] [-l LOGFILE] [--force-py]
+                     [--mcr MCR_DIRECTORY] [--ts TIMESTAMP] [--recint {hh,hr}]
+                     COMMAND DATA-DIR SITE-ID SITE-DIR FIRST-YEAR LAST-YEAR
+
+positional arguments:
+  COMMAND               ONEFlux command to be run [all, partition_nt, partition_dt]
+  DATA-DIR              Absolute path to general data directory
+  SITE-ID               Site Flux ID in the form CC-XXX
+  SITE-DIR              Relative path to site data directory (within data-dir)
+  FIRST-YEAR            First year of data to be processed
+  LAST-YEAR             Last year of data to be processed
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --perc [PERC [PERC ...]]
+                        List of percentiles to be processed
+  --prod [PROD [PROD ...]]
+                        List of products to be processed
+  -l LOGFILE, --logfile LOGFILE
+                        Logging file path
+  --force-py            Force execution of PY partitioning (saves original
+                        output, generates new)
+  --mcr MCR_DIRECTORY   Path to MCR directory
+  --recint {hh,hr}      Record interval for site
+```
+
+## Running examples
+
+### Sample data
+
+Data formatted to be used in the examples below are available. The [sample input data](ftp://ftp.fluxdata.org/.ameriflux_downloads/.test/US-ARc_sample_input.zip) (around 80MB) can be used to run the full pipeline. To check the processing worked as expected, the [sample output data](ftp://ftp.fluxdata.org/.ameriflux_downloads/.test/US-ARc_sample_output.zip) (around 400MB) cab be used.
+
+- sample input data: [ftp://ftp.fluxdata.org/.ameriflux_downloads/.test/US-ARc_sample_input.zip](ftp://ftp.fluxdata.org/.ameriflux_downloads/.test/US-ARc_sample_input.zip)
+- sample output data: [ftp://ftp.fluxdata.org/.ameriflux_downloads/.test/US-ARc_sample_output.zip](ftp://ftp.fluxdata.org/.ameriflux_downloads/.test/US-ARc_sample_output.zip)
+
+
+
+### Execution commands
+
+Run all steps in the pipeline:
+- *python*: Python interpreter
+- *runoneflux.py*: Main code to be executed
+- *all*: Pipeline step to be executed (all)
+- *"../datadir/"*: Main data directory
+- *US-ARc*: Site Flux ID of site to be processed
+- *"US-ARc_sample_input"*: Relative path to data directory for site (with main data directory)
+- *2005*: First year to be processed
+- *2006*: Last year to be processed
+- *-l partitioning_nt_US-ARc.log*: Uses file to store execution log
+```
+python runoneflux.py all "../datadir/" US-ARc "US-ARc_sample_input" 2005 2006 -l fluxnet_pipeline_US-ARc.log --mcr ~/bin/matlab/v94/ --recint hh
+```
+
+
+Run nighttime partitioning method:
+```
+python runoneflux.py partition_nt "../datadir/" US-ARc "US-ARc_sample_input" 2005 2006 -l fluxnet_pipeline_US-ARc.log
+```
+
+Run daytime partitioning with only single percentile and/or a single USTAR threshold type data product (recommended for first executions), use:
+- *--prod y*: processes only VUT USTAR threshold product
+- *--perc 50*: processes only 50-percentile USTAR threshold
+- *--force-py*: forces execution of Python partitioning code (replaces existing outputs)
+```
+python runoneflux.py partition_dt "../datadir/" US-ARc "US-ARc_sample_input" 2005 2006 -l fluxnet_pipeline_US-ARc.log --prod y --perc 50 --force-py
+```
+
+Note that for the execution of the partitioning steps, only if the output ```*.csv``` file doesn’t exist (e.g., ```nee_y_50_US-ARc_2005.csv```), the code will run and generate the file. If it exists, nothing will be done (unless the flag --force-py is used).
+
+
+
+## Required input data
+
+### All steps
+
+In the data directory for the site, the input data must be in the expected formats, especially for individual steps within the pipeline. If the full pipeline is being executed, the inputs that must be present should be in the following directories:
+- ```01_qc_visual/qcv_files/```
+- ```06_meteo_era/``` (optional)
+
+and the outputs will be generated in the directories:
+- `02_qc_auto/`
+- `04_ustar_mp/`
+- `05_ustar_cp/`
+- `07_meteo_proc/`
+- `08_nee_proc/`
+- `09_energy_proc/`
+- `10_nee_partition_nt/`
+- `11_nee_partition_dt/`
+- `12_ure_input/`
+- `12_ure/`
+- `99_fluxnet2015/`
+
+
+
+### Flux partitioning steps only
+
+For both the nighttime and daytime partitioning methods, the inputs that must be present should be in the following directories:
+- ```02_qc_auto/```
+- ```07_meteo_proc/```
+- ```08_nee_proc/```
+
+and the outputs will be generated, respectively, in the directories:
+- ```10_nee_partition_nt/```
+- ```11_nee_partition_dt/```
+
+
+
+## Caveats and known limitations
+
+- **NO SUPPORT (temporary).** We are not offering any kind of support for the code at this time (including creation of GitHub issues). This is so we are able to concentrate in improving the code and creating a more usable set of steps within the pipeline. This version of the code is intended to offer insight into how some of the steps work, but not a fully supported codebase. Once the code is more mature, we will revise this approach.
+
+- **NO CODE CONTRIBUTIONS (temporary).** Following the same reasoning for not offering support at this time, we will not accept code contributions for now. Once the we have a more mature code and development process we will revise this approach (and start encouraging contributions at that point).
+
+- **Execution environment requirements.** Many of the steps of the ONEFlux codebase have very specific requirements for the execution environment, including how the intermediate files are formatted, what outputs were generated successfully, execution logs being in place, etc. For this reason, it might be difficult for someone else to run this code if there are any unexpected conditions. Someone familiar with Python and C coding and Unix environments might be able to navigate and remedy errors, but the current version of the code is not intended to be "friendly" to the user (we hope to improve this in upcoming versions).
+
+- **Data format requirements.** We have tested this codebase extensively but only on sites included in the FLUXNET2015 dataset. Specific formats with extra metadata (see [sample data](#sample-data) files for examples) are required for the pipeline to run correctly. Preparing a new site to be run could be difficult (this also something we intend to improve soon).
+
+- **Python version.** This code has been tested to work with Python 2.7; it should work under Python 3.5 or later as well, but this was not fully tested.
+
+- **MATLAB code.** The CPD friction velocity threshold estimation step requires an MCR environment configured to run MATLAB step compiled into executable (see [instructions](#installing-mcr-to-run-compiled-matlab-code) above)
+
+- **Daytime partitioning method exceptions.** The current version of the implementation of the daytime flux partitioning method aimed at preserving the behavior of the code used to generate the FLUXNET2015 dataset. There are situations in which the non-linear least squares method fail for a window in the time series, stopping the execution. The solution implemented for the original implementation (mimicked in this version) would involve adding the failed window into a list of exception windows to be skipped when the execution is restarted. This is done automatically in this implementation, but is something that will be removed for future version, avoiding the failure conditions altogether.
+
+- **Performance issues.** The performance of a few of the steps is optimal. In particular, the daytime and nighttime partitioning methods, can take a long time. The daytime partitioning can be especially slow, with the non-linear least squares method taking a long time to run for each window. This will be addressed in future versions, taking advantage of newer least squares methods and other improvements to the execution flow.
+
+- **Sundown reference partitioning method** One of the methods used for flux partitioning in FLUXNET2015 is not included in this version of the pipeline currently. We are working on porting the code and will include the method in future versions.
+
+- **Micromet downscaling step.** The downscaling of micrometeorological variables using ERA-Interim reanalysis data (for filling long gaps) is another step missing from the current iteration and will be included in future versions.
+
+- **Bug for full years missing.** _Known bug, will be addressed in future updates:_ there are situations when a full year of data missing for CO2 fluxes, or for energy/water fluxes, or micromet variables (or combinations of them), will cause the code to break. 
+
+- **Bug in hourly resolution.** _Known bug, will be addressed in future updates:_ sites using hourly resolution (instead of half-hourly) will fail the execution of the last few steps (all steps up to, and including, flux partitioning, work as expected but the final product is not generated).
+
+- **Bug in input for nighttime partition.** _Known bug, will be addressed in future updates:_ Certain rare conditions in the USTAR threshold estimation can cause the nighttime partitioning to break for lack of data for one or more windows within the time series.
+
+- **Default output messages.** The default logging level (both to the screen/standard output and to the log file) are set to the most verbose mode, showing all diagnostics and status messages, which can generate a large log file.
+
+- **Installation setup.** The Python installation script (`setup.py`) is not implemented yet, so configuring the execution environment (e.g., Python Path) might have to be done manually
+
+- **Data input formats.** Some of the data formats are not fully compatible with regional networks and FLUXNET formats. This is being addressed and will be fixed in future versions.
+
+- **Not all steps callable.** The current implementation only offers the execution of the full pipeline, the nighttime, and the daytime partitioning methods. All other methods are available but do not have an easy interface to get them to run individually (will also be changed in future versions). 
+
+
+
+
+[//]: # (## Troubleshooting)
+
+
+
+## Contributors ##
+
+### Development and Code ###
+* Gilberto Pastorello, gzpastorello &lt;at&gt; lbl &lt;DOT&gt; gov
+* Carlo Trotta, trottacarlo &lt;at&gt; unitus &lt;DOT&gt; it
+* Alessio Ribeca, a.ribeca &lt;at&gt; unitus &lt;DOT&gt; it
+* Dario Papale, darpap &lt;at&gt; unitus &lt;DOT&gt; it
+* Abdelrahman Elbashandy, aaelbashandy &lt;at&gt; lbl &lt;DOT&gt; gov
+* Alan Barr, alan.barr &lt;at&gt; canada &lt;DOT&gt; ca
+
+### Methods and Evaluation ###
+* Markus Reichstein, mreichstein &lt;at&gt; bgc-jena &lt;DOT&gt; mpg &lt;DOT&gt; de
+* Gitta Lasslop, gitta.lasslop &lt;at&gt; bgc-jena &lt;DOT&gt; mpg &lt;DOT&gt; de
+* Deb Agarwal, daagarwal &lt;at&gt; lbl &lt;DOT&gt; gov
+* Sebastien Biraud, scbiraud &lt;at&gt; lbl &lt;DOT&gt; gov
+
+
+**(THIS IS A LIMITED TESTING VERSION, PLEASE SEE [CAVEATS LIST](#caveats-and-known-limitations) ABOVE)**
+
