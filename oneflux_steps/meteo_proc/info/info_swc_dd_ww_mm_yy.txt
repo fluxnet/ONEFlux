@@ -1,0 +1,2 @@
+- SWC_%d_f = soil water content (%%) at depth "%d". Numeric index increase with the depth. The exact depth is reported in the metadata when available.
+- SWC_%d_fqc = quality flags of the TS_%d_f. Value between 0 and 1 indicating the percentage of original or good quality data (gapfilled with MDS and quality = 1)

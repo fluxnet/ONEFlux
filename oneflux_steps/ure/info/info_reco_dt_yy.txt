@@ -1,0 +1,31 @@
+This file includes yearly Ecosystem Respiration (RECO) estimates and related uncertainty. RECO is estimated using the Lasslop et al. 2010 partitioning method where a NEE=f(GPP; Reco) model is parameterized using daytime measured NEE data. The parameterization of the model is done for each calendar year separately. The meteorological data used to apply the model have been gapfilled using MDS method and the ERA downscaled (merged version “_m”, see the meteo info file for details)
+RECO is estimated starting from the 40 different NEE estimates (based on different ustar thresholds, see NEE info document) and for the two different ustar threshold extraction (ustar threshold varying among years and constant ustar in case at least three years of data are present).
+To correctly understand the meaning of the uncertainty it is suggested to read also the NEE documentation. The quality of the RECO is linked to the quality of the NEE data and for this reason the NEE quality flags (included in the NEE products) should be considered. These 40 RECO versions have been first aggregated to yearly time resolution (from daily) and then used as basis for all the derived variables provided.
+RECO is always expressed as gC m-2 y-1
+
+- TIMESTAMP = date and time expressed using the ISO8601 format YYYY
+- RECO_ref_y and RECO_ref_c = reference RECO selected on the basis of the model efficiency (see below)
+- RECO_ust50_y and RECO_ust50_c = RECO calculated using NEE_ust50_y and NEE_ust50_y data (obtained filtering NEE using the 50 percentiles of the ustar thresholds) to parameterize the model.
+- RECO_mean_y and RECO_mean_c = average RECO calculated as mean of the 40 RECO versions obtained parameterizing the model using the 40 NEE resulting from the ustar threshold uncertainty
+- RECO_SE_y and RECO_SE_c = RECO Standard Error calculated as std(RECO)/sqrt(40) where the RECO used to calculate the std are the 40 versions obtained parameterizing the model using 40 NEE versions.
+- RECO_XX_y and RECO_XX_c (with XX = 05, 16, 25, 50, 75, 84, 95) = RECO percentiles (indicated by XX) calculated for each half hour on the basis of the 40 estimates
+
+Failure of the model parameterization:
+When not enough data are available to parameterize the model the RECO can not be calculated. This can happen for entire years or for NEE versions filtered with high ustar thresholds (that remove more data).
+In this site the partitioning model was not applied in the years:
+%s
+In this site the partitioning model was not applied for part of the NEE percentiles in the years:
+%s
+
+Model Efficiency selection:
+The reference RECO has been selected on the basis of the Model Efficiency. Starting from the 40 different RECO estimations (obtained parameterizing the model using 40 NEE versions filtered with different ustar thresholds) it has been calculated the Model Efficiency between each version and the others 39. The reference RECO has been selected as the one with higher Model Efficiency sum (so the most similar to the others 39).
+In this dataset have been selected as reference:
+
+{MODEL_EFFICIENCY_C}
+RECO_ref_c obtained parameterizing the model with NEE filtered using the ustar percentile %g (ustar value: %g)
+
+{MODEL_EFFICIENCY_Y_ONE_YEAR}
+RECO_ref_y obtained parameterizing the model with NEE filtered using the ustar percentile %g (ustar value: %g)
+
+{MODEL_EFFICIENCY_Y}
+RECO_ref_y obtained for year %d parameterizing the model with NEE filtered using the ustar percentile %g (ustar value: %g)

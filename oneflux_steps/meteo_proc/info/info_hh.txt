@@ -1,0 +1,49 @@
+The file contain a set of meteorological variables gapfilled and/or downscaled from the ERA-interim dataset. The downscaling both in space (from cell to tower) and time (6 hourly to half hourly) is applied to seven variables using regressions with the site measurements when available according to the method described in Vuichard and Papale 2015.
+The gapfilling of the site level measurements have been done using the MDS method as described in Reichstein et al. 2005.
+For the variables where the ERA-interim downscaling has been applied, a merged version using the MDS gapfilled and the downscaled is also provided.
+
+File content:
+
+- TIMESTAMP_START = Begin of the averaging period date and time expressed using the ISO8601 format YYYYMMDDHHMM
+- TIMESTAMP_END = End of the averaging period date and time expressed using the ISO8601 format YYYYMMDDHHMM
+- DTIME = decimal day of the year
+- TA_f = air temperature gapfilled with MDF (deg C)
+- TA_fqc = quality flags of the TA_f. 0 = original, 1-3 quality indicators with 1: high, 3:low.
+- TA_ERA = air temperature downscaled from ERA (deg C)
+- TA_m = air temperature merged between TA_f and TA_ERA (deg C) (TA_f used when TA_f_qc=<1)
+- TA_mqc = quality flag of TA_m: 0 = measured, 1 = gapfilled with MDS, 2 = downscaled from ERA
+- SW_IN_pot = Short Wave incoming potential radiation (top of atmosphere) (W m-2)
+- SW_IN_f = Short Wave incoming radiation gapfilled with MDF (W m-2). Negative SWin values (due to instrumental noise) have been set to zero
+- SW_IN_fqc = quality flags of the SW_IN_f. 0 = original, 1-3 quality indicators with 1: high, 3:low.
+- SW_IN_ERA = Short Wave incoming radiation downscaled from ERA (W m-2). 
+- SW_IN_m = Short Wave incoming radiation merged between SW_IN_f and SW_IN_ERA (W m-2) (SW_IN_f used when SW_IN_f_qc=<1). Negative SWin values (due to instrumental noise) have been set to zero
+- SW_IN_mqc = quality flag of SW_IN_m: 0 = measured, 1 = gapfilled with MDS, 2 = downscaled from ERA
+- LW_IN_f = Long Wave incoming radiation gapfilled with MDF (W m-2)
+- LW_IN_fqc = quality flags of the LW_IN_f. 0 = original, 1-3 quality indicators with 1: high, 3:low.
+- LW_IN_calc = Long Wave incoming radiation calculated from TA_f, SW_IN_f, VPD_f and SW_IN_pot using the algorithm implemented in the JSBACH model and provided by Sonke Zaehle (W m-2)
+- LW_IN_calc_qc = quality flags of the LW_IN_calc. Report the higher qc of the 3 field variables used to calculate the LW_IN (max of TA_fqc, SW_IN_fqc and VPD_fqc).
+- LW_IN_ERA = Long Wave incoming radiation downscaled from ERA (W m-2)
+- LW_IN_m = Long Wave incoming radiation merged between LW_IN_f and LW_IN_ERA (W m-2) (LW_IN_f used when LW_IN_f_qc=<1)
+- LW_IN_mqc = quality flag of LW_IN_m: 0 = measured, 1 = gapfilled with MDS, 2 = downscaled from ERA
+- VPD_f = Vapor Pressure Deficit gapfilled with MDF (hPa)
+- VPD_fqc = quality flags of the VPD_f. 0 = original, 1-3 quality indicators with 1: high, 3:low.
+- VPD_ERA = Vapor Pressure Deficit downscaled from ERA (hPa)
+- VPD_m = Vapor Pressure Deficit merged between VPD_f and VPD_ERA (hPa) (VPD_f used when VPD_f_qc=<1)
+- VPD_mqc = quality flag of VPD_m: 0 = measured, 1 = gapfilled with MDS, 2 = downscaled from ERA
+- Pa = Air pressure, original not gapfilled (kPa)
+- PA_ERA = Air pressure downscaled from ERA (kPa)
+- PA_m = Air pressure merged between PA and PA_ERA (kPa) (PA used if measured)
+- PA_mqc = quality flag of PA_m: 0 = measured, 2 = downscaled from ERA
+- P = Precipitation, original not gapfilled (mm)
+- P_ERA = Precipitation downscaled from ERA (mm)
+- P_m = Precipitation merged between P and P_ERA (mm) (P used if measured)
+- P_mqc = quality flag of P_m: 0 = measured, 2 = downscaled from ERA
+- WS = Wind Speed, original not gapfilled (m s-1)
+- WS_ERA = Wind Speed downscaled from ERA (m s-1)
+- WS_m = Wind Speed merged between WS and WS_ERA (m s-1) (WS used if measured)
+- WS_mqc = quality flag of WS_m: 0 = measured, 2 = downscaled from ERA
+- CO2_f = CO2 concentration gapfilled with MDF (ppm)
+- CO2_fqc = quality flags of the CO2_f. 0 = original, 1-3 quality indicators with 1: high, 3:low.
+%s
+STATISTICS related to the ERA downscaling (regression between measured and ERA data, when not reported no relations have been used):
+

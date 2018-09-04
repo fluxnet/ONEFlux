@@ -1,0 +1,2 @@
+- TS_%d_f = soil temperature at depth "%d" (deg C). Numeric index increase with the depth. The exact depth is reported in the metadata when available.
+- TS_%d_fqc = quality flags of the TS_%d_f. 0 = original, 1-3 quality indicators with 1: high, 3:low.

@@ -1,0 +1,21 @@
+This file includes monthly gapfilled LE and H, their version where a correction for the energy balance closure has been applied and an estimation of the random uncertainty.
+
+The corrected fluxes are obtained multiplying the original, gapfilled data by a correction factor (EBCcf: Energy Closure Balance correction factor) calculated starting from the halfhours where all the components needed to calculated the energy balance closure are available (Latent Heat, Sensible Heat, Net Radiation, Soil Heat Flux, with LE and H original or gapfilled with high quality).
+The EBCcf is calculated for each month only if at least 50% of the half hours have all the four components measured. EBCcf is calculated as (NETRAD-G)/(H+LE) where NETRAD, G, H and LE are the monthly averages (method 1).
+
+In the months where it is impossible to calculate the EBCcf with method 1, the method 2 is applied. With this method the EBCcf is calculated as the mean of the EBCcf (obtained with method 1) of a moving window of +/- 1 month. If it is still not possible to calculate an EBCcf (e.g. in case of long gaps) the same moving window is also applied to the same month of the years before and after (method 3).
+
+
+LE and H are always expressed as W m-2
+
+- TIMESTAMP = date and time expressed using the ISO8601 format YYYYMM
+- LE: latent heat flux gapfilled using the MDS method
+- LEcorr: latent heat flux corrected by the energy balance closure (LE*EBCcf)
+- LE_qc: quality flags of the LE and corrected versions. Value between 0 and 1 indicating the percentage of original or good quality data.
+- LE_randUnc = random uncertainty of LE calculated starting from the random uncertainty of the single halfhours (rand(i))  (see halfhourly data info file for details) using the equation [sqrt(sum(rand(i)^2))/n] where n is the number of halfhours used.
+- H: sensible heat flux gapfilled using the MDS method
+- Hcorr: sensible heat flux corrected by the energy balance closure (LE*EBCcf)
+- H_qc: quality flags of the H and corrected versions. Value between 0 and 1 indicating the percentage of original or good quality data.
+- H_randUnc = random uncertainty of H calculated starting from the random uncertainty of the single halfhours (rand(i))  (see halfhourly data info file for details) using the equation [sqrt(sum(rand(i)^2))/n] where n is the number of halfhours used.
+- EBCcf_n: percentage of halfhours used to calculate the EBCcf respect to the maximum possible when method 1 is applied, number of EBCcf calculated with method 1 in the moving window when methods 2 or 3 are used.
+- EBCcf_method: method used to calculate the EBCcf (1, 2 or 3) as described above.

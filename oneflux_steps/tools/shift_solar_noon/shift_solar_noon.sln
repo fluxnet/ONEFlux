@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shift_solar_noon", "shift_solar_noon.vcproj", "{A122D8D9-88F9-4060-B217-4069A9E57CB5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A122D8D9-88F9-4060-B217-4069A9E57CB5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A122D8D9-88F9-4060-B217-4069A9E57CB5}.Debug|Win32.Build.0 = Debug|Win32
+		{A122D8D9-88F9-4060-B217-4069A9E57CB5}.Release|Win32.ActiveCfg = Release|Win32
+		{A122D8D9-88F9-4060-B217-4069A9E57CB5}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

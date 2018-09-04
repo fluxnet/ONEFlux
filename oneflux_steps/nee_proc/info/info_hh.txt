@@ -1,0 +1,38 @@
+NEE PROCESSING RESULTS DESCRIPTION
+
+This file includes halfhourly NEE estimate and related uncertainty. Two different source of uncertainty are evaluated: the random uncertainty and the one due to the ustar filtering.
+The starting dataset is NEE already corrected by storage and de-spiked (method described in Papale et al 2006 Biogeosciences, z=5). The ustar filtering has been based on thresholds calculated using two different methods (Barr et al 2013 and modified version of Reichstein et al 2005) and for each of the two methods using 100 bootstrapped datasets (for a total of 200 ustar thresholds estimates for each year).
+
+Two different methods have been used to extract the ustar thresholds to be applied:
+- yearly (identified in the variables names ending with "_y"): the thresholds found for each year and the years before and after have been put together and from their join population the final threshold extracted (ustar thresholds varying among years).
+- common (identified in the variables names ending with "_c"): all the thresholds found in the different years have been put together and final thresholds extracted from this dataset (each year filtered with the same ustar threshold).
+Note that if the dataset includes up to two years of data the two methods give the same result and only the _y is provided.
+
+In both the _y and _c versions, 40 NEE datasets have been created filtering the original NEE using 40 different ustar values extracted from the thresholds datasets at percentiles [1.25:2.5:98.75]. These 40 NEE versions have been used as basis for all the derived variables provided.
+
+The random uncertainty in the measurements has been estimated starting from the filtered NEE using two hierarchical methods: for half hours where original fluxes are available the random uncertainty is calculated (method 1) as the standard deviation of the fluxes measured in a moving window of +/- 7 days and +/- one hour with similar meteorological conditions (as for the MDS gapfilling: TA +/- 2.5 °C, VPD +/- 5 hPa, SW_IN +/- 50 W m-2 if radiation is higher than 50 W m-2, +/-20 if lower). Random uncertainty for gapfilled halfhours or original halfhours where it has been impossible to find at least 5 measurements in the moving window with similar meteorological conditions, is estimated (method 2) as the median of the random uncertainty (calculated with method 1) of similar fluxes, where similar is defined as in the range of +/- 20% (but not less than 2 umolCO2 m-2 s-1). NEE is always expressed as umolCO2 m-2 s-1
+
+
+VARIABLES DEFINITION:
+
+- TIMESTAMP_START = Begin of the averaging period date and time expressed using the ISO8601 format YYYYMMDDHHMM
+- TIMESTAMP_END = End of the averaging period date and time expressed using the ISO8601 format YYYYMMDDHHMM
+- DTIME = decimal Day of the Year
+- night = flag indicating nighttime halfhours (0 = daytime, 1 = nighttime)
+- NEE_ref_y and NEE_ref_c = reference NEE selected on the basis of the model efficiency (see below)
+- NEE_ref_qc_y and NEE_ref_qc_c = quality flags of the NEE_ref_y and NEE_ref_c variables. 0 = original, 1-3 quality indicators with 1: high, 3:low.
+- NEE_ref_randUnc_y and NEE_ref_randUnc_c = random uncertainty of NEE_ref_y and NEE_ref_c
+- NEE_ref_randUnc_method_y and NEE_ref_randUnc_method_c = method used to estimate the random uncertainty of NEE_ref_y and NEE_ref_c (1 or 2, see above)
+- NEE_ref_randUnc_n_y and NEE_ref_randUnc_n_c = number of halfhours used to estimate the random uncertainty of NEE_ref_y and NEE_ref_c
+- NEE_ref_joinUnc_y and NEE_ref_joinUnc_c = join uncertainty estimation of NEE_ref (_y and _c) (random + ustar filtering) calculated for each half hour as [sqrt(NEE_ref_randUnc^2 + ((NEE_84-NEE_16)/2)^2)]
+- NEE_ust50_joinUnc_y and NEE_ust50_joinUnc_c = join uncertainty estimation of NEE_ust50 (_y and _c) (random + ustar filtering) calculated for each half hour as [sqrt(NEE_ref_randUnc^2 + ((NEE_84-NEE_16)/2)^2)]
+- NEE_ust50_y and NEE_ust50_c = NEE obtained filtering the data using the 50 percentiles of the ustar thresholds
+- NEE_ust50_qc_y and NEE_ust50_qc_c = quality flag of the NEE_ust50_y and NEE_ust50_c variables (0-3 as the others)
+- NEE_ust50_randUnc_y and NEE_ust50_randUnc_c = random uncertainty of NEE_ust50_y and NEE_ust50_c
+- NEE_ust50_randUnc_method_y and NEE_ust50_randUnc_method_c = method used to estimate the random uncertainty of NEE_ust50_y and NEE_ust50_c (1 or 2, see above)
+- NEE_ust50_randUnc_n_y and NEE_ust50_randUnc_n_c = number of halfhours used to estimate the random uncertainty of NEE_ust50_y and NEE_ust50_c
+- NEE_mean_y and NEE_mean_c = average NEE calculated for each half hour as mean of the 40 NEE versions
+- NEE_mean_qc_y and NEE_mean_qc_c = quality flag of the NEE_mean_y and NEE_mean_c variables expressed as percentage of good quality data (mean of the 40 qc where good quality data are defined data with the quality indicators introduced above equal to 0 or 1)
+- NEE_SE_y and NEE_SE_c = NEE Standard Error calculated as std(NEE)/sqrt(40) where the NEE used to calculate the std are the 40 versions for each halfhour
+- NEE_XX_y and NEE_XX_c (with XX = 05, 16, 25, 50, 75, 84, 95) = NEE percentiles (indicated by XX) calculated for each half hour on the basis of the 40 estimates.
+- NEE_XX_qc_y and NEE_XX_qc_c (with XX = 05, 16, 25, 50, 75, 84, 95) = quality flag of the NEE_XX_y and NEE_XX_c variables (0-3 as the others).

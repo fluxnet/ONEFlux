@@ -1,0 +1,31 @@
+This file includes monthly Gross Primary Production (GPP) estimates and related uncertainty. GPP is calculated as GPP=RECO-NEE where RECO is estimated as function of temperature using the Reichstein et al. 2005 partitioning method and the model parameterized using nighttime measured NEE data. The parameterization of the model is done for each calendar year separately. The meteorological data used to apply the model have been gapfilled using MDS method and the ERA downscaled (merged version “_m”, see the meteo info file for details) while the NEE are gapfilled using the MDS method.
+GPP is estimated starting from the 40 different NEE estimates (based on different ustar thresholds, see NEE info document) and for the two different ustar threshold extraction (ustar threshold varying among years and constant ustar in case at least three years of data are present).
+To correctly understand the meaning of the uncertainty it is suggested to read also the NEE documentation. The quality of the GPP is linked to the quality of the NEE data and for this reason the NEE quality flags (included in the NEE products) should be considered. These 40 GPP versions have been first aggregated to monthly time resolution (from daily) and then used as basis for all the derived variables provided.
+GPP is always expressed as gC m-2 d-1
+
+- TIMESTAMP = date and time expressed using the ISO8601 format YYYYMM
+- GPP_ref_y and GPP_ref_c = reference GPP selected on the basis of the model efficiency (see below)
+- GPP_ust50_y and GPP_ust50_c = GPP calculated using NEE_ust50_y and NEE_ust50_y data (obtained filtering NEE using the 50 percentiles of the ustar thresholds) to parameterize the model.
+- GPP_mean_y and GPP_mean_c = average GPP calculated as mean of the 40 GPP versions obtained parameterizing the model using the 40 NEE resulting from the ustar threshold uncertainty
+- GPP_SE_y and GPP_SE_c = GPP Standard Error calculated as std(GPP)/sqrt(40) where the GPP used to calculate the std are the 40 versions obtained parameterizing the model using 40 NEE versions.
+- GPP_XX_y and GPP_XX_c (with XX = 05, 16, 25, 50, 75, 84, 95) = GPP percentiles (indicated by XX) calculated for each half hour on the basis of the 40 estimates
+
+Failure of the model parameterization:
+When not enough data are available to parameterize the model the GPP can not be calculated. This can happen for entire years or for NEE versions filtered with high ustar thresholds (that remove more data).
+In this site the partitioning model was not applied in the years:
+%s
+In this site the partitioning model was not applied for part of the NEE percentiles in the years:
+%s
+
+Model Efficiency selection:
+The reference GPP has been selected on the basis of the Model Efficiency. Starting from the 40 different GPP estimations (obtained parameterizing the model using 40 NEE versions filtered with different ustar thresholds) it has been calculated the Model Efficiency between each version and the others 39. The reference GPP has been selected as the one with higher Model Efficiency sum (so the most similar to the others 39).
+In this dataset have been selected as reference:
+
+{MODEL_EFFICIENCY_C}
+GPP_ref_c obtained parameterizing the model with NEE filtered using the ustar percentile %g (ustar value: %g)
+
+{MODEL_EFFICIENCY_Y_ONE_YEAR}
+GPP_ref_y obtained parameterizing the model with NEE filtered using the ustar percentile %g (ustar value: %g)
+
+{MODEL_EFFICIENCY_Y}
+GPP_ref_y obtained for year %d parameterizing the model with NEE filtered using the ustar percentile %g (ustar value: %g)

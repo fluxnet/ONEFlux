@@ -1,0 +1,63 @@
+The file contain a set of meteorological variables gapfilled and/or downscaled from the ERA-interim dataset aggregated at weekly time resolution. The downscaling both in space (from cell to tower) and time (6 hourly to half hourly) is applied to seven variables using regressions with the site measurements when available according to the method described in Vuichard and Papale 2015.
+The gapfilling of the site level measurements have been done using the MDS method as described in Reichstein et al. 2005.
+For the variables where the ERA-interim downscaling has been applied, a merged version using the MDS gapfilled and the downscaled is also provided.
+
+File content:
+
+- TIMESTAMP_START = First day of the aggregated week expressed using the ISO8601 format YYYYMMDD
+- TIMESTAMP_END = Last day of the aggregated week expressed using the ISO8601 format YYYYMMDD
+- Week = week of the year, from 1 to 52, last week including all days needed to complete the year.
+- TA_f = air temperature gapfilled with MDF (deg C)
+- TA_fqc = quality flags of TA_f. Value between 0 and 1 indicating the percentage of original or good quality data (gapfilled with MDS and quality = 1).
+- TA_f_night = mean nighttime air temperature calculated using TA_f (deg C)
+- TA_f_night_std = standard deviation of the nighttime air temperature calculated using TA_f (deg C)
+- TA_f_night_qc = quality flags of TA_f_night. Value between 0 and 1 indicating the percentage of original or good quality data (gapfilled with MDS and quality = 1).
+- TA_f_day = mean daytime air temperature calculated using TA_f (deg C)
+- TA_f_day_std = standard deviation of the daytime air temperature calculated using TA_f (deg C)
+- TA_f_day_qc = quality flags of TA_f_day. Value between 0 and 1 indicating the percentage of original or good quality data (gapfilled with MDS and quality = 1).
+- TA_ERA = air temperature downscaled from ERA (deg C)
+- TA_ERA_night = mean nighttime air temperature calculated using TA_ERA (deg C)
+- TA_ERA_night_std = standard deviation of the nighttime air temperature calculated using TA_ERA (deg C)
+- TA_ERA_day = mean daytime air temperature calculated using TA_ERA (deg C)
+- TA_ERA_day_std = standard deviation of the daytime air temperature calculated using TA_ERA (deg C)
+- TA_m = air temperature merged between TA_f and TA_ERA (deg C) (TA_f used if measured or gapfilled with high quality)
+- TA_mqc = quality flags of TA_m. Value between 0 and 1 indicating the percentage of site level data used (original or gapfilled with MDS and quality = 1).
+- TA_m_night = mean nighttime air temperature calculated using TA_m (deg C)
+- TA_m_night_std = standard deviation of the nighttime air temperature calculated using TA_m (deg C)
+- TA_m_night_qc = quality flags of TA_m_night. Value between 0 and 1 indicating the percentage of original or good quality data (original or gapfilled with MDS and quality = 1).
+- TA_m_day = mean daytime air temperature calculated using TA_m (deg C)
+- TA_m_day_std = standard deviation of the daytime air temperature calculated using TA_m (deg C)
+- TA_m_day_qc = quality flags of TA_m_day. Value between 0 and 1 indicating the percentage of original or good quality data (original or gapfilled with MDS and quality = 1).
+- SW_IN_pot = Short Wave incoming potential radiation (top of atmosphere) (W m-2)
+- SW_IN_f = Short Wave incoming radiation gapfilled with MDF (W m-2). 
+- SW_IN_fqc = quality flags of SW_IN_f. Value between 0 and 1 indicating the percentage of original or good quality data (gapfilled with MDS and quality = 1).
+- SW_IN_ERA = Short Wave incoming radiation downscaled from ERA (W m-2).
+- SW_IN_m = Short Wave incoming radiation merged between SW_IN_f and SW_IN_ERA (W m-2) (SW_IN_f used if SW_IN_f_qc=<1). 
+- SW_IN_mqc = quality flag of SW_IN_m. Value between 0 and 1 indicating the percentage of site level data used (original or gapfilled with MDS and quality = 1).
+- LW_IN_f = Long Wave incoming radiation gapfilled with MDF (W m-2)
+- LW_IN_fqc = quality flags of the LW_IN_f. Value between 0 and 1 indicating the percentage of original or good quality data (gapfilled with MDS and quality = 1).
+- LW_IN_calc = Long Wave incoming radiation calculated from TA_f, SW_IN_f, VPD_f and SW_IN_pot using the JSBACH algorithm provided by Sonke Zaehle (W m-2)
+- LW_IN_calc_qc = quality flags of the LW_IN_calc. Value between 0 and 1 indicating the percentage of values calculated starting from original or good quality input data (gapfilled with MDS and quality = 1).
+- LW_IN_ERA = Long Wave incoming radiation downscaled from ERA (W m-2)
+- LW_IN_m = Long Wave incoming radiation merged between LW_IN_f and LW_IN_ERA (W m-2) (LW_IN_f used if LW_IN_f_qc=<1)
+- LW_IN_mqc = quality flag of LW_IN_m. Value between 0 and 1 indicating the percentage of site level data used (original or gapfilled with MDS and quality = 1).
+- VPD_f = Vapor Pressure Deficit gapfilled with MDF (hPa)
+- VPD_fqc = quality flags of the VPD_f. Value between 0 and 1 indicating the percentage of original or good quality data (gapfilled with MDS and quality = 1).
+- VPD_ERA = Vapor Pressure Deficit downscaled from ERA (hPa)
+- VPD_m = Vapor Pressure Deficit merged between VPD_f and VPD_ERA (hPa) (VPD_f used if VPD_f_qc=<1)
+- VPD_mqc = quality flag of VPD_m. Value between 0 and 1 indicating the percentage of site level data used (original or gapfilled with MDS and quality = 1).
+- PA_ERA = Air pressure downscaled from ERA (kPa)
+- PA_m = Air pressure merged between measured PA and PA_ERA (kPa)
+- PA_mqc = quality flag of PA_m. Value between 0 and 1 indicating the percentage of site level data used.
+- P_ERA = Precipitation downscaled from ERA (mm)
+- P_m = Precipitation merged between measured P and P_ERA (mm) (P used if measured)
+- P_mqc = quality flag of P_m. Value between 0 and 1 indicating the percentage of site level data used.
+- WS_ERA = Wind Speed downscaled from ERA (m s-1)
+- WS_m = Wind Speed merged between measured WS and WS_ERA (m s-1) (WS used if measured)
+- WS_mqc = quality flag of WS_m. Value between 0 and 1 indicating the percentage of site level data used.
+- CO2_f = CO2 concentration gapfilled with MDF (ppm)
+- CO2_fqc = quality flags of the CO2_f. Value between 0 and 1 indicating the percentage of original or good quality data (gapfilled with MDS and quality = 1).
+%s
+
+STATISTICS related to the ERA downscaling (regression between measured and ERA data, when not reported no relations have been used):
+

@@ -1,0 +1,6 @@
+
+USTAR THRESHOLD ESTIMATION METHODS
+
+There are cases where not enough data are present to calculate a ustar threshold (for both the Change Point detection method - CP - described in Barr et al. and the Moving Point detection method - MP - Reichstein et al. 2005) or where it is not possible to identify a clear change point (CP method only). This has an impact in the uncertainty estimation that is underestimated (less or no ustar threshold values available) but it should be considered as a general indication of difficulties in the application of the ustar filtering for the specific sites or years. Here below are reported the years and which of methods could not be applied to estimate an ustar threshold in the present dataset:
+
+YEAR, Method NOT applied

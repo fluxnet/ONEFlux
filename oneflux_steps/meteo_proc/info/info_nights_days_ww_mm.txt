@@ -1,0 +1,2 @@
+- night_d = percentage of half hours classified as nighttime in the month (when Potential radiation = 0)
+- day_d = percentage of half hours classified as daytime in the month (when potential radiation > 0)

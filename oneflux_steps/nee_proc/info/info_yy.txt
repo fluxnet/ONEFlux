@@ -1,0 +1,56 @@
+NEE PROCESSING RESULTS DESCRIPTION
+
+This file includes yearly NEE estimate and related uncertainty and nighttime and daytime NEE averages and related uncertainties. The starting dataset is NEE already corrected by storage and de-spiked (method described in Papale et al 2006 Biogeosciences, z=5). The ustar filtering has been based on thresholds calculated using two different methods (Barr et al 2013 and modified version of Reichstein et al 2005) and for each of the two methods using 100 bootstrapped datasets (for a total of 200 ustar thresholds estimates for each year).
+
+Two different methods have been used to extract the ustar thresholds to be applied:
+- yearly (identified in the variables names ending with "_y"): the thresholds found for each year and the years before and after have been put together and from their join population the final threshold extracted (ustar thresholds varying among years).
+- common (identified in the variables names ending with "_c"): all the thresholds found in the different years have been put together and final thresholds extracted from this dataset (each year filtered with the same ustar threshold).
+Note that if the dataset includes up to two years of data the two methods give the same result and only the _y is provided.
+
+In both the _y and _c versions, 40 NEE datasets have been created filtering the original NEE using 40 different ustar values extracted from the thresholds datasets at percentiles [1.25:2.5:98.75]. These 40 NEE versions have been first aggregated to yearly time resolution and then used as basis for all the derived variables provided.
+
+NEE is always expressed as gC m-2 y-1 except for the nighttime and daytime aggregations where it is in umolCO2 m-2 s-1
+
+
+VARIABLES DEFINITION:
+
+- TIMESTAMP = date and time expressed using the ISO8601 format YYYY
+- NEE_ref_y and NEE_ref_c = reference NEE selected on the basis of the model efficiency (see below)
+- NEE_ref_qc_y and NEE_ref_qc_c = quality flags of the NEE_ref_y and NEE_ref_c variables. Value between 0 and 1 indicating the percentage of original or good quality data.
+- NEE_ref_randUnc_y and NEE_ref_randUnc_c = random uncertainty of NEE_ref_y and NEE_ref_c calculated starting from the random uncertainty of the single halfhours (rand(i))  (see halfhourly data info file for details) using the equation [sqrt(sum(rand(i)^2))/n] where n is the number of halfhours used.
+- NEE_ref_joinUnc_y and NEE_ref_joinUnc_c = join uncertainty estimation of NEE_ref (_y and _c) (random + ustar filtering) calculated for each year as [sqrt(NEE_ref_randUnc^2 + ((NEE_84-NEE_16)/2)^2)]
+- NEE_ust50_y and NEE_ust50_c = NEE obtained filtering the data using the 50 percentiles of the ustar thresholds
+- NEE_ust50_qc_y and NEE_ust50_qc_c = quality flag of the NEE_ust50_y and NEE_ust50_c variables (0-1 as the others)
+- NEE_ust50_randUnc_y and NEE_ust50_randUnc_c = random uncertainty of NEE_ust50_y and NEE_ust50_c calculated starting from the random uncertainty of the single halfhours (rand(i))  (see halfhourly data info file for details) using the equation [sqrt(sum(rand(i)^2))/n] where n is the number of halfhours used.
+- NEE_ust50_joinUnc_y and NEE_ust50_joinUnc_c = join uncertainty estimation of NEE_ust50 (_y and _c) (random + ustar filtering) calculated for each year as [sqrt(NEE_ust50_randUnc^2 + ((NEE_84-NEE_16)/2)^2)]
+- NEE_mean_y and NEE_mean_c = average NEE calculated for each year as mean of the 40 NEE versions
+- NEE_mean_qc_y and NEE_mean_qc_c = quality flag of the NEE_mean_y and NEE_mean_c variables expressed as percentage of good quality data (mean of the 40 qc)
+- NEE_SE_y and NEE_SE_c = NEE Standard Error calculated as std(NEE)/sqrt(40) where the NEE used to calculate the std are the 40 versions for each year
+- NEE_XX_y and NEE_XX_c (with XX = 05, 16, 25, 50, 75, 84, 95) = NEE percentiles (indicated by XX) calculated for each year on the basis of the 40 estimates.
+- NEE_XX_qc_y and NEE_XX_qc_c (with XX = 05, 16, 25, 50, 75, 84, 95) = quality flag of the NEE_XX_y and NEE_XX_c variables (0-1 as the others).
+- night_randUnc_n = number of half hours classified as nighttime and used to calculate the aggregated random uncertainty
+- day_randUnc_n = number of half hours classified as daytime and used to calculate the aggregated random uncertainty
+- NEE_ref_night_y and NEE_ref_night_c = mean nighttime NEE (expressed in umolCO2 m-2 s-1) calculated starting from the NEE_ref
+- NEE_ref_night_std_y and NEE_ref_night_std_c = standard deviation of the nighttime NEE calculated starting from the NEE_ref
+- NEE_ref_night_qc_y and NEE_ref_night_qc_c = quality flags of the NEE_ref_night_y and NEE_ref_night_c variables. Value between 0 and 1 indicating the percentage of original or good quality data.
+- NEE_ref_night_randUnc_y and NEE_ref_night_randUnc_c = random uncertainty of NEE_ref_night_y and NEE_ref_night_c calculated starting from the random uncertainty of the single halfhours (see halfhourly data info file for details) classified as nighttime (rand(i)) using the equation [sqrt(sum(rand(i)^2))/n] where n is the number of halfhours used to calculate the nighttime aggregation in the day.
+- NEE_ref_night_joinUnc_y and NEE_ref_night_joinUnc_c = join uncertainty estimation of NEE_ref_night (_y and _c) (random + ustar filtering) calculated for each year as [sqrt(NEE_ref_night_randUnc^2 + ((NEE_night_84-NEE_night_16)/2)^2)]
+- NEE_ref_day_y and NEE_ref_day_c = mean daytime NEE (expressed in umolCO2 m-2 s-1) calculated starting from the NEE_ref
+- NEE_ref_day_std_y and NEE_ref_day_std_c = standard deviation of the daytime NEE calculated starting from the NEE_ref
+- NEE_ref_day_qc_y and NEE_ref_day_qc_c = quality flags of the NEE_ref_day_y and NEE_ref_day_c variables. Value between 0 and 1 indicating the percentage of original or good quality data.
+- NEE_ref_day_randUnc_y and NEE_ref_day_randUnc_c = random uncertainty of NEE_ref_day_y and NEE_ref_day_c calculated starting from the random uncertainty of the single halfhours (see halfhourly data info file for details) classified as daytime (rand(i)) using the equation [sqrt(sum(rand(i)^2))/n] where n is the number of halfhours used to calculate the daytime aggregation in the day.
+- NEE_ref_day_joinUnc_y and NEE_ref_day_joinUnc_c = join uncertainty estimation of NEE_ref_day (_y and _c) (random + ustar filtering) calculated for each year as [sqrt(NEE_ref_day_randUnc^2 + ((NEE_day_84-NEE_day_16)/2)^2)]
+- NEE_ust50_night_y and NEE_ust50_night_c = mean nighttime NEE (expressed in umolCO2 m-2 s-1) calculated starting from the NEE_ust50
+- NEE_ust50_night_std_y and NEE_ust50_night_std_c = standard deviation of the nighttime NEE calculated starting from the NEE_ust50
+- NEE_ust50_night_qc_y and NEE_ust50_night_qc_c = quality flags of the NEE_ust50_night_y and NEE_ust50_night_c variables. Value between 0 and 1 indicating the percentage of original or good quality data.
+- NEE_ust50_night_randUnc_y and NEE_ust50_night_randUnc_c = random uncertainty of NEE_ust50_night_y and NEE_ust50_night_c calculated starting from the random uncertainty of the single halfhours (see halfhourly data info file for details) classified as nighttime (rand(i)) using the equation [sqrt(sum(rand(i)^2))/n] where n is the number of halfhours used to calculate the nighttime aggregation in the day.
+- NEE_ust50_night_joinUnc_y and NEE_ust50_night_joinUnc_c = join uncertainty estimation of NEE_ust50_night (_y and _c) (random + ustar filtering) calculated for each year as [sqrt(NEE_ust50_night_randUnc^2 + ((NEE_night_84-NEE_night_16)/2)^2)]
+- NEE_ust50_day_y and NEE_ust50_day_c = mean daytime NEE (expressed in umolCO2 m-2 s-1) calculated starting from the NEE_ust50
+- NEE_ust50_day_std_y and NEE_ust50_day_std_c = standard deviation of the daytime NEE calculated starting from the NEE_ust50
+- NEE_ust50_day_qc_y and NEE_ust50_day_qc_c = quality flags of the NEE_ust50_day_y and NEE_ust50_day_c variables. Value between 0 and 1 indicating the percentage of original or good quality data.
+- NEE_ust50_day_randUnc_y and NEE_ust50_day_randUnc_c = random uncertainty of NEE_ust50_day_y and NEE_ust50_day_c calculated starting from the random uncertainty of the single halfhours (see halfhourly data info file for details) classified as daytime (rand(i)) using the equation [sqrt(sum(rand(i)^2))/n] where n is the number of halfhours used to calculate the daytime aggregation in the day.
+- NEE_ust50_day_joinUnc_y and NEE_ust50_day_joinUnc_c = join uncertainty estimation of NEE_ust50_day (_y and _c) (random + ustar filtering) calculated for each day as [sqrt(NEE_ust50_day_randUnc^2 + ((NEE_day_84-NEE_day_16)/2)^2)]
+- NEE_night_XX_y and NEE_night_XX_c (with XX = 05, 16, 25, 50, 75, 84, 95) = nighttime NEE (expressed in umolCO2 m-2 s-1) 25th and 75th percentiles (indicated by XX) calculated for each day on the basis of the 40 NEE estimates.
+- NEE_night_XX_qc_y and NEE_night_XX _qc_c (with XX = 05, 16, 25, 50, 75, 84, 95) = quality flag of the NEE_night_XX_y and NEE_night_XX_c variables (0-1 as the others).
+- NEE_day_XX_y and NEE_day_XX_c (with XX = 05, 16, 25, 50, 75, 84, 95) = daytime NEE (expressed in umolCO2 m-2 s-1) 25th and 75th percentiles (indicated by XX) calculated for each day on the basis of the 40 NEE estimates.
+- NEE_day_XX_qc_y and NEE_day_XX _qc_c (with XX = 05, 16, 25, 50, 75, 84, 95) = quality flag of the NEE_day_XX_y and NEE_day_XX_c variables (0-1 as the others).

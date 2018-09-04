@@ -1,0 +1,6 @@
+
+MODEL EFFICIENCY SELECTION FOR NEE_ref:
+
+The reference NEE has been selected on the basis of the Model Efficiency. Starting from the 40 different NEE estimations (obtained filtering the data with 40 different ustar thresholds) it has been calculated the Model Efficiency between each version and the others 39. The reference NEE has been selected as the one with higher Model Efficiency sum (so the most similar to the others 39).
+In this dataset have been selected as reference:
+
