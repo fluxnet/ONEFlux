@@ -26,7 +26,6 @@ from oneflux.partition.auxiliary import FLOAT_PREC, NAN, NAN_TEST, nan, not_nan
 from oneflux.partition.library import STRING_HEADERS, DT_OUTPUT_DIR, EXTRA_FILENAME
 from oneflux.graph.compare import plot_comparison, compute_plot_param_diffs
 from oneflux.utils.files import file_exists_not_empty, check_create_directory
-from oneflux.utils.pvwave import pvwave2csv
 
 log = logging.getLogger(__name__)
 

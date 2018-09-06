@@ -1,12 +1,12 @@
 # ONEFlux Processing Pipeline
 
-ONEFlux (Open Network-Enabled Flux processing pipeline) is an eddy covariance data processing software package implementing multiple steps to process half-hourly (or hourly) fluxes.
+ONEFlux (Open Network-Enabled Flux processing pipeline) is an eddy covariance data processing codes package.
 
-In particular, ONEFlux implements friction velocity threshold estimation methods and uncertainty estimates from multiple threshold levels, gap-filling of micrometeorological and fluxes variables, partitioning of CO2 fluxes into ecosystem respiration and primary production, uncertainty estimates, among others.
+ONEFlux consolidates multiple computations to process half-hourly (or hourly) flux inputs in an automatic fashion, including friction velocity threshold estimation methods and filtering, gap-filling of micrometeorological and flux variables, partitioning of CO2 fluxes into ecosystem respiration and gross primary production, uncertainty estimates, and more.
 
-The current version of the code is compatible with the version used to create the FLUXNET2015 dataset.
+The current version of the code is compatible with the code base used to create the FLUXNET2015 dataset.
 
-The pipeline controlling code for this software uses **Python version 2.7** (the code should work with Python version 3.5 or later, but was not fully tested with these versions).
+The pipeline controlling code uses **Python version 2.7** (it should work with Python version 3.5 or later, but was not fully tested with these versions).
 
 **(THIS IS A LIMITED TESTING VERSION, PLEASE SEE [CAVEATS LIST](#caveats-and-known-limitations) BELOW.)** This iteration of the code is not fully in line with open source/free software development practices, but we intend to steadily move in that direction.
 
