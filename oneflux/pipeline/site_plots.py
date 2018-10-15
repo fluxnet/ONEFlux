@@ -42,9 +42,9 @@ log = logging.getLogger(__name__)
 
 STRTEST_STANDARD = ['TIMESTAMP', 'TIMESTAMP_START', 'TIMESTAMP_END']
 INTTEST_STANDARD = {}
-NFULL_D = {k.lower():v for k, v in FULL_D.iteritems()}
+NFULL_D = {k.lower():v for k, v in FULL_D.items()}
 
-for res, l in INTTEST.iteritems():
+for res, l in INTTEST.items():
     nl = []
     for item in l:
         nitem = NFULL_D.get(item, None)

@@ -90,9 +90,9 @@ class Pipeline(object):
 
         self.valid_attribute_labels = ['data_dir', 'tool_dir', 'data_dir_main', 'prod_to_compare', 'perc_to_compare', 'first_year', 'last_year']
         for driver in self.driver_classes:
-            labels = [k.lower() for k, v in driver.__dict__.iteritems() if ((not callable(v)) and (not k.startswith('_')))]
+            labels = [k.lower() for k, v in driver.__dict__.items() if ((not callable(v)) and (not k.startswith('_')))]
             self.valid_attribute_labels.extend(labels)
-        labels = [k.lower() for k, v in Pipeline.__dict__.iteritems() if ((not callable(v)) and (not k.startswith('_')))]
+        labels = [k.lower() for k, v in Pipeline.__dict__.items() if ((not callable(v)) and (not k.startswith('_')))]
         self.valid_attribute_labels.extend(labels)
         for k in self.configs.keys():
             if k not in self.valid_attribute_labels:
