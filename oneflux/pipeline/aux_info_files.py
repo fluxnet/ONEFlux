@@ -2,7 +2,7 @@
 oneflux.pipeline.aux_info_files
 
 For license information:
-see LICENSE file or headers in oneflux.__init__.py 
+see LICENSE file or headers in oneflux.__init__.py
 
 Handling of auxiliary and info files
 
@@ -69,7 +69,7 @@ from oneflux.pipeline.common import METEO_INFO, NEE_INFO, NEEDIR_PATTERN, NEE_PE
                                      NEE_PERC_USTAR_CUT, NEE_PERC_USTAR_VUT_PATTERN, NEE_PERC_USTAR_VUT, \
                                      UNC_INFO, UNC_INFO_ALT, PRODFILE_AUX_TEMPLATE, RESOLUTION_LIST, \
                                      MPDIR, CPDIR, test_pattern
-from __builtin__ import enumerate
+from builtins import enumerate
 
 log = logging.getLogger(__name__)
 
@@ -277,7 +277,7 @@ def generate_nee(siteid, sitedir, first_year, last_year, version_data, version_p
     nee_perc_ustar_vut_values = load_ustar_vut(siteid=siteid, sitedir=sitedir, year_range=year_range, nee_perc_ustar_vut_template=nee_perc_ustar_vut_template)
 
     # process NEE, RECO, and GPP info
-    u50_ustar_perc = dict({'CUT':nee_perc_ustar_cut_values['50.00']}.items() + {year:threshold['50.00'] for year, threshold in nee_perc_ustar_vut_values.iteritems()}.items())
+    u50_ustar_perc = dict({'CUT':nee_perc_ustar_cut_values['50.00']}.items() + {year:threshold['50.00'] for year, threshold in nee_perc_ustar_vut_values.items()}.items())
     nee_ref_ustar_perc = {i:{} for i in RESOLUTION_LIST}
     unc_ref_ustar_perc = {i:{j:{} for j in RESOLUTION_LIST} for i in ['RECO_NT', 'GPP_NT', 'RECO_DT', 'GPP_DT']}
     ustar_not_working = {'files_mp':set(), 'files_cp':set(), 'info_mp':set(), 'info_cp':set()}
@@ -307,12 +307,12 @@ def generate_nee(siteid, sitedir, first_year, last_year, version_data, version_p
                     raise ONEFluxError("{s}: Unknown NEE VUT REF percentile/threshold entry in line: '{l}'".format(s=siteid, l=line.strip()))
                 threshold = line.strip().lower().split('ustar percentile')[1].strip().split()[0].strip()
                 ustar = nee_perc_ustar_vut_values[year][threshold]
-                if nee_ref_ustar_perc[res].has_key(year):
+                if year in nee_ref_ustar_perc[res]:
                     raise ONEFluxError("{s} duplicated entry for NEE REF VUT USTAR: {f}".format(s=siteid, f=nee_info))
                 else:
                     nee_ref_ustar_perc[res][year] = (threshold, ustar)
                 if year_extra:
-                    if nee_ref_ustar_perc[res].has_key(year_extra):
+                    if year_extra in nee_ref_ustar_perc[res]:
                         raise ONEFluxError("{s} duplicated entry for NEE REF VUT USTAR: {f}".format(s=siteid, f=nee_info))
                     else:
                         nee_ref_ustar_perc[res][year_extra] = (threshold, ustar)
@@ -322,7 +322,7 @@ def generate_nee(siteid, sitedir, first_year, last_year, version_data, version_p
             elif line.strip().lower().startswith('nee_ref_c'):
                 threshold = line.strip().lower().split('ustar percentile')[1].strip().split()[0].strip()
                 ustar = nee_perc_ustar_cut_values[threshold]
-                if nee_ref_ustar_perc[res].has_key('CUT'):
+                if 'CUT' in nee_ref_ustar_perc[res]:
                     raise ONEFluxError("{s} duplicated entry for NEE REF CUT USTAR: {f}".format(s=siteid, f=nee_info))
                 else:
                     nee_ref_ustar_perc[res]['CUT'] = (threshold, ustar)
@@ -383,12 +383,12 @@ def generate_nee(siteid, sitedir, first_year, last_year, version_data, version_p
                         raise ONEFluxError("{s}: Unknown RECO/GPP VUT REF percentile/threshold entry in line: '{l}'".format(s=siteid, l=line.strip()))
                     threshold = line.strip().lower().split('ustar percentile')[1].strip().split()[0].strip()
                     ustar = nee_perc_ustar_vut_values[year][threshold]
-                    if unc_ref_ustar_perc[key][res].has_key(year):
+                    if year in unc_ref_ustar_perc[key][res]:
                         raise ONEFluxError("{s} duplicated entry for {v} REF VUT USTAR: {f}".format(s=siteid, f=nee_info, v=variable))
                     else:
                         unc_ref_ustar_perc[key][res][year] = (threshold, ustar)
                     if year_extra:
-                        if unc_ref_ustar_perc[key][res].has_key(year_extra):
+                        if year_extra in unc_ref_ustar_perc[key][res]:
                             raise ONEFluxError("{s} duplicated entry for RECO/GPP REF VUT USTAR: {f}".format(s=siteid, f=nee_info))
                         else:
                             unc_ref_ustar_perc[key][res][year_extra] = (threshold, ustar)
@@ -398,7 +398,7 @@ def generate_nee(siteid, sitedir, first_year, last_year, version_data, version_p
                 elif line.strip().lower().startswith('{v}_ref_c'.format(v=variable).lower()):
                     threshold = line.strip().lower().split('ustar percentile')[1].strip().split()[0].strip()
                     ustar = nee_perc_ustar_cut_values[threshold]
-                    if unc_ref_ustar_perc[key][res].has_key('CUT'):
+                    if 'CUT' in unc_ref_ustar_perc[key][res]:
                         raise ONEFluxError("{s} duplicated entry for {v} REF CUT USTAR: {f}".format(s=siteid, f=nee_info, v=variable))
                     else:
                         unc_ref_ustar_perc[key][res]['CUT'] = (threshold, ustar)

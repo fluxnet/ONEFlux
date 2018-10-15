@@ -72,7 +72,7 @@ if __name__ == '__main__':
     # start execution
     try:
         # check arguments
-        print os.path.join(args.datadir, args.sitedir)
+        print(os.path.join(args.datadir, args.sitedir))
         if not os.path.isdir(os.path.join(args.datadir, args.sitedir)):
             raise ONEFluxError("Site dir not found: {d}".format(d=args.sitedir))
 

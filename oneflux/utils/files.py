@@ -2,7 +2,7 @@
 oneflux.utils.files
 
 For license information:
-see LICENSE file or headers in oneflux.__init__.py 
+see LICENSE file or headers in oneflux.__init__.py
 
 File manipulation utilities
 
@@ -194,7 +194,7 @@ def compress_file(filename):
     try:
         r = subprocess.call(['gzip', '-f', filename])
         _log.debug("Compressing file '{d}'. Result: {o}".format(d=filename, o=('success' if r == 0 else "fail ({r})".format(r=r))))
-    except subprocess.CalledProcessError, e:
+    except subprocess.CalledProcessError as e:
         msg = "Problems compressing file '{d}'. Error: '{e}'".format(d=filename, e=str(e))
         _log.critical(msg)
         raise ONEFluxError(msg)
@@ -222,7 +222,7 @@ def run_command(cmd):
             msg = 'Execution failed! EXITCODE: {c}  STDOUT: {o}  STDERR: {e}'.format(c=exitcode, o=stdout.replace('\r', '  ').replace('\n', '  '), e=stderr.replace('\r', '  ').replace('\n', '  '))
             _log.critical(msg)
             raise ONEFluxError(msg)
-    except subprocess.CalledProcessError, e:
+    except subprocess.CalledProcessError as e:
         msg = "Execution raised error: '{e}'".format(e=str(e))
         _log.critical(msg)
         raise ONEFluxError(msg)
@@ -282,7 +282,7 @@ def zip_file(filename, zipfilename=None, zip_option='w'):
         with zipfile.ZipFile(zipfilename, zip_option, zipfile.ZIP_DEFLATED) as z:
             _log.debug("Compressing '{f}' into '{z}' using zip option {o}".format(f=filename, z=zipfilename, o=zip_option))
             z.write(filename, os.path.basename(filename))
-    except Exception, e:
+    except Exception as e:
         _log.error("Error in zip_file: {e}".format(e=e))
     return zipfilename
 
@@ -309,7 +309,7 @@ def zip_file_list(filename_list, zipfilename, zip_option='w'):
             for filename in filename_list:
                 _log.debug("Adding '{f}'".format(f=filename))
                 z.write(filename, os.path.basename(filename))
-    except Exception, e:
+    except Exception as e:
         _log.error("Error in zip_file: {e}".format(e=e))
     return zipfilename
 
@@ -359,7 +359,7 @@ def join_paths(a, *p):
 def file_exists_not_empty(filename,):
     """
     Tests if file exists and is not empty
-    
+
     :param filename: full path of file to be checked
     :type filename: str
     """
