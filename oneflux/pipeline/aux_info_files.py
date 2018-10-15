@@ -277,7 +277,7 @@ def generate_nee(siteid, sitedir, first_year, last_year, version_data, version_p
     nee_perc_ustar_vut_values = load_ustar_vut(siteid=siteid, sitedir=sitedir, year_range=year_range, nee_perc_ustar_vut_template=nee_perc_ustar_vut_template)
 
     # process NEE, RECO, and GPP info
-    u50_ustar_perc = dict({'CUT':nee_perc_ustar_cut_values['50.00']}.items() + {year:threshold['50.00'] for year, threshold in nee_perc_ustar_vut_values.iteritems()}.items())
+    u50_ustar_perc = dict({'CUT':nee_perc_ustar_cut_values['50.00']}.items() + {year:threshold['50.00'] for year, threshold in nee_perc_ustar_vut_values.items()}.items())
     nee_ref_ustar_perc = {i:{} for i in RESOLUTION_LIST}
     unc_ref_ustar_perc = {i:{j:{} for j in RESOLUTION_LIST} for i in ['RECO_NT', 'GPP_NT', 'RECO_DT', 'GPP_DT']}
     ustar_not_working = {'files_mp':set(), 'files_cp':set(), 'info_mp':set(), 'info_cp':set()}
