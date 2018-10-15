@@ -2,7 +2,7 @@
 oneflux.partition.library
 
 For license information:
-see LICENSE file or headers in oneflux.__init__.py 
+see LICENSE file or headers in oneflux.__init__.py
 
 Library of optimization related functions
 
@@ -63,7 +63,7 @@ class ONEFluxPartitionError(ONEFluxError):
 def load_output(filename, delimiter=',', skip_header=1):
     """
     Loads 'output' formatted file (e.g., from output of nee_proc or meteo_proc)
-    
+
     :param filename: Name of file to be loaded
     :type filename: str
     """
@@ -100,7 +100,7 @@ def load_output(filename, delimiter=',', skip_header=1):
     array_minute = numpy.empty(len(data), dtype='i4')
     it = numpy.nditer(new_data['timestamp_end'], flags=['f_index'])
     while not it.finished:
-        timestamp = datetime.strptime(str(it.value), "%Y%m%d%H%M")
+        timestamp = datetime.strptime(it.value.item(0).decode("utf-8"), "%Y%m%d%H%M")
         array_year[it.index] = timestamp.year
         array_month[it.index] = timestamp.month
         array_day[it.index] = timestamp.day
@@ -127,7 +127,7 @@ def load_output(filename, delimiter=',', skip_header=1):
 def get_latitude(filename, delimiter=','):
     """
     Retrieves latitude from year 'input' formatted data file
-    
+
     :param filename: Name of file to be loaded
     :type filename: str
     :param delimiter: Cell delimiter character(s)
@@ -178,7 +178,7 @@ def add_empty_vars(data, records, column, unit='-'):
 def var(data, column):
     """
     Returns 1D array of data in column label
-    
+
     :param data: data structure for partitioning
     :type data: numpy.ndarray
     :param column: column/variable name to be retrieved
@@ -194,7 +194,7 @@ def var(data, column):
 def varnum(data, columns):
     """
     Checks if data array has all columns
-    
+
     :param data: data structure for partitioning
     :type data: numpy.ndarray
     :param columns: list of columns from data array to be used as target and parameters
@@ -211,7 +211,7 @@ def newselif(data, condition, drop=False, columns=None):
     """
     Filter data set using condition; drops records or removes variables
     depending on drop and vars parameters
-    
+
     :param data: data structure for partitioning
     :type data: numpy.ndarray
     :param condition: numpy boolean mask of condition
@@ -251,8 +251,8 @@ def newselif(data, condition, drop=False, columns=None):
 def nomi(data, columns):
     """
     Returns array with only the columns listed, filtering to include
-    only records where all columns are non-NA 
-    
+    only records where all columns are non-NA
+
     :param data: data structure for partitioning
     :type data: numpy.ndarray
     :param columns: list of columns to be filtered
@@ -355,7 +355,7 @@ def nlinlts2(data, lts_func, depvar, indepvar_arr, npara, xguess,
                 mprior, sigm, sigd, window_size=WINDOW_SIZE, trim_perc=BR_PERC):
     """
     Main non-linear least-squares driver function
-    
+
     :param data: data structure for partitioning
     :type data: numpy.ndarray
     :param func: function to be optimized
@@ -366,7 +366,7 @@ def nlinlts2(data, lts_func, depvar, indepvar_arr, npara, xguess,
     :type indepvar: str list
     :param npara: number of parameters to be optimized
     :type npara: int
-    :param xguess: list with initial/starting guesses for variables to be optimized 
+    :param xguess: list with initial/starting guesses for variables to be optimized
     :type xguess: list
     :param trim_perc: precentage to trim from residual values
     :type trim_perc: float
@@ -830,7 +830,7 @@ def pct(array, percent):
     """
     Calculates "percent" percentile of array -- not really a percentile,
     but similar intention. Following implementation in original code.
-    
+
     :param array: 1-d array to be used in calculation
     :type array: numpy.ndarray
     :param percent: target percent value for percentile
@@ -871,16 +871,16 @@ NO_CONVERGENCE_RETRY = 20  # multiplicative factor to increase number of iterati
 def least_squares(func, initial_guess, entries, iterations=None, stop=False, return_residuals_cov_mat=False):
     """
     Wrapper for least squares paramater optimization
-    
+
     Function used here (legacy wrapper):
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.leastsq.html
-    
+
     Alternative function (more options, better documented, requires more config):
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.least_squares.html
-    
+
     Underlying method implementation (from MINPACK Fortran implementation):
     https://www.math.utah.edu/software/minpack/minpack/lmdif.html
-    
+
     :param func: function with N parameters to be optimized
     :type func: function
     :param initial_guess: array with initial guess for N parameters
@@ -1030,8 +1030,8 @@ PARTITIONING_DT_ERROR_FILE = '11_nee_partition_dt_{s}.txt'
 def remove_errored_entries(ustar_type, site, site_dir, year, working_year_data):
     """
     :Task:  Remove entries that fall into error-ranges.
-    
-    :Explanation:   For the specified site, we look for it in paritioning_dt_error.txt to 
+
+    :Explanation:   For the specified site, we look for it in paritioning_dt_error.txt to
                     check if it falls in the written error-ranges. If we found a match, we'll
                     removes the entries that fall within the specified julday ranges.
 
@@ -1087,10 +1087,10 @@ def remove_errored_entries(ustar_type, site, site_dir, year, working_year_data):
 def create_data_structures(ustar_type, whole_dataset_nee, whole_dataset_meteo, percentile, year_mask_nee, year_mask_meteo, latitude, part_type=NT_STR):
     """
     :Task:  Creates data structure needed for partitioning; return working copy of populated input data array
-    
-    :Explanation:   Return working copy of populated input data array. In other words, 
+
+    :Explanation:   Return working copy of populated input data array. In other words,
                     we pass the read data to numpy to be able to have a flexible structure.
-                    
+
                     Hourly daytime data is also handled by duplicating each record to match
                     the half hourly scheme.
 
