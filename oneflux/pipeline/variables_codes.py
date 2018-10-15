@@ -680,7 +680,7 @@ FULL_DIRECT_D = {i[0]:i[1] for i in VARIABLE_LIST_FULL_MAP}
 FULL_D = {}
 for pair in VARIABLE_LIST_FULL_MAP:
     for old_e in pair[1]:
-        if FULL_D.has_key(old_e):
+        if old_e in FULL_D:
             raise ONEFluxError("Duplicate old entry: '{e}'".format(e=old_e))
         else:
             FULL_D[old_e] = pair[0]
@@ -690,7 +690,7 @@ VARIABLE_LIST_SUB_MAP = [[i, FULL_DIRECT_D[i]] for i in VARIABLE_LIST_SUB]
 SUB_D = {}
 for pair in VARIABLE_LIST_SUB_MAP:
     for old_e in pair[1]:
-        if SUB_D.has_key(old_e):
+        if old_e in SUB_D:
             raise ONEFluxError("Duplicate old entry: '{e}'".format(e=old_e))
         else:
             SUB_D[old_e] = pair[0]
@@ -749,7 +749,7 @@ QC_FULL_DIRECT_D = {i[0]:i[1] for i in QC_VARIABLE_LIST_FULL_MAP}
 QC_FULL_D = {}
 for pair in QC_VARIABLE_LIST_FULL_MAP:
     for old_e in pair[1]:
-        if QC_FULL_D.has_key(old_e):
+        if old_e in QC_FULL_D:
             raise ONEFluxError("Duplicate old entry: '{e}'".format(e=old_e))
         else:
             QC_FULL_D[old_e] = pair[0]
@@ -801,4 +801,3 @@ VARIABLE_LIST_COULD_BE_PRESENT = [
    ['GPP_NT_CUT_{n}'.format(n=i) for i in ['05', '16', '25', '50', '75', '84', '95']] + \
    ['RECO_DT_CUT_{n}'.format(n=i) for i in ['05', '16', '25', '50', '75', '84', '95']] + \
    ['GPP_DT_CUT_{n}'.format(n=i) for i in ['05', '16', '25', '50', '75', '84', '95']]
-

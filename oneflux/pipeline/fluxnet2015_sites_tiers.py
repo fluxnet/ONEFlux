@@ -439,7 +439,7 @@ for e in SITES_TIERS_FOLDERS:
         raise ONEFluxError(msg)
 
     # sites-tiers
-    if SITES_D.has_key(siteid):
+    if siteid in SITES_D:
         SITES_D[siteid][tier].append((fy, ly))
         SITES_D[siteid]['FY'] = min(SITES_D[siteid]['FY'], fy)
         SITES_D[siteid]['LY'] = max(SITES_D[siteid]['LY'], ly)
@@ -459,7 +459,7 @@ for e in SITES_TIERS_FOLDERS:
 
 
     # sites folders
-    if SITES_FOLDERS_D.has_key(siteid):
+    if siteid in SITES_FOLDERS_D:
         if SITES_FOLDERS_D[siteid] != sitedir:
             msg = "Multiple folders used for site {s}: {f1} and {f2}".format(s=siteid, f1=SITES_FOLDERS_D[siteid], f2=sitedir)
             log.critical(msg)

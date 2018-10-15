@@ -142,11 +142,11 @@ def plot_nee_unc(hh, dd, ww, mm, yy, title='', width=10, height=25, filename='ne
             hh_axis.fill_between(ts, r['data1'], r['data2'], color=r['color'], facecolor=r['color'], edgecolor=r['color'], alpha=r['alpha'], label=r['label'])
         for l in lines:
             hh_axis.plot_date(ts, l['data'], linestyle='', linewidth=1.5, marker='.', markersize=1, color=l['color'], alpha=r['alpha'], label=l['label'])
-        if hh.has_key('ranges2'):
+        if 'ranges2' in hh:
             ranges = hh['ranges2']
             for r in ranges:
                 hh_axis.fill_between(ts, r['data1'], r['data2'], color=r['color'], facecolor=r['color'], edgecolor=r['color'], alpha=r['alpha'], label=r['label'])
-        if hh.has_key('lines2'):
+        if 'lines2' in hh:
             lines = hh['lines2']
             for l in lines:
                 hh_axis.plot_date(ts, l['data'], linestyle='', linewidth=1.5, marker='.', markersize=1, color=l['color'], alpha=r['alpha'], label=l['label'])
@@ -181,11 +181,11 @@ def plot_nee_unc(hh, dd, ww, mm, yy, title='', width=10, height=25, filename='ne
             dd_axis.fill_between(ts, r['data1'], r['data2'], color=r['color'], facecolor=r['color'], edgecolor=r['color'], alpha=r['alpha'], label=r['label'])
         for l in lines:
             dd_axis.plot_date(ts, l['data'], linestyle='', linewidth=1.5, marker='.', markersize=2, color=l['color'], alpha=r['alpha'], label=l['label'])
-        if dd.has_key('ranges2'):
+        if 'ranges2' in dd:
             ranges = dd['ranges2']
             for r in ranges:
                 dd_axis.fill_between(ts, r['data1'], r['data2'], color=r['color'], facecolor=r['color'], edgecolor=r['color'], alpha=r['alpha'], label=r['label'])
-        if dd.has_key('lines2'):
+        if 'lines2' in dd:
             lines = dd['lines2']
             for l in lines:
                 dd_axis.plot_date(ts, l['data'], linestyle='', linewidth=1.5, marker='.', markersize=2, color=l['color'], alpha=r['alpha'], label=l['label'])
@@ -220,11 +220,11 @@ def plot_nee_unc(hh, dd, ww, mm, yy, title='', width=10, height=25, filename='ne
             ww_axis.fill_between(ts, r['data1'], r['data2'], color=r['color'], facecolor=r['color'], edgecolor=r['color'], alpha=r['alpha'], label=r['label'])
         for l in lines:
             ww_axis.plot_date(ts, l['data'], linestyle='-', linewidth=1.5, marker='', markersize=2, color=l['color'], alpha=r['alpha'], label=l['label'])
-        if ww.has_key('ranges2'):
+        if 'ranges2' in ww:
             ranges = ww['ranges2']
             for r in ranges:
                 ww_axis.fill_between(ts, r['data1'], r['data2'], color=r['color'], facecolor=r['color'], edgecolor=r['color'], alpha=r['alpha'], label=r['label'])
-        if ww.has_key('lines2'):
+        if 'lines2' in ww:
             lines = ww['lines2']
             for l in lines:
                 ww_axis.plot_date(ts, l['data'], linestyle='-', linewidth=1.5, marker='', markersize=2, color=l['color'], alpha=r['alpha'], label=l['label'])
@@ -259,11 +259,11 @@ def plot_nee_unc(hh, dd, ww, mm, yy, title='', width=10, height=25, filename='ne
             mm_axis.fill_between(ts, r['data1'], r['data2'], color=r['color'], facecolor=r['color'], edgecolor=r['color'], alpha=r['alpha'], label=r['label'])
         for l in lines:
             mm_axis.plot_date(ts, l['data'], linestyle='-', linewidth=1.5, marker='', markersize=4, color=l['color'], alpha=r['alpha'], label=l['label'])
-        if mm.has_key('ranges2'):
+        if 'ranges2' in mm:
             ranges = mm['ranges2']
             for r in ranges:
                 mm_axis.fill_between(ts, r['data1'], r['data2'], color=r['color'], facecolor=r['color'], edgecolor=r['color'], alpha=r['alpha'], label=r['label'])
-        if mm.has_key('lines2'):
+        if 'lines2' in mm:
             lines = mm['lines2']
             for l in lines:
                 mm_axis.plot_date(ts, l['data'], linestyle='-', linewidth=1.5, marker='', markersize=4, color=l['color'], alpha=r['alpha'], label=l['label'])
@@ -300,11 +300,11 @@ def plot_nee_unc(hh, dd, ww, mm, yy, title='', width=10, height=25, filename='ne
             yy_axis.fill_between(ts, r['data1'], r['data2'], color=r['color'], facecolor=r['color'], edgecolor=r['color'], alpha=r['alpha'], label=r['label'])
         for l in lines:
             yy_axis.plot_date(ts, l['data'], linestyle='-', linewidth=1.5, marker='', markersize=4, color=l['color'], alpha=r['alpha'], label=l['label'])
-        if yy.has_key('ranges2'):
+        if 'ranges2' in yy:
             ranges = yy['ranges2']
             for r in ranges:
                 yy_axis.fill_between(ts, r['data1'], r['data2'], color=r['color'], facecolor=r['color'], edgecolor=r['color'], alpha=r['alpha'], label=r['label'])
-        if yy.has_key('lines2'):
+        if 'lines2' in yy:
             lines = yy['lines2']
             for l in lines:
                 yy_axis.plot_date(ts, l['data'], linestyle='-', linewidth=1.5, marker='', markersize=4, color=l['color'], alpha=r['alpha'], label=l['label'])
@@ -787,4 +787,3 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
 
 if __name__ == '__main__':
     sys.exit("ERROR: cannot run independently")
-
