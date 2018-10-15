@@ -2,7 +2,7 @@
 oneflux.partition.nighttime
 
 For license information:
-see LICENSE file or headers in oneflux.__init__.py 
+see LICENSE file or headers in oneflux.__init__.py
 
 From scratch implementation from PV-Wave cleaned-up code, nighttime method
 
@@ -36,7 +36,7 @@ def partitioning_nt(datadir, siteid, sitedir, prod_to_compare, perc_to_compare, 
     """
     NT partitioning wrapper function.
     Handles all "versions" (percentiles, CUT/VUT, years, etc)
-    
+
     :param datadir: main data directory (full path)
     :type datadir: str
     :param siteid: site flux id to be processed - in format CC-SSS
@@ -191,14 +191,14 @@ DAY_MIN_SW_IN = 10.0  # minimum shortwave radiation (W m-2) to be considered day
 def flux_partition(data, lat, tempvar='tair', nomsg=False, temp_output_filename=''):
     """
     Main flux partitioning function (for a single dataset)
-    
+
     :param data: data structure for partitioning
     :type data: numpy.ndarray
     :param lat: site latitude
     :type lat: float
     :param tempvar: temperature variable to be used (e.g., tair or tsoil)
     :type tempvar: str
-    :param nomsg: hide messages flag (not used in this implementation) 
+    :param nomsg: hide messages flag (not used in this implementation)
     :type nomsg: boolean
     """
     _log.debug('Started NT flux partition main function')
@@ -282,7 +282,7 @@ def flux_partition(data, lat, tempvar='tair', nomsg=False, temp_output_filename=
                     est_e0_se_list.append(e0_se)
                     est_residuals_list.append(residuals)
                     est_covariance_matrices_list.append(covariance_matrix)
-                    indices_half_list.append(w_where[w_len / 2])
+                    indices_half_list.append(w_where[w_len // 2])
                     indices_first_list.append(w_where[0])
                     indices_last_list.append(w_where[-1])
                     indices_len_list.append(w_len)
@@ -478,7 +478,7 @@ def flux_partition(data, lat, tempvar='tair', nomsg=False, temp_output_filename=
 def reanalyse_rref(data, e0, tempvar='tair', step=4, moving_window=8):
     """
     Estimates reference respiration (rref) values based on fixed
-    temperature sensitivity value (e0)  
+    temperature sensitivity value (e0)
 
     :param data: data structure for partitioning
     :type data: numpy.ndarray
@@ -559,13 +559,13 @@ def reanalyse_rref(data, e0, tempvar='tair', step=4, moving_window=8):
 def ipolmiss(data, variable):
     """
     Interpolates missing values in data for variable
-    (changes data object directly)  
+    (changes data object directly)
 
     Note: original code allowed multiple variables to be interpolated
           in a single call to ipolmiss, but only used as a single variable
           at a time; this implementation assumes single variable for
           each call
-    
+
     :param data: data structure for partitioning
     :type data: numpy.ndarray
     :param variable: variable to be interpolated
@@ -614,8 +614,8 @@ def ipolmiss(data, variable):
 def ipolmiss_vector(array, order, exact=True):
     """
     Interpolates array
-    (TODO: finish implementation; not used in main branch of processing code) 
-    
+    (TODO: finish implementation; not used in main branch of processing code)
+
     :param array: array to be interpolated
     :type array: numpy.ndarray (1D)
     :param order: order of polinomial to be used
@@ -660,7 +660,7 @@ BR_PERC = 10.0
 def nlinlts1(data, func=lloyd_taylor, depvar='neenight', indepvar='tair', npara=2, xguess=[2.0, 200.0], trim_perc=BR_PERC):
     """
     Main non-linear least-squares driver function
-    
+
     :param data: data structure for partitioning
     :type data: numpy.ndarray
     :param func: function to be optimized
@@ -671,7 +671,7 @@ def nlinlts1(data, func=lloyd_taylor, depvar='neenight', indepvar='tair', npara=
     :type indepvar: str
     :param npara: number of parameters to be optimized
     :type npara: int
-    :param xguess: list with initial/starting guesses for variables to be optimized 
+    :param xguess: list with initial/starting guesses for variables to be optimized
     :type xguess: list
     :param trim_perc: precentage to trim from residual values
     :type trim_perc: float
@@ -797,7 +797,7 @@ def pct(array, percent):
     """
     Calculates "percent" percentile of array -- not really a percentile,
     but similar intention. Following implementation in original code.
-    
+
     :param array: 1-d array to be used in calculation
     :type array: numpy.ndarray
     :param percent: target percent value for percentile
@@ -838,16 +838,16 @@ NO_CONVERGENCE_RETRY = 20  # multiplicative factor to increase number of iterati
 def least_squares(func, initial_guess, entries, iterations=None, stop=False, return_residuals_cov_mat=False):
     """
     Wrapper for least squares paramater optimization
-    
+
     Function used here (legacy wrapper):
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.leastsq.html
-    
+
     Alternative function (more options, better documented, requires more config):
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.least_squares.html
-    
+
     Underlying method implementation (from MINPACK Fortran implementation):
     https://www.math.utah.edu/software/minpack/minpack/lmdif.html
-    
+
     :param func: function with N parameters to be optimized
     :type func: function
     :param initial_guess: array with initial guess for N parameters
@@ -898,7 +898,7 @@ def compu(data, func, columns, parameters={}, skip_if_present=False, no_missing=
     """
     Computes function on columns [1:] of data array, assigning result to first column [0]
     Uses actual functions and not text expressions as in the original PV-Wave code
-    
+
     :param data: data structure for partitioning
     :type data: numpy.ndarray
     :param func: function to be called with parameters from column
