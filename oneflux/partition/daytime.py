@@ -2,11 +2,11 @@
 oneflux.partition.daytime
 
 For license information:
-see LICENSE file or headers in oneflux.__init__.py 
+see LICENSE file or headers in oneflux.__init__.py
 
 From scratch implementation from PV-Wave cleaned-up code, daytime method
 
-@author: Gilberto Pastorello and Abdelrahman Elbashandy 
+@author: Gilberto Pastorello and Abdelrahman Elbashandy
 @contact: gzpastorello@lbl.gov & aaelbashandy@lbl.gov
 @date: 2017-05-22
 '''
@@ -32,6 +32,8 @@ from oneflux.utils.files import check_create_directory
 from oneflux.utils.helper_fns import islessthan
 
 from oneflux.graph.compare import plot_comparison
+
+from builtins import int
 
 _log = logging.getLogger(__name__)
 
@@ -59,7 +61,7 @@ PARAM_DTYPE = [
 class ONEFluxPartitionBrokenOptError(ONEFluxPartitionError):
     """
     Pipeline ONEFlux error - Partitioning specific - DT optimization fail
-    
+
     """
     def __init__(self, message, site_id=None, year=None, day_begin=None, day_end=None, prod=None, perc=None):
 
@@ -244,8 +246,8 @@ def flux_part_gl2010(data, name_file, name_out, dt_output_dir, site_id, ustar_ty
     :Task:  Main flux partitioning function (for day time)
 
     :Explanation:   This is the main function that handles the main processing
-                    of the data. 
-                    
+                    of the data.
+
                     - We handle filling tha gaps in the 'NEE' variable using
                     'uncert_via_gapFill'.
                     - Call estimate_params to get the best parameters or weights
@@ -394,9 +396,9 @@ def compute_flux(data, params, dt_output_dir, site_id, ustar_type, percentile_nu
     :Explanation:   We iterate over the "okay" parameters we got from estimate_params.
                     Then we get the data in each window while keeping in mind
                     the position of each window. i.e we handle the data of
-                    the first window and the last window. We're trying to 
+                    the first window and the last window. We're trying to
                     figure out the range we're covering within each window.
-                    In params, we saved the value day_begin of each window in the 
+                    In params, we saved the value day_begin of each window in the
                     the last column. That's why we're linking params[n_params - 1, ...].
                     "day_begin" of the last window to the "day_begin" of the next
                     window; and that's the range we're covering.
@@ -404,7 +406,7 @@ def compute_flux(data, params, dt_output_dir, site_id, ustar_type, percentile_nu
                     Lets keep in mind that these are only the "okay" parameters,
                     so if a specific window was "not-okay", then we might be connecting
                     a larger ranged window with the algorithm mentioned. For example,
-                    if the previous day_begin window was at 100 and each window size is 
+                    if the previous day_begin window was at 100 and each window size is
                     100, and there are no "not-okay" windows, then we are covering
                     the range from data-point 100 to data-point 200. But if there were
                     "not-okay" windows, then we might see a window with a range from
@@ -412,16 +414,16 @@ def compute_flux(data, params, dt_output_dir, site_id, ustar_type, percentile_nu
                     is "not-okay".
 
                     Finally, we iterate over each data-point "j" in the whole dataset.
-                    i.e j could represent around 17,000 data points. For each 
-                    data-point "j", there could be up to two windows that have 
-                    covered this data-point "j", as the windows are overlapped. 
-                    So we check how many windows have covered it. If there are two 
+                    i.e j could represent around 17,000 data points. For each
+                    data-point "j", there could be up to two windows that have
+                    covered this data-point "j", as the windows are overlapped.
+                    So we check how many windows have covered it. If there are two
                     windows covering this data-point "j", then we are going
                     to assign weights to each window and multiply the Reco and GPP
                     values we got previously with it's assigned weight. We get the
                     final Reco and GPP values by adding the multiplied values together.
                     If there is only one window covering this data-point "j", then
-                    we are going to assign the final Reco and GPP values to the 
+                    we are going to assign the final Reco and GPP values to the
                     previously calculated Reco and GPP.
 
 
@@ -682,9 +684,9 @@ def compute_var(data, params, whichmodel, JTJ_inv, res_cor):
     :type params: numpy.ndarray
     :param whichmodel: integer specifying the model type.
     :type whichmodel: int
-    :param JTJ_inv: 
+    :param JTJ_inv:
     :type JTJ_inv: numpy.ndarray
-    :param res_cor: 
+    :param res_cor:
     :type res_cor: numpy.ndarray
     """
     _log.info("Starting compute_var of daytime")
@@ -804,11 +806,11 @@ def varpred(func, data, JTJ_inv, optpara, res, params_filled_arr, params_filled_
     :type func: str
     :param data: data structure for partitioning
     :type data: numpy.ndarray
-    :param JTJ_inv: 
+    :param JTJ_inv:
     :type JTJ_inv: numpy.ndarray
     :param optpara: optimized parameters to be applied to the model
     :type optpara: numpy.ndarray
-    :param res: 
+    :param res:
     :type res: numpy.ndarray
     :param params_filled_arr: Array of replicated E0 values
     :type params_filled_arr: numpy.ndarray
@@ -867,24 +869,24 @@ def varpred(func, data, JTJ_inv, optpara, res, params_filled_arr, params_filled_
 
 def estimate_parasets(data, winsize, fguess, trimperc, name_out, dt_output_dir, site_id, ustar_type, percentile_num, year):
     """
-    :Task:  This function is responsible to find the best parameters to 
+    :Task:  This function is responsible to find the best parameters to
             represent the model that will fit the data the most.
 
     :Explanation:   To understand this function we have to know the terms ok and nok
                     for okay and not-okay. Basically the algorithm is about iterating
-                    through a range of days (The days are calculated and being saved 
+                    through a range of days (The days are calculated and being saved
                     to day_begin and day_end); each range represents a window.
 
                     We go through a process of parameter evaluation and based
                     on the retrieved parameters, we decide if they're okay or not okay,
                     and save them to the proper arrays, whether it's params_ok or params_nok.
 
-                    To effectively come up with the closely best parameters, we try 
+                    To effectively come up with the closely best parameters, we try
                     3 different guesses in the "for j" loop. After trying the 3 different
                     guesses and find the most suiltable parameters of the 3, we validate
                     them by calling the function "check_parameters".
 
-                    Based on specified conditions, we decide which model function to 
+                    Based on specified conditions, we decide which model function to
                     use to come up with the proper parameters (e.g lloyd_taylor, hlrc_lloydvpd, etc).
 
 
@@ -907,7 +909,7 @@ def estimate_parasets(data, winsize, fguess, trimperc, name_out, dt_output_dir, 
     ###############################################
 
     #### Creating the arrays we're going to use
-    n_parasets = long(365 / winsize) * 2
+    n_parasets = int(365 / winsize) * 2
     params = numpy.zeros((3, 2 * len(fguess), n_parasets), dtype=FLOAT_PREC)
     params_ok = numpy.zeros((2 * len(fguess), n_parasets), dtype=FLOAT_PREC)
     params_nok = numpy.zeros((2 * len(fguess), n_parasets), dtype=FLOAT_PREC)
@@ -941,7 +943,7 @@ def estimate_parasets(data, winsize, fguess, trimperc, name_out, dt_output_dir, 
     #end of my code
 
     '''
-    n_parasets = long(365 / winsize) * 2
+    n_parasets = int(365 / winsize) * 2
     params = fltarr(n_parasets, 2 * n_elements(fguess), 3)
     params_ok = fltarr(n_parasets, 2 * n_elements(fguess))
     params_nok = fltarr(n_parasets, 2 * n_elements(fguess))
@@ -1031,15 +1033,15 @@ def estimate_parasets(data, winsize, fguess, trimperc, name_out, dt_output_dir, 
         '''
         print("name_out, day_begin2, day_end2")
         print("name_out, " + str(day_begin2) + ", " + str(day_end2))
-        print("long((day_begin + winsize / 2.0) * 48.0)")
-        print(long((day_begin + winsize / 2.0) * 48.0))
+        print("int((day_begin + winsize / 2.0) * 48.0)")
+        print(int((day_begin + winsize / 2.0) * 48.0))
         '''
 
-        #ind[i][:][:] = long((day_begin + winsize / 2.0) * 48.0)
-        #ind[i, :, :] = long((day_begin + winsize / 2.0) * 48.0)
+        #ind[i][:][:] = int((day_begin + winsize / 2.0) * 48.0)
+        #ind[i, :, :] = int((day_begin + winsize / 2.0) * 48.0)
 
         #### Calculate the first index of the window we're using now
-        ind[:, :, i] = long((day_begin + winsize / 2.0) * 48.0)
+        ind[:, :, i] = int((day_begin + winsize / 2.0) * 48.0)
 
         '''
         #print("ind[:, :, i]")
@@ -1934,12 +1936,12 @@ def percentiles_fn(data, columns, values=[0.0, 0.25, 0.5, 0.75, 1.0], remove_mis
 
         #### Setting ind to the percentile wanted
         if values[i] <= 0.5:
-            ind = long(values[i] * n_elements)
+            ind = int(values[i] * n_elements)
         else:
-            ind = long(values[i] * (n_elements + 1))
+            ind = int(values[i] * (n_elements + 1))
 
         if ind >= n_elements:
-            ind = n_elements - long(1)
+            ind = n_elements - int(1)
 
         if i == 0:
             result = data[columns[0]][sorted_index_arr[ind]]
@@ -1955,11 +1957,11 @@ def uncert_via_gapFill(data, var, del_flag=False , nomsg=False, maxMissFrac=1.0,
     :Task: fill gaps of the chosen varname or column (for day time)
 
     :Explanation:   We fill the gaps by picking all the nulls in a certain window and
-                    average the non gapped values in that window to fill the gaps in 
+                    average the non gapped values in that window to fill the gaps in
                     that window with the calculated average value.
                     We do this 6 times. Each time we cover certain conditions to fill
                     the gaps with (e.g TA_TOLERANCE, etc).
-    
+
     :param data: data structure for partitioning
     :type data: numpy.ndarray
     """
@@ -2571,7 +2573,7 @@ def compare_results_pv_py(py_data, pvwave_file_path, var, file_basename, single_
         plot_comparison(timestamp_list=timestamp_list_temp, data1=single_array, data2=pvwave_data[var], label1='Python', label2='PV-Wave', title=var + " Data preparation comparison between pv-wave and python after error range", basename=figure_basename, show=False)
         if save_csv:
             numpy.savetxt(str(file_basename + '.csv'), numpy.column_stack((single_array, pvwave_data[var])), delimiter=',', fmt='%s')
-        
+
         if show_diff_index:
             print("Big difference Indices between the 2 arrays:")
             print(numpy.where(abs(single_array - pvwave_data[var]) > show_diff_thresh)[0])
