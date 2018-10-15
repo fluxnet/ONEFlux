@@ -69,7 +69,7 @@ from oneflux.pipeline.common import METEO_INFO, NEE_INFO, NEEDIR_PATTERN, NEE_PE
                                      NEE_PERC_USTAR_CUT, NEE_PERC_USTAR_VUT_PATTERN, NEE_PERC_USTAR_VUT, \
                                      UNC_INFO, UNC_INFO_ALT, PRODFILE_AUX_TEMPLATE, RESOLUTION_LIST, \
                                      MPDIR, CPDIR, test_pattern
-from __builtin__ import enumerate
+from builtins import enumerate
 
 log = logging.getLogger(__name__)
 
