@@ -2,7 +2,7 @@
 Changes to ONEFlux will be documented in this file.
 
 
-## 0.4.0-beta - 2018-02-08
+## 0.4.0-beta - 2019-02-08
 ### Added
 - Add changelog
 - Add optional handling of missing downscaling input files to not stop execution
