@@ -35,7 +35,7 @@ HOSTNAME = socket.gethostname()
 NOW_TS = datetime.now().strftime("%Y%m%dT%H%M%S")
 
 ERA_FIRST_TIMESTAMP_START = '198901010000'
-ERA_LAST_TIMESTAMP_START = '201412312330' # should be 2015? Failing for some sites
+ERA_LAST_TIMESTAMP_START = '201412312330'
 
 HOME_DIRECTORY = os.path.expanduser('~')
 TOOL_DIRECTORY = os.path.join(HOME_DIRECTORY, 'bin', 'oneflux')

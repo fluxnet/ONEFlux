@@ -48,6 +48,7 @@ Open Network-Enabled Flux Processing Pipeline (ONEFlux)
 @date: 2017-01-31
 '''
 
+VERSION_PROCESSING = 3
 VERSION_METADATA = 'beta'
 VERSION = "0.3.0-{m}".format(m=VERSION_METADATA)
 

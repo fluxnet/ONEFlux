@@ -1122,6 +1122,7 @@ def create_data_structures(ustar_type, whole_dataset_nee, whole_dataset_meteo, p
                       'Rrefoptord', 'Rrefoptord_SE', 'RrefoptTRIM', 'RrefoptTRIM_SE', # TRIM and ROB are the same variables
                       'Reco_2', 'Reco_2rob', # TRIM and ROB are the same variables
                       'GPP_2', 'GPP_2rob', 'GPP_2e', # TRIM and ROB are the same variables
+                      'GPP_2_nongf', 'GPP_2rob_nongf', 'GPP_2e_nongf', # TRIM and ROB are the same variables
                       'ls_status', # optimization status code
                       'pvalue', # p-value (measured NEE vs NEE from estimated parameters)
                       'nee_std', # std dev of NEE

@@ -235,7 +235,7 @@ def load_ustar_vut(siteid, sitedir, year_range, nee_perc_ustar_vut_template=NEE_
         nee_perc_ustar_vut_values[year]['50.00'] = nee_perc_ustar_vut_values[year]['50']
     return nee_perc_ustar_vut_values
 
-def generate_nee(siteid, sitedir, first_year, last_year, version_data, version_processing, pipeline=None):
+def generate_nee(datadir, siteid, sitedir, first_year, last_year, version_data, version_processing, pipeline=None):
     log.debug("{s}: starting generation of AUXNEE file".format(s=siteid))
 
     nee_info_template = (NEE_INFO if pipeline is None else pipeline.nee_info)
@@ -249,16 +249,29 @@ def generate_nee(siteid, sitedir, first_year, last_year, version_data, version_p
 
     ### TEST year range for real range. Some sites have only energy/water fluxes for some of the first or last years, so NEE has shorter range
     nee_perc_ustar_cut = nee_perc_ustar_cut_template.format(s=siteid, sd=sitedir, fy=first_year, ly=last_year)
-    if not os.path.isfile(nee_perc_ustar_cut):
+    if os.path.isfile(nee_perc_ustar_cut):
+        find_nee_perc_ustar_cut = test_pattern(tdir=os.path.join(datadir, sitedir, NEEDIR_PATTERN), tpattern=NEE_PERC_USTAR_CUT_PATTERN.format(s=siteid, sd=sitedir, fy='????', ly='????'), label='aux_info_files', log_only=True)
+        if len(find_nee_perc_ustar_cut) == 1:
+            log.warning("{s}: USTAR CUT percentiles file FOUND: {f}".format(s=siteid, f=find_nee_perc_ustar_cut))
+            find_nee_perc_ustar_cut = find_nee_perc_ustar_cut[0]
+            _, find_first_year, find_last_year, _ = find_nee_perc_ustar_cut.split('_', 3)
+            if find_first_year != first_year:
+                log.error("{s}: first year ({fy1}) differs from USTAR CUT percentiles file first year ({fy2}: {f}".format(s=siteid, f=find_nee_perc_ustar_cut, fy1=first_year, fy2=find_first_year))
+            if find_last_year != last_year:
+                log.error("{s}: last year ({fy1}) differs from USTAR CUT percentiles file last year ({fy2}: {f}".format(s=siteid, f=find_nee_perc_ustar_cut, fy1=last_year, fy2=find_last_year))
+            first_year, last_year = int(first_year), int(last_year)
+        else:
+            log.warning("{s}: incorrect number of NEE_PERC_USTAR_CUT files found (1-2 years record?): {l}".format(s=siteid, l=find_nee_perc_ustar_cut))
+    else:
         log.warning("{s}: looking for alternate USTAR CUT percentiles file, NOT found: {f}".format(s=siteid, f=nee_perc_ustar_cut))
-        alt_nee_perc_ustar_cut = test_pattern(tdir=os.path.join(sitedir, NEEDIR_PATTERN), tpattern=NEE_PERC_USTAR_CUT_PATTERN.format(s=siteid, sd=sitedir, fy='????', ly='????'), label='aux_info_files', log_only=True)
+        alt_nee_perc_ustar_cut = test_pattern(tdir=os.path.join(datadir, sitedir, NEEDIR_PATTERN), tpattern=NEE_PERC_USTAR_CUT_PATTERN.format(s=siteid, sd=sitedir, fy='????', ly='????'), label='aux_info_files', log_only=True)
         if len(alt_nee_perc_ustar_cut) == 1:
             log.warning("{s}: alternate USTAR CUT percentiles file FOUND: {f}".format(s=siteid, f=alt_nee_perc_ustar_cut))
             alt_nee_perc_ustar_cut = alt_nee_perc_ustar_cut[0]
             _, first_year, last_year, _ = alt_nee_perc_ustar_cut.split('_', 3)
             first_year, last_year = int(first_year), int(last_year)
         else:
-            log.warning("{s}: incorrect number of NEE_PERC_USTAR_CUT files found (1-2 years record?): {l}".format(s=siteid, l=alt_nee_perc_ustar_cut))
+            log.warning("{s}: incorrect number of alternate NEE_PERC_USTAR_CUT files found (1-2 years record?): {l}".format(s=siteid, l=alt_nee_perc_ustar_cut))
 
 #        # PREVIOU SINGLE YEAR IMPLEMENTATION
 #        alt_nee_perc_ustar_cut = NEE_PERC_USTAR_CUT.format(s=siteid, sd=sitedir, fy=int(first_year) + 1, ly=last_year)
@@ -382,7 +395,7 @@ def generate_nee(siteid, sitedir, first_year, last_year, version_data, version_p
                     else:
                         raise ONEFluxError("{s}: Unknown RECO/GPP VUT REF percentile/threshold entry in line: '{l}'".format(s=siteid, l=line.strip()))
                     threshold = line.strip().lower().split('ustar percentile')[1].strip().split()[0].strip()
-                    ustar = nee_perc_ustar_vut_values[year][threshold]
+                    ustar = (nee_perc_ustar_vut_values[year][threshold] if nee_perc_ustar_vut_values.has_key(year) else -9999)
                     if unc_ref_ustar_perc[key][res].has_key(year):
                         raise ONEFluxError("{s} duplicated entry for {v} REF VUT USTAR: {f}".format(s=siteid, f=nee_info, v=variable))
                     else:
@@ -502,12 +515,12 @@ def generate_nee(siteid, sitedir, first_year, last_year, version_data, version_p
 
 # TODO: Make AUX files Tier aware..........
 
-def run_site_aux(siteid, sitedir, first_year, last_year, version_data, version_processing, pipeline=None):
+def run_site_aux(datadir, siteid, sitedir, first_year, last_year, version_data, version_processing, pipeline=None):
     log.info("Starting generation of AUX-INFO files for {s}".format(s=siteid))
 
     aux_file_list = []
     aux_file_list.append(generate_meteo(siteid=siteid, sitedir=sitedir, first_year=first_year, last_year=last_year, version_data=version_data, version_processing=version_processing, pipeline=pipeline))
-    aux_file_list.append(generate_nee(siteid=siteid, sitedir=sitedir, first_year=first_year, last_year=last_year, version_data=version_data, version_processing=version_processing, pipeline=pipeline))
+    aux_file_list.append(generate_nee(datadir=datadir, siteid=siteid, sitedir=sitedir, first_year=first_year, last_year=last_year, version_data=version_data, version_processing=version_processing, pipeline=pipeline))
 
     log.info("Finished generation of AUX-INFO files for {s}".format(s=siteid))
     return aux_file_list

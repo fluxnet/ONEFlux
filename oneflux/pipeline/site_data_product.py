@@ -29,7 +29,7 @@ from oneflux.utils.files import check_create_directory, file_stat, zip_file_list
 from oneflux.pipeline.variables_codes import VARIABLE_LIST_FULL, VARIABLE_LIST_SUB, PERC_LABEL, \
                                               TIMESTAMP_VARIABLE_LIST, FULL_D, QC_FULL_D
 from oneflux.pipeline.aux_info_files import run_site_aux
-from oneflux.pipeline.common import QCDIR, METEODIR, NEEDIR, ENERGYDIR, UNCDIR, PRODDIR, \
+from oneflux.pipeline.common import QCDIR, METEODIR, NEEDIR, ENERGYDIR, UNCDIR, PRODDIR, WORKING_DIRECTORY, \
                                      PRODFILE_TEMPLATE, ZIPFILE_TEMPLATE, \
                                      FULLSET_STR, SUBSET_STR, RESOLUTION_LIST, STRTEST, INTTEST, \
                                      ERA_STR, \
@@ -1049,6 +1049,7 @@ def check_lengths(siteid, meteo, energy, nee, unc, resolution):
 
 def run_site(siteid, sitedir, first_t1, last_t1, version_processing=1, version_data=1, pipeline=None):
     if pipeline is None:
+        datadir = WORKING_DIRECTORY
         meteo = METEODIR.format(sd=sitedir)
         nee = NEEDIR.format(sd=sitedir)
         energy = ENERGYDIR.format(sd=sitedir)
@@ -1058,6 +1059,7 @@ def run_site(siteid, sitedir, first_t1, last_t1, version_processing=1, version_d
         zipfile_template = ZIPFILE_TEMPLATE
         prodfile_years_template = PRODFILE_YEARS_TEMPLATE
     else:
+        datadir = pipeline.data_dir_main
         meteo = pipeline.meteo_proc.meteo_proc_dir
         nee = pipeline.nee_proc.nee_proc_dir
         energy = pipeline.energy_proc.energy_proc_dir
@@ -1248,7 +1250,7 @@ def run_site(siteid, sitedir, first_t1, last_t1, version_processing=1, version_d
     log.debug("{s}: wrote years metadata file: {f}".format(s=siteid, f=prodfile_years))
 
     # generate aux and info files
-    aux_file_list = run_site_aux(siteid=siteid, sitedir=sitedir, first_year=first_year, last_year=last_year, version_data=version_data, version_processing=version_processing, pipeline=pipeline)
+    aux_file_list = run_site_aux(datadir=datadir, siteid=siteid, sitedir=sitedir, first_year=first_year, last_year=last_year, version_data=version_data, version_processing=version_processing, pipeline=pipeline)
     if full_filelist_t1:
         full_filelist_t1.extend(aux_file_list)
         full_filelist_t1.extend(erai_filelist)
@@ -1310,29 +1312,4 @@ def run_site(siteid, sitedir, first_t1, last_t1, version_processing=1, version_d
 
 
 if __name__ == '__main__':
-#    load_qcdata(siteid='BE-Lon', ddir='/Users/gilberto/Documents/Dropbox (Climate)/fluxnet/data/FLUXNET2015/BE-Lon_test/01_qc_visual/qcv_files/', firsty=2004, lasty=2014)
-    siteid = 'US-Cop'
-    sitedir = '/Users/gilberto/Documents/Dropbox (Climate)/fluxnet/data/FLUXNET2015/US-Cop-20160311-ready_processamento_completato_il_20160414_zip/01_qc_visual/qcv_files/'
-    qcdata = load_qcdata(siteid=siteid, ddir=sitedir, firsty=2001, lasty=2007, output_resolution='HR')
-    log.debug("{s}: updating names for qc data".format(s=siteid))
-    qcdata = update_names_qc(data=qcdata)
-    output_data_dd, output_data_ww, output_data_mm, output_data_yy = aggregate_qcdata(qcdata=qcdata)
-    log.debug("FINISHED")
-    sys.exit("FINISHED")
-
-
-#    parser = argparse.ArgumentParser()
-#    parser.add_argument('siteid', metavar="SITEID", help="FLUXNET Site ID", type=str, nargs=1)
-#    parser.add_argument('sitedir', metavar="SITEDIR", help="File with FileList", type=str, nargs=1)
-#    parser.add_argument('first_t1', metavar="FIRST_T1", help="First tier 1 site-year", type=str, nargs=1)
-#    parser.add_argument('last_t1', metavar="LAST_T1", help="Last tier 1 site-year", type=str, nargs=1)
-#
-#    args = parser.parse_args()
-#
-#    csv_manifest_entries, zip_manifest_entries = run_site(siteid=args.siteid[0],
-#                                                          sitedir=args.sitedir[0],
-#                                                          first_t1=args.first_t1[0],
-#                                                          last_t1=args.last_t1[0])
-#    print 'CSVs: ', csv_manifest_entries
-#    print 'ZIPs: ', zip_manifest_entries
-    pass
+    sys.exit("ERROR: cannot run independently")

@@ -638,8 +638,10 @@ def compute_flux(data, params, dt_output_dir, site_id, ustar_type, percentile_nu
             '''
 
         #### If there is no window covering this data-point "j", then exit.
-        else:
-            exit()
+        else: # TODO: investigate and replace behavior (same as broken opt error?)
+            msg = "DT EXIT EXCEPTION: no window covering data point j"
+            _log.critical(msg)
+            raise ONEFluxPartitionError(msg)
     #### end "for j"
 
     #print("Reco")
@@ -1714,8 +1716,10 @@ def estimate_parasets(data, winsize, fguess, trimperc, name_out, dt_output_dir, 
         '''
 
         #### This if statement is weird but it's in the pvwave code
-        if ind[jmin[0], 1, i] == 6616:
-            exit()
+        if ind[jmin[0], 1, i] == 6616: # TODO: investigate and replace statement
+            msg = "DT EXIT EXCEPTION: exact number of indices"
+            _log.critical(msg)
+            raise ONEFluxPartitionError(msg)
 
         #### If the current set of parameters is valid
         #### then we choose it for the current window

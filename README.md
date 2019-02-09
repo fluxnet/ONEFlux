@@ -80,6 +80,8 @@ optional arguments:
                         output, generates new)
   --mcr MCR_DIRECTORY   Path to MCR directory
   --recint {hh,hr}      Record interval for site
+  --versionp VERSIONP   Version of processing
+  --versiond VERSIOND   Version of data
 ```
 
 ## Running examples
@@ -187,9 +189,9 @@ and the outputs will be generated, respectively, in the directories:
 
 - **Bug for full years missing.** _Known bug, will be addressed in future updates:_ there are situations when a full year of data missing for CO2 fluxes, or for energy/water fluxes, or micromet variables (or combinations of them), will cause the code to break. 
 
-- **Bug in hourly resolution.** _Known bug, will be addressed in future updates:_ sites using hourly resolution (instead of half-hourly) will fail the execution of the last few steps (all steps up to, and including, flux partitioning, work as expected but the final product is not generated).
-
 - **Bug in input for nighttime partition.** _Known bug, will be addressed in future updates:_ Certain rare conditions in the USTAR threshold estimation can cause the nighttime partitioning to break for lack of data for one or more windows within the time series.
+
+- **Incompatibility with numpy version 1.16 or higher.** A change on how [numpy handles access to multiple fields in version 1.16](https://docs.scipy.org/doc/numpy-1.16.0/user/basics.rec.html#accessing-multiple-fields) broke many spots in the code _(to be corrected in future updates)_
 
 - **Default output messages.** The default logging level (both to the screen/standard output and to the log file) are set to the most verbose mode, showing all diagnostics and status messages, which can generate a large log file.
 

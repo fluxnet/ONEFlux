@@ -16,7 +16,7 @@ import logging
 import argparse
 import traceback
 
-from oneflux import ONEFluxError, log_config, log_trace
+from oneflux import ONEFluxError, log_config, log_trace, VERSION_PROCESSING, VERSION_METADATA
 from oneflux.tools.partition_nt import run_partition_nt, PROD_TO_COMPARE, PERC_TO_COMPARE
 from oneflux.tools.partition_dt import run_partition_dt
 from oneflux.tools.pipeline import run_pipeline, NOW_TS
@@ -44,6 +44,8 @@ if __name__ == '__main__':
     parser.add_argument('--mcr', help="Path to MCR directory", type=str, dest='mcr_directory', default=None)
     parser.add_argument('--ts', help="Timestamp to be used in processing IDs", type=str, dest='timestamp', default=NOW_TS)
     parser.add_argument('--recint', help="Record interval for site", type=str, choices=['hh', 'hr'], dest='recint', default='hh')
+    parser.add_argument('--versionp', help="Version of processing (hardcoded default)", type=str, dest='versionp', default=str(VERSION_PROCESSING))
+    parser.add_argument('--versiond', help="Version of data (hardcoded default)", type=str, dest='versiond', default=str(VERSION_METADATA))
     args = parser.parse_args()
 
     # setup logging file and stdout
@@ -81,7 +83,7 @@ if __name__ == '__main__':
         if args.command == 'all':
             run_pipeline(datadir=args.datadir, siteid=args.siteid, sitedir=args.sitedir, firstyear=firstyear, lastyear=lastyear,
                          prod_to_compare=prod, perc_to_compare=perc, mcr_directory=args.mcr_directory, timestamp=args.timestamp,
-                         record_interval=args.recint)
+                         record_interval=args.recint, version_data=args.versiond, version_proc=args.versionp)
         elif args.command == 'partition_nt':
             run_partition_nt(datadir=args.datadir, siteid=args.siteid, sitedir=args.sitedir, years_to_compare=range(firstyear, lastyear + 1),
                              py_remove_old=args.forcepy, prod_to_compare=prod, perc_to_compare=perc)

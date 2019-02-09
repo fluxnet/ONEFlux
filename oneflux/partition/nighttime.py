@@ -453,9 +453,24 @@ def flux_partition(data, lat, tempvar='tair', nomsg=False, temp_output_filename=
 
         # compute gpp and gpp_trim/rob
         # TODO: check on reco_e and gpp_e; needed?
+        # gapfilled
         data['gpp_2'] = NAN
         data['gpp_2rob'] = NAN
         data['gpp_2e'] = NAN
+
+        mask = not_nan(data['nee_f']) & not_nan(data['reco_2'])
+        data['gpp_2'][mask] = -data['nee_f'][mask] + data['reco_2'][mask]
+
+        mask = not_nan(data['nee_f']) & not_nan(data['reco_2rob'])
+        data['gpp_2rob'][mask] = -data['nee_f'][mask] + data['reco_2rob'][mask]
+
+        mask = not_nan(data['nee_f']) & not_nan(data['reco_2e_from_tair'])
+        data['gpp_2e'][mask] = -data['nee_f'][mask] + data['reco_2e_from_tair'][mask]
+
+        # non-gapfilled
+        data['gpp_2_nongf'] = NAN
+        data['gpp_2rob_nongf'] = NAN
+        data['gpp_2e_nongf'] = NAN
 
         mask = not_nan(data['nee']) & not_nan(data['reco_2'])
         data['gpp_2'][mask] = -data['nee'][mask] + data['reco_2'][mask]

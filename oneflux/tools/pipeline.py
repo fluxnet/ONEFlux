@@ -17,7 +17,7 @@ import argparse
 
 from datetime import datetime
 
-from oneflux import ONEFluxError, log_trace, VERSION_METADATA
+from oneflux import ONEFluxError, log_trace, VERSION_METADATA, VERSION_PROCESSING
 from oneflux.pipeline.wrappers import Pipeline
 from oneflux.pipeline.common import TOOL_DIRECTORY, MCR_DIRECTORY, ONEFluxPipelineError, NOW_TS
 from oneflux.tools.partition_nt import PROD_TO_COMPARE, PERC_TO_COMPARE
@@ -25,7 +25,7 @@ from oneflux.tools.partition_nt import PROD_TO_COMPARE, PERC_TO_COMPARE
 log = logging.getLogger(__name__)
 
 
-def run_pipeline(datadir, siteid, sitedir, firstyear, lastyear, version=VERSION_METADATA, prod_to_compare=PROD_TO_COMPARE, perc_to_compare=PERC_TO_COMPARE, mcr_directory=None, timestamp=NOW_TS, record_interval='hh'):
+def run_pipeline(datadir, siteid, sitedir, firstyear, lastyear, version_data=VERSION_METADATA, version_proc=VERSION_PROCESSING, prod_to_compare=PROD_TO_COMPARE, perc_to_compare=PERC_TO_COMPARE, mcr_directory=None, timestamp=NOW_TS, record_interval='hh'):
 
     sitedir_full = os.path.abspath(os.path.join(datadir, sitedir))
     if not sitedir or not os.path.isdir(sitedir_full):
@@ -48,7 +48,8 @@ def run_pipeline(datadir, siteid, sitedir, firstyear, lastyear, version=VERSION_
                     record_interval=record_interval,
                     fluxnet2015_first_t1=firstyear,
                     fluxnet2015_last_t1=lastyear,
-                    fluxnet2015_version_data=version,
+                    fluxnet2015_version_data=version_data,
+                    fluxnet2015_version_processing=version_proc,
                     ustar_cp_mcr_dir=mcr_directory,
                     qc_auto_execute=True,
                     ustar_mp_execute=True,
