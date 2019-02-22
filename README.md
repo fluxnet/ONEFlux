@@ -207,6 +207,10 @@ and the outputs will be generated, respectively, in the directories:
 [//]: # (## Troubleshooting)
 
 
+## Support and Funding (incomplete list) ##
+* U.S. Department of Energy's Office of Science, through the AmeriFlux Management Project
+* COOP+ H2020
+
 
 ## Contributors ##
 
