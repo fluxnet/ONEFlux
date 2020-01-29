@@ -1,14 +1,14 @@
 # ONEFlux Processing Pipeline
 
-ONEFlux (Open Network-Enabled Flux processing pipeline) is an eddy covariance data processing codes package.
+ONEFlux (Open Network-Enabled Flux processing pipeline) is an eddy covariance data processing codes package jointly developed by the [AmeriFlux Management Project](https://ameriflux.lbl.gov/), the [European Fluxes Database](http://www.europe-fluxdata.eu/), and the [ICOS Ecosystem Thematic Centre](http://www.icos-etc.eu/icos/). ONEFlux is used for the standard processing and data product creation for these networks.
 
 ONEFlux consolidates multiple computations to process half-hourly (or hourly) flux inputs in an automatic fashion, including friction velocity threshold estimation methods and filtering, gap-filling of micrometeorological and flux variables, partitioning of CO2 fluxes into ecosystem respiration and gross primary production, uncertainty estimates, and more.
 
-The current version of the code is compatible with the code base used to create the FLUXNET2015 dataset.
+The current version of the code is compatible with the code base used to create the [FLUXNET2015 dataset](https://fluxnet.fluxdata.org/data/fluxnet2015-dataset/), and data processed with ONEFlux can be used in conjunction with data from FLUXNET2015.
 
-The pipeline controlling code uses **Python version 2.7** (it should work with Python version 3.5 or later, but was not fully tested with these versions).
+The pipeline controlling code uses **Python version 2.7** (it should work with Python version 3.5 or later, but was not fully tested with these versions; update of the code to Python 3 is ongoing).
 
-**(THIS IS A LIMITED TESTING VERSION, PLEASE SEE [CAVEATS LIST](#caveats-and-known-limitations) BELOW.)** This iteration of the code is not fully in line with open source/free software development practices, but we intend to steadily move in that direction.
+**(THERE ARE CAVEATS AND KNOWN LIMITATIONS TO THIS CODE, PLEASE SEE [CAVEATS LIST](#caveats-and-known-limitations) BELOW.)** This iteration of the code is not fully in line with open source/free software development practices, but we intend to steadily move in that direction.
 
 
 ## Implemented steps
@@ -181,7 +181,7 @@ and the outputs will be generated, respectively, in the directories:
 
 - **Daytime partitioning method exceptions.** The current version of the implementation of the daytime flux partitioning method aimed at preserving the behavior of the code used to generate the FLUXNET2015 dataset. There are situations in which the non-linear least squares method fail for a window in the time series, stopping the execution. The solution implemented for the original implementation (mimicked in this version) would involve adding the failed window into a list of exception windows to be skipped when the execution is restarted. This is done automatically in this implementation, but is something that will be removed for future version, avoiding the failure conditions altogether.
 
-- **Performance issues.** The performance of a few of the steps is optimal. In particular, the daytime and nighttime partitioning methods, can take a long time. The daytime partitioning can be especially slow, with the non-linear least squares method taking a long time to run for each window. This will be addressed in future versions, taking advantage of newer least squares methods and other improvements to the execution flow.
+- **Performance issues.** The performance of a few of the steps is not optimal. In particular, the daytime and nighttime partitioning methods, can take a long time. The daytime partitioning can be especially slow, with the non-linear least squares method taking a long time to run for each window. This will be addressed in future versions, taking advantage of newer least squares methods and other improvements to the execution flow.
 
 - **Sundown reference partitioning method** One of the methods used for flux partitioning in FLUXNET2015 is not included in this version of the pipeline currently. We are working on porting the code and will include the method in future versions.
 
@@ -207,27 +207,30 @@ and the outputs will be generated, respectively, in the directories:
 [//]: # (## Troubleshooting)
 
 
-## Support and Funding (incomplete list) ##
-* U.S. Department of Energy's Office of Science, through the AmeriFlux Management Project
-* COOP+ H2020
+## Support and Funding ##
+This material is based upon work supported by:
+* U.S. Department of Energy, Office of Science, Office of Biological and Environmental Research, through the AmeriFlux Management Project, under Contract No. DE-AC02-05CH11231
+* COOP+ project funded under the European Union's Horizon 2020 research
+and innovation programme - grant agreement No 654131
+* RINGO project funded under the European Union's Horizon 2020 research
+and innovation programme - grant agreement No 730944
+* ENVRIFAIR project funded under the European Union's Horizon 2020
+research and innovation programme - grant agreement No 824068
 
 
 ## Contributors ##
 
 ### Development and Code ###
 * Gilberto Pastorello, gzpastorello &lt;at&gt; lbl &lt;DOT&gt; gov
+* Dario Papale, darpap &lt;at&gt; unitus &lt;DOT&gt; it
 * Carlo Trotta, trottacarlo &lt;at&gt; unitus &lt;DOT&gt; it
 * Alessio Ribeca, a.ribeca &lt;at&gt; unitus &lt;DOT&gt; it
-* Dario Papale, darpap &lt;at&gt; unitus &lt;DOT&gt; it
 * Abdelrahman Elbashandy, aaelbashandy &lt;at&gt; lbl &lt;DOT&gt; gov
 * Alan Barr, alan.barr &lt;at&gt; canada &lt;DOT&gt; ca
 
-### Methods and Evaluation ###
-* Markus Reichstein, mreichstein &lt;at&gt; bgc-jena &lt;DOT&gt; mpg &lt;DOT&gt; de
-* Gitta Lasslop, gitta.lasslop &lt;at&gt; bgc-jena &lt;DOT&gt; mpg &lt;DOT&gt; de
+### Evaluation ###
 * Deb Agarwal, daagarwal &lt;at&gt; lbl &lt;DOT&gt; gov
 * Sebastien Biraud, scbiraud &lt;at&gt; lbl &lt;DOT&gt; gov
 
 
-**(THIS IS A LIMITED TESTING VERSION, PLEASE SEE [CAVEATS LIST](#caveats-and-known-limitations) ABOVE)**
-
+**(THERE ARE CAVEATS AND KNOWN LIMITATIONS TO THIS CODE, PLEASE SEE [CAVEATS LIST](#caveats-and-known-limitations) (ABOVE)**
