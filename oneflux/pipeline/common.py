@@ -12,6 +12,7 @@ Pipeline common/shared configuration parameters
 '''
 import sys
 import os
+import platform
 import copy
 import collections
 import logging
@@ -38,7 +39,9 @@ ERA_FIRST_TIMESTAMP_START = '198901010000'
 ERA_LAST_TIMESTAMP_START = '201412312330'
 
 HOME_DIRECTORY = os.path.expanduser('~')
-TOOL_DIRECTORY = os.path.join(HOME_DIRECTORY, 'bin', 'oneflux')
+#TOOL_DIRECTORY = os.path.join(HOME_DIRECTORY, 'bin', 'oneflux')
+# PRI 2020/10/20 - move executables to ONEFlux\bin
+TOOL_DIRECTORY = os.path.join(HOME_DIRECTORY, 'ONEFlux', 'bin')
 MCR_DIRECTORY = os.path.join(HOME_DIRECTORY, 'bin', 'MATLAB_Compiler_Runtime', 'v717')
 WORKING_DIRECTORY = os.path.join(HOME_DIRECTORY, 'data', 'fluxnet', 'FLUXNET2015')
 WORKING_DIRECTORY_SITE = os.path.join(WORKING_DIRECTORY, '{sd}')
@@ -156,6 +159,17 @@ def run_command(cmd):
     :param cmd: command to be executed
     :type cmd: str
     """
+    # PRI 2020/10/21
+    # trap input file strings surrounded by quotes
+    if platform.system() == "Windows":
+        # get rid of double quotes arounf file paths
+        cmd = cmd.replace('"', '')
+        # change forward slash to double back slash
+        cmd = cmd.replace("/", "\\")
+    # PRI 2020/10/21
+    # should replace os.system() with subprocess.call() ...
+    # ... and break cmd into separate commands
+    # ... and execute OS commands via Python os or similar
     return_value = os.system(cmd)
     if return_value != 0:
         msg = "Non-clean execution of : {c}".format(c=cmd)

@@ -17,6 +17,7 @@ import re
 import numpy
 import socket
 import fnmatch
+import platform
 
 from datetime import datetime
 
@@ -177,13 +178,33 @@ class Pipeline(object):
 
         ### validation
         # list all steps
+        #self.drivers = [self.fp_creator,
+                        #self.qc_visual,
+                        #self.qc_auto,
+                        #self.qc_auto_convert,
+                        #self.qc_visual_cross,
+                        #self.ustar_mp,
+                        #self.ustar_cp,
+                        #self.meteo_era,
+                        #self.meteo_mds,
+                        #self.meteo_proc,
+                        #self.nee_proc,
+                        #self.energy_proc,
+                        #self.nee_partition_nt,
+                        #self.nee_partition_dt,
+                        #self.nee_partition_sr,
+                        #self.prepare_ure,
+                        #self.ure,
+                        #self.fluxnet2015,
+                       #]
+        # PRI 2020/10/21 - remove ustar_cp from processing list
         self.drivers = [self.fp_creator,
                         self.qc_visual,
                         self.qc_auto,
                         self.qc_auto_convert,
                         self.qc_visual_cross,
                         self.ustar_mp,
-                        self.ustar_cp,
+                        #self.ustar_cp,
                         self.meteo_era,
                         self.meteo_mds,
                         self.meteo_proc,
@@ -412,7 +433,12 @@ class PipelineQCAuto(object):
     Executes QC Automated Quality Flagging step.
     '''
     QC_AUTO_EXECUTE = True
-    QC_AUTO_EX = 'qc_auto'
+    # PRI 2020/10/20 - trap OS type and change EXE name as required
+    # there is a better way to do this ...
+    if platform.system() == "Windows":
+        QC_AUTO_EX = 'qc_auto.exe'
+    else:
+        QC_AUTO_EX = 'qc_auto'
     QC_AUTO_DIR = '02_qc_auto'
     _OUTPUT_FILE_PATTERNS = [
         '{s}_qca_energy_????.csv',
@@ -633,7 +659,12 @@ class PipelineUstarMP(object):
     Executes USTAR Moving Point Threshold estimation.
     '''
     USTAR_MP_EXECUTE = True
-    USTAR_MP_EX = 'ustar_mp'
+    # PRI 2020/10/20 - trap OS type and change EXE name as required
+    # there is a better way to do this ...
+    if platform.system() == "Windows":
+        USTAR_MP_EX = 'ustar_mp.exe'
+    else:
+        USTAR_MP_EX = 'ustar_mp'
     USTAR_MP_DIR = '04_ustar_mp'
     _OUTPUT_FILE_PATTERNS = [
         "{s}_usmp_????.txt",
@@ -704,7 +735,12 @@ class PipelineUstarCP(object):
     Executes Ustar Changing Point threshold estimation.
     '''
     USTAR_CP_EXECUTE = True
-    USTAR_CP_EX = "ustar_cp"
+    # PRI 2020/10/20 - trap OS type and change EXE name as required
+    # there is a better way to do this ...
+    if platform.system() == "Windows":
+        USTAR_CP_EX = "ustar_cp.exe"
+    else:
+        USTAR_CP_EX = "ustar_cp"
     USTAR_CP_DIR = "05_ustar_cp"
     _OUTPUT_FILE_PATTERNS = [
         "{s}_uscp_????.txt",
@@ -984,7 +1020,12 @@ class PipelineMeteoMDS(object):
     METEO_MDS_EXECUTE = False # TODO: change default when method implemented
     METEO_MDS_DIR = "07a_meteo_mds"
     METEO_NARR_DIR = "07b_meteo_narr"
-    METEO_MDS_EX = "meteo_mds"
+    # PRI 2020/10/21 - trap OS type and change EXE name as required
+    # there is a better way to do this ...
+    if platform.system() == "Windows":
+        METEO_MDS_EX = "meteo_mds.exe"
+    else:
+        METEO_MDS_EX = "meteo_mds"
 
     def __init__(self, pipeline):
         '''
@@ -1083,7 +1124,12 @@ class PipelineMeteoProc(object):
     '''
     METEO_PROC_EXECUTE = True
     METEO_PROC_DIR = "07_meteo_proc"
-    METEO_PROC_EX = "meteo_proc"
+    # PRI 2020/10/21 - trap OS type and change EXE name as required
+    # there is a better way to do this ...
+    if platform.system() == "Windows":
+        METEO_PROC_EX = "meteo_proc.exe"
+    else:
+        METEO_PROC_EX = "meteo_proc"
     _OUTPUT_FILE_PATTERNS = [
         "{s}_meteo_hh.csv",
         "{s}_meteo_dd.csv",
@@ -1113,17 +1159,27 @@ class PipelineMeteoProc(object):
         self.meteo_proc_dir = self.pipeline.configs.get('meteo_proc_dir', os.path.join(self.pipeline.data_dir, self.METEO_PROC_DIR))
         self.output_file_patterns = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS]
         self.output_file_patterns_info = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_INFO]
-        self.input_meteo_era_dir = '..' + os.sep + os.path.basename(self.pipeline.meteo_era.meteo_era_dir) + os.sep
-        self.input_qc_auto_dir = '..' + os.sep + os.path.basename(self.pipeline.qc_auto.qc_auto_dir) + os.sep
+        # PRI 2020/10/21 - meteo_proc does something strange with paths under Windows ...
+        if platform.system() == "Windows":
+            self.input_meteo_era_dir = self.pipeline.data_dir + os.sep + os.path.basename(self.pipeline.meteo_era.meteo_era_dir) + os.sep
+            self.input_qc_auto_dir = self.pipeline.data_dir + os.sep + os.path.basename(self.pipeline.qc_auto.qc_auto_dir) + os.sep
+        else:
+            self.input_meteo_era_dir = '..' + os.sep + os.path.basename(self.pipeline.meteo_era.meteo_era_dir) + os.sep
+            self.input_qc_auto_dir = '..' + os.sep + os.path.basename(self.pipeline.qc_auto.qc_auto_dir) + os.sep
         self.output_meteo_proc_dir = self.meteo_proc_dir + os.sep
         self.output_log = os.path.join(self.meteo_proc_dir, 'report_{t}.txt'.format(t=self.pipeline.run_id))
-        self.cmd_txt = 'cd "{o}" {cmd_sep} {c} -qc_auto_path="{q}" -era_path="{e}" -output_path=. > "{log}"'
+        if platform.system() == "Windows":
+            self.cmd_txt = 'cd "{o}" {cmd_sep} {c} -qc_auto_path="{q}" -era_path="{e}" -output_path="{o}" > "{log}"'
+        else:
+            self.cmd_txt = 'cd "{o}" {cmd_sep} {c} -qc_auto_path="{q}" -era_path="{e}" -output_path=. > "{log}"'
         self.cmd = self.cmd_txt.format(o=self.output_meteo_proc_dir,
                                        cmd_sep=CMD_SEP,
                                        c=self.meteo_proc_ex,
                                        q=self.input_qc_auto_dir,
                                        e=self.input_meteo_era_dir,
                                        log=self.output_log)
+        # PRI 2020/10/21 - added to provide a statement for breakpoint
+        return
 
     def pre_validate(self):
         '''
@@ -1175,7 +1231,12 @@ class PipelineNEEProc(object):
     '''
     NEE_PROC_EXECUTE = True
     NEE_PROC_DIR = "08_nee_proc"
-    NEE_PROC_EX = "nee_proc"
+    # PRI 2020/10/20 - trap OS type and change EXE name as required
+    # there is a better way to do this ...
+    if platform.system() == "Windows":
+        NEE_PROC_EX = "nee_proc.exe"
+    else:
+        NEE_PROC_EX = "nee_proc"
     _OUTPUT_FILE_PATTERNS = [
         "{s}_NEE_hh.csv",
         "{s}_NEE_dd.csv",
@@ -1223,13 +1284,23 @@ class PipelineNEEProc(object):
         self.output_file_patterns_y_alt = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_Y_ALT]
         self.output_file_patterns_c = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_C]
         self.output_file_patterns_c_alt = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_C_ALT]
-        self.input_qc_auto_dir = '..' + os.sep + os.path.basename(self.pipeline.qc_auto.qc_auto_dir) + os.sep
-        self.input_ustar_mp_dir = '..' + os.sep + os.path.basename(self.pipeline.ustar_mp.ustar_mp_dir) + os.sep
-        self.input_ustar_cp_dir = '..' + os.sep + os.path.basename(self.pipeline.ustar_cp.ustar_cp_dir) + os.sep
-        self.input_meteo_proc_dir = '..' + os.sep + os.path.basename(self.pipeline.meteo_proc.meteo_proc_dir) + os.sep
+        # PRI 2020/10/21 - nee_proc does something strange with paths under Windows ...
+        if platform.system() == "Windows":
+            self.input_qc_auto_dir = self.pipeline.data_dir + os.sep + os.path.basename(self.pipeline.qc_auto.qc_auto_dir) + os.sep
+            self.input_ustar_mp_dir = self.pipeline.data_dir + os.sep + os.path.basename(self.pipeline.ustar_mp.ustar_mp_dir) + os.sep
+            self.input_ustar_cp_dir = self.pipeline.data_dir + os.sep + os.path.basename(self.pipeline.ustar_cp.ustar_cp_dir) + os.sep
+            self.input_meteo_proc_dir = self.pipeline.data_dir + os.sep + os.path.basename(self.pipeline.meteo_proc.meteo_proc_dir) + os.sep
+        else:
+            self.input_qc_auto_dir = '..' + os.sep + os.path.basename(self.pipeline.qc_auto.qc_auto_dir) + os.sep
+            self.input_ustar_mp_dir = '..' + os.sep + os.path.basename(self.pipeline.ustar_mp.ustar_mp_dir) + os.sep
+            self.input_ustar_cp_dir = '..' + os.sep + os.path.basename(self.pipeline.ustar_cp.ustar_cp_dir) + os.sep
+            self.input_meteo_proc_dir = '..' + os.sep + os.path.basename(self.pipeline.meteo_proc.meteo_proc_dir) + os.sep
         self.output_nee_proc_dir = self.nee_proc_dir + os.sep
         self.output_log = os.path.join(self.nee_proc_dir, 'report_{t}.txt'.format(t=self.pipeline.run_id))
-        self.cmd_txt = 'cd "{o}" {cmd_sep} {c} -qc_auto_path="{q}" -ustar_mp_path="{ump}" -ustar_cp_path="{ucp}" -meteo_path="{m}" -output_path=. > "{log}"'
+        if platform.system() == "Windows":
+            self.cmd_txt = 'cd "{o}" {cmd_sep} {c} -qc_auto_path="{q}" -ustar_mp_path="{ump}" -ustar_cp_path="{ucp}" -meteo_path="{m}" -output_path="{o}" > "{log}"'
+        else:
+            self.cmd_txt = 'cd "{o}" {cmd_sep} {c} -qc_auto_path="{q}" -ustar_mp_path="{ump}" -ustar_cp_path="{ucp}" -meteo_path="{m}" -output_path=. > "{log}"'
         self.cmd = self.cmd_txt.format(o=self.output_nee_proc_dir,
                                        cmd_sep=CMD_SEP,
                                        c=self.nee_proc_ex,
@@ -1293,7 +1364,12 @@ class PipelineEnergyProc(object):
     Executes the LE and H filtering, gapfilling, and corrections.
     '''
     ENERGY_PROC_EXECUTE = True
-    ENERGY_PROC_EX = "energy_proc"
+    # PRI 2020/10/21 - trap OS type and change EXE name as required
+    # there is a better way to do this ...
+    if platform.system() == "Windows":
+        ENERGY_PROC_EX = "energy_proc.exe"
+    else:
+        ENERGY_PROC_EX = "energy_proc"
     ENERGY_PROC_DIR = "09_energy_proc"
     _OUTPUT_FILE_PATTERNS = [
         "{s}_energy_hh_info.txt",
@@ -1980,7 +2056,12 @@ class PipelineURE(object):
     Executes the Uncertainty and References Estimations/calculations.
     '''
     URE_EXECUTE = True
-    URE_EX = "ure"
+    # PRI 2020/10/20 - trap OS type and change EXE name as required
+    # there is a better way to do this ...
+    if platform.system() == "Windows":
+        URE_EX = "ure.exe"
+    else:
+        URE_EX = "ure"
     URE_DIR = "12_ure"
     _OUTPUT_FILE_PATTERNS = [
         "{s}_DT_GPP_dd.csv",

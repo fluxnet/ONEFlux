@@ -1,0 +1,157 @@
+# enables most optimization flags
+CC := gcc -O3
+
+# create directory command
+MKDIR = mkdir
+
+# copy file command (verbose, keep file metadata)
+COPY = copy
+
+SRCDIR := ${CURDIR}
+TGTDIR := $(join ${SRCDIR}, /bin)
+
+COMMON_DIR := $(join ${SRCDIR}, /common)
+COMMON_SRC := common.c
+COMMON_OBJ := $(COMMON_SRC:.c=.o)
+COMMON_TGT := common
+
+TXT2H_DIR := $(join ${SRCDIR}, /tools/txt2h/src)
+TXT2H_SRC := common.c main.c
+TXT2H_OBJ := $(TXT2H_SRC:.c=.o)
+TXT2H_BIN := $(join ${TGTDIR}, /txt2h)
+TXT2H_EXE := txt2h
+
+QC_AUTO_DIR := $(join ${SRCDIR}, /qc_auto/src)
+QC_AUTO_SRC := common.c dataset.c main.c marginals.c rpot.c spike.c ustar.c
+QC_AUTO_OBJ := $(QC_AUTO_SRC:.c=.o)
+QC_AUTO_BIN := $(join ${TGTDIR}, /qc_auto)
+QC_AUTO_EXE := qc_auto
+
+USTAR_MP_DIR := $(join ${SRCDIR}, /ustar_mp/src)
+USTAR_MP_SRC := bootstrapping.c common.c dataset.c main.c parser.c ustar.c
+USTAR_MP_OBJ := $(USTAR_MP_SRC:.c=.o)
+USTAR_MP_BIN := $(join ${TGTDIR}, /ustar_mp)
+USTAR_MP_EXE := ustar_mp
+
+GF_MDS_DIR := $(join ${SRCDIR}, /tools/gf_mds/src)
+GF_MDS_SRC := common.c dataset.c main.c
+GF_MDS_OBJ := $(GF_MDS_SRC:.c=.o)
+GF_MDS_BIN := $(join ${TGTDIR}, /gf_mds)
+GF_MDS_EXE := gf_mds
+
+SW_IN_POT_DIR := $(join ${SRCDIR}, /tools/SW_IN_POT_Calculator/src)
+SW_IN_POT_SRC := common.c main.c
+SW_IN_POT_OBJ := $(SW_IN_POT_SRC:.c=.o)
+SW_IN_POT_BIN := $(join ${TGTDIR}, /sw_in_pot)
+SW_IN_POT_EXE := sw_in_pot
+
+METEO_PROC_DIR := $(join ${SRCDIR}, /meteo_proc/src)
+METEO_PROC_SRC := common.c dataset.c main.c
+METEO_PROC_OBJ := $(METEO_PROC_SRC:.c=.o)
+METEO_PROC_BIN := $(join ${TGTDIR}, /meteo_proc)
+METEO_PROC_EXE := meteo_proc
+
+METEO_MDS_DIR := $(join ${SRCDIR}, /tools/gf_mds/src)
+METEO_MDS_SRC := common.c dataset.c main.c
+METEO_MDS_OBJ := $(METEO_MDS_SRC:.c=.o)
+METEO_MDS_BIN := $(join ${TGTDIR}, /meteo_mds)
+METEO_MDS_EXE := meteo_mds
+
+NEE_PROC_DIR := $(join ${SRCDIR}, /nee_proc/src)
+NEE_PROC_SRC := common.c dataset.c main.c randunc.c
+NEE_PROC_OBJ := $(NEE_PROC_SRC:.c=.o)
+NEE_PROC_BIN := $(join ${TGTDIR}, /nee_proc)
+NEE_PROC_EXE := nee_proc
+
+ENERGY_PROC_DIR := $(join ${SRCDIR}, /energy_proc/src)
+ENERGY_PROC_SRC := aggr.c common.c dataset.c ecbcf.c main.c randunc.c
+ENERGY_PROC_OBJ := $(ENERGY_PROC_SRC:.c=.o)
+ENERGY_PROC_BIN := $(join ${TGTDIR}, /energy_proc)
+ENERGY_PROC_EXE := energy_proc
+
+URE_DIR := $(join ${SRCDIR}, /ure/src)
+URE_SRC := common.c dataset.c main.c
+URE_OBJ := $(URE_SRC:.c=.o)
+URE_BIN := $(join ${TGTDIR}, /ure)
+URE_EXE := ure
+
+all: ${COMMON_TGT} ${TXT2H_BIN} ${QC_AUTO_BIN} ${USTAR_MP_BIN} ${GF_MDS_BIN} ${SW_IN_POT_BIN} ${METEO_PROC_BIN} ${METEO_MDS_BIN} ${NEE_PROC_BIN} ${ENERGY_PROC_BIN} ${URE_BIN}
+	@echo Build finished.
+
+.PHONY: all
+
+${COMMON_TGT}:
+	@echo Building common objects...
+	cd ${COMMON_DIR} &&\
+	${CC} -w -c ${COMMON_SRC}
+
+${TXT2H_BIN}: ${COMMON_TGT}
+	@echo Building ${TXT2H_BIN}...
+	cd ${TXT2H_DIR} &&\
+	${CC} -w -c ${TXT2H_SRC}
+	cd ${TXT2H_DIR} &&\
+	${CC} ${TXT2H_OBJ} -w -lm -o ${TXT2H_EXE}
+	
+${QC_AUTO_BIN}: ${COMMON_TGT}
+	@echo Building ${QC_AUTO_BIN}...
+	cd ${QC_AUTO_DIR} &&\
+	${CC} -w -c ${QC_AUTO_SRC}
+	cd ${QC_AUTO_DIR} &&\
+	${CC} ${QC_AUTO_OBJ} -w -lm -o ${QC_AUTO_EXE}
+
+${USTAR_MP_BIN}: ${COMMON_TGT}
+	@echo Building ${USTAR_MP_BIN}...
+	cd ${USTAR_MP_DIR} &&\
+	${CC} -w -c ${USTAR_MP_SRC}
+	cd ${USTAR_MP_DIR} &&\
+	${CC} ${USTAR_MP_OBJ} -w -lm -o ${USTAR_MP_EXE}
+
+${GF_MDS_BIN}: ${COMMON_TGT}
+	@echo Building ${GF_MDS_BIN}...
+	cd ${GF_MDS_DIR} &&\
+	${CC} -w -c ${GF_MDS_SRC}
+	cd ${GF_MDS_DIR} &&\
+	${CC} ${GF_MDS_OBJ} -w -lm -o ${GF_MDS_EXE}
+
+${SW_IN_POT_BIN}: ${COMMON_TGT}
+	@echo Building ${SW_IN_POT_BIN}...
+	cd ${SW_IN_POT_DIR} &&\
+	${CC} -w -c ${SW_IN_POT_SRC}
+	cd ${SW_IN_POT_DIR} &&\
+	${CC} ${SW_IN_POT_OBJ} -w -lm -o ${SW_IN_POT_EXE}
+
+${METEO_PROC_BIN}: ${COMMON_TGT}
+	@echo Building ${METEO_PROC_BIN}...
+	cd ${METEO_PROC_DIR}  &&\
+	${CC} -w -c ${METEO_PROC_SRC}
+	cd ${METEO_PROC_DIR}  &&\
+	${CC} ${METEO_PROC_OBJ} -w -lm -o ${METEO_PROC_EXE}
+
+${METEO_MDS_BIN}: ${COMMON_TGT}
+	@echo Building ${METEO_MDS_BIN}...
+	cd ${METEO_MDS_DIR} &&\
+	${CC} -w -c ${METEO_MDS_SRC}
+	cd ${METEO_MDS_DIR} &&\
+	${CC} ${METEO_MDS_OBJ} -w -lm -o ${METEO_MDS_EXE}
+
+${NEE_PROC_BIN}: ${COMMON_TGT}
+	@echo Building ${NEE_PROC_BIN}...
+	cd ${NEE_PROC_DIR}  &&\
+	${CC} -w -c ${NEE_PROC_SRC}
+	cd ${NEE_PROC_DIR}  &&\
+	${CC} ${NEE_PROC_OBJ} -w -lm -o ${NEE_PROC_EXE}
+
+${ENERGY_PROC_BIN}: ${COMMON_TGT}
+	@echo Building ${ENERGY_PROC_BIN}...
+	cd ${ENERGY_PROC_DIR}  &&\
+	${CC} -w -c ${ENERGY_PROC_SRC}
+	cd ${ENERGY_PROC_DIR}  &&\
+	${CC} ${ENERGY_PROC_OBJ} -w -lm -o ${ENERGY_PROC_EXE}
+
+${URE_BIN}: ${COMMON_TGT}
+	@echo Building ${URE_BIN}...
+	cd ${URE_DIR} &&\
+	${CC} -w -c ${URE_SRC}
+	cd ${URE_DIR} &&\
+	${CC} ${URE_OBJ} -w -lm -o ${URE_EXE}
+
