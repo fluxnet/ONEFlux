@@ -932,7 +932,7 @@ def get_resolution(timestamps, error_str=''):
         t0 = datetime.strptime(timestamps[i - 1], "%Y%m%d%H%M")
         d = t1 - t0
         if d != diff:
-            raise ONEFluxError("Inconsistent timestamp intevals ({e}): {t1} {t2}".format(e=error_str, t1=t1.strftime("%Y%m%d%H%M"), t2=t2.strftime("%Y%m%d%H%M")))
+            raise ONEFluxError("Inconsistent timestamp intevals ({e}): {t1} {t0}".format(e=error_str, t1=t1.strftime("%Y%m%d%H%M"), t0=t0.strftime("%Y%m%d%H%M")))
 
     if ceil(diff.seconds / 60.0) == 30:
         return 'HH'
