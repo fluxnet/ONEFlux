@@ -32,10 +32,23 @@ log = logging.getLogger(__name__)
 
 HOSTNAME = socket.gethostname()
 
-NOW_TS = datetime.now().strftime("%Y%m%dT%H%M%S")
+NOW_DATETIME = datetime.now()
+NOW_TS = NOW_DATETIME.strftime("%Y%m%dT%H%M%S")
 
-ERA_FIRST_TIMESTAMP_START = '198901010000'
-ERA_LAST_TIMESTAMP_START = '201412312330'
+try:
+    from oneflux.local_settings import MODE_ISSUER, MODE_PRODUCT, MODE_ERA, ERA_FIRST_YEAR, ERA_LAST_YEAR
+except ImportError as e:
+    MODE_ISSUER = 'FLX'
+    MODE_PRODUCT = 'FLUXNET2015'
+    MODE_ERA = 'ERAI'
+    # most recent year available for ERA -- assuming new ERA year available after March each year
+    ERA_FIRST_YEAR = '1989'
+    ERA_LAST_YEAR = (NOW_DATETIME.year - 1 if (NOW_DATETIME.month > 3) else NOW_DATETIME.year - 2)
+
+ERA_FIRST_TIMESTAMP_START_TEMPLATE = '{y}01010000'
+ERA_LAST_TIMESTAMP_START_TEMPLATE = '{y}12312330'
+ERA_FIRST_TIMESTAMP_START = ERA_FIRST_TIMESTAMP_START_TEMPLATE.format(y=ERA_FIRST_YEAR)
+ERA_LAST_TIMESTAMP_START = ERA_LAST_TIMESTAMP_START_TEMPLATE.format(y=str(ERA_LAST_YEAR))
 
 HOME_DIRECTORY = os.path.expanduser('~')
 TOOL_DIRECTORY = os.path.join(HOME_DIRECTORY, 'bin', 'oneflux')
@@ -51,11 +64,11 @@ NEEDIR = os.path.join(WORKING_DIRECTORY_SITE, NEEDIR_PATTERN)
 ENERGYDIR = os.path.join(WORKING_DIRECTORY_SITE, "09_energy_proc")
 UNCDIR = os.path.join(WORKING_DIRECTORY_SITE, "12_ure")
 PRODDIR = os.path.join(WORKING_DIRECTORY_SITE, "99_fluxnet2015")
-PRODFILE_TEMPLATE_F = "FLX_{s}_FLUXNET2015_{g}_{r}_{fy}-{ly}_{vd}-{vp}.csv"
-PRODFILE_AUX_TEMPLATE_F = "FLX_{s}_FLUXNET2015_{aux}_{fy}-{ly}_{vd}-{vp}.csv"
-PRODFILE_YEARS_TEMPLATE_F = "FLX_{s}_FLUXNET2015_YEARS_{vd}-{vp}.csv"
-PRODFILE_FIGURE_TEMPLATE_F = "FLX_{s}_FLUXNET2015_FIG-{f}_{fy}-{ly}_{vd}-{vp}.png"
-ZIPFILE_TEMPLATE_F = "FLX_{s}_FLUXNET2015_{g}_{fy}-{ly}_{vd}-{vp}.zip"
+PRODFILE_TEMPLATE_F = MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_{g}_{r}_{fy}-{ly}_{vd}-{vp}.csv"
+PRODFILE_AUX_TEMPLATE_F = MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_{aux}_{fy}-{ly}_{vd}-{vp}.csv"
+PRODFILE_YEARS_TEMPLATE_F = MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_YEARS_{vd}-{vp}.csv"
+PRODFILE_FIGURE_TEMPLATE_F = MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FIG-{f}_{fy}-{ly}_{vd}-{vp}.png"
+ZIPFILE_TEMPLATE_F = MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_{g}_{fy}-{ly}_{vd}-{vp}.zip"
 PRODFILE_TEMPLATE = os.path.join(PRODDIR, PRODFILE_TEMPLATE_F)
 PRODFILE_AUX_TEMPLATE = os.path.join(PRODDIR, PRODFILE_AUX_TEMPLATE_F)
 PRODFILE_YEARS_TEMPLATE = os.path.join(PRODDIR, PRODFILE_YEARS_TEMPLATE_F)
@@ -90,7 +103,7 @@ UNC_INFO_ALT = os.path.join(UNCDIR, UNC_INFO_ALT_F) # DT, NT, SR __ GPP, RECO __
 FULLSET_STR = 'FULLSET'
 SUBSET_STR = 'SUBSET'
 
-ERA_STR = 'ERAI'
+ERA_STR = MODE_ERA
 
 RESOLUTION_LIST = ['hh', 'dd', 'ww', 'mm', 'yy']
 
@@ -262,10 +275,10 @@ def test_pattern(tdir, tpattern, label, log_only=False):
         matches, matches_alt = [], []
 
     if matches:
-        log.debug("Pipeline {l} in '{d}' found file pattern '{p}': {m}".format(l=label, d=tdir, p=tpattern, m=matches))
+        log.debug("Pipeline {l} in '{d}' found file pattern '{p}' ({n} occurrences): {m}".format(l=label, d=tdir, p=tpattern, m=matches, n=len(matches)))
     elif matches_alt:
         matches = matches_alt
-        log.debug("Pipeline {l} in '{d}' found file pattern '{p}': {m}".format(l=label, d=tdir, p=tpattern, m=matches))
+        log.debug("Pipeline {l} in '{d}' found file pattern '{p}' ({n} occurrences): {m}".format(l=label, d=tdir, p=tpattern, m=matches, n=len(matches)))
     else:
         msg = "Pipeline {l} file with pattern '{p}' not found in '{d}'".format(l=label, p=tpattern, d=tdir)
         if log_only:
@@ -463,8 +476,8 @@ def check_headers_fluxnet2015(filename):
     :rtype: bool
     """
     basename = os.path.basename(filename)
-    if not ((basename[:4] == "FLX_") and (basename[10:30] == "_FLUXNET2015_FULLSET")):
-        log.error("Filename does not mactch FLUXNET2015 FULLET filename template: {f}".format(f=filename))
+    if not ((basename[:4] == MODE_ISSUER + "_") and (basename[10:11 + len(MODE_PRODUCT) + 8] == "_" + MODE_PRODUCT + "_FULLSET")):
+        log.error("Filename does not match {p} FULLSET filename template: {f}".format(p=MODE_PRODUCT, f=filename))
         return False
 
     headers = get_headers(filename=filename)
