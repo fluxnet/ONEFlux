@@ -21,7 +21,6 @@ from oneflux.tools.partition_nt import run_partition_nt, PROD_TO_COMPARE, PERC_T
 from oneflux.tools.partition_dt import run_partition_dt
 from oneflux.tools.pipeline import run_pipeline, NOW_TS
 from oneflux.pipeline.common import ERA_FIRST_YEAR, ERA_LAST_YEAR
-from oneflux.pipeline.fluxnet2015_sites_tiers import SITES_FOLDERS_D, SITES_D
 
 log = logging.getLogger(__name__)
 
