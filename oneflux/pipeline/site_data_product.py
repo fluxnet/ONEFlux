@@ -932,7 +932,7 @@ def get_resolution(timestamps, error_str=''):
         t0 = datetime.strptime(timestamps[i - 1], "%Y%m%d%H%M")
         d = t1 - t0
         if d != diff:
-            raise ONEFluxError("Inconsistent timestamp intevals ({e}): {t1} {t2}".format(e=error_str, t1=t1.strftime("%Y%m%d%H%M"), t2=t2.strftime("%Y%m%d%H%M")))
+            raise ONEFluxError("Inconsistent timestamp intevals ({e}): {t1} {t0}".format(e=error_str, t1=t1.strftime("%Y%m%d%H%M"), t0=t0.strftime("%Y%m%d%H%M")))
 
     if ceil(diff.seconds / 60.0) == 30:
         return 'HH'
@@ -1047,7 +1047,15 @@ def check_lengths(siteid, meteo, energy, nee, unc, resolution):
     return meteo, energy, nee, unc
 
 
-def run_site(siteid, sitedir, first_t1, last_t1, version_processing=1, version_data=1, pipeline=None):
+def run_site(siteid,
+             sitedir,
+             first_t1,
+             last_t1,
+             version_processing=1,
+             version_data=1,
+             pipeline=None,
+             era_first_timestamp_start=ERA_FIRST_TIMESTAMP_START,
+             era_last_timestamp_start=ERA_LAST_TIMESTAMP_START):
     if pipeline is None:
         datadir = WORKING_DIRECTORY
         meteo = METEODIR.format(sd=sitedir)
@@ -1058,6 +1066,8 @@ def run_site(siteid, sitedir, first_t1, last_t1, version_processing=1, version_d
         prodfile_template = PRODFILE_TEMPLATE
         zipfile_template = ZIPFILE_TEMPLATE
         prodfile_years_template = PRODFILE_YEARS_TEMPLATE
+        era_first_year = int(ERA_FIRST_TIMESTAMP_START[:4])
+        era_last_year = int(ERA_FIRST_TIMESTAMP_START[:4])
     else:
         datadir = pipeline.data_dir_main
         meteo = pipeline.meteo_proc.meteo_proc_dir
@@ -1068,6 +1078,8 @@ def run_site(siteid, sitedir, first_t1, last_t1, version_processing=1, version_d
         prodfile_template = pipeline.prodfile_template
         zipfile_template = pipeline.zipfile_template
         prodfile_years_template = pipeline.prodfile_years_template
+        era_first_year = pipeline.era_first_year
+        era_last_year = pipeline.era_last_year
 
     check_create_directory(prod)
 
@@ -1190,15 +1202,16 @@ def run_site(siteid, sitedir, first_t1, last_t1, version_processing=1, version_d
         # NEW FOR JULY2016: save full ERA output
         ts_precision = TIMESTAMP_PRECISION_BY_RESOLUTION[resolution]
         ts_by_res = TIMESTAMP_DTYPE_BY_RESOLUTION[resolution][0][0]
-        first_era_ts, last_era_ts = ERA_FIRST_TIMESTAMP_START[:ts_precision], ERA_LAST_TIMESTAMP_START[:ts_precision]
+        first_era_ts, last_era_ts = era_first_timestamp_start[:ts_precision], era_last_timestamp_start[:ts_precision]
         if (full_meteo_data[ts_by_res][0] != first_era_ts):
             msg = "{s}: mismatched first ERA timestamp expected ({e}) and found ({f})".format(s=siteid, e=first_era_ts, f=full_meteo_data[ts_by_res][0])
             log.critical(msg)
             raise ONEFluxError(msg)
         if (full_meteo_data[ts_by_res][-1] != last_era_ts):
-            ww_last_era_ts = last_era_ts[:6] + '24' # last weekly timestamp can be on the 24th not 31st of December
+            ww_last_era_ts_leap = last_era_ts[:6] + '24' # last weekly timestamp can be on the 24th not 31st of December
+            ww_last_era_ts = last_era_ts[:6] + '23' #  23rd if not leap year
             hr_last_era_ts = last_era_ts[:-2] + '00' # last hourly timestamp is 2300 not 2330
-            if (resolution == 'ww') and (full_meteo_data[ts_by_res][-1] == ww_last_era_ts):
+            if (resolution == 'ww') and ((full_meteo_data[ts_by_res][-1] == ww_last_era_ts) or (full_meteo_data[ts_by_res][-1] == ww_last_era_ts_leap)):
                 pass
             elif (resolution == 'hh') and (full_meteo_data[ts_by_res][-1] == hr_last_era_ts):
                 pass
@@ -1206,7 +1219,7 @@ def run_site(siteid, sitedir, first_t1, last_t1, version_processing=1, version_d
                 msg = "{s} mismatched last ERA timestamp expected ({e}) and found ({f})".format(s=siteid, e=last_era_ts, f=full_meteo_data[ts_by_res][-1])
                 log.critical(msg)
                 raise ONEFluxError(msg)
-        filename = prodfile_template.format(sd=sitedir, s=siteid, g=ERA_STR, r=output_resolution, fy=1989, ly=2014, vd=version_data, vp=version_processing)
+        filename = prodfile_template.format(sd=sitedir, s=siteid, g=ERA_STR, r=output_resolution, fy=era_first_year, ly=era_last_year, vd=version_data, vp=version_processing)
         log.info("Saving ERA-Interim CSV file: {f}".format(f=filename))
         full_meteo_header_labels = TIMESTAMP_VARIABLE_LIST + NEW_ERA_VARS
         full_meteo_headers = [i for i in full_meteo_header_labels if i in full_meteo_data.dtype.names]

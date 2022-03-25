@@ -48,9 +48,9 @@ Open Network-Enabled Flux Processing Pipeline (ONEFlux)
 @date: 2017-01-31
 '''
 
-VERSION_PROCESSING = 3
+VERSION_PROCESSING = 5
 VERSION_METADATA = 'beta'
-VERSION = "0.3.0-{m}".format(m=VERSION_METADATA)
+VERSION = "0.4.0-{m}".format(m=VERSION_METADATA)
 
 __author__ = "Gilberto Pastorello"
 __copyright__ = "Copyright 2017, The Regents of the University of California, through Lawrence Berkeley National Laboratory"
