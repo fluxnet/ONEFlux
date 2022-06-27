@@ -1425,13 +1425,13 @@ static int get_meteo(DATASET *const dataset) {
 	for ( token = string_tokenizer(buffer, dataset_delimiter, &p), i = 0; token; token = string_tokenizer(NULL, dataset_delimiter, &p), ++i ) {
 		if ( ! string_compare_i(token, "TA_m") ) {
 			TA = i;
-		} else if ( ! string_compare_i(token, "SWIN_m") ) {
+		} else if ( ! string_compare_i(token, "SW_IN_m") ) {
 			SWIN = i;
 		} else if ( ! string_compare_i(token, "VPD_m") ) {
 			VPD = i;
 		} else if ( ! string_compare_i(token, "TA_mqc") ) {
 			TA_QC = i;
-		} else if ( ! string_compare_i(token, "SWIN_mqc") ) {
+		} else if ( ! string_compare_i(token, "SW_IN_mqc") ) {
 			SWIN_QC = i;
 		} else if ( ! string_compare_i(token, "VPD_mqc") ) {
 			VPD_QC = i;
@@ -1514,7 +1514,12 @@ static int get_meteo(DATASET *const dataset) {
 		}
 		while ( fgets(buffer, BUFFER_SIZE, f) ) {
 			for ( token = string_tokenizer(buffer, dataset_delimiter, &p), i = 0; token; token = string_tokenizer(NULL, dataset_delimiter, &p), i++ ) {
-				if ( !i ) {
+				if ( ! i ) {
+					// skip TIMESTAMP_START
+					continue;
+				}
+				// get TIMESTAMP_END
+				if ( 1 == i ) {
 					t = get_timestamp(token);
 					if ( ! t ) {
 						fclose(f);
@@ -1540,7 +1545,7 @@ static int get_meteo(DATASET *const dataset) {
 					current_row = get_row_by_timestamp(t, (HOURLY_TIMERES==dataset->details->timeres));
 					free(t);
 					if ( element != current_row ) {
-						printf("bad timestamp: %s", token);
+						printf("bad timestamp: %s\n", token);
 						fclose(f);
 						return 0;
 					}							
