@@ -416,8 +416,6 @@ void compute_missings(DATASET *const dataset) {
 		for ( y = 0; y < dataset->rows_count; y++ ) {
 			if ( IS_INVALID_VALUE(dataset->rows[y].value[i]) ) {
 				++dataset->missings[i];
-			} else {
-				int a = 5;
 			}
 		}
 	}
@@ -524,6 +522,13 @@ int set_nee(DATASET *const dataset) {
 	QCFOOT = get_var_index(dataset, var_names[QCFOOT_INPUT]);
 	SC_NEGL = get_var_index(dataset, var_names[SC_NEGL_INPUT]);
 	assert((FCSTOR != -1)&&(FCSTORTT != -1)&&(HEIGHT != -1)&&(NEE_FLAG != -1)&&(SC_NEGL != -1));
+
+	/* added on 20160822 */
+	/* check for FC */
+	if ( (-1 == FC) || (dataset->rows_count == dataset->missings[FC]) ) {
+		/* do not add NEE */
+		return 1;
+	}
 
 	/* */
 	has_fcstor = 0;
@@ -910,6 +915,7 @@ static int set_swin_from_ppfd(DATASET *const dataset) {
 			if ( (slope < SLOPE_MIN) || (slope > SLOPE_MAX) ) {
 				printf("unable to compute %s from %s: slope is %f\n\n", var_names[SWIN_INPUT], var_names[PPFD_INPUT], slope);
 				free(all_valids);
+
 				return 0;
 			}
 
@@ -1860,7 +1866,17 @@ static int save_nee_file(DATASET *const dataset) {
 	/* check for mandatory values */
 	i = get_var_index(dataset, var_names[NEE_INPUT]);
 	if ( -1 == i ) {
-		printf("var %s is missing. file will be not created.\n", var_names[NEE_INPUT]);
+		/* added on 20160822 */
+		i = get_var_index(dataset, var_names[FC_INPUT]);
+		y = 0;
+		if ( i != -1 ) {
+			y = (dataset->rows_count == dataset->missings[i]);
+		}
+		if ( (-1 == i) || y )  {
+			printf("var %s was not computed, FC is missing. file will be not created\n", var_names[NEE_INPUT]);
+		} else {
+			printf("var %s is missing. file will be not created\n", var_names[NEE_INPUT]);
+		}
 		return 0;
 	}
 
@@ -1964,6 +1980,23 @@ static int save_energy_file(DATASET *const dataset) {
 	/* */
 	assert(dataset);
 
+	/* added on October 25, 2016 */
+	{
+		/* check H */
+		var = get_var_index(dataset, var_names[H_INPUT]);
+		if ( (-1 == var) || (dataset->rows_count == dataset->missings[var]) ) {
+			printf("%s missing. File will be not created.", var_names[H_INPUT]);
+			return 1;
+		}
+
+		/* check LE */
+		var = get_var_index(dataset, var_names[LE_INPUT]);
+		if ( (-1 == var) || (dataset->rows_count == dataset->missings[var]) ) {
+			printf("%s missing. File will be not created.", var_names[LE_INPUT]);
+			return 1;
+		}
+	}
+
 	/* check how many vars can be written */
 	y = 0;
 	for ( i = 0; i < SIZEOF_ARRAY(vars_index); i++ ) {
@@ -2055,6 +2088,39 @@ static int save_ustar_file(DATASET *const dataset) {
 
 	/* */
 	assert(dataset);
+
+	/* added on 20160822 */
+	/* do not create u* file if u* is missing */
+	var = get_var_index(dataset, var_names[USTAR_INPUT]);
+	if ( -1 != var ) {
+		if ( dataset->rows_count == dataset->missings[var] ) {
+			var = -1;
+		}
+	}
+	if ( -1 == var ) {
+		printf("%s missing! file will be not created\n", var_names[USTAR_INPUT]);
+		return 0;
+	}
+	/* do not create u* file if nee is missing */
+	var = get_var_index(dataset, var_names[NEE_INPUT]);
+	if ( -1 != var ) {
+		if ( dataset->rows_count == dataset->missings[var] ) {
+			var = -1;
+		}
+	}
+	if ( -1 == var ) {
+		var = get_var_index(dataset, var_names[FC_INPUT]);
+		y = 0;
+		if ( var != -1 ) {
+			y = (dataset->rows_count == dataset->missings[var]);
+		}
+		if ( (-1 == var) || y )  {
+			printf("var %s was not computed, %s is missing. file will be not created\n", var_names[NEE_INPUT], var_names[FC_INPUT]);
+		} else {
+			printf("var %s is missing. file will be not created\n", var_names[NEE_INPUT]);
+		}
+		return 0;
+	}		
 
 	/* create file */
 	sprintf(buffer, "%s%s_qca_ustar_%d.csv", output_path, dataset->details->site, dataset->details->year);
