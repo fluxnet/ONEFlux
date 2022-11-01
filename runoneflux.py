@@ -17,12 +17,12 @@ import argparse
 import traceback
 import yaml
 
+from datetime import datetime
 from oneflux import ONEFluxError, log_config, log_trace, VERSION_PROCESSING, VERSION_METADATA
 from oneflux.tools.partition_nt import run_partition_nt, PROD_TO_COMPARE, PERC_TO_COMPARE
 from oneflux.tools.partition_dt import run_partition_dt
 from oneflux.tools.pipeline import run_pipeline, NOW_TS
 from oneflux.pipeline.common import ERA_FIRST_YEAR, ERA_LAST_YEAR
-import oneflux
 
 log = logging.getLogger(__name__)
 
@@ -81,8 +81,8 @@ if __name__ == '__main__':
         logfile = args.logfile if args.logfile else run_config.get('log_file', DEFAULT_LOGGING_FILENAME)
         forcepy = args.forcepy if args.forcepy else run_config.get('force_py', False)
         mcr_directory = args.mrc_directory if args.mcr_directory else run_config.get('mcr_directory', None)
-        timestamp = args.timestamp if args.timestamp else run_config.get('record_interval', 'hh')
-        recint = args.recint if args.recint else run_config.get('mcr_directory', NOW_TS)
+        timestamp = args.timestamp if args.timestamp else run_config.get('timestamp', NOW_TS)
+        recint = args.recint if args.recint else run_config.get('mcr_directory', None)
         versionp = args.versionp if args.versionp else run_config.get('version_processing', str(VERSION_PROCESSING))
         versiond = args.versiond if args.versiond else run_config.get('version_data', str(VERSION_METADATA))
         erafy = args.erafy if args.erafy else run_config.get('era_first_year', int(ERA_FIRST_YEAR))
@@ -121,6 +121,30 @@ if __name__ == '__main__':
         if not os.path.isdir(os.path.join(datadir, sitedir)):
             raise ONEFluxError("Site dir not found: {d}".format(d=sitedir))
 
+        run_params = {'run':
+            {
+                'command': command,
+                'data_dir': datadir,
+                'site_id': siteid,
+                'first_year': firstyear,
+                'last_year': lastyear,
+                'prod': prod,
+                'perc': perc,
+                'log_file': logfile,
+                'force_py': forcepy,
+                'mcr_dir': mcr_directory,
+                'timestamp': timestamp,
+                'record_interval': recint,
+                'version_processing': versionp,
+                'version_data': versiond,
+                'era_first_year': erafy,
+                'era_last_year': eraly,
+                'steps': steps
+            }}
+
+        datetime_log = datetime.now().strftime('%y_%m_%d-%H_%M_%S')
+        with open(os.path.join(datadir, sitedir, 'run_params_{}.yaml'.format(datetime_log)), 'w') as f:
+            yaml.dump(run_params, f)
         # run command
         log.info("Starting execution: {c}".format(c=command))
         if command == 'all':
