@@ -1,21 +1,22 @@
 run:
   command: all
-  data_dir: /home/toanngo/Documents/GitHub/ameriflux/ONEFlux/data
-  site_id: US-ARc
-  site_dir: US-ARc_sample_input
-  first_year: 2005
-  last_year: 2006
-  prod:
+  datadir: ./data
+  siteid: <replace_me>
+  sitedir: <replace_me>
+  firstyear: 2005
+  lastyear: 2006
   perc:
-  log_file: fluxnet_pipeline_US-ARc.log
-  force_py: true
-  mcr_dir: /home/toanngo/Documents/GitHub/MATLAB_Runtime/v94
-  timestamp:
-  record_interval: hh
-  version_processing:
-  version_data:
-  era_first_year:
-  era_last_year:
+  prod:
+  logfile: oneflux.log
+  force_py: false
+  mcr: <replace_me>/MATLAB_Runtime/v94
+  ts: oneflux.tools.pipeline:NOW_TS
+  recint: hh
+  versionp: oneflux:VERSION_PROCESSING
+  versiond: oneflux:VERSION_METADATA
+  era_fy: oneflux.pipeline.common:ERA_FIRST_YEAR
+  era_ly: oneflux.pipeline.common:ERA_LAST_YEAR
+  configfile:
   steps:
       qc_auto_execute: true
       ustar_mp_execute: true
