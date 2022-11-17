@@ -19,6 +19,7 @@ RUN_MODE = {'all': run_pipeline,
             'partition_nt': run_partition_nt,
             'partition_dt': run_partition_dt
            }
+
 YAML_TEMPLATE_PATH = 'oneflux/configs/config_template.yaml'
 YAML_DESCRIPTION_PATH ='oneflux/configs/config_description.yaml'
 

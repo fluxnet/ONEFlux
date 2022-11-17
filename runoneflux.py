@@ -35,23 +35,23 @@ if __name__ == '__main__':
     config.run_check()
     config.export_to_yaml()
     # start execution
-    # try:
-    #     # run command
-    #     log.info("Starting execution: {c}".format(c=config.args.command))
-    #     run_mode_func = config.get_run_mode_func()
-    #     if config.args.command == 'all':
-    #         run_mode_func(**config.get_pipeline_params())
-    #     elif config.args.command == 'partition_nt':
-    #         run_mode_func(**config.get_partition_nt_params())
-    #     elif config.args.command == 'partition_dt':
-    #         run_mode_func(**config.get_partition_dt_params())
-    #     log.info("Finished execution: {c}".format(c=config.args.command))
+    try:
+        # run command
+        log.info("Starting execution: {c}".format(c=config.args.command))
+        run_mode_func = config.get_run_mode_func()
+        if config.args.command == 'all':
+            run_mode_func(**config.get_pipeline_params())
+        elif config.args.command == 'partition_nt':
+            run_mode_func(**config.get_partition_nt_params())
+        elif config.args.command == 'partition_dt':
+            run_mode_func(**config.get_partition_dt_params())
+        log.info("Finished execution: {c}".format(c=config.args.command))
 
-    # except Exception as e:
-    #     msg = log_trace(exception=e, level=logging.CRITICAL, log=log)
-    #     log.critical("***Problem during execution*** {e}".format(e=str(e)))
-    #     tb = traceback.format_exc()
-    #     log.critical("***Problem traceback*** {s}".format(s=str(tb)))
-    #     sys.exit(msg)
+    except Exception as e:
+        msg = log_trace(exception=e, level=logging.CRITICAL, log=log)
+        log.critical("***Problem during execution*** {e}".format(e=str(e)))
+        tb = traceback.format_exc()
+        log.critical("***Problem traceback*** {s}".format(s=str(tb)))
+        sys.exit(msg)
 
     sys.exit(0)
