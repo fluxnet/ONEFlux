@@ -86,46 +86,57 @@ run:
   dummy-step-1:
     help: dummy-step-1
     type: str
+
 02_qc_auto:
   dummy-step-2:
     help: dummy-step-2
     type: str
+
 04_ustar_mp:
   dummy-step-4:
     help: dummy-step-4
     type: str
+
 05_ustar_cp:
   dummy-step-5:
     help: dummy-step-5
     type: str
+
 06_meteo_era:
   dummy-step-6:
     help: dummy-step-6
     type: str
+
 07_meteo_proc:
   dummy-step-7:
     help: dummy-step-7
     type: str
+
 08_nee_proc:
   dummy-step-8:
     help: dummy-step-8
     type: str
+
 09_energy_proc:
   dummy-step-9:
     help: dummy-step-9
     type: str
+
 10_nee_partition_nt:
   dummy-step-10:
     help: dummy-step-10
     type: str
+
 11_nee_partition_dt:
   dummy-step-11:
     help: dummy-step-11
     type: str
+
 12_ure:
   dummy-step-12:
     help: dummy-step-12
     type: str
+
 99_fluxnet2015:
   dummy-step-99:
     help: dummy-step-99
