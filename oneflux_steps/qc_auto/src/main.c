@@ -23,7 +23,7 @@
 #include "../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION			"v1.0"
+#define PROGRAM_VERSION			"v1.01"
 const int days_per_month[MONTHS] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
 /* enum */
@@ -1189,10 +1189,10 @@ static int save_db_file(DATASET *const dataset) {
 	for ( i = 0; i < dataset->rows_count; i++ ) {
 		/* ...timestamp_start.... */
 		if ( ! one_timestamp ) {
-			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		}
 		/* ...timestamp_end.... */
-		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		/* ...values... */
 		for ( y = 0; y < SIZEOF_ARRAY(vars_index); y++ ) {
 			var = get_var_index(dataset, var_names[vars_index[y]]);
@@ -1797,10 +1797,10 @@ static int save_graph_file(DATASET *const dataset) {
 	for ( i = 0; i < dataset->rows_count; i++ ) {
 		/* ...timestamp_start.... */
 		if ( ! one_timestamp ) {
-			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		}
 		/* ...timestamp_end.... */
-		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		/* ...values... */
 		for ( y = 0; y < SIZEOF_ARRAY(vars_index); y++ ) {
 			var = get_var_index(dataset, var_names[vars_index[y]]);
@@ -1917,10 +1917,10 @@ static int save_nee_file(DATASET *const dataset) {
 	for ( i = 0; i < dataset->rows_count; i++ ) {
 		/* ...timestamp_start.... */
 		if ( ! one_timestamp ) {
-			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		}
 		/* ...timestamp_end.... */
-		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		/* ...values... */
 		for ( y = 0; y < SIZEOF_ARRAY(vars_index); y++ ) {
 			var = get_var_index(dataset, var_names[vars_index[y]]);
@@ -2014,10 +2014,10 @@ static int save_energy_file(DATASET *const dataset) {
 	for ( i = 0; i < dataset->rows_count; i++ ) {
 		/* ...timestamp_start.... */
 		if ( ! one_timestamp ) {
-			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		}
 		/* ...timestamp_end.... */
-		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		/* ...values... */
 		for ( y = 0; y < SIZEOF_ARRAY(vars_index); y++ ) {
 			var = get_var_index(dataset, var_names[vars_index[y]]);
@@ -2093,10 +2093,10 @@ static int save_ustar_file(DATASET *const dataset) {
 	for ( i = 0; i < dataset->rows_count; i++ ) {
 		/* ...timestamp_start.... */
 		if ( ! one_timestamp ) {
-			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		}
 		/* ...timestamp_end.... */
-		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		/* ...values... */
 		for ( y = 0; y < SIZEOF_ARRAY(vars_index); y++ ) {
 			var = get_var_index(dataset, var_names[vars_index[y]]);
@@ -2973,10 +2973,10 @@ static int save_meteo_file(DATASET *const dataset) {
 	for ( i = 0; i < dataset->rows_count; i++ ) {
 		/* ...timestamp_start.... */
 		if ( ! one_timestamp ) {
-			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		}
 		/* ...timestamp_end.... */
-		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		/* ...values... */
 		if ( dataset->rows_count != dataset->missings[CO2] ) fprintf(f, ",%g", dataset->rows[i].value[CO2]);
 		if ( dataset->rows_count != dataset->missings[P] ) fprintf(f, ",%g", dataset->rows[i].value[P]);
@@ -3163,14 +3163,14 @@ static int save_sr_file(DATASET *const dataset) {
 	/* write values */
 	for ( i = 0; i < dataset->rows_count; i++ ) {
 		/* ...timestamp.... */
-		fprintf(f, "%s,", timestamp_for_sr(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s,", timestamp_for_sr(i, dataset->details->year, dataset->details->timeres));
 		/* ...values... */
 		fprintf(f, "%g,", dataset->rows[i].value[FC]);
 		fprintf(f, "%g,", dataset->rows[i].value[SC]);
 		fprintf(f, "%g,", dataset->rows[i].value[USTAR]);
 		fprintf(f, "%g,", dataset->rows[i].value[SWIN]);
 		fprintf(f, "%g,", dataset->rows[i].value[TS]);
-		fprintf(f, "%s,", timestamp_end_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s,", timestamp_end_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		fprintf(f, "%g,", dataset->rows[i].value[TA]);
 		fprintf(f, "%g\n", dataset->rows[i].value[VPD]);
 	}
@@ -3199,7 +3199,7 @@ static int set_sc_negl(DATASET *const dataset) {
 	}
 
 	for ( i = 0; i < dataset->details->sc_negles_count; i++ ) {
-		z = get_row_by_timestamp(&dataset->details->sc_negles[i].timestamp, (HOURLY_TIMERES == dataset->details->timeres));
+		z = get_row_by_timestamp(&dataset->details->sc_negles[i].timestamp, dataset->details->timeres);
 		for ( y = z; y < dataset->rows_count; y++ ) {
 			dataset->rows[y].value[SC_NEGL] = dataset->details->sc_negles[i].flag;
 		}

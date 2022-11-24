@@ -20,7 +20,7 @@
 #include "../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION		"v1.0"
+#define PROGRAM_VERSION		"v1.01"
 #define BUFFER_SIZE			1024
 #define QC_AUTO_PATH		"qc_auto"
 #define ERA_PATH			"era"
@@ -32,10 +32,10 @@ char *era_files_path = NULL;								/* mandatory */
 char *output_files_path = NULL;								/* mandatory */
 char folder_delimiter_str[2];                               /* used to get folder delimiter string from FOLDER_DELIMITER char in common.h*/
 
-PREC swin_tolerance_min = GF_SW_IN_TOLERANCE_MIN;			/* see common.h */
-PREC swin_tolerance_max = GF_SW_IN_TOLERANCE_MAX;			/* see common.h */
-PREC ta_tolerance = GF_TA_TOLERANCE;						/* see common.h */
-PREC vpd_tolerance = GF_VPD_TOLERANCE;						/* see common.h */
+PREC swin_tolerance_min = GF_DRIVER_1_TOLERANCE_MIN;			/* see common.h */
+PREC swin_tolerance_max = GF_DRIVER_1_TOLERANCE_MAX;			/* see common.h */
+PREC ta_tolerance = GF_DRIVER_2A_TOLERANCE_MIN;					/* see common.h */
+PREC vpd_tolerance = GF_DRIVER_2B_TOLERANCE_MIN;				/* see common.h */
 
 /* strings */
 static const char banner[] =	"\nmeteo_proc "PROGRAM_VERSION"\n"

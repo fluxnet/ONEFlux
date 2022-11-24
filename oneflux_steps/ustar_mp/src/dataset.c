@@ -408,7 +408,7 @@ UT *import_dataset(const LIST *const list, const int list_count) {
 								/* fix to zero based index */
 								--row;
 
-								token = timestamp_end_by_row_s(row, 0, 0);
+								token = timestamp_end_by_row_s(row, 0, HALFHOURLY_TIMERES);
 								if ( !token ) {
 									free_ut(ut);
 									fclose(f);

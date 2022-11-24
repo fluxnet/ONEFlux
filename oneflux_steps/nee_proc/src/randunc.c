@@ -172,10 +172,10 @@ void random_method_1(RAND_UNC_ROW *const unc_rows, const int unc_rows_count, con
 					
 			/* compute tolerance for SWin */
 			swin_tolerance = unc_rows[i].value[SWIN_UNC];
-			if ( swin_tolerance < GF_SW_IN_TOLERANCE_MIN ) {
-				swin_tolerance = GF_SW_IN_TOLERANCE_MIN;
-			} else if ( swin_tolerance > GF_SW_IN_TOLERANCE_MAX ) {
-				swin_tolerance = GF_SW_IN_TOLERANCE_MAX;
+			if ( swin_tolerance < GF_DRIVER_1_TOLERANCE_MIN ) {
+				swin_tolerance = GF_DRIVER_1_TOLERANCE_MIN;
+			} else if ( swin_tolerance > GF_DRIVER_1_TOLERANCE_MAX ) {
+				swin_tolerance = GF_DRIVER_1_TOLERANCE_MAX;
 			}
 
 			/* loop through window */
@@ -187,9 +187,9 @@ void random_method_1(RAND_UNC_ROW *const unc_rows, const int unc_rows_count, con
 
 					if (	(0 == unc_rows[window_current+y].qc[to_rand_index]) &&
 							IS_FLAG_SET(unc_rows[window_current+y].mask, GF_ALL_VALID) &&
-							(FABS(unc_rows[window_current+y].value[TA_UNC]-unc_rows[i].value[TA_UNC]) < GF_TA_TOLERANCE) &&
+							(FABS(unc_rows[window_current+y].value[TA_UNC]-unc_rows[i].value[TA_UNC]) < GF_DRIVER_2A_TOLERANCE_MIN) &&
 							(FABS(unc_rows[window_current+y].value[SWIN_UNC]-unc_rows[i].value[SWIN_UNC]) < swin_tolerance ) &&
-							(FABS(unc_rows[window_current+y].value[VPD_UNC]-unc_rows[i].value[VPD_UNC]) < GF_VPD_TOLERANCE) ) {
+							(FABS(unc_rows[window_current+y].value[VPD_UNC]-unc_rows[i].value[VPD_UNC]) < GF_DRIVER_2B_TOLERANCE_MIN) ) {
 						unc_rows[samples_count++].similiar = unc_rows[window_current+y].value[to_rand_index];
 					}
 				}

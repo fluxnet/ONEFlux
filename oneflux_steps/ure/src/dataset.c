@@ -1280,10 +1280,10 @@ int compute_datasets(DATASET *const datasets, const int datasets_count, const in
 			exists = datasets[dataset].years[i].exist;
 			for ( row = 0; row < y; row++ ) {
 				/* TIMESTAMP_START */
-				p = timestamp_start_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].hourly); 
+				p = timestamp_start_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres); 
 				fputs(p, f);
 				/* TIMESTAMP_END */
-				p = timestamp_end_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].hourly); 
+				p = timestamp_end_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres); 
 				fprintf(f, ",%s,", p);
 				/* dtime */
 				fprintf(f, "%g,", get_dtime_by_row(row, datasets[dataset].hourly));
@@ -2704,10 +2704,10 @@ int compute_sr_datasets(DATASET *const datasets, const int datasets_count, const
 			}
 			for ( row = 0; row < y; row++ ) {
 				/* TIMESTAMP_START */
-				p = timestamp_start_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].hourly); 
+				p = timestamp_start_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres); 
 				fputs(p, f);
 				/* TIMESTAMP_END */
-				p = timestamp_end_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].hourly); 
+				p = timestamp_end_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres); 
 				fprintf(f, ",%s,", p);
 				/* values */
 				fprintf(f, "%g,%g\n", get_dtime_by_row(row, datasets[dataset].hourly), datasets[dataset].srs[j+row].reco);

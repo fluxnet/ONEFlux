@@ -24,7 +24,7 @@
 #include "../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION		"v1.0"
+#define PROGRAM_VERSION		"v1.01"
 
 /* static global variables */
 static char *input_path;
@@ -947,7 +947,7 @@ int main(int argc, char *argv[]) {
 			}
 
 			/* add to filename */
-			if ( !mystrcat(filename, string, FILENAME_MAX) && '\0' == filename[0]) {
+			if ( !string_concat(filename, string, FILENAME_MAX) && '\0' == filename[0]) {
 				puts(err_unable_create_output_filename);
 				files_not_processed_count += files[z].count;
 				free(string);
