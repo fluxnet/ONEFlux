@@ -2990,10 +2990,10 @@ static int save_dataset_hh(const DATASET *const dataset) {
 		}
 		for ( row = 0; row < y; row++ ) {
 			/* TIMESTAMP_START */
-			p = timestamp_start_by_row_s(row, dataset->years[i].year, dataset->hourly); 
+			p = timestamp_start_by_row_s(row, dataset->years[i].year, dataset->timeres); 
 			fputs(p, f);
 			/* TIMESTAMP_END */
-			p = timestamp_end_by_row_s(row, dataset->years[i].year, dataset->hourly); 
+			p = timestamp_end_by_row_s(row, dataset->years[i].year, dataset->timeres); 
 			fprintf(f, ",%s,", p);
 			/* write values */
 			fprintf(f, output_format_hh,
@@ -3146,7 +3146,7 @@ static int save_dataset_dd(const DATASET *const dataset) {
 		}
 		y /= (dataset->hourly ? 24 : 48);
 		for ( row = 0; row < y; row++ ) {
-			t = timestamp_end_by_row(row*(dataset->hourly ? 24 : 48), dataset->years[i].year, dataset->hourly);
+			t = timestamp_end_by_row(row*(dataset->hourly ? 24 : 48), dataset->years[i].year, dataset->timeres);
 			/* write values */
 			fprintf(f, output_format_dd,
 										t->YYYY,
@@ -3312,10 +3312,10 @@ static int save_dataset_ww(const DATASET *const dataset) {
 		year = dataset->years[i].year;
 		for ( row = 0; row < 52; row++ ) {
 			/* write timestamp_start */
-			p = timestamp_ww_get_by_row_s(row, year, dataset->hourly, 1);
+			p = timestamp_ww_get_by_row_s(row, year, dataset->timeres, 1);
 			fprintf(f, "%s,", p);
 			/* write timestamp_end */
-			p = timestamp_ww_get_by_row_s(row, year, dataset->hourly, 0);
+			p = timestamp_ww_get_by_row_s(row, year, dataset->timeres, 0);
 			fprintf(f, "%s,", p);
 			/* write values */
 			fprintf(f, output_format_ww,
@@ -4266,28 +4266,38 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				end_row = current_dataset->rows_count;
 			}
 		
-			gf_rows = gf_mds_with_bounds(	current_dataset->rows->value,
-											sizeof(ROW),
-											current_dataset->rows_count,
-											VALUES,
-											current_dataset->hourly,
-											GF_SW_IN_TOLERANCE_MIN,
-											GF_SW_IN_TOLERANCE_MAX,
-											GF_TA_TOLERANCE,
-											GF_VPD_TOLERANCE,
-											TA_MET,
-											SW_IN_MET,
-											TA_MET,
-											VPD_MET,
-											-1,
-											-1,
-											-1,
-											INVALID_VALUE,
-											GF_ROWS_MIN,
-											0,
-											start_row,
-											end_row,
-											&not_gf_count
+			gf_rows = gf_mds(	current_dataset->rows->value,
+								sizeof(ROW),
+								current_dataset->rows_count,
+								VALUES,
+								current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
+								GF_DRIVER_1_TOLERANCE_MIN,
+								GF_DRIVER_1_TOLERANCE_MAX,
+								GF_DRIVER_2A_TOLERANCE_MIN,
+								GF_DRIVER_2A_TOLERANCE_MAX,
+								GF_DRIVER_2B_TOLERANCE_MIN,
+								GF_DRIVER_2B_TOLERANCE_MAX,
+								TA_MET,
+								SW_IN_MET,
+								TA_MET,
+								VPD_MET,
+								-1,
+								-1,
+								-1,
+								INVALID_VALUE,
+								INVALID_VALUE,
+								INVALID_VALUE,
+								GF_ROWS_MIN,
+								0,
+								start_row,
+								end_row,
+								&not_gf_count,
+								0,
+								0,
+								0,
+								NULL,
+								0
+
 			);
 
 			if ( !gf_rows ) {
@@ -4360,28 +4370,37 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				end_row = current_dataset->rows_count;
 			}
 		
-			gf_rows = gf_mds_with_bounds(	current_dataset->rows->value,
-											sizeof(ROW),
-											current_dataset->rows_count,
-											VALUES,
-											current_dataset->hourly,
-											GF_SW_IN_TOLERANCE_MIN,
-											GF_SW_IN_TOLERANCE_MAX,
-											GF_TA_TOLERANCE,
-											GF_VPD_TOLERANCE,
-											SW_IN_MET,
-											SW_IN_MET,
-											TA_MET,
-											VPD_MET,
-											-1,
-											-1,
-											-1,
-											INVALID_VALUE,
-											GF_ROWS_MIN,
-											0,
-											start_row,
-											end_row,
-											&not_gf_count
+			gf_rows = gf_mds(	current_dataset->rows->value,
+								sizeof(ROW),
+								current_dataset->rows_count,
+								VALUES,
+								current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
+								GF_DRIVER_1_TOLERANCE_MIN,
+								GF_DRIVER_1_TOLERANCE_MAX,
+								GF_DRIVER_2A_TOLERANCE_MIN,
+								GF_DRIVER_2A_TOLERANCE_MAX,
+								GF_DRIVER_2B_TOLERANCE_MIN,
+								GF_DRIVER_2B_TOLERANCE_MAX,
+								SW_IN_MET,
+								SW_IN_MET,
+								TA_MET,
+								VPD_MET,
+								-1,
+								-1,
+								-1,
+								INVALID_VALUE,
+								INVALID_VALUE,
+								INVALID_VALUE,
+								GF_ROWS_MIN,
+								0,
+								start_row,
+								end_row,
+								&not_gf_count,
+								0,
+								0,
+								0,
+								NULL,
+								0
 			);
 
 			if ( !gf_rows ) {
@@ -4454,28 +4473,37 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				end_row = current_dataset->rows_count;
 			}
 		
-			gf_rows = gf_mds_with_bounds(	current_dataset->rows->value,
-											sizeof(ROW),
-											current_dataset->rows_count,
-											VALUES,
-											current_dataset->hourly,
-											GF_SW_IN_TOLERANCE_MIN,
-											GF_SW_IN_TOLERANCE_MAX,
-											GF_TA_TOLERANCE,
-											GF_VPD_TOLERANCE,
-											LW_IN_MET,
-											SW_IN_MET,
-											TA_MET,
-											VPD_MET,
-											-1,
-											-1,
-											-1,
-											INVALID_VALUE,
-											GF_ROWS_MIN,
-											0,
-											start_row,
-											end_row,
-											&not_gf_count
+			gf_rows = gf_mds(	current_dataset->rows->value,
+								sizeof(ROW),
+								current_dataset->rows_count,
+								VALUES,
+								current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
+								GF_DRIVER_1_TOLERANCE_MIN,
+								GF_DRIVER_1_TOLERANCE_MAX,
+								GF_DRIVER_2A_TOLERANCE_MIN,
+								GF_DRIVER_2A_TOLERANCE_MAX,
+								GF_DRIVER_2B_TOLERANCE_MIN,
+								GF_DRIVER_2B_TOLERANCE_MAX,
+								LW_IN_MET,
+								SW_IN_MET,
+								TA_MET,
+								VPD_MET,
+								-1,
+								-1,
+								-1,
+								INVALID_VALUE,
+								INVALID_VALUE,
+								INVALID_VALUE,
+								GF_ROWS_MIN,
+								0,
+								start_row,
+								end_row,
+								&not_gf_count,
+								0,
+								0,
+								0,
+								NULL,
+								0
 			);
 
 			if ( !gf_rows ) {
@@ -4548,28 +4576,37 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				end_row = current_dataset->rows_count;
 			}
 		
-			gf_rows = gf_mds_with_bounds(	current_dataset->rows->value,
-											sizeof(ROW),
-											current_dataset->rows_count,
-											VALUES,
-											current_dataset->hourly,
-											GF_SW_IN_TOLERANCE_MIN,
-											GF_SW_IN_TOLERANCE_MAX,
-											GF_TA_TOLERANCE,
-											GF_VPD_TOLERANCE,
-											VPD_MET,
-											SW_IN_MET,
-											TA_MET,
-											VPD_MET,
-											-1,
-											-1,
-											-1,
-											INVALID_VALUE,
-											GF_ROWS_MIN,
-											0,
-											start_row,
-											end_row,
-											&not_gf_count
+			gf_rows = gf_mds(	current_dataset->rows->value,
+								sizeof(ROW),
+								current_dataset->rows_count,
+								VALUES,
+								current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
+								GF_DRIVER_1_TOLERANCE_MIN,
+								GF_DRIVER_1_TOLERANCE_MAX,
+								GF_DRIVER_2A_TOLERANCE_MIN,
+								GF_DRIVER_2A_TOLERANCE_MAX,
+								GF_DRIVER_2B_TOLERANCE_MIN,
+								GF_DRIVER_2B_TOLERANCE_MAX,
+								VPD_MET,
+								SW_IN_MET,
+								TA_MET,
+								VPD_MET,
+								-1,
+								-1,
+								-1,
+								INVALID_VALUE,
+								INVALID_VALUE,
+								INVALID_VALUE,
+								GF_ROWS_MIN,
+								0,
+								start_row,
+								end_row,
+								&not_gf_count,
+								0,
+								0,
+								0,
+								NULL,
+								0
 			);
 
 			if ( !gf_rows ) {
@@ -4642,28 +4679,37 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				end_row = current_dataset->rows_count;
 			}
 		
-			gf_rows = gf_mds_with_bounds(	current_dataset->rows->value,
-											sizeof(ROW),
-											current_dataset->rows_count,
-											VALUES,
-											current_dataset->hourly,
-											GF_SW_IN_TOLERANCE_MIN,
-											GF_SW_IN_TOLERANCE_MAX,
-											GF_TA_TOLERANCE,
-											GF_VPD_TOLERANCE,
-											CO2_MET,
-											SW_IN_MET,
-											TA_MET,
-											VPD_MET,
-											-1,
-											-1,
-											-1,
-											INVALID_VALUE,
-											GF_ROWS_MIN,
-											0,
-											start_row,
-											end_row,
-											&not_gf_count
+			gf_rows = gf_mds(	current_dataset->rows->value,
+								sizeof(ROW),
+								current_dataset->rows_count,
+								VALUES,
+								current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
+								GF_DRIVER_1_TOLERANCE_MIN,
+								GF_DRIVER_1_TOLERANCE_MAX,
+								GF_DRIVER_2A_TOLERANCE_MIN,
+								GF_DRIVER_2A_TOLERANCE_MAX,
+								GF_DRIVER_2B_TOLERANCE_MIN,
+								GF_DRIVER_2B_TOLERANCE_MAX,
+								CO2_MET,
+								SW_IN_MET,
+								TA_MET,
+								VPD_MET,
+								-1,
+								-1,
+								-1,
+								INVALID_VALUE,
+								INVALID_VALUE,
+								INVALID_VALUE,
+								GF_ROWS_MIN,
+								0,
+								start_row,
+								end_row,
+								&not_gf_count,
+								0,
+								0,
+								0,
+								NULL,
+								0
 			);
 
 			if ( !gf_rows ) {
@@ -4739,28 +4785,37 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				}
 			
 				/* do gf */
-				gf_rows = gf_mds_with_bounds(	current_dataset->rows->value,
-												sizeof(ROW),
-												current_dataset->rows_count,
-												VALUES,
-												current_dataset->hourly,
-												GF_SW_IN_TOLERANCE_MIN,
-												GF_SW_IN_TOLERANCE_MAX,
-												GF_TA_TOLERANCE,
-												GF_VPD_TOLERANCE,
-												TEMP,
-												SW_IN_MET,
-												TA_MET,
-												VPD_MET,
-												-1,
-												-1,
-												-1,
-												INVALID_VALUE,
-												GF_ROWS_MIN,
-												0,
-												start_row,
-												end_row,
-												&not_gf_count
+				gf_rows = gf_mds(	current_dataset->rows->value,
+									sizeof(ROW),
+									current_dataset->rows_count,
+									VALUES,
+									current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
+									GF_DRIVER_1_TOLERANCE_MIN,
+									GF_DRIVER_1_TOLERANCE_MAX,
+									GF_DRIVER_2A_TOLERANCE_MIN,
+									GF_DRIVER_2A_TOLERANCE_MAX,
+									GF_DRIVER_2B_TOLERANCE_MIN,
+									GF_DRIVER_2B_TOLERANCE_MAX,
+									TEMP,
+									SW_IN_MET,
+									TA_MET,
+									VPD_MET,
+									-1,
+									-1,
+									-1,
+									INVALID_VALUE,
+									INVALID_VALUE,
+									INVALID_VALUE,
+									GF_ROWS_MIN,
+									0,
+									start_row,
+									end_row,
+									&not_gf_count,
+									0,
+									0,
+									0,
+									NULL,
+									0
 				);
 
 				if ( !gf_rows ) {
@@ -4837,28 +4892,38 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				}
 			
 				/* do gf */
-				gf_rows = gf_mds_with_bounds(	current_dataset->rows->value,
-												sizeof(ROW),
-												current_dataset->rows_count,
-												VALUES,
-												current_dataset->hourly,
-												GF_SW_IN_TOLERANCE_MIN,
-												GF_SW_IN_TOLERANCE_MAX,
-												GF_TA_TOLERANCE,
-												GF_VPD_TOLERANCE,
-												TEMP,
-												SW_IN_MET,
-												TA_MET,
-												VPD_MET,
-												-1,
-												-1,
-												-1,
-												INVALID_VALUE,
-												GF_ROWS_MIN,
-												0,
-												start_row,
-												end_row,
-												&not_gf_count
+				gf_rows = gf_mds(	current_dataset->rows->value,
+									sizeof(ROW),
+									current_dataset->rows_count,
+									VALUES,
+									current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
+									GF_DRIVER_1_TOLERANCE_MIN,
+									GF_DRIVER_1_TOLERANCE_MAX,
+									GF_DRIVER_2A_TOLERANCE_MIN,
+									GF_DRIVER_2A_TOLERANCE_MAX,
+									GF_DRIVER_2B_TOLERANCE_MIN,
+									GF_DRIVER_2B_TOLERANCE_MAX,
+									TEMP,
+									SW_IN_MET,
+									TA_MET,
+									VPD_MET,
+									-1,
+									-1,
+									-1,
+									INVALID_VALUE,
+									INVALID_VALUE,
+									INVALID_VALUE,
+									GF_ROWS_MIN,
+									0,
+									start_row,
+									end_row,
+									&not_gf_count,
+									0,
+									0,
+									0,
+									NULL,
+									0
+
 				);
 
 				if ( !gf_rows ) {
@@ -4914,7 +4979,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				New option added 20160616 to take into account the possibility that ERA is
 				not present in a given year (recent years). In this case the data filled using
 				MDS are used for the _M and the QC is set as 3
-				AGGIUNGI COME SOPRA, SE LW_IN_CALC_M è ancora -9999 metter LW_IN_CALC e QC = 3
+				if LW_IN_CALC_M is still INVALID_VALUE, LW_IN_CALC and LW_IN_CALC_M_QC are set to 3
 			*/
 			if ( IS_INVALID_VALUE(current_dataset->rows[i].value[LW_IN_CALC_M]) ) {
 				current_dataset->rows[i].value[LW_IN_CALC_M] = current_dataset->rows[i].value[LW_IN_CALC];

@@ -111,10 +111,10 @@ enum {
 
 /* gf */
 enum {
-	GF_TOFILL_VALID		= 1,
-	GF_VALUE1_VALID		= 2,	/* was GF_SWIN_VALID */
-	GF_VALUE2_VALID		= 4,	/* was GF_TA_VALID */
-	GF_VALUE3_VALID		= 8,	/* was GF_VPD_VALID */
+	GF_TOFILL_VALID		= 1 << 0 ,
+	GF_VALUE1_VALID		= 1 << 1 ,
+	GF_VALUE2_VALID		= 1 << 2 ,
+	GF_VALUE3_VALID		= 1 << 3 ,
 	GF_ALL_VALID		= GF_TOFILL_VALID|GF_VALUE1_VALID|GF_VALUE2_VALID|GF_VALUE3_VALID
 };
 
@@ -169,14 +169,16 @@ enum {
 #define YEAR_LEN			5				/* including null-terminating char */
 
 /* constants for gapfilling */
-#define GF_SW_IN_TOLERANCE_MIN			20.0
-#define GF_SW_IN_TOLERANCE_MAX			50.0
-#define GF_TA_TOLERANCE					2.5
-#define GF_VPD_TOLERANCE				5.0
-#define GF_TOKEN_LENGTH_MAX				32
-#define GF_ROWS_MIN_MIN					0
-#define GF_ROWS_MIN						0
-#define GF_ROWS_MIN_MAX					10000
+#define GF_DRIVER_1_TOLERANCE_MIN			20.0
+#define GF_DRIVER_1_TOLERANCE_MAX			50.0
+#define GF_DRIVER_2A_TOLERANCE_MIN			2.5
+#define GF_DRIVER_2A_TOLERANCE_MAX			INVALID_VALUE
+#define GF_DRIVER_2B_TOLERANCE_MIN			5.0
+#define GF_DRIVER_2B_TOLERANCE_MAX			INVALID_VALUE
+#define GF_TOKEN_LENGTH_MAX					32
+#define GF_ROWS_MIN_MIN						0
+#define GF_ROWS_MIN							0
+#define GF_ROWS_MIN_MAX						10000
 
 /* */
 #define TIMESTAMP_STRING		"TIMESTAMP"
@@ -238,6 +240,16 @@ typedef struct {
 	int time_window;
 	int samples_count;
 	int method;
+	PREC value1_sym_mean;
+	PREC value1_w_sym_mean;
+	PREC similiar_sym_mean;
+	PREC filled_sym_mean;
+	PREC mean_above;
+	PREC mean_below;
+	int n_above;
+	int n_below;
+
+	int index;		/* internal use, debug */
 } GF_ROW;
 
 /* structure for timezone */
@@ -304,7 +316,7 @@ char *string_copy(const char *const string);
 char *string_tokenizer(char *string, const char *delimiters, char **p);
 char *get_current_directory(void);
 int add_char_to_string(char *const string, char c, const int size);
-int mystrcat(char *const string, const char *const string_to_add, const int size);
+int string_concat(char *const string, const char *const string_to_add, const int size);
 int file_exists(const char *const file);
 int path_exists(const char *const path);
 int compare_prec(const void * a, const void * b);
@@ -321,114 +333,59 @@ char *info_get_part_by_number(const INFO *const info, const int index);
 void info_free(INFO *info);
 
 TIMESTAMP *get_timestamp(const char *const string);
-int get_row_by_timestamp(const TIMESTAMP *const t, const int hourly_dataset);
+int get_row_by_timestamp(const TIMESTAMP *const t, const int timeres);
 int get_year_from_timestamp_string(const char *const string);
 char *get_filename_ext(const char *const filename);
 
-/* */
-#define timestamp_start_by_row(r,y,h) timestamp_get_by_row((r),(y),(h),1)
-#define timestamp_end_by_row(r,y,h) timestamp_get_by_row((r),(y),(h),0)
-TIMESTAMP *timestamp_get_by_row(int row, int yy, const int hourly_dataset, const int start);
-#define timestamp_start_by_row_s(r,y,h) timestamp_get_by_row_s((r),(y),(h),1)
-#define timestamp_end_by_row_s(r,y,h) timestamp_get_by_row_s((r),(y),(h),0)
-char *timestamp_get_by_row_s(int row, int yy, const int hourly_dataset, const int start);
+#define timestamp_start_by_row(r,y,t) timestamp_get_by_row((r),(y),(t),1)
+#define timestamp_end_by_row(r,y,t) timestamp_get_by_row((r),(y),(t),0)
+TIMESTAMP *timestamp_get_by_row(int row, int yy, const int timeres, const int start);
+#define timestamp_start_by_row_s(r,y,t) timestamp_get_by_row_s((r),(y),(t),1)
+#define timestamp_end_by_row_s(r,y,t) timestamp_get_by_row_s((r),(y),(t),0)
+char *timestamp_get_by_row_s(int row, int yy, const int timeres, const int start);
 
 #define timestamp_start_ww_by_row(r,y,h) timestamp_ww_get_by_row((r),(y),(h),1)
 #define timestamp_end_ww_by_row(r,y,h) timestamp_ww_get_by_row((r),(y),(h),0)
-TIMESTAMP *timestamp_ww_get_by_row(int row, int yy, const int hourly_dataset, int start);
+TIMESTAMP *timestamp_ww_get_by_row(int row, int yy, const int timeres, int start);
 #define timestamp_start_ww_by_row_s(r,y,h) timestamp_get_by_row_s((r),(y),(h),1)
 #define timestamp_end_ww_by_row_s(r,y,h) timestamp_get_by_row_s((r),(y),(h),0)
-char *timestamp_ww_get_by_row_s(int row, int yy, const int hourly_dataset, const int start);
+char *timestamp_ww_get_by_row_s(int row, int yy, const int timeres, const int start);
 
 /* gf */
-GF_ROW *gf_mds(		PREC *values,
-					const int struct_size,
-					const int rows_count,
-					const int columns_count,
-					const int hourly_dataset,
-					PREC value1_tolerance_min,
-					PREC value1_tolerance_max,
-					PREC value2_tolerance,
-					PREC value3_tolerance,
-					const int tofill_column,
-					const int value1_column,
-					const int value2_column,
-					const int value3_column,
-					const int values_min,
-					const int compute_hat,
-					int *no_gaps_filled_count
-);
-
-GF_ROW *gf_mds_with_qc(	PREC *values,
-						const int struct_size,
-						const int rows_count,
-						const int columns_count,
-						const int hourly_dataset,
-						PREC value1_tolerance_min,
-						PREC value1_tolerance_max,
-						PREC value2_tolerance,
-						PREC value3_tolerance,
-						const int tofill_column,
-						const int value1_column,
-						const int value2_column,
-						const int value3_column,
-						const int value1_qc_column,
-						const int value2_qc_column,
-						const int value3_qc_column,
-						const int qc_thrs,
-						const int values_min,
-						const int compute_hat,
-						int *no_gaps_filled_count
-);
-
-GF_ROW *gf_mds_with_bounds(	PREC *values,
-							const int struct_size,
-							const int rows_count,
-							const int columns_count,
-							const int hourly_dataset,
-							PREC value1_tolerance_min,
-							PREC value1_tolerance_max,
-							PREC value2_tolerance,
-							PREC value3_tolerance,
-							const int tofill_column,
-							const int value1_column,
-							const int value2_column,
-							const int value3_column,
-							const int value1_qc_column,
-							const int value2_qc_column,
-							const int value3_qc_column,
-							const int qc_thrs,
-							const int values_min,
-							const int compute_hat,
-							int start_row,
-							int end_row,
-							int *no_gaps_filled_count
+GF_ROW *gf_mds(PREC *values,
+	const int struct_size,
+	const int rows_count,
+	const int columns_count,
+	const int hourly_dataset,
+	PREC value1_tolerance_min,
+	PREC value1_tolerance_max,
+	PREC value2_tolerance_min,
+	PREC value2_tolerance_max,
+	PREC value3_tolerance_min,
+	PREC value3_tolerance_max,
+	const int tofill_column,
+	const int value1_column,
+	const int value2_column,
+	const int value3_column,
+	const int value1_qc_column,
+	const int value2_qc_column,
+	const int value3_qc_column,
+	const int qc_thrs1,
+	const int qc_thrs2,
+	const int qc_thrs3,
+	const int values_min,
+	const int compute_hat,
+	int start_row,
+	int end_row,
+	int *no_gaps_filled_count,
+	int sym_mean,
+	int max_mdv_win,
+	int debug,
+	const char* debug_file_name,
+	int debug_start_year
 );
 PREC gf_get_similiar_standard_deviation(const GF_ROW *const gf_rows, const int rows_count);
 PREC gf_get_similiar_median(const GF_ROW *const gf_rows, const int rows_count, int *const error);
-
-/* temp functions used for G in energy_proc */
-GF_ROW *temp_gf_mds(	PREC *values,
-						const int struct_size,
-						const int rows_count,
-						const int columns_count,
-						const int hourly_dataset,
-						PREC value1_tolerance_min,
-						PREC value1_tolerance_max,
-						PREC value2_tolerance,
-						PREC value3_tolerance,
-						const int tofill_column,
-						const int value1_column,
-						const int value2_column,
-						const int value3_column,
-						const int value1_qc_column,
-						const int value2_qc_column,
-						const int value3_qc_column,
-						const int qc_thrs,
-						const int values_min,
-						const int compute_hat,
-						int *no_gaps_filled_count
-);
 
 /* dataset details */
 DD *alloc_dd(void);
@@ -437,6 +394,7 @@ DD *parse_dd(FILE *const f);
 int write_dd(const DD *const dd, FILE *const f, const char *const notes_to_add);
 int write_dds(const DD **const dd, const int count, FILE *const f, const char *const notes_to_add);
 void free_dd(DD *dd);
+int get_rows_count_by_timeres(const int timeres, const int year);
 int get_rows_count_by_dd(const DD *const dd);
 int get_rows_per_day_by_dd(const DD *const dd);
 
@@ -452,6 +410,9 @@ PREC get_dtime_by_row(const int row, const int hourly);
 /* */
 PREC *get_rpot(DD *const details);
 PREC *get_rpot_with_solar_noon(DD *const details, const int s_n_month, const int s_n_day, int *const solar_noon);
+
+int check_timestamp(const TIMESTAMP* const p);
+int timestamp_difference_in_seconds(const TIMESTAMP* const p1, const TIMESTAMP* const p2);
 
 /* */
 void check_memory_leak(void);
