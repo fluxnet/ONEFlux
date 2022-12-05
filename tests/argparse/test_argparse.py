@@ -52,3 +52,20 @@ class TestArgParse(unittest.TestCase):
         self.assertEqual(args.siteid, overwritten_siteid)
         self.assertEqual(args.sitedir, 'dummy_sitedir')
         self.assertEqual(args.mcr_directory, 'dummy_mcrdir/MATLAB_Runtime/v94')
+
+    def test_arg_cli_wrong_args(self):
+        wrong_arg = 'wrong_arg'
+        wrong_arg_value = 'wrong_arg_value'
+        test_yaml_path = './tests/argparse/config.yaml'
+        with patch("sys.argv", ["python runoneflux.py",
+                                f"--{wrong_arg}", f"{wrong_arg_value}",
+                                "--configfile", f"{test_yaml_path}"]):
+            with self.assertRaises(SystemExit):
+                _, _, args = argparse_from_yaml_and_cli()
+
+    def test_arg_yaml_wrong_args(self):
+        test_yaml_path = './tests/argparse/config_faulty.yaml'
+        with patch("sys.argv", ["python runoneflux.py",
+                                "--configfile", f"{test_yaml_path}"]):
+            with self.assertRaises(ValueError):
+                _, _, args = argparse_from_yaml_and_cli()
