@@ -26,6 +26,7 @@ YAML_DESCRIPTION_PATH ='oneflux/configs/config_description.yaml'
 def argparse_from_yaml_and_cli():
     param_dest = {}
     config_default = {}
+    all_params = []
     with open(YAML_DESCRIPTION_PATH, 'r') as f:
         config_description = yaml.safe_load(f)
     with open(YAML_TEMPLATE_PATH, 'r') as f:
@@ -35,6 +36,7 @@ def argparse_from_yaml_and_cli():
         group = parser.add_argument_group(parser_group_name)
         default_val = config_default.get(parser_group_name, {})
         for param_name, param_details in params.items():
+            all_params.append(param_name)
             if 'type' in param_details:
                 param_details['type'] = _type_from_str(param_details['type'])
             if 'choices' in param_details:
@@ -58,6 +60,8 @@ def argparse_from_yaml_and_cli():
             config = yaml.safe_load(f)
         for _, params in config.items():
             for param_name, param_value in params.items():
+                if param_name not in all_params:
+                    raise ValueError(f'{param_name} is unknown: it has not been declared in the config_description.yaml and the default value in config_template.yaml')
                 if param_name not in commandline_args:
                     if param_name in param_dest:
                         param_name = param_dest[param_name]
