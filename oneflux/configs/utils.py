@@ -117,7 +117,7 @@ class ONEFluxConfig:
         }
         return params
 
-    def export_to_yaml(self):
+    def export_to_yaml(self, dir=None, name=None, overwritten=False):
         saved_dict = {}
         args_dict = vars(self.args)
         for group_name, params in self.config_default.items():
@@ -131,8 +131,18 @@ class ONEFluxConfig:
                     p = self.param_dest[param]
                     if p in args_dict and args_dict[p] != param_value:
                         saved_dict[group_name][param] = args_dict[p]
-        with open('run_params_{}.yaml'.format(dt.datetime.now().strftime('%d-%m-%Y_%H-%M-%S')), 'w') as f:
-            yaml.dump(saved_dict, f, default_flow_style=False)
+        if not name:
+            name = 'run_params_{}.yaml'.format(dt.datetime.now().strftime('%d-%m-%Y_%H-%M-%S'))
+        if not dir:
+            path = name
+        else:
+            path = f'{dir}/{name}'
+        if dir and not os.path.exists(dir):
+            os.makedirs(dir)
+        if overwritten and os.path.isfile(path):
+            os.remove(path)
+        with open(path, 'w') as f:
+                yaml.dump(saved_dict, f, default_flow_style=False)
 
 
     def log_msg(self):
