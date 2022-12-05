@@ -23,53 +23,52 @@ RUN_MODE = {'all': run_pipeline,
 YAML_TEMPLATE_PATH = 'oneflux/configs/config_template.yaml'
 YAML_DESCRIPTION_PATH ='oneflux/configs/config_description.yaml'
 
+def argparse_from_yaml_and_cli():
+    param_dest = {}
+    config_default = {}
+    with open(YAML_DESCRIPTION_PATH, 'r') as f:
+        config_description = yaml.safe_load(f)
+    with open(YAML_TEMPLATE_PATH, 'r') as f:
+        config_default = yaml.safe_load(f)
+    parser = argparse.ArgumentParser()
+    for parser_group_name, params in config_description.items():
+        group = parser.add_argument_group(parser_group_name)
+        default_val = config_default.get(parser_group_name, {})
+        for param_name, param_details in params.items():
+            if 'type' in param_details:
+                param_details['type'] = _type_from_str(param_details['type'])
+            if 'choices' in param_details:
+                param_details['choices'] = _parse_choices(param_details['choices'])
+            if 'dest' in param_details:
+                param_dest[param_name] = param_details['dest']
+            if param_name in default_val:
+                param_details['default'] = default_val[param_name]
+                if isinstance(param_details['default'], str) and ':' in param_details['default']:
+                    module, class_name = default_val[param_name].split(':')
+                    param_details['default'] = _str_to_class(module, class_name)
+                param_details['help'] += ' (default to {})'.format(param_details['default'])
+            param_name = param_name.replace('_', '-')
+            group.add_argument('--{}'.format(param_name), **param_details)
+    args = parser.parse_args()
+    commandline_args = [arg.strip('-_') for arg in sys.argv[1:] if '-' in arg or '--' in arg]
+    configfile = args.configfile
+    args_dict = vars(args)
+    if configfile:
+        with open(configfile, 'r') as f:
+            config = yaml.safe_load(f)
+        for _, params in config.items():
+            for param_name, param_value in params.items():
+                if param_name not in commandline_args:
+                    if param_name in param_dest:
+                        param_name = param_dest[param_name]
+                    args_dict[param_name] = param_value
+    return config_default, param_dest, argparse.Namespace(**args_dict)
+
 class ONEFluxConfig:
     def __init__(self):
-        self.param_dest = {}
-        self.args = self.argparse_from_yaml()
+        self.config_default, self.param_dest, self.args = argparse_from_yaml_and_cli()
         self.perc = (PERC_TO_COMPARE if self.args.perc is None else self.args.perc[0])
         self.prod = (PROD_TO_COMPARE if self.args.prod is None else self.args.prod[0])
-
-    def argparse_from_yaml(self):
-        with open(YAML_DESCRIPTION_PATH, 'r') as f:
-            config_description = yaml.safe_load(f)
-        with open(YAML_TEMPLATE_PATH, 'r') as f:
-            config_default = yaml.safe_load(f)
-        parser = argparse.ArgumentParser()
-
-        self.config_default = config_default
-        for parser_group_name, params in config_description.items():
-            group = parser.add_argument_group(parser_group_name)
-            default_val = config_default.get(parser_group_name, {})
-            for param_name, param_details in params.items():
-                if 'type' in param_details:
-                    param_details['type'] = _type_from_str(param_details['type'])
-                if 'choices' in param_details:
-                    param_details['choices'] = _parse_choices(param_details['choices'])
-                if 'dest' in param_details:
-                    self.param_dest[param_name] = param_details['dest']
-                if param_name in default_val:
-                    param_details['default'] = default_val[param_name]
-                    if isinstance(param_details['default'], str) and ':' in param_details['default']:
-                        module, class_name = default_val[param_name].split(':')
-                        param_details['default'] = _str_to_class(module, class_name)
-                    param_details['help'] += ' (default to {})'.format(param_details['default'])
-                param_name = param_name.replace('_', '-')
-                group.add_argument('--{}'.format(param_name), **param_details)
-        args = parser.parse_args()
-        commandline_args = [arg for arg in sys.argv[1:] if '-' in arg or '--' in arg]
-        configfile = args.configfile
-        args_dict = vars(args)
-        if configfile:
-            with open(configfile, 'r') as f:
-                config = yaml.safe_load(f)
-            for _, params in config.items():
-                for param_name, param_value in params.items():
-                    if param_name not in commandline_args or param_name.replace('_', '-') not in commandline_args:
-                        if param_name in self.param_dest:
-                            param_name = self.param_dest[param_name]
-                        args_dict[param_name] = param_value
-        return argparse.Namespace(**args_dict)
 
     def get_pipeline_params(self):
         params = {
