@@ -89,7 +89,22 @@ class ONEFluxConfig:
             'version_data': self.args.versiond,
             'version_proc': self.args.versionp,
             'era_first_year': self.args.erafy,
-            'era_last_year': self.args.eraly
+            'era_last_year': self.args.eraly,
+            'steps': {
+                'qc_auto_execute': self.args.qc_auto_execute,
+                'ustar_mp_execute': self.args.ustar_mp_execute,
+                'user_cp_execute': self.args.user_cp_execute,
+                'meteo_proc_execute': self.args.meteo_proc_execute,
+                'nee_proc_execute': self.args.nee_proc_execute,
+                'energy_proc_execute': self.args.energy_proc_execute,
+                'nee_partition_nt_execute': self.args.nee_partition_nt_execute,
+                'nee_partition_dt_execute': self.args.nee_partition_dt_execute,
+                'prepare_ure_execute': self.args.prepare_ure_execute,
+                'ure_execute': self.args.ure_execute,
+                'fluxnet2015_execute': self.args.fluxnet2015_execute,
+                'fluxnet2015_site_plots': self.args.fluxnet2015_site_plots,
+                'simulation': self.args.simulation
+            }
         }
         return params
 
@@ -143,6 +158,20 @@ class ONEFluxConfig:
             os.remove(path)
         with open(path, 'w') as f:
                 yaml.dump(saved_dict, f, default_flow_style=False)
+        step_name_list = ['01_qc_visual', '02_qc_auto', '04_ustar_mp', '05_ustar_cp',
+                          '06_meteo_era', '07_meteo_proc', '08_nee_proc', '09_energy_proc',
+                          '10_nee_partition_nt', '11_nee_partition_dt', '12_ure',
+                          '99_fluxnet2015']
+        for step in step_name_list:
+            v = {}
+            for arg in self.config_default.get(step, []):
+                v[arg] = self.args.__getattribute__(arg.replace('-', '_'))
+            if v:
+                path = f'{dir}/{step}_{name}'
+                if overwritten and os.path.isfile(path):
+                    os.remove(path)
+                with open(path, 'w') as f:
+                    yaml.dump(v, f, default_flow_style=False)
 
 
     def log_msg(self):
@@ -173,7 +202,7 @@ class ONEFluxConfig:
         return RUN_MODE[self.args.command]
 
 def _type_from_str(s):
-    s_dict = {'str': str, 'int': int, 'float': float}
+    s_dict = {'str': str, 'int': int, 'float': float, 'bool': bool}
     return s_dict[s]
 
 def _str_to_class(module, class_name):

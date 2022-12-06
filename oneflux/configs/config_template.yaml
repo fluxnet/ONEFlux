@@ -17,17 +17,21 @@ run:
   era_fy: oneflux.pipeline.common:ERA_FIRST_YEAR
   era_ly: oneflux.pipeline.common:ERA_LAST_YEAR
   configfile:
-  steps:
-      qc_auto_execute: true
-      ustar_mp_execute: true
-      user_cp_execute: true
-      meteo_proc_execute: true
-      nee_proc_execute: true
-      energy_proc_execute: true
-      nee_partition_nt_execute: true
-      nee_partition_dt_execute: true
-      prepare_ure_execute: true
-      ure_execute: true
-      fluxnet2015_execute: true
-      fluxnet2015_site_plots: true
-      simulation: false
+
+steps:
+    qc_auto_execute: true
+    ustar_mp_execute: true
+    user_cp_execute: true
+    meteo_proc_execute: true
+    nee_proc_execute: true
+    energy_proc_execute: true
+    nee_partition_nt_execute: true
+    nee_partition_dt_execute: true
+    prepare_ure_execute: true
+    ure_execute: true
+    fluxnet2015_execute: true
+    fluxnet2015_site_plots: true
+    simulation: false
+
+01_qc_visual:
+  dummy-step-1: dummy_step_1_test_string

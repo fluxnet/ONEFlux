@@ -82,6 +82,47 @@ run:
     type: str
     dest: configfile
 
+steps:
+  qc_auto_execute:
+    help: enable qc auto execution
+    type: bool
+  ustar_mp_execute:
+    help: enable ustar mp execution
+    type: bool
+  user_cp_execute:
+    help: enable user cp execution
+    type: bool
+  meteo_proc_execute:
+    help: enable meteo proc execution
+    type: bool
+  nee_proc_execute:
+    help: enable nee proc execution
+    type: bool
+  energy_proc_execute:
+    help: enable energy proc execution
+    type: bool
+  nee_partition_nt_execute:
+    help: enable nee partition nt execution
+    type: bool
+  nee_partition_dt_execute:
+    help: enable nee partition dt execution
+    type: bool
+  prepare_ure_execute:
+    help: enable prepare ure execution
+    type: bool
+  ure_execute:
+    help: enable ure execution
+    type: bool
+  fluxnet2015_execute:
+    help: enable qc auto execution
+    type: bool
+  fluxnet2015_site_plots:
+    help: enable fluxnet2015 site plots
+    type: bool
+  simulation:
+    help: enable simulation
+    type: bool
+
 01_qc_visual:
   dummy-step-1:
     help: dummy-step-1

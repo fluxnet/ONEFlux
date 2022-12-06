@@ -106,7 +106,7 @@ class TestArgParse(unittest.TestCase):
         with patch("sys.argv", ["python runoneflux.py",
                                 "--configfile", test_output_yaml_path]):
             new_onefluxconfig = ONEFluxConfig()
-            
+
         no_check_args_list = ['timestamp', 'configfile']
         for name, val in onefluxconfig.args._get_kwargs():
             if name not in no_check_args_list:
