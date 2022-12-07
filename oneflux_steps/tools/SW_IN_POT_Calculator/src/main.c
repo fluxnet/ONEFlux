@@ -1,7 +1,10 @@
 /*
 	main.c
 
-	this file is part of SW_IN_POT_Calculator
+	This file is part of SW_IN_POT_Calculator that
+	calculates the extra-atmosphere potential short-wave
+	incoming radiation based on geographical location
+	and time.
 
 	author: Alessio Ribeca <a.ribeca@unitus.it>
 	owner: DIBAF - University of Tuscia, Viterbo, Italy
