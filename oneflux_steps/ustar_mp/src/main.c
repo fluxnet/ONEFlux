@@ -1,7 +1,10 @@
 /*
 	main.c
 
-	this file is part of ustar_mp
+	This file is part of ustar_mp tool.
+	It calculates the ustar threshold to filter out NEE
+	using the method described in Reichstein 2005 and 
+	Papale 2006
 
 	author: Alessio Ribeca <a.ribeca@unitus.it>
 	owner: DIBAF - University of Tuscia, Viterbo, Italy

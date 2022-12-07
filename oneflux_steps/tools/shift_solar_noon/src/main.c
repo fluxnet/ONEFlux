@@ -1,7 +1,10 @@
 /*
 	main.c
 
-	this file is part of shift_solar_noon
+	This file is part of shift_solar_noon tool.
+	It calculates a composit maximum incoming radiation
+	that is compared with the potential radiation in order
+	to identify possible shifts in the timeseries.
 
 	author: Alessio Ribeca <a.ribeca@unitus.it>
 	owner: DIBAF - University of Tuscia, Viterbo, Italy

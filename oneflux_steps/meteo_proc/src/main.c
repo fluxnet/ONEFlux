@@ -1,7 +1,10 @@
 /*
 	main.c
 
-	this file is part of meteo_proc
+	This file is part of the meteo_proc step of processing.
+	It is responsible for the meteorological data gapfilling
+	including the merging with the downscaled meteo data and
+	the temporal aggregation at different time resolutions.
 
 	author: Alessio Ribeca <a.ribeca@unitus.it>
 	owner: DIBAF - University of Tuscia, Viterbo, Italy

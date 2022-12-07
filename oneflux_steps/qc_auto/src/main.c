@@ -1,7 +1,10 @@
 /*
 	main.c
 
-	this file is part of qc_auto
+	This file is part of the qc_auto step of processing.
+	It is responsible for a number of basic quality check test
+	and the creation of the input files for the following
+	processing steps
 
 	author: Alessio Ribeca <a.ribeca@unitus.it>
 	owner: DIBAF - University of Tuscia, Viterbo, Italy

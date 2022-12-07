@@ -1,7 +1,10 @@
 /*
 	main.c
 
-	this file is part of gf_mds
+	This file is part of gf_mds tool that applies an
+	improved and fully parameterizable version of the
+	Marginal Distribution Sampling gapfilling method
+	described in Reichstein et al. 2005
 
 	author: Alessio Ribeca <a.ribeca@unitus.it>
 	owner: DIBAF - University of Tuscia, Viterbo, Italy
@@ -146,7 +149,8 @@ static const char msg_usage[] =	"This code applies the gapfilling Marginal Distr
 								"  -driver2b_qc_thrs=values -> set threshold for second additional driver qc check\n\n"
 								"  -rows_min=value -> set the minimum number of rows with valid data\n"
 								"    to run the gapfilling (default: %d)\n\n"
-								"  -nohat -> disable hat computing (enabled by default)\n\n"
+								"  -nohat -> disable hat computing (gapfilling applied to all the records,\n"
+								"    even if not missing, enabled by default)\n\n"
 								"  -sym_mean -> enable symmetric mean method\n\n"
 								"  -max_mdv_win=value -> set max window to be used when MDV is applied as last option\n\n"
 								"  -debug -> save used values to compute gf to file\n\n"
