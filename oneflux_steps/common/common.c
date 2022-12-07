@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 #endif /* _DEBUG */
-#pragma comment(lib, "kernel32.lib")
+#pragma comment(lib, "kernel32")
 static WIN32_FIND_DATA wfd;
 static HANDLE handle;
 #elif defined (linux) || defined (__linux) || defined (__linux__) || defined (__APPLE__)
@@ -1988,7 +1988,7 @@ int check_timestamp(const TIMESTAMP* const p)
 	return 1;
 }
 
-/* private - used by timestamp_difference_in_seconds */
+/* static - used by timestamp_difference_in_seconds */
 static int timestamp_to_epoch(const TIMESTAMP* const p)
 {
 #define YEAR_0 (1900)
@@ -2144,7 +2144,7 @@ char *timestamp_ww_get_by_row_s(int row, int yy, const int timeres, const int st
 	return buffer;
 }
 
-/* private function for gapfilling */
+/* static function for gapfilling. Calculates the mean */
 static PREC gf_get_similiar_mean(const GF_ROW *const gf_rows, const int rows_count) {
  	int i;
 	PREC mean;
@@ -2168,7 +2168,7 @@ static PREC gf_get_similiar_mean(const GF_ROW *const gf_rows, const int rows_cou
 	return mean;
 }
 
-/* private function for gapfilling */
+/* static function for gapfilling. Calculates the symmetric mean */
 static void gf_get_similiar_mean_sym_mean(GF_ROW *const gf_rows, const int rows_count, const int current_row) {
  	int i;
 	int n;
@@ -2233,7 +2233,7 @@ static void gf_get_similiar_mean_sym_mean(GF_ROW *const gf_rows, const int rows_
 	gf_rows[current_row].n_below = n_below;
 }
 
-/* gapfilling */
+/* gapfilling function to calculate the standard deviation */
 PREC gf_get_similiar_standard_deviation(const GF_ROW *const gf_rows, const int rows_count) {
 	int i;
 	PREC mean;
@@ -2269,7 +2269,7 @@ PREC gf_get_similiar_standard_deviation(const GF_ROW *const gf_rows, const int r
 	return sum2;
 }
 
-/* gapfilling */
+/* gapfilling function to calculate the median */
 PREC gf_get_similiar_median(const GF_ROW *const gf_rows, const int rows_count, int *const error) {
 	int i;
 	PREC *p_median;
@@ -2319,7 +2319,7 @@ PREC gf_get_similiar_median(const GF_ROW *const gf_rows, const int rows_count, i
 	return result;
 }
 
-/* private function for gapfilling */
+/* static function for gapfilling. This is the core gapfillign function called only internally */
 static int gapfill(	PREC *values,
 					const int struct_size,
 					GF_ROW *const gf_rows,
@@ -2468,10 +2468,7 @@ static int gapfill(	PREC *values,
 			}
 		}
 
-		/*	fix bounds for first two methods
-			cause in hour method (NEE_METHOD) a window start at -32 and window end at 69,
-			it will be fixed to window start at 0 and this is an error...
-		*/
+		/*	fix bounds for first two methods */
 		if ( GF_TOFILL_METHOD != method ) {
 			if ( window_start < 0 ) {
 				window_start = 0;
@@ -2483,7 +2480,7 @@ static int gapfill(	PREC *values,
 
 			/* compute tolerance for value1 */
 			if ( IS_INVALID_VALUE(value1_tolerance_min) ) {
-				value1_tolerance = value1_tolerance_max;
+				value1_tolerance = GF_DRIVER_1_TOLERANCE_MIN;
 			} else if ( IS_INVALID_VALUE(value1_tolerance_max) ) {
 				value1_tolerance = value1_tolerance_min;
 			} else {
@@ -2498,7 +2495,9 @@ static int gapfill(	PREC *values,
 			/* compute tolerance for value2 */
 			if ( IS_INVALID_VALUE(value2_tolerance_min) ) {
 				value2_tolerance = GF_DRIVER_2A_TOLERANCE_MIN;
-			} else if ( ! IS_INVALID_VALUE(value2_tolerance_max) ) {
+			} else if ( IS_INVALID_VALUE(value2_tolerance_max) ) {
+				value2_tolerance = value2_tolerance_min;
+			} else {
 				value2_tolerance = ((PREC *)(((char *)values)+current_row*struct_size))[value2_column];
 				if ( value2_tolerance < value2_tolerance_min ) {
 					value2_tolerance = value2_tolerance_min;
@@ -2510,7 +2509,9 @@ static int gapfill(	PREC *values,
 			/* compute tolerance for value3 */
 			if ( IS_INVALID_VALUE(value3_tolerance_min) ) {
 				value3_tolerance = GF_DRIVER_2B_TOLERANCE_MIN;
-			} else if ( ! IS_INVALID_VALUE(value3_tolerance_max) ) {
+			} else if ( IS_INVALID_VALUE(value3_tolerance_max) ) {
+				value3_tolerance = value3_tolerance_min;
+			} else {
 				value3_tolerance = ((PREC *)(((char *)values)+current_row*struct_size))[value3_column];
 				if ( value3_tolerance < value3_tolerance_min ) {
 					value3_tolerance = value3_tolerance_min;
@@ -2524,12 +2525,13 @@ static int gapfill(	PREC *values,
 		assert(! IS_INVALID_VALUE(value2_tolerance));
 		assert(! IS_INVALID_VALUE(value3_tolerance));
 
-		/* loop through window */
+		/* gapfilling loop, it is called passing window size and method to use */
 		for ( window_current = window_start; window_current < window_end; window_current += z ) {
 			window_current_values = ((PREC *)(((char *)values)+window_current*struct_size));
 			row_current_values = ((PREC *)(((char *)values)+current_row*struct_size));
 
 			switch ( method ) {
+				/* gapfilling method 1 when all the three drivers are available */
 				case GF_ALL_METHOD:
 					if ( IS_FLAG_SET(gf_rows[window_current].mask, GF_ALL_VALID) ) {
 						if (
@@ -2540,6 +2542,7 @@ static int gapfill(	PREC *values,
 							gf_rows[samples_count].similiar = window_current_values[tofill_column];
 							gf_rows[samples_count].index = window_current;
 
+							/* if specified by parameter sets the information to use the symmetric mean */
 							if ( sym_mean ) {
 								gf_rows[samples_count].value1_sym_mean = row_current_values[value1_column];
 								gf_rows[samples_count].value1_w_sym_mean = window_current_values[value1_column];	
@@ -2550,12 +2553,14 @@ static int gapfill(	PREC *values,
 					}
 				break;
 
+				/* gapfilling method 2 when only the main driver is available */
 				case GF_VALUE1_METHOD:
 					if ( IS_FLAG_SET(gf_rows[window_current].mask, (GF_TOFILL_VALID|GF_VALUE1_VALID)) ) {
 						if ( FABS(window_current_values[value1_column]-row_current_values[value1_column]) < value1_tolerance ) {
 							gf_rows[samples_count].similiar = window_current_values[tofill_column];
 							gf_rows[samples_count].index = window_current;
 
+							/* if specified by parameter sets the information to use the symmetric mean */
 							if ( sym_mean ) {
 								gf_rows[samples_count].value1_sym_mean = row_current_values[value1_column];
 								gf_rows[samples_count].value1_w_sym_mean = window_current_values[value1_column];
@@ -2566,6 +2571,7 @@ static int gapfill(	PREC *values,
 					}
 				break;
 
+				/* gapfilling method 3 based only on time, when the main driver is not available */
 				case GF_TOFILL_METHOD:
 					for ( y = 0; y < j; y++ ) {
 						if ( ((window_current+y) < 0) || (window_current+y) >= end_window ) {
@@ -2598,6 +2604,7 @@ static int gapfill(	PREC *values,
 				++gf_rows[current_row].time_window;
 			}
 			
+			/* compute symmetrical mean (if enabled) */
 			if ( sym_mean && (method < GF_TOFILL_METHOD) ) {
 				gf_get_similiar_mean_sym_mean(gf_rows, samples_count, current_row);
 			}
@@ -2605,6 +2612,7 @@ static int gapfill(	PREC *values,
 			/* set samples */
 			gf_rows[current_row].samples_count = samples_count;
 
+			/* debug file. only for internal use */
 			if ( debug ) {
 				char buf[FILENAME_SIZE];
 				FILE* f;
@@ -2649,7 +2657,8 @@ static int gapfill(	PREC *values,
 	return 0;
 }
 
-/* */
+
+/* gap-filling function called by the different tools and codes. Uses the gapfill function above */
 GF_ROW *gf_mds(	PREC *values,
 				const int struct_size,
 				const int rows_count,
@@ -2731,6 +2740,8 @@ GF_ROW *gf_mds(	PREC *values,
 	}
 
 	/* update mask and count valids TO FILL */
+	/* creates a bitmask to identify for each record is target value
+	and the different drivers are available or not */
 	valids_count = 0;
 	for ( i = start_row; i < end_row; i++ ) {
 		for ( c = 0; c < columns_count; c++ ) {
@@ -2748,6 +2759,7 @@ GF_ROW *gf_mds(	PREC *values,
 		}
 
 		/* check for QC */
+		/* sets as invalid in the bitmask drivers with QC above the threshold */
 		if (	!IS_INVALID_VALUE(qc_thrs1) &&
 				(value1_qc_column != -1) &&
 				!IS_INVALID_VALUE(((PREC *)(((char *)values)+i*struct_size))[value1_qc_column]) ) {
@@ -2783,22 +2795,19 @@ GF_ROW *gf_mds(	PREC *values,
 		return NULL;
 	}
 
+	/* sets the tolerance values for the drivers */
 	if ( IS_INVALID_VALUE(value1_tolerance_min) && IS_INVALID_VALUE(value1_tolerance_max) ) {
 		value1_tolerance_min = GF_DRIVER_1_TOLERANCE_MIN;
 		value1_tolerance_max = GF_DRIVER_1_TOLERANCE_MAX;
 	} else if ( IS_INVALID_VALUE(value1_tolerance_min) ) {
 		value1_tolerance_min = GF_DRIVER_1_TOLERANCE_MIN;
-	} else if ( IS_INVALID_VALUE(value1_tolerance_max) ) {
-		value1_tolerance_max = INVALID_VALUE;
-	}
+	} 
 
 	if ( IS_INVALID_VALUE(value2_tolerance_min) && IS_INVALID_VALUE(value2_tolerance_max) ) {
 		value2_tolerance_min = GF_DRIVER_2A_TOLERANCE_MIN;
 		value2_tolerance_max = GF_DRIVER_2A_TOLERANCE_MAX;
 	} else if ( IS_INVALID_VALUE(value2_tolerance_min) ) {
 		value2_tolerance_min = GF_DRIVER_2A_TOLERANCE_MIN;
-	} else if ( IS_INVALID_VALUE(value2_tolerance_max) ) {
-		value2_tolerance_max = INVALID_VALUE;
 	}
 
 	if ( IS_INVALID_VALUE(value3_tolerance_min) && IS_INVALID_VALUE(value3_tolerance_max) ) {
@@ -2806,11 +2815,9 @@ GF_ROW *gf_mds(	PREC *values,
 		value3_tolerance_max = GF_DRIVER_2B_TOLERANCE_MAX;
 	} else if ( IS_INVALID_VALUE(value3_tolerance_min) ) {
 		value3_tolerance_min = GF_DRIVER_2B_TOLERANCE_MIN;
-	} else if ( IS_INVALID_VALUE(value3_tolerance_max) ) {
-		value3_tolerance_max = INVALID_VALUE;
 	}
 
-	/* loop for each row */
+	/* gapfilling call loop for each row */
 	for ( i = start_row; i < end_row; i++ ) {
 		/* copy value from TOFILL to FILLED */
 		gf_rows[i].filled = ((PREC *)(((char *)values)+i*struct_size))[tofill_column];
@@ -2820,10 +2827,7 @@ GF_ROW *gf_mds(	PREC *values,
 			continue;
 		}
 
-		/*	fill
-			Added 20140422: if a gap is impossible to fill, e.g. if with MDV there are no data in the whole dataset acquired in a range +/- one hour,
-			the data point is not filled and the qc is set to -9999
-		*/
+		/*	fill gaps. If a values is impossible to fill it remains -9999 with QC also -9999 */
 		if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 7, 14, 7, GF_ALL_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, debug, debug_file_name, debug_start_year) ) {
 			if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 7, 7, 7, GF_VALUE1_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, debug, debug_file_name, debug_start_year) ) {
 				if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 0, 2, 1, GF_TOFILL_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, debug, debug_file_name, debug_start_year) ) {
@@ -2853,7 +2857,7 @@ GF_ROW *gf_mds(	PREC *values,
 	return gf_rows;
 }
 
-/* private function for parse_dd */
+/* static function for parse_dd */
 static int parse_time_zone(DD *const dd, char *const string) {
 	int i;
 	PREC v;
@@ -2941,7 +2945,7 @@ static int parse_time_zone(DD *const dd, char *const string) {
 	return !(check & 1);
 }
 
-/* private function for parse_dd */
+/* static function for parse_dd */
 static int parse_htower(DD *const dd, char *const string) {
 	int i;
 	PREC h;
@@ -2997,7 +3001,7 @@ static int parse_htower(DD *const dd, char *const string) {
 	return !(check & 1);
 }
 
-/* private function for parse_dd */
+/* static function for parse_dd */
 static int parse_sc_negles(DD *const dd, char *const string) {
 	int i;
 	int flag;
@@ -3082,7 +3086,7 @@ static int parse_sc_negles(DD *const dd, char *const string) {
 }
 
 
-/* private function for parse_dd */
+/* static function for parse_dd */
 static int parse_timeres(DD *const dd, const char *const string) {
 	int i;
 

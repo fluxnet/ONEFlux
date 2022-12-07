@@ -926,7 +926,7 @@ int main(int argc, char *argv[]) {
 		/* reset */
 		seasons_group_count = seasons_group_count_bak;
 
-		/* inc total files founded */
+		/* inc total files found */
 		total_files_count += files[z].count;
 
 		/* processing and create output filename */
@@ -1226,7 +1226,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* summary */
-	printf("%d file%s founded: %d processed, %d skipped.\n\n",
+	printf("%d file%s found: %d processed, %d skipped.\n\n",
 																total_files_count,
 																total_files_count > 1 ? "s" : "",
 																files_processed_count,

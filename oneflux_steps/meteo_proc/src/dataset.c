@@ -193,9 +193,9 @@ static const char output_format_yy[] =	"%04d,"
 										"%.3f,%g";
 
 static const char output_stat_file[] = "%s%s_meteo_%s_info.txt";
-static const char err_no_files_founded[] = "no files founded.";
-static const char err_no_meteo_files_founded[] = "no meteo files founded.";
-static const char err_no_era_files_founded[] = "no era files founded.";
+static const char err_no_files_found[] = "no files found.";
+static const char err_no_meteo_files_found[] = "no meteo files found.";
+static const char err_no_era_files_found[] = "no era files found.";
 
 /* */
 static int is_valid_era_filename(const char *const filename) {
@@ -785,7 +785,7 @@ static int import_meteo_values(DATASET *const dataset) {
 	int rows_count;
 	int error;
 	int year;
-	int columns_founded_count;
+	int columns_found_count;
 	int columns_index[MET_VALUES];
 	int profile;
 	int *int_no_leak;
@@ -870,7 +870,7 @@ static int import_meteo_values(DATASET *const dataset) {
 				/* check for same profile on header */
 				for ( j = 0; j < ts_profiles_count; j++ ) {
 					if ( profile == ts_profiles[j] ) {
-						printf("profile %d for var TS already founded\n", profile);
+						printf("profile %d for var TS already found\n", profile);
 						free(ts_profiles);
 						free(swc_profiles);
 						free(swc_columns);		
@@ -947,7 +947,7 @@ static int import_meteo_values(DATASET *const dataset) {
 				/* check for same profile on header */
 				for ( j = 0; j < swc_profiles_count; j++ ) {
 					if ( profile == swc_profiles[j] ) {
-						printf("profile %d for var SWC already founded\n", profile);
+						printf("profile %d for var SWC already found\n", profile);
 						free(ts_profiles);
 						free(swc_profiles);
 						free(swc_columns);		
@@ -1337,15 +1337,15 @@ static int import_meteo_values(DATASET *const dataset) {
 				}
 			}
 
-			/* check founded columns */
-			columns_founded_count = swc_columns_count+ts_columns_count;
+			/* check found columns */
+			columns_found_count = swc_columns_count+ts_columns_count;
 			for (  i = 0; i < MET_VALUES; i++ ) {
 				if ( columns_index[i] != -1 ) {
-					++columns_founded_count;
+					++columns_found_count;
 				}
 			}
 
-			if ( !columns_founded_count ) {
+			if ( !columns_found_count ) {
 				puts("no columns found!");
 				fclose(f);
 				return 0;
@@ -1510,8 +1510,8 @@ static int import_meteo_values(DATASET *const dataset) {
 				}
 
 				/* check assigned */
-				if ( assigned != columns_founded_count ) {
-					printf("imported %d value not %d\n", assigned, columns_founded_count);
+				if ( assigned != columns_found_count ) {
+					printf("imported %d value not %d\n", assigned, columns_found_count);
 					free(swc_columns);		
 					free(ts_columns);
 					fclose(f);
@@ -3874,7 +3874,7 @@ DATASET *get_datasets(int *const datasets_count) {
 	if ( error ) {
 		return NULL;
 	} else if ( !files_temp_count ) {
-		puts(err_no_meteo_files_founded);
+		puts(err_no_meteo_files_found);
 		return NULL;
 	}
 
@@ -3886,7 +3886,7 @@ DATASET *get_datasets(int *const datasets_count) {
 		return NULL;
 	}
 
-	/* loop on each files founded */
+	/* loop on each files found */
 	for ( file = 0; file < files_temp_count; file++ ) {
 		/* check filename */
 		if ( is_valid_era_filename(files_temp[file].list[0].name) ) {
@@ -3912,13 +3912,13 @@ DATASET *get_datasets(int *const datasets_count) {
 	/* free memory */
 	free_files(files_temp, files_temp_count);
 
-	/* check for non files founded */
+	/* check for non files found */
 	if ( !files_count ) {
-		puts(err_no_files_founded);
+		puts(err_no_files_found);
 		return NULL;
 	}
 	
-	/* loop on each files founded */
+	/* loop on each files found */
 	for ( file = 0; file < files_count; file++ ) {
 		type = files[file].type;
 		if ( ERA_FILES == type ) {
@@ -4131,7 +4131,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 
 		/* check if has any met files */
 		if ( !check_met_files(current_dataset) ) {
-			puts("MET files not founded.");
+			puts("MET files not found.");
 			continue;
 		}
 
