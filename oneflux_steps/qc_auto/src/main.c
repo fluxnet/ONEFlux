@@ -93,7 +93,7 @@ int spike_check_3_return = SPIKE_CHECK_3_RETURN;					/* see common.h */
 PREC spike_threshold_nee = SPIKE_THRESHOLD_NEE;						/* see common.h */
 PREC spike_threshold_le = SPIKE_THRESHOLD_LE;						/* see common.h */
 PREC spike_threshold_h = SPIKE_THRESHOLD_H;							/* see common.h */
-int files_founded_count;
+int files_found_count;
 PREC height;
 static int doy;
 static int qc2_filter;												/* default is off */
@@ -110,7 +110,7 @@ static int solar_output;											/* default is off */
 static int one_timestamp;											/* default is off */
 
 /* static global variables */
-static FILES *files_founded;
+static FILES *files_found;
 
 /* strings */
 static const char banner[] =	"\nqc_auto "PROGRAM_VERSION"\n"
@@ -134,7 +134,7 @@ static const char msg_dataset_path[] = "dataset path = %s\n";
 static const char msg_output_path[] = "output path = %s\n\n";
 static const char msg_processing[] = "	- found %s, %d...ok\n";
 static const char msg_ok[] = "ok";
-static const char msg_summary[] = "\n%d file%s founded: %d processed, %d skipped.\n\n";
+static const char msg_summary[] = "\n%d file%s found: %d processed, %d skipped.\n\n";
 static const char msg_usage[] =	"usage: qc_auto parameters output_formats\n\n"
 								"parameters:\n\n"
 								"-input_path=filename or path to be processed (optional)\n"
@@ -221,8 +221,8 @@ static void clean_up(void) {
 	if ( program_path ) {
 		free(program_path);
 	}
-	if ( files_founded ) {
-		free_files(files_founded, files_founded_count);
+	if ( files_found ) {
+		free_files(files_found, files_found_count);
 	}
 	check_memory_leak();
 }
@@ -1008,11 +1008,11 @@ static void set_invalid_by_flag(DATASET *const dataset, const char *const var, c
 }
 
 /* */
-static char *timestamp_for_sr(int row, int yy, const int hourly) {
+static char *timestamp_for_sr(int row, int yy, const int timeres) {
 	TIMESTAMP *t;
 	static char buffer[16+1] = { 0 };
 
-	t = timestamp_end_by_row(row, yy, hourly);
+	t = timestamp_end_by_row(row, yy, timeres);
 	sprintf(buffer, "%02d,%02d,%04d,%02d,%02d", t->MM, t->DD, t->YYYY, t->hh, t->mm); 
 
 	/* */
@@ -3374,7 +3374,7 @@ int main(int argc, char *argv[]) {
 	printf(msg_output_path, output_path);
 
 	/* get files */
-	files_founded = get_files(program_path, input_path, &files_founded_count, &error);
+	files_found = get_files(program_path, input_path, &files_found_count, &error);
 	if ( error ) {
 		return 1;
 	}
@@ -3385,13 +3385,13 @@ int main(int argc, char *argv[]) {
 	total_files_count = 0;
 
 	/* loop for searching file */
-	for ( z = 0; z < files_founded_count; z++) {
+	for ( z = 0; z < files_found_count; z++) {
 		/* inc */
 		++total_files_count;
 
 		/* import dataset */
-		printf("processing %s...", files_founded[z].list[0].name);
-		dataset = import_dataset(files_founded[z].list[0].fullpath);
+		printf("processing %s...", files_found[z].list[0].name);
+		dataset = import_dataset(files_found[z].list[0].fullpath);
 		if ( !dataset ) {
 			puts("nothing found.");
 			++files_not_processed_count;

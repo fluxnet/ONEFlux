@@ -109,7 +109,7 @@ const char *const var_flag_names[] = {	"NEE",
 
 /* error strings */
 static const char err_unable_open_file[] = "unable to open file.";
-static const char err_redundancy[] = "redundancy: var \"%s\" already founded at column %d.\n";
+static const char err_redundancy[] = "redundancy: var \"%s\" already found at column %d.\n";
 static const char err_unable_find_column[] = "unable to find column for \"%s\" var.\n";
 static const char err_conversion[] = "error during conversion of \"%s\" value at row %d, column %d.\n";
 static const char err_too_many_rows[] = "too many rows.";
@@ -219,7 +219,7 @@ static int parse_header(DATASET *const dataset, char *header, const char *const 
 				if ( dataset->header[i].index ) {
 					printf("_%d", dataset->header[i].index);
 				}
-				printf(" founded at row %d and %d", i+1, j+1);
+				printf(" found at row %d and %d", i+1, j+1);
 				return 0;
 			}
 		}
