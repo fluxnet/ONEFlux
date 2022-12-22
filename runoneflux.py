@@ -16,6 +16,9 @@ import traceback
 
 from oneflux import log_config, log_trace
 from oneflux.configs.utils import ONEFluxConfig
+from oneflux.tools.partition_nt import run_partition_nt
+from oneflux.tools.partition_dt import run_partition_dt
+from oneflux.tools.pipeline import run_pipeline
 
 log = logging.getLogger(__name__)
 # main function
@@ -38,13 +41,12 @@ if __name__ == '__main__':
     try:
         # run command
         log.info("Starting execution: {c}".format(c=config.args.command))
-        run_mode_func = config.get_run_mode_func()
         if config.args.command == 'all':
-            run_mode_func(**config.get_pipeline_params())
+            run_pipeline(config)
         elif config.args.command == 'partition_nt':
-            run_mode_func(**config.get_partition_nt_params())
+            run_partition_nt(**config.get_partition_nt_params())
         elif config.args.command == 'partition_dt':
-            run_mode_func(**config.get_partition_dt_params())
+            run_partition_dt(**config.get_partition_dt_params())
         log.info("Finished execution: {c}".format(c=config.args.command))
 
     except Exception as e:

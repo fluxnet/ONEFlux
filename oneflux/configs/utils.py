@@ -8,21 +8,15 @@ import yaml
 
 from oneflux import ONEFluxError
 from oneflux.tools.partition_nt import PROD_TO_COMPARE, PERC_TO_COMPARE
-from oneflux.tools.partition_nt import run_partition_nt
-from oneflux.tools.partition_dt import run_partition_dt
-from oneflux.tools.pipeline import run_pipeline
-
 
 log = logging.getLogger(__name__)
 
-RUN_MODE = {'all': run_pipeline,
-            'partition_nt': run_partition_nt,
-            'partition_dt': run_partition_dt
-           }
-
 YAML_TEMPLATE_PATH = 'oneflux/configs/config_template.yaml'
 YAML_DESCRIPTION_PATH ='oneflux/configs/config_description.yaml'
-
+STEP_NAME_LIST = ['01_qc_visual', '02_qc_auto', '04_ustar_mp', '05_ustar_cp',
+                    '06_meteo_era', '07_meteo_proc', '08_nee_proc', '09_energy_proc',
+                    '10_nee_partition_nt', '11_nee_partition_dt', '12_ure',
+                    '99_fluxnet2015']
 def argparse_from_yaml_and_cli():
     param_dest = {}
     config_default = {}
@@ -158,20 +152,20 @@ class ONEFluxConfig:
             os.remove(path)
         with open(path, 'w') as f:
                 yaml.dump(saved_dict, f, default_flow_style=False)
-        step_name_list = ['01_qc_visual', '02_qc_auto', '04_ustar_mp', '05_ustar_cp',
-                          '06_meteo_era', '07_meteo_proc', '08_nee_proc', '09_energy_proc',
-                          '10_nee_partition_nt', '11_nee_partition_dt', '12_ure',
-                          '99_fluxnet2015']
-        for step in step_name_list:
-            v = {}
-            for arg in self.config_default.get(step, []):
-                v[arg] = self.args.__getattribute__(arg.replace('-', '_'))
-            if v:
-                path = f'{dir}/{step}_{name}'
-                if overwritten and os.path.isfile(path):
-                    os.remove(path)
-                with open(path, 'w') as f:
-                    yaml.dump(v, f, default_flow_style=False)
+
+    def export_step_to_yaml(self, dir=None, name='config.yaml', overwritten=False):
+        step = os.path.split(dir)[-1]
+        if step not in STEP_NAME_LIST:
+            raise ONEFluxError(f"Step does not exist: {step}")
+        v = {}
+        for arg in self.config_default.get(step, []):
+            v[arg] = self.args.__getattribute__(arg.replace('-', '_'))
+        if v:
+            path = f'{dir}/{name}'
+            if overwritten and os.path.isfile(path):
+                os.remove(path)
+            with open(path, 'w') as f:
+                yaml.dump(v, f, default_flow_style=False)
 
 
     def log_msg(self):
@@ -193,13 +187,8 @@ class ONEFluxConfig:
         log.debug(msg)
 
     def run_check(self):
-        if self.args.command not in RUN_MODE:
-            raise ONEFluxError("Unknown command: {c}".format(c=self.args.command))
         if not os.path.isdir(os.path.join(self.args.datadir, self.args.sitedir)):
             raise ONEFluxError("Site dir not found: {d}".format(d=self.args.sitedir))
-
-    def get_run_mode_func(self):
-        return RUN_MODE[self.args.command]
 
 def _type_from_str(s):
     s_dict = {'str': str, 'int': int, 'float': float, 'bool': bool}

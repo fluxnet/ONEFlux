@@ -54,10 +54,13 @@ class Pipeline(object):
     VALIDATE_ON_CREATE = False
     SIMULATION = False
 
-    def __init__(self, siteid, timestamp=datetime.now().strftime("%Y%m%d%H%M%S"), *args, **kwargs):
+    def __init__(self, config_obj):
         '''
         Initializes pipeline execution object, including initialization tests (e.g., directories and initial datasets tests)
         '''
+        self.config_obj = config_obj
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+
         log.info("ONEFlux Pipeline: initialization started")
         self.run_id = socket.getfqdn() + '_run' + timestamp
 
@@ -68,10 +71,11 @@ class Pipeline(object):
 
         ### basic checks
         # extra configs
-        if args:
-            log.warning("ONEFlux Pipeline: non-keyword arguments provided, ignoring: {a}".format(a=args))
+        kwargs = self.config_obj.get_pipeline_params()
         log.debug("ONEFlux Pipeline: keyword arguments: {a}".format(a=kwargs))
         self.configs = kwargs
+        siteid = self.configs.get('siteid')
+        self.configs['datadir'] = os.path.abspath(os.path.join(self.configs['datadir'], self.configs['sitedir']))
 
         # check valid config attribute labels from defaults from classes
         self.driver_classes = [PipelineFPCreator,
@@ -96,9 +100,9 @@ class Pipeline(object):
 
         self.valid_attribute_labels = ['data_dir', 'tool_dir', 'data_dir_main', 'prod_to_compare', 'perc_to_compare', 'first_year', 'last_year']
         for driver in self.driver_classes:
-            labels = [k.lower() for k, v in driver.__dict__.iteritems() if ((not callable(v)) and (not k.startswith('_')))]
+            labels = [k.lower() for k, v in driver.__dict__.items() if ((not callable(v)) and (not k.startswith('_')))]
             self.valid_attribute_labels.extend(labels)
-        labels = [k.lower() for k, v in Pipeline.__dict__.iteritems() if ((not callable(v)) and (not k.startswith('_')))]
+        labels = [k.lower() for k, v in Pipeline.__dict__.items() if ((not callable(v)) and (not k.startswith('_')))]
         self.valid_attribute_labels.extend(labels)
         for k in self.configs.keys():
             if k not in self.valid_attribute_labels:
@@ -106,7 +110,7 @@ class Pipeline(object):
         self.first_year = self.configs.get('first_year', None)
         self.last_year = self.configs.get('last_year', None)
         self.data_dir_main = self.configs.get('data_dir_main', None)
-        self.site_dir = self.configs.get('site_dir', None)
+        self.site_dir = self.configs.get('sitedir', None)
 
         # check OS
         if (os.name != 'posix') and (os.name != 'nt'):
@@ -126,7 +130,7 @@ class Pipeline(object):
         log.debug("ONEFlux Pipeline: setting up for site '{v}'".format(v=self.siteid))
 
         # main data directory (all sites)
-        self.data_dir = self.configs.get('data_dir', os.path.join(DATA_DIR, self.siteid)) # TODO: default should be self.site_dir?
+        self.data_dir = self.configs.get('datadir', os.path.join(DATA_DIR, self.siteid)) # TODO: default should be self.site_dir?
         log.debug("ONEFlux Pipeline: using data dir '{v}'".format(v=self.data_dir))
 
         self.prodfile_template = os.path.join(self.data_dir, FLUXNET_PRODUCT_CLASS.FLUXNET2015_DIR, PRODFILE_TEMPLATE_F)
@@ -384,6 +388,7 @@ class PipelineQCVisual(object):
         self.qc_visual_dir_inner = self.pipeline.configs.get('qc_visual_files_dir', os.path.join(self.qc_visual_dir, self.QC_VISUAL_DIR_INNER))
         self.output_file_pattern = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS]
         self.output_file_patterns_inner = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_INNER]
+        self.pipeline.config_obj.export_step_to_yaml(self.qc_visual_dir)
 
     def pre_validate(self):
         '''
@@ -454,6 +459,7 @@ class PipelineQCAuto(object):
         self.output_log = os.path.join(self.qc_auto_dir, 'report_{t}.txt'.format(t=self.pipeline.run_id))
         self.cmd_txt = 'cd "{o}" {cmd_sep} {c} -input_path="{i}" -output_path=. -ustar -graph -nee -energy -meteo -solar > "{log}"'
         self.cmd = self.cmd_txt.format(c=self.qc_auto_ex, i=self.input_qc_visual_dir, o=self.qc_auto_dir_fmt, log=self.output_log, cmd_sep=CMD_SEP)
+        self.pipeline.config_obj.export_step_to_yaml(self.qc_auto_dir)
 
     def pre_validate(self):
         '''
@@ -525,6 +531,7 @@ class PipelineQCAutoConvert(object):
         self.qc_auto_convert_original = self._QC_AUTO_CONVERT_ORIGINAL
         self.output_file_patterns = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS]
         self.qc_auto_convert_files_to_convert = []
+        
 
     def pre_validate(self):
         '''
@@ -672,6 +679,7 @@ class PipelineUstarMP(object):
         self.output_log = os.path.join(self.ustar_mp_dir, 'report_{t}.txt'.format(t=self.pipeline.run_id))
         self.cmd_txt = 'cd "{o}" {cmd_sep} mkdir input {cmd_sep} {cp} "{i}"*_ustar_*.csv ./input/ {cmd_sep} {c} -input_path=./input/ -output_path=./ > "{log}"'
         self.cmd = self.cmd_txt.format(c=self.ustar_mp_ex, i=self.input_qc_auto_dir, o=self.ustar_mp_dir_fmt, log=self.output_log, cmd_sep=CMD_SEP, cp=COPY)
+        self.pipeline.config_obj.export_step_to_yaml(self.ustar_mp_dir)
 
     def pre_validate(self):
         '''
@@ -760,6 +768,7 @@ class PipelineUstarCP(object):
                                        cmd_sep=CMD_SEP,
                                        cp=COPY,
                                        dl=DELETE)
+        self.pipeline.config_obj.export_step_to_yaml(self.ustar_cp_dir)
 
     def pre_validate(self):
         '''
@@ -887,6 +896,7 @@ class PipelineMeteoERA(object):
         self.meteo_era_dir = self.pipeline.configs.get('meteo_era_dir', os.path.join(self.pipeline.data_dir, self.METEO_ERA_DIR))
         self.output_file_patterns = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS]
         self.output_file_patterns_extra = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_EXTRA]
+        self.pipeline.config_obj.export_step_to_yaml(self.meteo_era_dir)
 
     def pre_validate(self):
         '''
@@ -1162,6 +1172,7 @@ class PipelineMeteoProc(object):
                                        q=self.input_qc_auto_dir,
                                        e=self.input_meteo_era_dir,
                                        log=self.output_log)
+        self.pipeline.config_obj.export_step_to_yaml(self.meteo_proc_dir)
 
     def pre_validate(self):
         '''
@@ -1276,6 +1287,7 @@ class PipelineNEEProc(object):
                                        ucp=self.input_ustar_cp_dir,
                                        m=self.input_meteo_proc_dir,
                                        log=self.output_log)
+        self.pipeline.config_obj.export_step_to_yaml(self.nee_proc_dir)
 
     def pre_validate(self):
         '''
@@ -1372,6 +1384,7 @@ class PipelineEnergyProc(object):
         self.cmd_execute = self.cmd_execute_txt.format(cmd_sep=CMD_SEP, o=self.output_energy_proc_dir, c=os.path.basename(self.energy_proc_ex), log=self.output_log)
         self.cmd_del_tool_txt = '{delete} "{o}{c}"'
         self.cmd_del_tool = self.cmd_del_tool_txt.format(delete=DELETE, o=self.output_energy_proc_dir, c=os.path.basename(self.energy_proc_ex))
+        self.pipeline.config_obj.export_step_to_yaml(self.energy_proc_dir)
 
     def pre_validate(self):
         '''
@@ -1453,6 +1466,7 @@ class PipelineNEEPartitionNT(object):
         self.output_file_patterns_c = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_C]
         self.prod_to_compare = self.pipeline.configs.get('prod_to_compare', PROD_TO_COMPARE)
         self.perc_to_compare = self.pipeline.configs.get('perc_to_compare', PERC_TO_COMPARE)
+        self.pipeline.config_obj.export_step_to_yaml(self.nee_partition_nt_dir)
 
     def pre_validate(self):
         '''
@@ -1531,6 +1545,7 @@ class PipelineNEEPartitionDT(object):
         self.output_file_patterns_c = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_C]
         self.prod_to_compare = self.pipeline.configs.get('prod_to_compare', PROD_TO_COMPARE)
         self.perc_to_compare = self.pipeline.configs.get('perc_to_compare', PERC_TO_COMPARE)
+        self.pipeline.config_obj.export_step_to_yaml(self.nee_partition_dt_dir)
 
     def pre_validate(self):
         '''
@@ -1738,16 +1753,16 @@ class PipelinePrepareUREPW(object):
 #       #  TODO: finish implementation
         for root, _, filenames in os.walk(self.pipeline.nee_partition_nt.nee_partition_nt_dir):
             for f in filenames:
-                print os.path.join(root, f)
+                print(os.path.join(root, f))
 
         for root, _, filenames in os.walk(self.pipeline.nee_partition_dt.nee_partition_dt_dir):
             for f in filenames:
-                print os.path.join(root, f)
+                print(os.path.join(root, f))
 
         if os.path.isdir(self.pipeline.nee_partition_sr.nee_partition_sr_dir):
             for root, _, filenames in os.walk(self.pipeline.nee_partition_dt.nee_partition_sr_dir):
                 for f in filenames:
-                    print os.path.join(root, f)
+                    print(os.path.join(root, f))
 
         # execute prepare_ure step
         if not self.execute and not self.pipeline.simulation:
@@ -2128,6 +2143,7 @@ class PipelineURE(object):
         self.output_log = os.path.join(self.ure_dir, 'report_{t}.txt'.format(t=self.pipeline.run_id))
         self.cmd_txt = 'cd "{o}" {cmd_sep} {c} -input_path={i} -output_path={o} > "{log}"'
         self.cmd = self.cmd_txt.format(c=self.ure_ex, i=self.input_prepare_ure_dir, o=self.ure_dir_fmt, log=self.output_log, cmd_sep=CMD_SEP, cp=COPY)
+        self.pipeline.config_obj.export_step_to_yaml(self.ure_dir)
 
     def pre_validate(self):
         '''
@@ -2224,6 +2240,7 @@ class PipelineFLUXNET(object):
         self.zip_manifest_lines = [ZIPMANIFEST_HEADER, ]
         self.csv_manifest_file = os.path.join(self.fluxnet2015_dir, OUTPUT_LOG_TEMPLATE.format(t='CSV_' + self.pipeline.run_id)[:-4] + '.csv')
         self.zip_manifest_file = os.path.join(self.fluxnet2015_dir, OUTPUT_LOG_TEMPLATE.format(t='ZIP_' + self.pipeline.run_id)[:-4] + '.csv')
+        self.pipeline.config_obj.export_step_to_yaml(self.fluxnet2015_dir)
 
     def pre_validate(self):
         '''
@@ -2370,6 +2387,7 @@ class PipelineFLUXNET2015(object):
         self.zip_manifest_lines = [ZIPMANIFEST_HEADER, ]
         self.csv_manifest_file = os.path.join(self.fluxnet2015_dir, OUTPUT_LOG_TEMPLATE.format(t='CSV_' + self.pipeline.run_id)[:-4] + '.csv')
         self.zip_manifest_file = os.path.join(self.fluxnet2015_dir, OUTPUT_LOG_TEMPLATE.format(t='ZIP_' + self.pipeline.run_id)[:-4] + '.csv')
+        self.pipeline.config_obj.export_step_to_yaml(self.fluxnet2015_dir)
 
     def pre_validate(self):
         '''
