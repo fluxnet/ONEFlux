@@ -126,7 +126,7 @@ class ONEFluxConfig:
         }
         return params
 
-    def export_to_yaml(self, dir=None, name=None, overwritten=False):
+    def export_to_yaml(self, dir='.', name='config.yaml', replaced_name=None):
         saved_dict = {}
         args_dict = vars(self.args)
         for group_name, params in self.config_default.items():
@@ -140,20 +140,17 @@ class ONEFluxConfig:
                     p = self.param_dest[param]
                     if p in args_dict and args_dict[p] != param_value:
                         saved_dict[group_name][param] = args_dict[p]
-        if not name:
-            name = 'run_params_{}.yaml'.format(dt.datetime.now().strftime('%d-%m-%Y_%H-%M-%S'))
-        if not dir:
-            path = name
-        else:
-            path = f'{dir}/{name}'
+
+        path = f'{dir}/{name}'
+        renamed_path = f'{dir}/{replaced_name}'
         if dir and not os.path.exists(dir):
             os.makedirs(dir)
-        if overwritten and os.path.isfile(path):
-            os.remove(path)
+        if os.path.isfile(path):
+            os.rename(path, renamed_path)
         with open(path, 'w') as f:
                 yaml.dump(saved_dict, f, default_flow_style=False)
 
-    def export_step_to_yaml(self, dir=None, name='config.yaml', overwritten=False):
+    def export_step_to_yaml(self, dir=None, name='config.yaml'):
         step = os.path.split(dir)[-1]
         if step not in STEP_NAME_LIST:
             raise ONEFluxError(f"Step does not exist: {step}")
@@ -162,8 +159,6 @@ class ONEFluxConfig:
             v[arg] = self.args.__getattribute__(arg.replace('-', '_'))
         if v:
             path = f'{dir}/{name}'
-            if overwritten and os.path.isfile(path):
-                os.remove(path)
             with open(path, 'w') as f:
                 yaml.dump(v, f, default_flow_style=False)
 

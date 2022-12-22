@@ -77,6 +77,8 @@ class Pipeline(object):
         siteid = self.configs.get('siteid')
         self.configs['datadir'] = os.path.abspath(os.path.join(self.configs['datadir'], self.configs['sitedir']))
 
+        self.config_obj.export_to_yaml(dir=self.configs['datadir'], replaced_name=f'config_{self.run_id}.yaml')
+
         # check valid config attribute labels from defaults from classes
         self.driver_classes = [PipelineFPCreator,
                         PipelineQCVisual,
