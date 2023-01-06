@@ -126,20 +126,30 @@ class ONEFluxConfig:
         }
         return params
 
-    def export_to_yaml(self, dir='.', name='config.yaml', replaced_name=None):
+    def export_to_yaml(self, dir='.', name='config.yaml', replaced_name=None, is_compact=False):
         saved_dict = {}
         args_dict = vars(self.args)
-        for group_name, params in self.config_default.items():
-            saved_dict[group_name] = {}
-            for param, param_value in params.items():
-                if param not in self.param_dest:
-                    p = param
-                    if p in args_dict and args_dict[p] != param_value:
-                        saved_dict[group_name][p] = args_dict[p]
-                else:
-                    p = self.param_dest[param]
+        if is_compact:
+            for group_name, params in self.config_default.items():
+                saved_dict[group_name] = {}
+                for param, param_value in params.items():
+                    if param not in self.param_dest:
+                        p = param
+                    else:
+                        p = self.param_dest[param]
+                    p = p.replace('-', '_')
                     if p in args_dict and args_dict[p] != param_value:
                         saved_dict[group_name][param] = args_dict[p]
+        else:
+            for group_name, params in self.config_default.items():
+                saved_dict[group_name] = {}
+                for param, param_value in params.items():
+                    if param not in self.param_dest:
+                        p = param
+                    else:
+                        p = self.param_dest[param]
+                    p = p.replace('-', '_')
+                    saved_dict[group_name][param] = args_dict[p]
 
         path = f'{dir}/{name}'
         renamed_path = f'{dir}/{replaced_name}'
