@@ -14,10 +14,7 @@ permissions:
 
 jobs:
   build:
-
-    # 20.04 currently still supports old version of python (ubuntu-latest doesn't)
     runs-on: ubuntu-20.04
-
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python 2.7.10
