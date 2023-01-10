@@ -15,7 +15,7 @@ permissions:
 jobs:
   build:
 
-	# 20.04 currently still supports old version of python (ubuntu-latest doesn't)
+    # 20.04 currently still supports old version of python (ubuntu-latest doesn't)
     runs-on: ubuntu-20.04
 
     steps:
