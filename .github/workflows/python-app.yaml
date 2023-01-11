@@ -36,7 +36,6 @@ jobs:
         wget ftp://ftp.fluxdata.org/.ameriflux_downloads/.test/US-ARc_sample_output.zip
         unzip US-ARc_sample_input.zip -d ./datadir/test_input/
         unzip US-ARc_sample_output.zip -d ./datadir/test_output/
-
     - name: Run OneFLUX partitioning_nt
       run: |
         # copy necessary output data to force partitioning_nt to run
@@ -44,13 +43,9 @@ jobs:
         cp -r ./datadir/test_output/US-ARc_sample_output/07_meteo_proc/ ./datadir/test_input/US-ARc_sample_input/
         cp -r ./datadir/test_output/US-ARc_sample_output/08_nee_proc/ ./datadir/test_input/US-ARc_sample_input/
         python runoneflux.py partition_nt ./datadir/test_input/ US-ARc US-ARc_sample_input 2005 2006 -l fluxnet_pipeline_US-ARc.log --recint hh
-
     - name: Run pytest
       run: |
         pytest oneflux/tools/partition_nt.py
-
-
-
     # - name: Lint with flake8
     #   run: |
     #     # stop the build if there are Python syntax errors or undefined names
