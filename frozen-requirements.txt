@@ -12,3 +12,4 @@ scipy==1.2.3
 six==1.16.0
 statsmodels==0.8.0
 subprocess32==3.5.4
+setuptools==44.1.1
