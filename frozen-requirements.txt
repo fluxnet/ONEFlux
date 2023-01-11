@@ -2,7 +2,7 @@ backports.functools-lru-cache==1.6.4
 cycler==0.10.0
 kiwisolver==1.1.0
 matplotlib==2.2.5
-pandas==0.20.0
+pandas==0.20.1
 patsy==0.5.2
 pyparsing==2.4.7
 python-dateutil==2.8.2
