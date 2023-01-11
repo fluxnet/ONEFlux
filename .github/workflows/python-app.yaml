@@ -23,17 +23,21 @@ jobs:
         python-version: "2.7.18"
     - name: Install OneFLUX
       run: |
-        python -m pip install --upgrade pip
-        pip install flake8 pytest
+        # python -m pip install --upgrade pip
+        # pip install flake8 pytest
         # if [ -f frozen-requirement.txt ]; then pip install -r frozen-requirements.txt; fi
         make
-    - name: Run OneFLUX partitioning_nt
+    -name: Get data
       run: |
+        mkdir datadir
         # get necessary data
         wget ftp://ftp.fluxdata.org/.ameriflux_downloads/.test/US-ARc_sample_input.zip
         wget ftp://ftp.fluxdata.org/.ameriflux_downloads/.test/US-ARc_sample_output.zip
         unzip US-ARc_sample_input.zip -d ./datadir/test_input/
         unzip US-ARc_sample_output.zip -d ./datadir/test_output/
+
+    - name: Run OneFLUX partitioning_nt
+      run: |
         # copy necessary output data to force partitioning_nt to run
         cp -r ./datadir/test_output/US-ARc_sample_output/02_qc_auto/ ./datadir/test_input/US-ARc_sample_input/
         cp -r ./datadir/test_output/US-ARc_sample_output/07_meteo_proc/ ./datadir/test_input/US-ARc_sample_input/
