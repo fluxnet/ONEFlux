@@ -25,7 +25,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install flake8 pytest
-        # if [ -f requirements-frozen.txt ]; then pip install -r requirements-frozen.txt; fi
+        # if [ -f frozen-requirement.txt ]; then pip install -r frozen-requirements.txt; fi
         make
     - name: Run OneFLUX partitioning_nt
       run: |
