@@ -21,11 +21,31 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: "2.7.18"
-    - name: Install dependencies
+    - name: Install OneFLUX
       run: |
         python -m pip install --upgrade pip
         pip install flake8 pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        # if [ -f requirements-frozen.txt ]; then pip install -r requirements-frozen.txt; fi
+        make
+    - name: Run OneFLUX partitioning_nt
+      run: |
+        # get necessary data
+        wget ftp://ftp.fluxdata.org/.ameriflux_downloads/.test/US-ARc_sample_input.zip
+        wget ftp://ftp.fluxdata.org/.ameriflux_downloads/.test/US-ARc_sample_output.zip
+        unzip US-ARc_sample_input.zip -d ./datadir/test_input/
+        unzip US-ARc_sample_output.zip -d ./datadir/test_output/
+        # copy necessary output data to force partitioning_nt to run
+        cp -r ./datadir/test_output/US-ARc_sample_output/02_qc_auto/ ./datadir/test_input/US-ARc_sample_input/
+        cp -r ./datadir/test_output/US-ARc_sample_output/07_meteo_proc/ ./datadir/test_input/US-ARc_sample_input/
+        cp -r ./datadir/test_output/US-ARc_sample_output/08_nee_proc/ ./datadir/test_input/US-ARc_sample_input/
+        python runoneflux.py partition_nt ./datadir/test_input/ US-ARc US-ARc_sample_input 2005 2006 -l fluxnet_pipeline_US-ARc.log --recint hh
+
+    - name: Run pytest
+      run: |
+        pytest oneflux/tools/partition_nt.py
+
+
+
     # - name: Lint with flake8
     #   run: |
     #     # stop the build if there are Python syntax errors or undefined names
