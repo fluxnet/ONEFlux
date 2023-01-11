@@ -6,7 +6,7 @@ buildpy:
 	@echo "Installing Python dependencies..."
 ifeq ($(PYPACKAGE),pip)
 	@echo "Using pip to install dependencies..."
-	pip install -r requirements.txt
+	pip install -r frozen-requirements.txt
 else
 ifeq ($(PYPACKAGE),conda)
 	@echo "Using conda to install dependencies..."

@@ -147,11 +147,11 @@ def equal_csv(csv_1, csv_2):
             if line not in fileone:
                 return False
     
-# deal with fixtures for running nt_test
+# TODO: deal with fixtures for running nt_test
 # step 10
 def test_run_partition_nt():
-    
-    datadir = "../datadir/"
+    datadir = "./datadir/test_input"
+    data_output = "./datadir/test_output"
     siteid = "US-ARc"
     sitedir = "US-ARc_sample_input"
     years = [2005] # years = [2005, 2006]
@@ -168,11 +168,12 @@ def test_run_partition_nt():
     # now do simple check of output 
     rootdir = os.path.join(datadir, sitedir, "10_nee_partition_nt")
     nee_y_files = glob.glob(os.path.join(rootdir, "nee_y_1.25_US-ARc_2005*"))
-    compare_y_files = glob.glob(os.path.join('saved', "nee_y_1.25_US-ARc_2005*"))
+    ref_output = os.path.join(data_output, sitedir, "10_nee_partition_nt")
+    ref_y_files = glob.glob(os.path.join(ref_output, "nee_y_1.25_US-ARc_2005*"))
     
     # log.info(nee_y_files)
     # log.info(compare_y_files)
-    for f, b in zip(nee_y_files, compare_y_files):
+    for f, b in zip(nee_y_files, ref_y_files):
         if not equal_csv(f, b):
             return False
 
@@ -181,11 +182,6 @@ def test_run_partition_nt():
     #     print(file)
     #     log.info(file)
     #     if not equal_csv(file, )
-        
-        
-    
-    
-
     # with open('saved/nee_y_1.25_US-ARc_2005.csv', 'r') as t1, open(nee_y, 'r') as t2:
 
     
