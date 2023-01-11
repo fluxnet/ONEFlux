@@ -27,7 +27,7 @@ jobs:
         # pip install flake8 pytest
         # if [ -f frozen-requirement.txt ]; then pip install -r frozen-requirements.txt; fi
         make
-    -name: Get data
+    - name: Get data
       run: |
         mkdir datadir
         # get necessary data
