@@ -7,6 +7,8 @@ import sys
 import yaml
 
 from oneflux import ONEFluxError
+from oneflux.pipeline.common import TOOL_DIRECTORY, \
+                                    ERA_FIRST_TIMESTAMP_START_TEMPLATE, ERA_LAST_TIMESTAMP_START_TEMPLATE
 from oneflux.tools.partition_nt import PROD_TO_COMPARE, PERC_TO_COMPARE
 
 log = logging.getLogger(__name__)
@@ -17,6 +19,7 @@ STEP_NAME_LIST = ['01_qc_visual', '02_qc_auto', '04_ustar_mp', '05_ustar_cp',
                     '06_meteo_era', '07_meteo_proc', '08_nee_proc', '09_energy_proc',
                     '10_nee_partition_nt', '11_nee_partition_dt', '12_ure',
                     '99_fluxnet2015']
+
 def argparse_from_yaml_and_cli():
     param_dest = {}
     config_default = {}
@@ -69,25 +72,31 @@ class ONEFluxConfig:
         self.prod = (PROD_TO_COMPARE if self.args.prod is None else self.args.prod[0])
 
     def get_pipeline_params(self):
+        if self.args.timestamp:
+            timestamp = self.args.timestamp
+        else:
+            timestamp = dt.datetime.now().strftime("%Y%m%d%H%M%S")
         params = {
-            'datadir': self.args.datadir,
-            'siteid': self.args.siteid,
-            'sitedir': self.args.sitedir,
-            'firstyear': self.args.firstyear,
-            'lastyear': self.args.lastyear,
+            'data_dir': os.path.abspath(os.path.join(self.args.datadir, self.args.sitedir)),
+            'data_dir_main': os.path.abspath(self.args.datadir),
+            'site_dir': self.args.sitedir,
+            'tool_dir': TOOL_DIRECTORY,
+            'first_year': self.args.firstyear,
+            'last_year': self.args.lastyear,
             'prod_to_compare': self.prod,
             'perc_to_compare': self.perc,
-            'mcr_directory': self.args.mcr_directory,
-            'timestamp': self.args.timestamp,
+            'ustar_cp_mcr_dir': self.args.mcr_directory,
             'record_interval': self.args.recint,
-            'version_data': self.args.versiond,
-            'version_proc': self.args.versionp,
-            'era_first_year': self.args.erafy,
-            'era_last_year': self.args.eraly,
+            'fluxnet2015_first_t1': self.args.firstyear,
+            'fluxnet2015_last_t1': self.args.lastyear,
+            'fluxnet2015_version_data': self.args.versiond,
+            'fluxnet2015_version_processing': self.args.versionp,
+            'era_first_timestamp_start': ERA_FIRST_TIMESTAMP_START_TEMPLATE.format(y=self.args.erafy),
+            'era_last_timestamp_start': ERA_LAST_TIMESTAMP_START_TEMPLATE.format(y=self.args.eraly),
             'steps': {
                 'qc_auto_execute': self.args.qc_auto_execute,
                 'ustar_mp_execute': self.args.ustar_mp_execute,
-                'user_cp_execute': self.args.user_cp_execute,
+                'ustar_cp_execute': self.args.ustar_cp_execute,
                 'meteo_proc_execute': self.args.meteo_proc_execute,
                 'nee_proc_execute': self.args.nee_proc_execute,
                 'energy_proc_execute': self.args.energy_proc_execute,
@@ -100,7 +109,7 @@ class ONEFluxConfig:
                 'simulation': self.args.simulation
             }
         }
-        return params
+        return self.args.siteid, timestamp, params
 
     def get_partition_nt_params(self):
         params = {

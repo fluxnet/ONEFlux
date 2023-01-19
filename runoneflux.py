@@ -36,7 +36,6 @@ if __name__ == '__main__':
     # set defaults if no perc or prod
     config.log_msg()
     config.run_check()
-    config.export_to_yaml()
     # start execution
     try:
         # run command

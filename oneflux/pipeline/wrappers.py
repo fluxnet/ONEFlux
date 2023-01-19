@@ -59,7 +59,7 @@ class Pipeline(object):
         Initializes pipeline execution object, including initialization tests (e.g., directories and initial datasets tests)
         '''
         self.config_obj = config_obj
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        siteid, timestamp, kwargs = self.config_obj.get_pipeline_params()
 
         log.info("ONEFlux Pipeline: initialization started")
         self.run_id = socket.getfqdn() + '_run' + timestamp
@@ -71,16 +71,12 @@ class Pipeline(object):
 
         ### basic checks
         # extra configs
-        kwargs = self.config_obj.get_pipeline_params()
         log.debug("ONEFlux Pipeline: keyword arguments: {a}".format(a=kwargs))
         self.configs = kwargs
-        siteid = self.configs.get('siteid')
-        self.configs['data_dir_main'] = os.path.abspath(self.configs['datadir'])
-        self.configs['datadir'] = os.path.abspath(os.path.join(self.configs['datadir'], self.configs['sitedir']))
         # export compact form
-        self.config_obj.export_to_yaml(dir=self.configs['datadir'], name=f'compact_{DEFAULT_CONFIG_FILE_NAME.format(s=siteid)}', is_compact=True)
+        self.config_obj.export_to_yaml(dir=self.configs['data_dir'], name=f'compact_{DEFAULT_CONFIG_FILE_NAME.format(s=siteid)}', is_compact=True)
         # export long form
-        self.config_obj.export_to_yaml(dir=self.configs['datadir'], name=f'full_{DEFAULT_CONFIG_FILE_NAME.format(s=siteid)}')
+        self.config_obj.export_to_yaml(dir=self.configs['data_dir'], name=f'full_{DEFAULT_CONFIG_FILE_NAME.format(s=siteid)}')
 
         # check valid config attribute labels from defaults from classes
         self.driver_classes = [PipelineFPCreator,
@@ -103,19 +99,23 @@ class Pipeline(object):
                         FLUXNET_PRODUCT_CLASS,
                        ]
 
-        self.valid_attribute_labels = ['data_dir', 'tool_dir', 'data_dir_main', 'prod_to_compare', 'perc_to_compare', 'firstyear', 'lastyear']
+        self.valid_attribute_labels = ['data_dir', 'tool_dir', 'site_dir', 'data_dir_main', 'prod_to_compare', 'perc_to_compare', 'first_year', 'last_year']
         for driver in self.driver_classes:
             labels = [k.lower() for k, v in driver.__dict__.items() if ((not callable(v)) and (not k.startswith('_')))]
             self.valid_attribute_labels.extend(labels)
         labels = [k.lower() for k, v in Pipeline.__dict__.items() if ((not callable(v)) and (not k.startswith('_')))]
         self.valid_attribute_labels.extend(labels)
         for k in self.configs.keys():
-            if k not in self.valid_attribute_labels:
-                log.warning("Pipeline: unknown config attribute: '{p}'".format(p=k))
-        self.first_year = self.configs.get('firstyear', None)
-        self.last_year = self.configs.get('lastyear', None)
+            if k == 'steps':
+                for sk in self.configs[k]:
+                    if sk not in self.valid_attribute_labels:
+                        log.error("Pipeline: unknown config attribute: '{p}'".format(p=sk))
+            elif k not in self.valid_attribute_labels:
+                log.error("Pipeline: unknown config attribute: '{p}'".format(p=k))
+        self.first_year = self.configs.get('first_year', None)
+        self.last_year = self.configs.get('last_year', None)
         self.data_dir_main = self.configs.get('data_dir_main', None)
-        self.site_dir = self.configs.get('sitedir', None)
+        self.site_dir = self.configs.get('site_dir', None)
 
         # check OS
         if (os.name != 'posix') and (os.name != 'nt'):
@@ -135,7 +135,7 @@ class Pipeline(object):
         log.debug("ONEFlux Pipeline: setting up for site '{v}'".format(v=self.siteid))
 
         # main data directory (all sites)
-        self.data_dir = self.configs.get('datadir', os.path.join(DATA_DIR, self.siteid)) # TODO: default should be self.site_dir?
+        self.data_dir = self.configs.get('data_dir', os.path.join(DATA_DIR, self.siteid)) # TODO: default should be self.site_dir?
         log.debug("ONEFlux Pipeline: using data dir '{v}'".format(v=self.data_dir))
 
         self.prodfile_template = os.path.join(self.data_dir, FLUXNET_PRODUCT_CLASS.FLUXNET2015_DIR, PRODFILE_TEMPLATE_F)

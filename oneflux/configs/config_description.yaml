@@ -89,8 +89,8 @@ steps:
   ustar_mp_execute:
     help: enable ustar mp execution
     type: bool
-  user_cp_execute:
-    help: enable user cp execution
+  ustar_cp_execute:
+    help: enable ustar cp execution
     type: bool
   meteo_proc_execute:
     help: enable meteo proc execution

@@ -21,7 +21,7 @@ run:
 steps:
     qc_auto_execute: true
     ustar_mp_execute: true
-    user_cp_execute: true
+    ustar_cp_execute: true
     meteo_proc_execute: true
     nee_proc_execute: true
     energy_proc_execute: true
