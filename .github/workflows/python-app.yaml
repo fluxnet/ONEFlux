@@ -39,6 +39,7 @@ jobs:
         unzip US-ARc_sample_output.zip -d ./tests/data/test_output/
     - name: Run pytest
       run: |
+        export PYTHONPATH=/home/runner/work/ONEFlux/ONEFlux/:$PYTHONPATH
         pytest tests/python/
 
     # - name: Lint with flake8
