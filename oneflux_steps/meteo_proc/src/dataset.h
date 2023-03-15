@@ -78,5 +78,8 @@ void free_datasets(DATASET *datasets, const int datasets_count);
 DATASET *get_datasets(int *const datasets_count);
 int compute_datasets(DATASET *const datasets, const int datasets_count);
 
+/* int is_valid_era_filename(const char *const filename); */
+/* int is_valid_met_filename(const char *const filename); */
+
 /* */
 #endif /* DATASET_H */

@@ -23,4 +23,8 @@ buildc:
 	@echo "\nBuilding C code executables..."
 	$(MAKE) -C oneflux_steps
 
+# buildc_test:
+# 	$(MAKE) -C oneflux_steps test
+
+
 .PHONY: init test buildpy buildc

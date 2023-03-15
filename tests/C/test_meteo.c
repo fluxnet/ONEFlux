@@ -1,9 +1,7 @@
 #include <check.h>
 #include <stdio.h>
 #include <stdlib.h>
-// #include "../../oneflux_steps/meteo_proc/dataset.h"
-#include "../../oneflux_steps/meteo_proc/src/dataset.h"
-#include "../../oneflux_steps/common/common.h"
+#include "../../oneflux_steps/meteo_proc/src/dataset.c"
 
 char *qc_auto_files_path = NULL; /* mandatory */
 char *era_files_path = NULL;     /* mandatory */

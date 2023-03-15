@@ -4914,7 +4914,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				New option added 20160616 to take into account the possibility that ERA is
 				not present in a given year (recent years). In this case the data filled using
 				MDS are used for the _M and the QC is set as 3
-				AGGIUNGI COME SOPRA, SE LW_IN_CALC_M è ancora -9999 metter LW_IN_CALC e QC = 3
+				AGGIUNGI COME SOPRA, SE LW_IN_CALC_M ï¿½ ancora -9999 metter LW_IN_CALC e QC = 3
 			*/
 			if ( IS_INVALID_VALUE(current_dataset->rows[i].value[LW_IN_CALC_M]) ) {
 				current_dataset->rows[i].value[LW_IN_CALC_M] = current_dataset->rows[i].value[LW_IN_CALC];
