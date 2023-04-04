@@ -7,7 +7,7 @@ from distutils.dir_util import copy_tree
 import logging
 
 _log = logging.getLogger(__name__)
-# @pytest.fixture(scope="module")
+
 @pytest.fixture(scope="module")
 def get_data():
     '''
@@ -101,7 +101,7 @@ def test_run_partition_nt(setup_data):
         if not equal_csv(f, b):
             retval = False
 
-    # clean up data. We clean up every call anyway. 
+    # clean up data. 
     shutil.rmtree(datadir)
     
-    return retval 
+    return retval

@@ -8,27 +8,6 @@ import os, errno
 
 from distutils.dir_util import copy_tree
 
-# LIBRARY
-# looks like a good candidate for unit testing - lots of maths functions:
-# get_first_last_ts
-# cov2cor
-# root_mean_sq_error
-# least_squares () - calls scipy function 
-# check_parameters (checks values within given threshold)
-
-# loading data function:
-# load outputs
-
-# Less easy:
-# create_data_structures - very long function
-#  nlinlts1 (non-linear least-squares driver function)
-
-# function is used in daytime at present - so ignore for now
-# array consisting of 6 elements
-
-# create dataset for step 10
-
-# this function isn't actually used much
 def test_check_parameters():
     # from oneflux.partition.library import check_parameter
    
@@ -117,6 +96,5 @@ def test_compu(setup_data):
 
 def test_get_first_last_ts():
     pass
-
 
 # partitioning_nt -> flux_partition -> nlinlts -> 

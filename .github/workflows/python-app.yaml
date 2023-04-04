@@ -39,22 +39,5 @@ jobs:
         unzip US-ARc_sample_output.zip -d ./tests/data/test_output/
     - name: Run pytest
       run: |
-        export PYTHONPATH=/home/runner/work/ONEFlux/ONEFlux/:$PYTHONPATH
-        pytest tests/python/
-
-    # - name: Lint with flake8
-    #   run: |
-    #     # stop the build if there are Python syntax errors or undefined names
-    #     flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-    #     # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-    #     flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    # - name: Test with pytest
-    #   run: |
-    #     pytest
-    # - name: Run OneFLUX partitioning_nt
-    #   run: |
-    #     # copy necessary output data to force partitioning_nt to run
-    #     cp -r ./datadir/test_output/US-ARc_sample_output/02_qc_auto/ ./datadir/test_input/US-ARc_sample_input/
-    #     cp -r ./datadir/test_output/US-ARc_sample_output/07_meteo_proc/ ./datadir/test_input/US-ARc_sample_input/
-    #     cp -r ./datadir/test_output/US-ARc_sample_output/08_nee_proc/ ./datadir/test_input/US-ARc_sample_input/
-    #     python runoneflux.py partition_nt ./datadir/test_input/ US-ARc US-ARc_sample_input 2005 2006 -l fluxnet_pipeline_US-ARc.log --recint hh
+        export PYTHONPATH=/home/runner/work/ONEFlux/ONEFlux:$PYTHONPATH
+        pytest tests/python

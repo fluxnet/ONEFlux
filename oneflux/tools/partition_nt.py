@@ -12,7 +12,6 @@ Execution controller module for NT partitioning method
 '''
 import sys
 import os
-import glob
 import logging
 import time
 import numpy
@@ -20,7 +19,6 @@ import subprocess
 import socket
 import numpy
 import calendar
-import pytest
 
 from datetime import datetime
 from io import StringIO
@@ -134,3 +132,7 @@ def run_partition_nt(datadir, siteid, sitedir, years_to_compare,
     """
     remove_previous_run(datadir=datadir, siteid=siteid, sitedir=sitedir, python=py_remove_old, prod_to_compare=prod_to_compare, perc_to_compare=perc_to_compare, years_to_compare=years_to_compare)
     run_python(datadir=datadir, siteid=siteid, sitedir=sitedir, prod_to_compare=prod_to_compare, perc_to_compare=perc_to_compare, years_to_compare=years_to_compare)
+
+
+if __name__ == '__main__':
+    raise ONEFluxError('Not executable')
