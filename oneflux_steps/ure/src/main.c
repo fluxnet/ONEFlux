@@ -1,6 +1,10 @@
 /*
 	main.c
-	this file is part of ure - Uncertainty and References Extraction
+
+	This file is part of the ure step of processing.
+	It is responsible for calculation and extraction of the NEE,
+	GPP and RECO uncertainties and reference values starting
+	from the different realizations created by the nee_proc tool.
 
 	author: Alessio Ribeca <a.ribeca@unitus.it>
 	owner: DIBAF - University of Tuscia, Viterbo, Italy
@@ -18,7 +22,7 @@
 #include "../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION			"v1.0"
+#define PROGRAM_VERSION			"v1.01"
 #define BUFFER_SIZE				1024
 
 /* global variables */

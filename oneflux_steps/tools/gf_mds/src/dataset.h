@@ -17,6 +17,5 @@
 
 /* prototypes */
 ROW *import_dataset(const LIST *const list, const int count, int *const rows_count);
-void free_details_list(DD **details_list, const int count);
 
 #endif /* DATASET_H */

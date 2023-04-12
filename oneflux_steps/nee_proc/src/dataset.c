@@ -421,13 +421,13 @@ static int get_meteo(DATASET *const dataset) {
 	for ( token = string_tokenizer(buffer, dataset_delimiter, &p), i = 0; token; token = string_tokenizer(NULL, dataset_delimiter, &p), ++i ) {
 		if ( ! string_compare_i(token, "TA_m") ) {
 			_TA = i;
-		} else if ( ! string_compare_i(token, "SWIN_m") ) {
+		} else if ( ! string_compare_i(token, "SW_IN_m") ) {
 			_SWIN = i;
 		} else if ( ! string_compare_i(token, "VPD_m") ) {
 			_VPD = i;
 		} else if ( ! string_compare_i(token, "TA_mqc") ) {
 			TA_QC = i;
-		} else if ( ! string_compare_i(token, "SWIN_mqc") ) {
+		} else if ( ! string_compare_i(token, "SW_IN_mqc") ) {
 			SWIN_QC = i;
 		} else if ( ! string_compare_i(token, "VPD_mqc") ) {
 			VPD_QC = i;
@@ -493,7 +493,7 @@ static int get_meteo(DATASET *const dataset) {
 			return 0;
 		}
 	}
-	puts("founded");
+	puts("found");
 
 	/* get values */
 	index = 0;
@@ -510,7 +510,11 @@ static int get_meteo(DATASET *const dataset) {
 		}
 		while ( fgets(buffer, BUFFER_SIZE, f) ) {
 			for ( token = string_tokenizer(buffer, dataset_delimiter, &p), i = 0; token; token = string_tokenizer(NULL, dataset_delimiter, &p), i++ ) {
-				if ( !i ) {
+				if ( ! i ) {
+					// skip timestamp start
+					continue;
+				} else if ( 1 == i ) {
+					// get timestamp
 					t = get_timestamp(token);
 					if ( ! t ) {
 						fclose(f);
@@ -533,7 +537,7 @@ static int get_meteo(DATASET *const dataset) {
 						}
 					}
 
-					current_row = get_row_by_timestamp(t, (HOURLY_TIMERES==dataset->details->timeres));
+					current_row = get_row_by_timestamp(t, dataset->details->timeres);
 					free(t);
 					if ( element != current_row ) {
 						printf("bad timestamp: %s", token);
@@ -1138,23 +1142,38 @@ static int is_valid_filename(const char *const filename) {
 }
 
 /* */
+void clear_dataset(DATASET* dataset) {
+	if ( dataset ) {
+		if ( dataset->umna_count ) {
+			free(dataset->umna);
+			dataset->umna = NULL;
+		}
+		if ( dataset->details ) {
+			free_dd(dataset->details);
+			dataset->details = NULL;
+		}
+		if ( dataset->gf_rows ) {
+			free(dataset->gf_rows);
+			dataset->gf_rows = NULL;
+		}
+		if ( dataset->rows ) {
+			free(dataset->rows);
+			dataset->rows = NULL;
+		}
+		if ( dataset->years ) {
+			free(dataset->years);
+			dataset->years = NULL;
+		}
+	}
+}
+
+/* */
 void free_datasets(DATASET *datasets, const int datasets_count) {
 	int i;
 
 	/* */
 	for ( i = 0; i < datasets_count; i++ ) {
-		if ( datasets[i].umna_count ) {
-			free(datasets[i].umna);
-		}
-		free_dd(datasets[i].details);
-		free(datasets[i].gf_rows);
-		free(datasets[i].rows);
-		free(datasets[i].years);
-		datasets[i].umna = NULL;
-		datasets[i].details = NULL;
-		datasets[i].rows = NULL;
-		datasets[i].gf_rows = NULL;
-		datasets[i].years = NULL;
+		clear_dataset(&datasets[i]);
 	}
 	free(datasets);
 }
@@ -2435,22 +2454,22 @@ int save_nee_matrix(const NEE_MATRIX *const m, const DATASET *const d, int type)
 		for ( row = 0; row < y; row++ ) {
 			switch ( type ) {
 				case HH_TR:
-					t = timestamp_start_by_row(row, d->years[i].year, (HOURLY_TIMERES == d->details->timeres));
+					t = timestamp_start_by_row(row, d->years[i].year, d->details->timeres);
 					fprintf(f, "%04d%02d%02d%02d%02d,", t->YYYY, t->MM, t->DD, t->hh, t->mm);
-					t = timestamp_end_by_row(row, d->years[i].year, (HOURLY_TIMERES == d->details->timeres));
+					t = timestamp_end_by_row(row, d->years[i].year, d->details->timeres);
 					fprintf(f, "%04d%02d%02d%02d%02d,", t->YYYY, t->MM, t->DD, t->hh, t->mm);
 				break;
 
 				case DD_TR:
-					t = timestamp_start_by_row(row*rows_per_day, d->years[i].year, (HOURLY_TIMERES == d->details->timeres));
+					t = timestamp_start_by_row(row*rows_per_day, d->years[i].year, d->details->timeres);
 					fprintf(f, "%04d%02d%02d,", t->YYYY, t->MM, t->DD);					
 				break;
 
 				case WW_TR:
 					/* timestamp_start */
-					fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, d->years[i].year, (HOURLY_TIMERES == d->details->timeres), 1));
+					fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, d->years[i].year, d->details->timeres, 1));
 					/* timestamp_end */
-					fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, d->years[i].year, (HOURLY_TIMERES == d->details->timeres), 0));
+					fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, d->years[i].year, d->details->timeres, 0));
 				break;
 
 				case MM_TR:
@@ -3283,7 +3302,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 	int is_leap;
 	int exists;
 	int columns_index[INPUT_VALUES];
-	int columns_founded_count;
+	int columns_found_count;
 	int rows_per_day;
 	int no_gaps_filled_count;
 	int on_error;
@@ -3684,7 +3703,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				}
 				
 				/* parse header */
-				columns_founded_count = 0;
+				columns_found_count = 0;
 				for ( token = string_tokenizer(buffer, dataset_delimiter, &p), i = 0; token; token = string_tokenizer(NULL, dataset_delimiter, &p), ++i ) {
 					for ( y = 0; y < INPUT_VALUES; y++ ) {
 						/* create itp name */
@@ -3715,7 +3734,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 								break;
 							} else {
 								columns_index[y] = i;
-								++columns_founded_count;
+								++columns_found_count;
 								// do not skip, continue searching for redundant columns
 							}
 						}
@@ -3730,7 +3749,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				}
 
 				/* check imported values */
-				if ( columns_founded_count != INPUT_VALUES ) {
+				if ( columns_found_count != INPUT_VALUES ) {
 					for ( i = 0; i < INPUT_VALUES; i++ ) {
 						if ( -1 == columns_index[i] ) {
 							/* VPD can be missing */
@@ -3859,8 +3878,8 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 					}		
 
 					/* check assigned */
-					if ( assigned != columns_founded_count ) {
-						printf("expected %d columns not %d\n", columns_founded_count, assigned);
+					if ( assigned != columns_found_count ) {
+						printf("expected %d columns not %d\n", columns_found_count, assigned);
 						fclose(f);
 						if ( compute_nee_flags ) {
 							if ( datasets[dataset].years_count >= 3 ) {
@@ -4063,26 +4082,37 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 
 			/* gapfilling */
 			printf("     -> gf...");
-			datasets[dataset].gf_rows = gf_mds_with_qc(	datasets[dataset].rows->value,
-														sizeof(ROW),
-														datasets[dataset].rows_count,
-														REQUIRED_DATASET_VALUES,
-														HOURLY_TIMERES == datasets[dataset].details->timeres,
-														GF_SW_IN_TOLERANCE_MIN,
-														GF_SW_IN_TOLERANCE_MAX,
-														GF_TA_TOLERANCE,
-														GF_VPD_TOLERANCE,
-														NEE_VALUE,
-														SWIN_VALUE,
-														TA_VALUE,
-														VPD_VALUE,
-														SWIN_QC_VALUE,
-														TA_QC_VALUE,
-														VPD_QC_VALUE,
-														qc_gf_threshold,
-														GF_ROWS_MIN,
-														1,
-														&no_gaps_filled_count);
+			datasets[dataset].gf_rows = gf_mds(	datasets[dataset].rows->value,
+												sizeof(ROW),
+												datasets[dataset].rows_count,
+												REQUIRED_DATASET_VALUES,
+												(HOURLY_TIMERES == datasets[dataset].details->timeres) ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
+												GF_DRIVER_1_TOLERANCE_MIN,
+												GF_DRIVER_1_TOLERANCE_MAX,
+												GF_DRIVER_2A_TOLERANCE_MIN,
+												GF_DRIVER_2A_TOLERANCE_MAX,
+												GF_DRIVER_2B_TOLERANCE_MIN,
+												GF_DRIVER_2B_TOLERANCE_MAX,
+												NEE_VALUE,
+												SWIN_VALUE,
+												TA_VALUE,
+												VPD_VALUE,
+												SWIN_QC_VALUE,
+												TA_QC_VALUE,
+												VPD_QC_VALUE,
+												qc_gf_threshold,
+												qc_gf_threshold,
+												qc_gf_threshold,
+												GF_ROWS_MIN,
+												1,
+												-1,
+												-1,
+												&no_gaps_filled_count,
+												0,
+												0,
+												0,
+												NULL,
+												0);
 			if ( !datasets[dataset].gf_rows ) {
 				if ( compute_nee_flags ) {
 					if ( datasets[dataset].years_count >= 3 ) {
@@ -4289,15 +4319,17 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				/* gapfilling */
 				printf(" gf...");
 				free(datasets[dataset].gf_rows);
-				datasets[dataset].gf_rows = gf_mds_with_qc(	datasets[dataset].rows->value,
+				datasets[dataset].gf_rows = gf_mds(	datasets[dataset].rows->value,
 													sizeof(ROW),
 													datasets[dataset].rows_count,
 													REQUIRED_DATASET_VALUES,
-													HOURLY_TIMERES == datasets[dataset].details->timeres,
-													GF_SW_IN_TOLERANCE_MIN,
-													GF_SW_IN_TOLERANCE_MAX,
-													GF_TA_TOLERANCE,
-													GF_VPD_TOLERANCE,
+													(HOURLY_TIMERES == datasets[dataset].details->timeres) ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
+													GF_DRIVER_1_TOLERANCE_MIN,
+													GF_DRIVER_1_TOLERANCE_MAX,
+													GF_DRIVER_2A_TOLERANCE_MIN,
+													GF_DRIVER_2A_TOLERANCE_MAX,
+													GF_DRIVER_2B_TOLERANCE_MIN,
+													GF_DRIVER_2B_TOLERANCE_MAX,
 													NEE_VALUE,
 													SWIN_VALUE,
 													TA_VALUE,
@@ -4306,9 +4338,18 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 													TA_QC_VALUE,
 													VPD_QC_VALUE,
 													qc_gf_threshold,
+													qc_gf_threshold,
+													qc_gf_threshold,
 													GF_ROWS_MIN,
 													1,
-													&no_gaps_filled_count);
+													-1,
+													-1,
+													&no_gaps_filled_count,
+													0,
+													0,
+													0,
+													NULL,
+													0);
 				if ( !datasets[dataset].gf_rows ) {
 					if ( compute_nee_flags ) {
 						if ( datasets[dataset].years_count >= 3 ) {
@@ -4523,9 +4564,9 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				}
 
 				for ( row = 0; row < y; row++ ) {
-					t = timestamp_start_by_row(row, datasets[dataset].years[i].year, (HOURLY_TIMERES == datasets[dataset].details->timeres));
+					t = timestamp_start_by_row(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres);
 					fprintf(f, "%04d%02d%02d%02d%02d,", t->YYYY, t->MM, t->DD, t->hh, t->mm);
-					t = timestamp_end_by_row(row, datasets[dataset].years[i].year, (HOURLY_TIMERES == datasets[dataset].details->timeres));
+					t = timestamp_end_by_row(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres);
 					fprintf(f, "%04d%02d%02d%02d%02d,", t->YYYY, t->MM, t->DD, t->hh, t->mm);
 					fprintf(f, "%d,%d", nee_flags_y[j+row].value[ref_y], nee_flags_y[j+row].value[PERCENTILES_COUNT_2-1]);
 					if ( datasets[dataset].years_count >= 3 ) {
@@ -4632,10 +4673,10 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			exists = datasets[dataset].years[i].exist;
 			for ( row = 0; row < y; row++ ) {
 				/* timestamp start */
-				t = timestamp_start_by_row(row, datasets[dataset].years[i].year, (HOURLY_TIMERES == datasets[dataset].details->timeres));
+				t = timestamp_start_by_row(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres);
 				fprintf(f, "%04d%02d%02d%02d%02d,", t->YYYY, t->MM, t->DD, t->hh, t->mm);
 				/* timestamp end */
-				t = timestamp_end_by_row(row, datasets[dataset].years[i].year, (HOURLY_TIMERES == datasets[dataset].details->timeres));
+				t = timestamp_end_by_row(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres);
 				fprintf(f, "%04d%02d%02d%02d%02d,", t->YYYY, t->MM, t->DD, t->hh, t->mm);
 				/* dtime */
 				fprintf(f, "%g,", get_dtime_by_row(row, (HOURLY_TIMERES == datasets[dataset].details->timeres)));
@@ -5122,7 +5163,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			/* */
 			exists = datasets[dataset].years[i].exist;
 			for ( row = 0; row < y; row++ ) {
-				t = timestamp_end_by_row(row*((HOURLY_TIMERES == datasets[dataset].details->timeres) ? 24 : 48), datasets[dataset].years[i].year, (HOURLY_TIMERES == datasets[dataset].details->timeres));
+				t = timestamp_end_by_row(row*((HOURLY_TIMERES == datasets[dataset].details->timeres) ? 24 : 48), datasets[dataset].years[i].year, datasets[dataset].details->timeres);
 				fprintf(f, "%04d%02d%02d,%d,",		t->YYYY,
 													t->MM,
 													t->DD,
@@ -5956,7 +5997,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				y /= rows_per_day;
 				for ( row = 0; row < y; row++ ) {
 					t = timestamp_end_by_row(row*((HOURLY_TIMERES == datasets[dataset].details->timeres) ? 24 : 48)
-								, datasets[dataset].years[i].year, (HOURLY_TIMERES == datasets[dataset].details->timeres));
+								, datasets[dataset].years[i].year, datasets[dataset].details->timeres);
 					fprintf(f, "%04d%02d%02d", t->YYYY, t->MM, t->DD);
 					for ( z = 0; z < PERCENTILES_COUNT_2; ++z ) {
 						fprintf(f, ",%g,%g", rows_night_daily[j+row].night_columns_y[z]
@@ -5999,7 +6040,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				y /= rows_per_day;
 				for ( row = 0; row < y; row++ ) {
 					t = timestamp_end_by_row(row*((HOURLY_TIMERES == datasets[dataset].details->timeres) ? 24 : 48)
-								, datasets[dataset].years[i].year, (HOURLY_TIMERES == datasets[dataset].details->timeres));
+								, datasets[dataset].years[i].year, datasets[dataset].details->timeres);
 					fprintf(f, "%04d%02d%02d", t->YYYY, t->MM, t->DD);
 					for ( z = 0; z < PERCENTILES_COUNT_2; ++z ) {
 						fprintf(f, ",%g,%g", rows_night_daily[j+row].day_columns_y[z]
@@ -6042,7 +6083,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				y /= rows_per_day;
 				for ( row = 0; row < y; row++ ) {
 					t = timestamp_end_by_row(row*((HOURLY_TIMERES == datasets[dataset].details->timeres) ? 24 : 48)
-								, datasets[dataset].years[i].year, (HOURLY_TIMERES == datasets[dataset].details->timeres));
+								, datasets[dataset].years[i].year, datasets[dataset].details->timeres);
 					fprintf(f, "%04d%02d%02d", t->YYYY, t->MM, t->DD);
 					for ( z = 0; z < PERCENTILES_COUNT_2; ++z ) {
 						fprintf(f, ",%g,%g", rows_night_daily[j+row].night_columns_c[z]
@@ -6085,7 +6126,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				y /= rows_per_day;
 				for ( row = 0; row < y; row++ ) {
 					t = timestamp_end_by_row(row*((HOURLY_TIMERES == datasets[dataset].details->timeres) ? 24 : 48)
-								, datasets[dataset].years[i].year, (HOURLY_TIMERES == datasets[dataset].details->timeres));
+								, datasets[dataset].years[i].year, datasets[dataset].details->timeres);
 					fprintf(f, "%04d%02d%02d", t->YYYY, t->MM, t->DD);
 					for ( z = 0; z < PERCENTILES_COUNT_2; ++z ) {
 						fprintf(f, ",%g,%g", rows_night_daily[j+row].day_columns_c[z]
@@ -6459,8 +6500,8 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			fputs("\n", f);
 			for ( i = 0; i < datasets[dataset].years_count; i++ ) {
 				for ( row = 0; row < y; row++ ) {
-					fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, (HOURLY_TIMERES == datasets[dataset].details->timeres), 1));
-					fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, (HOURLY_TIMERES == datasets[dataset].details->timeres), 0));
+					fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres, 1));
+					fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres, 0));
 					for ( z = 0; z < PERCENTILES_COUNT_2; ++z ) {
 						fprintf(f, ",%g,%g", rows_night_weekly[j+row].night_columns_y[z]
 											, rows_night_weekly[j+row].night_qc_columns_y[z]);
@@ -6496,8 +6537,8 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			fputs("\n", f);
 			for ( i = 0; i < datasets[dataset].years_count; i++ ) {
 				for ( row = 0; row < y; row++ ) {
-					fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, (HOURLY_TIMERES == datasets[dataset].details->timeres), 1));
-					fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, (HOURLY_TIMERES == datasets[dataset].details->timeres), 0));
+					fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres, 1));
+					fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres, 0));
 					for ( z = 0; z < PERCENTILES_COUNT_2; ++z ) {
 						fprintf(f, ",%g,%g", rows_night_weekly[j+row].day_columns_y[z]
 											, rows_night_weekly[j+row].day_qc_columns_y[z]);
@@ -6533,8 +6574,8 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			fputs("\n", f);
 			for ( i = 0; i < datasets[dataset].years_count; i++ ) {
 				for ( row = 0; row < y; row++ ) {
-					fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, (HOURLY_TIMERES == datasets[dataset].details->timeres), 1));
-					fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, (HOURLY_TIMERES == datasets[dataset].details->timeres), 0));
+					fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres, 1));
+					fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres, 0));
 					for ( z = 0; z < PERCENTILES_COUNT_2; ++z ) {
 						fprintf(f, ",%g,%g", rows_night_weekly[j+row].night_columns_c[z]
 											, rows_night_weekly[j+row].night_qc_columns_c[z]);
@@ -6570,8 +6611,8 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			fputs("\n", f);
 			for ( i = 0; i < datasets[dataset].years_count; i++ ) {
 				for ( row = 0; row < y; row++ ) {
-					fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, (HOURLY_TIMERES == datasets[dataset].details->timeres), 1));
-					fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, (HOURLY_TIMERES == datasets[dataset].details->timeres), 0));
+					fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres, 1));
+					fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres, 0));
 					for ( z = 0; z < PERCENTILES_COUNT_2; ++z ) {
 						fprintf(f, ",%g,%g", rows_night_weekly[j+row].day_columns_c[z]
 											, rows_night_weekly[j+row].day_qc_columns_c[z]);
@@ -6661,9 +6702,9 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			exists = datasets[dataset].years[i].exist;
 			for ( row = 0; row < 52; row++ ) {
 				/* timestamp_start */
-				fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, (HOURLY_TIMERES == datasets[dataset].details->timeres), 1));
+				fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres, 1));
 				/* timestamp_end */
-				fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, (HOURLY_TIMERES == datasets[dataset].details->timeres), 0));
+				fprintf(f, "%s,", timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres, 0));
 				/* week */
 				fprintf(f, "%d,", row+1);
 				if ( no_rand_unc ) {
@@ -9295,6 +9336,8 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			free(nee_matrix_c_daily);
 			free(nee_matrix_c);
 		}
+
+		clear_dataset(&datasets[dataset]);
 	}
 
 	/* free memory */
@@ -9313,9 +9356,9 @@ DATASET *get_datasets(const char *const path, int *const datasets_count) {
 	int error;
 	int assigned;
 	int file_index;
-	int files_founded_count;
+	int files_found_count;
 	FILE *f;
-	FILES *files_founded;
+	FILES *files_found;
 	DD *details;
 	YEAR *years_no_leak;
 	DATASET *datasets;
@@ -9329,32 +9372,32 @@ DATASET *get_datasets(const char *const path, int *const datasets_count) {
 	*datasets_count = 0;
 
 	/* scan path */
-	files_founded = get_files(path, "*.csv", &files_founded_count, &error);
-	if ( error || !files_founded_count ) {
-		puts("no files founded!");
+	files_found = get_files(path, "*.csv", &files_found_count, &error);
+	if ( error || !files_found_count ) {
+		puts("no files found!");
 		return NULL;
 	}
 
-	/* loop on each files founded */
+	/* loop on each files found */
 	skipped = 0;
-	for ( file_index = 0; file_index < files_founded_count; file_index++ ) {
+	for ( file_index = 0; file_index < files_found_count; file_index++ ) {
 		/* check filename */
-		if ( !is_valid_filename(files_founded[file_index].list[0].name) ) {
+		if ( !is_valid_filename(files_found[file_index].list[0].name) ) {
 			++skipped;
 			continue;
 		}
 
 		/* open file */
-		f = fopen(files_founded[file_index].list[0].fullpath, "r");
+		f = fopen(files_found[file_index].list[0].fullpath, "r");
 		if ( !f ) {
-			printf("unable to open %s\n", files_founded[file_index].list[0].fullpath);
+			printf("unable to open %s\n", files_found[file_index].list[0].fullpath);
 			continue;
 		}
 
 		/* get details */
 		details = parse_dd(f);
 		if ( !details ) {
-			free_files(files_founded, files_founded_count);
+			free_files(files_found, files_found_count);
 			free_datasets(datasets, *datasets_count);
 			return NULL;
 		}
@@ -9395,7 +9438,7 @@ DATASET *get_datasets(const char *const path, int *const datasets_count) {
 			if ( datasets[*datasets_count-1].years_count > 1 ) {
 				if ( datasets[*datasets_count-1].details->timeres != details->timeres ) {
 					puts("different time resolution between years!");
-					free_files(files_founded, files_founded_count);
+					free_files(files_found, files_found_count);
 					free_datasets(datasets, *datasets_count);
 					return NULL;
 				}
@@ -9409,7 +9452,7 @@ DATASET *get_datasets(const char *const path, int *const datasets_count) {
 		for ( y = 0; y < datasets[i].years_count; y++ ) {
 			if ( details->year == datasets[i].years[y].year ) {
 				puts(err_out_of_memory);
-				free_files(files_founded, files_founded_count);
+				free_files(files_found, files_found_count);
 				free_datasets(datasets, *datasets_count);
 				return NULL;
 			}
@@ -9436,12 +9479,12 @@ DATASET *get_datasets(const char *const path, int *const datasets_count) {
 	}
 
 	/* free memory */
-	free_files(files_founded, files_founded_count);
-	files_founded_count -= skipped;
+	free_files(files_found, files_found_count);
+	files_found_count -= skipped;
 
 	/* check imported files */
-	if ( ! files_founded_count ) {
-		printf("no files founded!");
+	if ( ! files_found_count ) {
+		printf("no files found!");
 		if ( skipped ) 
 			printf(" (%d file%s skipped)", skipped, (skipped > 1) ? "s" : "");
 		puts("");

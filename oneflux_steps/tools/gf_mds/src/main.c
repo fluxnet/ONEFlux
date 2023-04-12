@@ -1,7 +1,10 @@
 /*
 	main.c
 
-	this file is part of gf_mds
+	This file is part of gf_mds tool that applies an
+	improved and fully parameterizable version of the
+	Marginal Distribution Sampling gapfilling method
+	described in Reichstein et al. 2005
 
 	author: Alessio Ribeca <a.ribeca@unitus.it>
 	owner: DIBAF - University of Tuscia, Viterbo, Italy
@@ -18,40 +21,52 @@
 #include "../../../compiler.h"
 	
 /* constants */
-#define PROGRAM_VERSION		"1.0"
-const char def_tokens[GF_TOKENS][GF_TOKEN_LENGTH_MAX+1] = {
-	"NEE", 
-	"SW_IN",
-	"TA",
-	"VPD",
-	TIMESTAMP_STRING,
+#define PROGRAM_VERSION "3.0"
+const char def_tokens[GF_TOKENS][GF_TOKEN_LENGTH_MAX+1] =
+{
+	"NEE"
+	, "SW_IN"
+	, "TA"
+	, "VPD"
+	, TIMESTAMP_END_STRING
 };
 
 /* static global variables */
 static FILES *files;
 static int files_count;
-static int rows_min = GF_ROWS_MIN;	/* see types.h */
+static int rows_min = GF_ROWS_MIN;								/* see types.h */
+/* v2.04b */
+static int sym_mean = 0;
+/* v3.0 */
+static int max_mdv_win = 0;
+static int driver1_qc_col = -1;
+static int driver2a_qc_col = -1;
+static int driver2b_qc_col = -1;
+static PREC driver1_qc_thrs = INVALID_VALUE;
+static PREC driver2a_qc_thrs = INVALID_VALUE;
+static PREC driver2b_qc_thrs = INVALID_VALUE;
 
 /* global variables */
-char *program_path = NULL;	/* required */
-char *input_path = NULL;	/* required */
-char *output_path = NULL;	/* required */
-int hourly_dataset = 0;		/* required */
-int *years = NULL;			/* required */
-int years_count = 0;		/* required */
-DD **details_list = NULL;	/* required */
-int has_dtime = 0;			/* required */
+char *program_path = NULL;										/* required */
+char *input_path = NULL;										/* required */
+char *output_path = NULL;										/* required */
+int timeres = HALFHOURLY_TIMERES;								/* required */
+int *years = NULL;												/* required */
+int years_count = 0;											/* required */
+PREC driver1_tolerance_min = GF_DRIVER_1_TOLERANCE_MIN;			/* required */
+PREC driver1_tolerance_max = GF_DRIVER_1_TOLERANCE_MAX;			/* required */
+PREC driver2a_tolerance_min = GF_DRIVER_2A_TOLERANCE_MIN;		/* required */
+PREC driver2a_tolerance_max = GF_DRIVER_2A_TOLERANCE_MAX;		/* required */
+PREC driver2b_tolerance_min = GF_DRIVER_2B_TOLERANCE_MIN;		/* required */
+PREC driver2b_tolerance_max = GF_DRIVER_2B_TOLERANCE_MAX;		/* required */
+
 int custom_tokens[GF_TOKENS];
-PREC swin_tolerance_min = GF_SW_IN_TOLERANCE_MIN;
-PREC swin_tolerance_max = GF_SW_IN_TOLERANCE_MAX;
-PREC ta_tolerance = GF_TA_TOLERANCE;
-PREC vpd_tolerance = GF_VPD_TOLERANCE;
 
 /* strings */
-static const char banner[] =	"\ngf_mds "PROGRAM_VERSION"\n"
-								"by Alessio Ribeca\n\n"
-								"scientific contact: darpap at unitus dot it\n"
-								"technical contact: a dot ribeca at unitus dot it\n\n"
+static const char banner[] =	"\ngf_mds v"PROGRAM_VERSION"\n"
+								"by A. Ribeca\n\n"
+								"scientific contact: <darpap@unitus.it>\n"
+								"technical contact: <a.ribeca@unitus.it>\n\n"
 								"DIBAF - University of Tuscia, Viterbo, Italy\n"
 								"(builded on "__DATE__" at "__TIME__ " with "COMPILER")\n"
 								"(use -h parameter for more information)\n";
@@ -60,77 +75,100 @@ static const char notes[] = "processed on %s with gf_mds "PROGRAM_VERSION" compi
 /* must have same order of eValues in types.h */
 char tokens[GF_TOKENS][GF_TOKEN_LENGTH_MAX+1];
 static const char gap_file[] = "%s%smds.csv";
-static const char gap_header[] = "TIMESTAMP,%s,FILLED,QC,HAT,SAMPLE,STDDEV,METHOD,QC_HAT,TIMEWINDOW\n";
-static const char gap_dtime_header[] = "DTime,%s,FILLED,QC,HAT,SAMPLE,STDDEV,METHOD,QC_HAT,TIMEWINDOW\n";
+static const char gap_header[] = "%s,%s,FILLED,QC,HAT,SAMPLE,STDDEV,METHOD,QC_HAT,TIMEWINDOW\n";
 static const char gap_format[] = "%s,%g,%g,%d,%g,%d,%g,%d,%d,%d\n";
-static const char gap_dtime_format[] = "%g,%g,%g,%d,%g,%d,%g,%d,%d,%d\n";
+
+/* v2.04b */
+static const char gap_header_sym_mean[] = "%s,%s,FILLED,QC,HAT,DT,DT_MA,DT_MA_SAMPLE,DT_MB,DT_MB_SAMPLE,SAMPLE,STDDEV,METHOD,QC_HAT,TIMEWINDOW\n";
+static const char gap_format_sym_mean[] = "%s,%g,%g,%d,%g,%g,%g,%d,%g,%d,%d,%g,%d,%d,%d\n";
 
 /* messages */
 static const char msg_dataset_not_specified[] =
-"dataset not specified."
-#if defined (_WIN32) || defined (linux) || defined (__linux) || defined (__linux__) || defined (__APPLE__)
-" searching..."
-#endif
-"\n";
+"dataset not specified. searching...\n";
 static const char msg_import_dataset[] = "processing: %s%s";
+static const char msg_input_path[] = "input path = %s\n";
 static const char msg_output_path[] = "output path = %s\n\n";
 static const char msg_rows_min[] = "rows min = %d\n\n";
-static const char msg_tolerances[] =	"%s tolerances = %g, %g\n"
-										"%s tolerance = %g\n"
-										"%s tolerance = %g\n\n";
 static const char msg_ok[] = "ok";
 static const char msg_ok_with_gaps_unfilled[] = "ok with %d gaps unfilled.\n";
-static const char msg_summary[] = "\n%d file%s founded: %d processed, %d skipped.\n\n";
+static const char msg_summary[] = "\n%d file%s found: %d processed, %d skipped.\n\n";
 static const char msg_usage[] =	"This code applies the gapfilling Marginal Distribution Sampling method\n"
-								"described in Reichstein et al. 2005 (Global Change Biology).\n\n"
+								"described in Reichstein et al. 2005 (Global Change Biology).\nThis version "
+								"allows larger flexibility in the selection of the drivers.\n"
+								"\n"
 								"Differences respect to the original method are the possibilities to:\n"
-								"1) define the name you used to specify the different variables\n"
-								"2) process a multi-years dataset\n"
-								"3) change the tolerance of the different drivers (see the paper for details)\n\n\n"
+								"1) define the variable to fill and the drivers to use\n"
+								"2) change the tolerance of the different drivers (see the paper for details)\n"
+								"3) process a multi-years dataset\n"
+								"4) process hourly timeseries\n"
+								"\n"
+								"Basic on the use:\n"
+								"The MDS method uses look-up-tables defined around each single gap, looking for\nthe "
+								"best compromise between size of the window (as small as possible)\nand number of drivers "
+								"used.\nThe main driver (driver1) is used when it is not possible\nto fill the gap using all the "
+								"three drivers (driver1, driver2a and driver2b).\nFor details see the original paper.\n"
+								"\n"
 								"How to use: gf_mds parameters\n\n"
-								"  -input=filename -> file to be processed (optional)\n"
-								"    (if not specified all the files in the folder are processed)\n"
-								"    use , to separate paths\\files\n"
-								"    (e.g. -dataset=ITRoc2003.txt,ITCpz2003.txt will process only these 2 files)\n"
-								"    use + to concatenate paths\\files\n"
-								"    (e.g. -dataset=ITRo2003.txt+ITRo2004.txt will process the 2 years as one dataset)\n\n"
+								"  -input=filename -> name of the file to be processed and multiple years\n"
+								"    (optional, if not specified all the files in the folder are processed)\n"
+								"    use , to separate paths\\files that will be processed singularly\n"
+								"    (e.g. -input=ITRoc2003.txt,ITCpz2003.txt will process only these 2 files)\n"
+								"    use + to concatenate paths\\files that will me merged in a single file\n"
+								"    IMPORTANT: this option should be used only if the years are all consecutive\n"
+								"    (multiyears timeseries, e.g. -input=ITRo2003.txt+ITRo2004.txt\n              "
+								"       will process the 2 years as one dataset of two years)\n\n"
 								"  -output=path where result files are created (optional)\n"
-								"    (if not specified the folder with the gf_mds.exe file is used)\n\n"
+								"    (if not specified the folder with the program file is used)\n\n"
 								"  -hourly -> specify that your file is not halfhourly but hourly\n\n"
-								"  -tofill=XXXX -> name of the the variable to be filled as reported in the header of the\n"
-								"    input file (max %d chars, default is \"%s\")\n\n"
-								"  -sw_in=XXXX -> name of the incoming radiation (W m-2) as reported in the header of the\n"
-								"    input file (max %d chars, default is \"%s\")\n\n"
-								"  -ta=XXXX -> name of the air temperature (C degree) as reported in the header of the\n"
-								"    input file (max %d chars, default is \"%s\")\n\n"
-								"  -vpd=XXXX -> name of the vapor pressure deficit (hP) as reported in the header of the\n"
-								"    input file (max %d chars, default is \"%s\")\n\n"
-								"  -date=XXXX -> name of the date variable as reported in the header of the\n"
-								"    input file (max %d chars, default is \"%s\")\n\n"
-								"  -sw_int=min,max -> change SW_IN tolerances (default min: %g, default max: %g)\n\n"
-								"  -tat=value -> change TA tolerance (default: %g)\n\n"
-								"  -vpdt=value -> change VPD tolerance (default: %g)\n\n"
-								"  -dtime -> timestamp reported as decimal day of the year\n"
-								"    (e.g. 1.02083 for the first half hour of the year) using as variable name DTIME\n"
-								"    (can be changed using the -date parameter). Default is OFF and ISODATE is expected\n\n"
-								"  -rows_min=value -> set rows min (default: %d)\n\n"
+								"  -tofill=XXXX -> name of the the variable to be filled as reported in\n    the header of the "
+								" input file (max %d chrs, default is \"%s\")\n\n"
+								"  -driver1=XXXX -> name of the name of the main driver (as in the header)\n    that is used in case using all the 3 drivers "
+								"it is not possible to fill\n    the gap (max %d chrs, default is \"%s\", Incoming Solar Radiation in Wm-2)\n\n"
+								"  -driver2a=XXXX -> name of the first additional driver as reported in\n    the header of the input file\n"
+								"    (max %d chrs, default is \"%s\", Air Temperature in degree C)\n\n"
+								"  -driver2b=XXXX -> name of the second additional driver as reported in\n    the header of the input file\n"
+								"    (max %d chrs, default is \"%s\", Vapor Pressure Deficit in hPa)\n\n"
+								"  -date=XXXX -> name of the variable in the header of the input file\n    where the timestamp is reported "
+								"in the format YYYYMMDDHHMM\n    (max %d chrs, default is \"%s\")\n\n"
+								"  -tdriver1=min[,max] -> set the tolerance values used to define\n    similar conditions related to driver1. If only "
+								"one values is specified\n    it is used for all the driver1 values (e.g. -tdriver1=5).\n    If two values are reported "
+								"(e.g. -tdriver1=4,10)\n    the first is used for driver1 values below it, the second for\n    driver1 values above it "
+								"while between the two the driver1 value itself\n    is also used as tolerance (in the example a tolerance of 6 "
+								"would be\n    used for driver1=6)\n    (default is two values for SW_IN in Wm-2 and are min: %g, max: %g)\n\n"
+								"  -tdriver2a=min[,max] -> set the tolerance values used to define\n    similar conditions related to driver2a. "
+								"See description for tdriver1\n"
+								"    (default is one value for TA in degrees C and is %g)\n\n"
+								"  -tdriver2b=min[,max] -> set the tolerance values used to define\n    similar conditions related to driver2b. "
+								"See description for tdriver1\n"
+								"    (default is one value for VPD in hPa and is %g)\n\n"
+								"  -driver1_qc_col=values -> set column for main driver qc check\n\n"
+								"  -driver2a_qc_col=values -> set column for first additional driver qc check\n\n"
+								"  -driver2b_qc_col=values -> set column for second additional driver qc check\n\n"
+								"  -driver1_qc_thrs=values -> set threshold for main driver qc check\n\n"
+								"  -driver2a_qc_thrs=values -> set threshold for first additional driver qc check\n\n"
+								"  -driver2b_qc_thrs=values -> set threshold for second additional driver qc check\n\n"
+								"  -rows_min=value -> set the minimum number of rows with valid data\n"
+								"    to run the gapfilling (default: %d)\n\n"
+								"  -nohat -> disable hat computing (gapfilling applied to all the records,\n"
+								"    even if not missing, enabled by default)\n\n"
+								"  -sym_mean -> enable symmetric mean method\n\n"
+								"  -max_mdv_win=value -> set max window to be used when MDV is applied as last option\n\n"
+								"  -debug -> save used values to compute gf to file\n\n"
 								"  -h -> show this help\n\n"
-								"Others driver variables can be used instead of Air temperature and VPD,\nspecifying the name and the new tolerances.\n\n"
-								"For example to use Soil Water Content (name swc, expressed as %% 0-100 and with\na tolerance of 5%) instead of "
-								"VPD you have to specify:\n\ngf_mds -vpd=swc -vpdt=5\n";
+;
+
 /* errors messages */
 extern const char err_out_of_memory[];
 const char err_unable_open_file[] = "unable to open file.";
 const char err_empty_file[] = "empty file ?";
-const char err_not_founded[] = "not founded.";
 static const char err_unable_get_current_directory[] = "unable to retrieve current directory.\n";
 static const char err_unable_to_register_atexit[] = "unable to register clean-up routine.\n";
+static const char err_unable_create_output_path[] = "unable to create output path: %s.\n";
 static const char err_unable_to_convert_value_for[] = "unable to convert value \"%s\" for %s\n\n";
 static const char err_output_path_no_delimiter[] = "output path must terminating with a \"%c\"\n\n";
 static const char err_unable_open_output_path[] = "unable to open output path.\n";
-static const char err_swin_no_min_max_available[] = "no min and max available in \"%s\" for SW_IN tolerances.\n\n";
-static const char err_swin_no_min_tolerance[] = "no min tolerance available for SW_IN\n";
-static const char err_swin_no_max_tolerance[] = "no max tolerance available for SW_IN\n";
+static const char err_tolerances_not_specified[] = "tolerances not specified for %s\n\n";
+static const char err_no_min_tolerance[] = "no min tolerance available for %s\n\n";
 static const char err_unable_create_gap_file[] = "unable to create gap file.";
 static const char err_unable_convert_tolerance[] = "unable to convert tolerance \"%s\" for %s.\n\n";
 static const char err_arg_needs_param[] = "%s parameter not specified.\n\n";
@@ -142,12 +180,15 @@ static const char err_rows_min[] = "rows_min must be between %d and %d not %d. d
 
 /* */
 static void clean_up(void) {
-	if ( program_path ) {
-		free(program_path);
-	}
 	if ( files ) {
 		free_files(files, files_count);
 	}
+	if ( program_path ) {
+		free(program_path);
+	}
+#if defined (_WIN32) && defined (_DEBUG) 
+	dump_memory_leaks();
+#endif
 }
 
 /* */
@@ -191,7 +232,7 @@ int set_hourly_dataset(char *arg, char *param, void *p) {
 		return 0;
 	}
 
-	hourly_dataset = 1;
+	timeres = HOURLY_TIMERES;
 
 	/* ok */
 	return 1;
@@ -218,74 +259,70 @@ static int set_token(char *arg, char *param, void *p) {
 }
 
 /* */
-int set_swin_tolerances(char *arg, char *param, void *p) {
+typedef struct {
+	const char *name;
+	PREC *min;
+	PREC *max;
+} TOLERANCE;
+
+int set_driver_tolerances(char *arg, char *param, void *p) {
 	int error;
 	PREC min;
 	PREC max;
 	char *t;
+	TOLERANCE* tol;
+
+	tol = (TOLERANCE*)p;
+	assert(tol);
 
 	if ( !param ) {
 		printf(err_arg_needs_param, arg);
+		return 0;
+	}
+
+	if ( !param[0] ) {
+		printf(err_tolerances_not_specified, tol->name);
 		return 0;
 	}
 
 	/* check for comma */
 	t = strrchr(param, ',');
 	if ( !t ) {
-		printf(err_swin_no_min_max_available, param);
-		return 0;
-	}
+		min = convert_string_to_prec(param, &error);
+		if ( error ) {
+			printf(err_unable_convert_tolerance, param, tol->name);
+			return 0;
+		}
+		max = INVALID_VALUE;
+	} else {
+		/* get min */
+		*t = 0;
+		if ( !param[0] ) {
+			printf(err_no_min_tolerance, tol->name);
+			return 0;
+		}
+		min = convert_string_to_prec(param, &error);
+		if ( error ) {
+			printf(err_unable_convert_tolerance, param, tol->name);
+			return 0;
+		}
 
-	/* get min */
-	*t = 0;
-	if ( !param[0] ) {
-		puts(err_swin_no_min_tolerance);
-		return 0;
-	}
-	min = convert_string_to_prec(param, &error);
-	if ( error ) {
-		printf(err_unable_convert_tolerance, param, "SW_IN");
-		return 0;
-	}
-
-	/* get max */
-	++t;
-	if ( !t[0] ) {
-		puts(err_swin_no_max_tolerance);
-		return 0;
-	}
-	max = convert_string_to_prec(t, &error);
-	if ( error ) {
-		printf(err_unable_convert_tolerance, param, "SW_IN");
-		return 0;
-	}
-
-	/* */
-	swin_tolerance_min = min;
-	swin_tolerance_max = max;
-
-	/* ok */
-	return 1;
-}
-
-/* */
-int set_prec_value(char *arg, char *param, void *p) {
-	int error;
-	PREC v;
-
-	if ( !param ) {
-		printf(err_arg_needs_param, arg);
-		return 0;
-	}
-
-	v = convert_string_to_prec(param, &error);
-	if ( error ) {
-		printf(err_unable_to_convert_value_for, param, arg);
-		return 0;
+		/* get max */
+		++t;
+		if ( !t[0] ) {
+			max = INVALID_VALUE;
+		} else {
+			max = convert_string_to_prec(t, &error);
+			if ( error ) {
+				printf(err_unable_convert_tolerance, param, tol->name);
+				return 0;
+			}
+		}
 	}
 
 	/* */
-	*((PREC *)p) = v;
+	*tol->min = min;
+	*tol->max = max;
 
 	/* ok */
 	return 1;
@@ -314,6 +351,28 @@ static int set_int_value(char *arg, char *param, void *p) {
 }
 
 /* */
+static int set_prec_value(char *arg, char *param, void *p) {
+	PREC v;
+	int error;
+
+	if ( !param ) {
+		printf(err_arg_needs_param, arg);
+		return 0;
+	}
+	v = convert_string_to_prec(param, &error);
+	if ( error ) {
+		printf(err_unable_to_convert_value_for, param, arg);
+		return 0;
+	}
+
+	/* set value */
+	*((PREC *)p) = v;
+
+	/* ok */
+	return 1;
+}
+
+/* */
 static int set_flag(char *arg, char *param, void *p) {
 	if ( param ) {
 		printf(err_arg_no_needs_param, arg);
@@ -322,6 +381,19 @@ static int set_flag(char *arg, char *param, void *p) {
 
 	/* enable */
 	*((int *)p) = 1;
+
+	/* ok */
+	return 1;
+}
+
+/* */
+static int reverse_flag(char *arg, char *param, void *p) {
+	if ( param ) {
+		printf(err_arg_no_needs_param, arg);
+		return 0;
+	}
+
+	*((int *)p) = ! *((int *)p);
 
 	/* ok */
 	return 1;
@@ -338,22 +410,55 @@ int show_help(char *arg, char *param, void *p) {
 						GF_TOKEN_LENGTH_MAX,
 						def_tokens[GF_TOFILL],
 						GF_TOKEN_LENGTH_MAX,
-						def_tokens[GF_SWIN],
+						def_tokens[GF_DRIVER_1],
 						GF_TOKEN_LENGTH_MAX,
-						def_tokens[GF_TA],
+						def_tokens[GF_DRIVER_2A],
 						GF_TOKEN_LENGTH_MAX,
-						def_tokens[GF_VPD],
+						def_tokens[GF_DRIVER_2B],
 						GF_TOKEN_LENGTH_MAX,
 						def_tokens[GF_ROW_INDEX],
-						swin_tolerance_min,
-						swin_tolerance_max,
-						ta_tolerance,
-						vpd_tolerance,
+						driver1_tolerance_min,
+						driver1_tolerance_max,
+						driver2a_tolerance_min,
+						driver2b_tolerance_min,
 						rows_min
 	);
 
 	/* must return error */
 	return 0;
+}
+
+/* added on January 17, 2018 */
+void show_tolerances(void) {
+	printf("%s tolerance%s= %g"
+				, tokens[GF_DRIVER_1]
+				, IS_INVALID_VALUE(driver1_tolerance_max) ? "" : "s "
+				, driver1_tolerance_min
+	);
+	if ( ! IS_INVALID_VALUE(driver1_tolerance_max) ) {
+		printf(", %g", driver1_tolerance_max);
+	}
+	puts("");
+
+	printf("%s tolerance%s= %g"
+				, tokens[GF_DRIVER_2A]
+				, IS_INVALID_VALUE(driver2a_tolerance_max) ? "" : "s "
+				, driver2a_tolerance_min
+	);
+	if ( ! IS_INVALID_VALUE(driver2a_tolerance_max) ) {
+		printf(", %g", driver2a_tolerance_max);
+	}
+	puts("");
+
+	printf("%s tolerance%s= %g"
+				, tokens[GF_DRIVER_2B]
+				, IS_INVALID_VALUE(driver2b_tolerance_max) ? "" : "s "
+				, driver2b_tolerance_min
+	);
+	if ( ! IS_INVALID_VALUE(driver2b_tolerance_max) ) {
+		printf(", %g", driver2b_tolerance_max);
+	}
+	puts("\n");
 }
 
 /* */
@@ -370,27 +475,47 @@ int main(int argc, char *argv[]) {
 	int files_not_processed_count;
 	int total_files_count;
 	int no_gaps_filled_count;
+	int hat;
+	int debug;
 	char buffer[BUFFER_SIZE];
 	char filename[FILENAME_SIZE];
+	char debug_name[FILENAME_SIZE];
 	char *p;
 	char *string;
 	FILE *f;
 	ROW *rows;
 	GF_ROW *gf_rows;
+
+	TOLERANCE tol1 = { "driver1", &driver1_tolerance_min, &driver1_tolerance_max };
+	TOLERANCE tol2a = { "driver2a", &driver2a_tolerance_min, &driver2a_tolerance_max };
+	TOLERANCE tol2b = { "driver2b", &driver2b_tolerance_min, &driver2b_tolerance_max };
+
 	const ARGUMENT args[] = {
 		{ "input", get_input_path, NULL },
 		{ "output", get_output_path, NULL },
 		{ "hourly", set_hourly_dataset, NULL },
 		{ "tofill", set_token, (void *)GF_TOFILL },
-		{ "ta", set_token, (void *)GF_TA },
-		{ "sw_in", set_token, (void *)GF_SWIN },
-		{ "vpd", set_token, (void *)GF_VPD },
+		{ "driver1", set_token, (void *)GF_DRIVER_1 },
+		{ "driver2a", set_token, (void *)GF_DRIVER_2A },		
+		{ "driver2b", set_token, (void *)GF_DRIVER_2B },
 		{ "date", set_token, (void *)GF_ROW_INDEX },
-		{ "sw_int", set_swin_tolerances, NULL },
-		{ "tat", set_prec_value, &ta_tolerance },
-		{ "vpdt", set_prec_value, &vpd_tolerance },
+		{ "tdriver1", set_driver_tolerances, &tol1 },
+		{ "tdriver2a", set_driver_tolerances, &tol2a },
+		{ "tdriver2b", set_driver_tolerances, &tol2b },
 		{ "rows_min", set_int_value, &rows_min },
-		{ "dtime", set_flag, &has_dtime },
+		{ "nohat", reverse_flag, &hat },
+		{ "debug", reverse_flag, &debug },
+		{ "rows_min", set_int_value, &rows_min },
+
+		/* v3.0 */
+		{ "symmean", reverse_flag, &sym_mean },
+		{ "driver1_qc_col", set_int_value, &driver1_qc_col },
+		{ "driver2a_qc_col", set_int_value, &driver2a_qc_col },
+		{ "driver2b_qc_col", set_int_value, &driver2b_qc_col },
+		{ "driver1_qc_thrs", set_prec_value, &driver1_qc_thrs },
+		{ "driver2a_qc_thrs", set_prec_value, &driver2a_qc_thrs },
+		{ "driver2b_qc_thrs", set_prec_value, &driver2b_qc_thrs },
+
 		{ "h", show_help, NULL },
 		{ "?", show_help, NULL },
 		{ "help", show_help, NULL },
@@ -409,6 +534,13 @@ int main(int argc, char *argv[]) {
 	for ( i = 0; i < GF_TOKENS; i++ ) {
 		custom_tokens[i] = 0;
 	}
+
+	/* defaults */
+	debug = 0;
+	hat = 1;
+
+	/* v2.04b */
+	sym_mean = 0;
 
 	/* parse arguments */
 	if ( !parse_arguments(argc, argv, args, SIZEOF_ARRAY(args)) ) {
@@ -438,8 +570,10 @@ int main(int argc, char *argv[]) {
 
 		/* check if output path exists */
 		if ( !path_exists(output_path) ) {
-			puts(err_unable_open_output_path);
-			return 1;
+			if ( !create_dir(output_path) ) {
+				printf(err_unable_create_output_path, output_path);
+				return 1;
+			}
 		}
 	} else {
 		output_path = program_path;
@@ -451,7 +585,8 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	/* show output path */
+	/* show paths */
+	printf(msg_input_path, input_path);
 	printf(msg_output_path, output_path);
 
 	/* show rows min */
@@ -471,15 +606,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* show tolerances */
-	printf(msg_tolerances,
-							tokens[GF_SWIN],
-							swin_tolerance_min,
-							swin_tolerance_max,
-							tokens[GF_TA],
-							ta_tolerance,
-							tokens[GF_VPD],
-							vpd_tolerance
-	);
+	show_tolerances();
 
 	/* reset */
 	files_processed_count = 0;
@@ -518,7 +645,7 @@ int main(int argc, char *argv[]) {
 			}
 
 			/* add to filename */
-			if ( !mystrcat(filename, string, FILENAME_MAX) && '\0' == filename[0]) {
+			if ( !string_concat(filename, string, FILENAME_MAX) && '\0' == filename[0]) {
 				puts(err_unable_create_output_filename);
 				files_not_processed_count += files[z].count;
 				free(string);
@@ -533,6 +660,17 @@ int main(int argc, char *argv[]) {
 				continue;
 			}
 
+			/* v2.04 */
+			if ( sym_mean )
+			{
+				if ( !string_concat(filename, "sym_mean_", FILENAME_MAX) && '\0' == filename[0]) {
+					puts(err_unable_create_output_filename);
+					files_not_processed_count += files[z].count;
+					free(string);
+					continue;
+				}
+			}
+
 			/* free memory */
 			free(string);
 		}
@@ -545,8 +683,48 @@ int main(int argc, char *argv[]) {
 			continue;
 		}
 
+		if ( debug ) {
+			int len = strlen(files[z].list->name);
+			char* p = strrchr(files[z].list->name, '.');
+			if ( p ) {
+				len -= strlen(p);
+			}
+			sprintf(debug_name, "%.*s", len, files[z].list->name);
+		}
+
 		/* gf */
-		gf_rows = gf_mds(rows->value, sizeof(ROW), rows_count, GF_REQUIRED_DATASET_VALUES, hourly_dataset, swin_tolerance_min, swin_tolerance_max, ta_tolerance, vpd_tolerance, GF_TOFILL, GF_SWIN, GF_TA, GF_VPD, rows_min, 1, &no_gaps_filled_count);
+		gf_rows = gf_mds(	rows->value,
+							sizeof(ROW),
+							rows_count,
+							GF_REQUIRED_DATASET_VALUES,
+							timeres,
+							driver1_tolerance_min,
+							driver1_tolerance_max,
+							driver2a_tolerance_min,
+							driver2a_tolerance_max,
+							driver2b_tolerance_min,
+							driver2b_tolerance_max,
+							GF_TOFILL,
+							GF_DRIVER_1,
+							GF_DRIVER_2A,
+							GF_DRIVER_2B,
+							driver1_qc_col,
+							driver2a_qc_col,
+							driver2b_qc_col,
+							driver1_qc_thrs,
+							driver2a_qc_thrs,
+							driver2b_qc_thrs,
+							rows_min,
+							hat,
+							-1,
+							-1,
+							&no_gaps_filled_count,
+							sym_mean,
+							max_mdv_win,
+							debug,
+							debug_name,
+							years[z]
+		);
 		if ( !gf_rows ) {
 			free(years);
 			free(rows);
@@ -561,65 +739,55 @@ int main(int argc, char *argv[]) {
 			puts(err_unable_create_gap_file);
 			free(years);
 			free(rows);
-			free_details_list(details_list, files[z].count);
 			files_not_processed_count += files[z].count;
 			continue;
 		}
 
-		/* write details */
-		if ( details_list && details_list[0] ) {
-			sprintf(buffer, notes, get_datetime_in_timestamp_format());
-			write_dds(details_list, files[z].count, f, buffer);
-		}
-
 		/* write header */
-		if ( !IS_INVALID_VALUE(years[0]) ) {
-			fprintf(f, gap_header, tokens[GF_TOFILL]);
+		/* v2.04b */
+		if ( sym_mean ) {
+			fprintf(f, gap_header_sym_mean, tokens[GF_ROW_INDEX], tokens[GF_TOFILL]);
 		} else {
-			fprintf(f, gap_dtime_header, tokens[GF_TOFILL]);
+			fprintf(f, gap_header, tokens[GF_ROW_INDEX], tokens[GF_TOFILL]);
 		}
 		
 		/* write values */
 		for ( y = 0; y < files[z].count; y++ ) {
-			if ( !IS_INVALID_VALUE(years[y]) ) {
-				y = 0;
-				w = 0;
-				j = IS_LEAP_YEAR(years[y]) ? LEAP_YEAR_ROWS : YEAR_ROWS;
-				if ( hourly_dataset ) {
-					j /= 2;
+			y = 0;
+			w = 0;
+			j = get_rows_count_by_timeres(timeres, years[y]);
+			
+			/* */
+			for ( i = 0; i < rows_count; i++ ) {
+				if ( i == j ) {
+					++y;
+					k = get_rows_count_by_timeres(timeres, years[y]);
+					j += k;
+					k = get_rows_count_by_timeres(timeres,years[y-1]);
+					w += k;
 				}
-				/* */
-				for ( i = 0; i < rows_count; i++ ) {
-					if ( i == j ) {
-						++y;
-						k = IS_LEAP_YEAR(years[y]) ? LEAP_YEAR_ROWS : YEAR_ROWS;
-						if ( hourly_dataset ) {
-							k /= 2;
-						}
-						j += k;
-						k = IS_LEAP_YEAR(years[y-1]) ? LEAP_YEAR_ROWS : YEAR_ROWS;
-						if ( hourly_dataset ) {
-							k /= 2;
-						}
-						w += k;
-					}
-					fprintf(f, gap_format,
-											timestamp_end_by_row_s(i-w, years[y], hourly_dataset),
+				/* v2.04b */
+				if ( sym_mean ) {
+					fprintf(f, gap_format_sym_mean,
+											timestamp_end_by_row_s(i-w, years[y], timeres),
 											rows[i].value[GF_TOFILL],
 											IS_FLAG_SET(gf_rows[i].mask, GF_TOFILL_VALID) ? rows[i].value[GF_TOFILL] : gf_rows[i].filled,
 											IS_FLAG_SET(gf_rows[i].mask, GF_TOFILL_VALID) ? 0 : gf_rows[i].quality,
 											gf_rows[i].filled,									
+											gf_rows[i].filled_sym_mean,
+											gf_rows[i].mean_above,
+											gf_rows[i].n_above,
+											gf_rows[i].mean_below,
+											gf_rows[i].n_below,
 											gf_rows[i].samples_count,
 											gf_rows[i].stddev,
 											gf_rows[i].method,
 											gf_rows[i].quality,
 											gf_rows[i].time_window
 					);
-				}
-			} else {
-				for ( i = 0; i < rows_count; i++ ) {
-					fprintf(f, gap_dtime_format,
-											get_dtime_by_row(i, hourly_dataset),
+				} else {
+					fprintf(f, gap_format,
+											timestamp_end_by_row_s(i-w, years[y], timeres),
 											rows[i].value[GF_TOFILL],
 											IS_FLAG_SET(gf_rows[i].mask, GF_TOFILL_VALID) ? rows[i].value[GF_TOFILL] : gf_rows[i].filled,
 											IS_FLAG_SET(gf_rows[i].mask, GF_TOFILL_VALID) ? 0 : gf_rows[i].quality,
@@ -641,10 +809,7 @@ int main(int argc, char *argv[]) {
 		free(gf_rows);
 		free(years);
 		free(rows);
-		if ( details_list ) {
-			free_details_list(details_list, files[z].count);
-		}
-
+		
 		/* increment processed files count */
 		files_processed_count += files[z].count;
 
@@ -664,6 +829,5 @@ int main(int argc, char *argv[]) {
 						files_not_processed_count
 	);
 
-	/* memory freeded on return */
 	return 0;
 }

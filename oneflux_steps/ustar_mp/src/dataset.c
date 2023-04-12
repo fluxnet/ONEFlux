@@ -42,7 +42,7 @@ extern const char err_out_of_memory[];
 /* errors strings */
 static const char err_unable_open_dataset[] = "unable to open dataset.";
 static const char err_empty_file[] = "empty file ?";
-static const char err_redundancy[] = "redundancy: var \"%s\" already founded at column %d\n";
+static const char err_redundancy[] = "redundancy: var \"%s\" already found at column %d\n";
 static const char err_unable_find_column[] = "unable to find column for \"%s\" var.\n";
 static const char err_conversion[] = "error during conversion of \"%s\" value at row %d, column %d\n";
 static const char err_too_many_rows[] = "too many rows.";
@@ -408,7 +408,7 @@ UT *import_dataset(const LIST *const list, const int list_count) {
 								/* fix to zero based index */
 								--row;
 
-								token = timestamp_end_by_row_s(row, 0, 0);
+								token = timestamp_end_by_row_s(row, 0, HALFHOURLY_TIMERES);
 								if ( !token ) {
 									free_ut(ut);
 									fclose(f);

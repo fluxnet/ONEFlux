@@ -185,7 +185,7 @@ int bootstrapping(	FILE *const f,
 			++i;
 		}
 
-		/* if night and valid values founded, compute ustar threshold */
+		/* if night and valid values found, compute ustar threshold */
 		if ( rows_boot_count ) {
 			/* sort rows */
 			qsort(rows_boot, rows_boot_count, sizeof(ROW), compare_row);

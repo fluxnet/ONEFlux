@@ -1,7 +1,10 @@
 /*
 	main.c
 
-	this file is part of qc_auto
+	This file is part of the qc_auto step of processing.
+	It is responsible for a number of basic quality check test
+	and the creation of the input files for the following
+	processing steps
 
 	author: Alessio Ribeca <a.ribeca@unitus.it>
 	owner: DIBAF - University of Tuscia, Viterbo, Italy
@@ -23,7 +26,7 @@
 #include "../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION			"v1.0"
+#define PROGRAM_VERSION			"v1.01"
 const int days_per_month[MONTHS] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
 /* enum */
@@ -93,7 +96,7 @@ int spike_check_3_return = SPIKE_CHECK_3_RETURN;					/* see common.h */
 PREC spike_threshold_nee = SPIKE_THRESHOLD_NEE;						/* see common.h */
 PREC spike_threshold_le = SPIKE_THRESHOLD_LE;						/* see common.h */
 PREC spike_threshold_h = SPIKE_THRESHOLD_H;							/* see common.h */
-int files_founded_count;
+int files_found_count;
 PREC height;
 static int doy;
 static int qc2_filter;												/* default is off */
@@ -110,7 +113,7 @@ static int solar_output;											/* default is off */
 static int one_timestamp;											/* default is off */
 
 /* static global variables */
-static FILES *files_founded;
+static FILES *files_found;
 
 /* strings */
 static const char banner[] =	"\nqc_auto "PROGRAM_VERSION"\n"
@@ -134,7 +137,7 @@ static const char msg_dataset_path[] = "dataset path = %s\n";
 static const char msg_output_path[] = "output path = %s\n\n";
 static const char msg_processing[] = "	- found %s, %d...ok\n";
 static const char msg_ok[] = "ok";
-static const char msg_summary[] = "\n%d file%s founded: %d processed, %d skipped.\n\n";
+static const char msg_summary[] = "\n%d file%s found: %d processed, %d skipped.\n\n";
 static const char msg_usage[] =	"usage: qc_auto parameters output_formats\n\n"
 								"parameters:\n\n"
 								"-input_path=filename or path to be processed (optional)\n"
@@ -221,8 +224,8 @@ static void clean_up(void) {
 	if ( program_path ) {
 		free(program_path);
 	}
-	if ( files_founded ) {
-		free_files(files_founded, files_founded_count);
+	if ( files_found ) {
+		free_files(files_found, files_found_count);
 	}
 	check_memory_leak();
 }
@@ -1008,11 +1011,11 @@ static void set_invalid_by_flag(DATASET *const dataset, const char *const var, c
 }
 
 /* */
-static char *timestamp_for_sr(int row, int yy, const int hourly) {
+static char *timestamp_for_sr(int row, int yy, const int timeres) {
 	TIMESTAMP *t;
 	static char buffer[16+1] = { 0 };
 
-	t = timestamp_end_by_row(row, yy, hourly);
+	t = timestamp_end_by_row(row, yy, timeres);
 	sprintf(buffer, "%02d,%02d,%04d,%02d,%02d", t->MM, t->DD, t->YYYY, t->hh, t->mm); 
 
 	/* */
@@ -1189,10 +1192,10 @@ static int save_db_file(DATASET *const dataset) {
 	for ( i = 0; i < dataset->rows_count; i++ ) {
 		/* ...timestamp_start.... */
 		if ( ! one_timestamp ) {
-			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		}
 		/* ...timestamp_end.... */
-		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		/* ...values... */
 		for ( y = 0; y < SIZEOF_ARRAY(vars_index); y++ ) {
 			var = get_var_index(dataset, var_names[vars_index[y]]);
@@ -1797,10 +1800,10 @@ static int save_graph_file(DATASET *const dataset) {
 	for ( i = 0; i < dataset->rows_count; i++ ) {
 		/* ...timestamp_start.... */
 		if ( ! one_timestamp ) {
-			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		}
 		/* ...timestamp_end.... */
-		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		/* ...values... */
 		for ( y = 0; y < SIZEOF_ARRAY(vars_index); y++ ) {
 			var = get_var_index(dataset, var_names[vars_index[y]]);
@@ -1917,10 +1920,10 @@ static int save_nee_file(DATASET *const dataset) {
 	for ( i = 0; i < dataset->rows_count; i++ ) {
 		/* ...timestamp_start.... */
 		if ( ! one_timestamp ) {
-			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		}
 		/* ...timestamp_end.... */
-		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		/* ...values... */
 		for ( y = 0; y < SIZEOF_ARRAY(vars_index); y++ ) {
 			var = get_var_index(dataset, var_names[vars_index[y]]);
@@ -2014,10 +2017,10 @@ static int save_energy_file(DATASET *const dataset) {
 	for ( i = 0; i < dataset->rows_count; i++ ) {
 		/* ...timestamp_start.... */
 		if ( ! one_timestamp ) {
-			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		}
 		/* ...timestamp_end.... */
-		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		/* ...values... */
 		for ( y = 0; y < SIZEOF_ARRAY(vars_index); y++ ) {
 			var = get_var_index(dataset, var_names[vars_index[y]]);
@@ -2093,10 +2096,10 @@ static int save_ustar_file(DATASET *const dataset) {
 	for ( i = 0; i < dataset->rows_count; i++ ) {
 		/* ...timestamp_start.... */
 		if ( ! one_timestamp ) {
-			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		}
 		/* ...timestamp_end.... */
-		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		/* ...values... */
 		for ( y = 0; y < SIZEOF_ARRAY(vars_index); y++ ) {
 			var = get_var_index(dataset, var_names[vars_index[y]]);
@@ -2973,10 +2976,10 @@ static int save_meteo_file(DATASET *const dataset) {
 	for ( i = 0; i < dataset->rows_count; i++ ) {
 		/* ...timestamp_start.... */
 		if ( ! one_timestamp ) {
-			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+			fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		}
 		/* ...timestamp_end.... */
-		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		/* ...values... */
 		if ( dataset->rows_count != dataset->missings[CO2] ) fprintf(f, ",%g", dataset->rows[i].value[CO2]);
 		if ( dataset->rows_count != dataset->missings[P] ) fprintf(f, ",%g", dataset->rows[i].value[P]);
@@ -3163,14 +3166,14 @@ static int save_sr_file(DATASET *const dataset) {
 	/* write values */
 	for ( i = 0; i < dataset->rows_count; i++ ) {
 		/* ...timestamp.... */
-		fprintf(f, "%s,", timestamp_for_sr(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s,", timestamp_for_sr(i, dataset->details->year, dataset->details->timeres));
 		/* ...values... */
 		fprintf(f, "%g,", dataset->rows[i].value[FC]);
 		fprintf(f, "%g,", dataset->rows[i].value[SC]);
 		fprintf(f, "%g,", dataset->rows[i].value[USTAR]);
 		fprintf(f, "%g,", dataset->rows[i].value[SWIN]);
 		fprintf(f, "%g,", dataset->rows[i].value[TS]);
-		fprintf(f, "%s,", timestamp_end_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s,", timestamp_end_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		fprintf(f, "%g,", dataset->rows[i].value[TA]);
 		fprintf(f, "%g\n", dataset->rows[i].value[VPD]);
 	}
@@ -3199,7 +3202,7 @@ static int set_sc_negl(DATASET *const dataset) {
 	}
 
 	for ( i = 0; i < dataset->details->sc_negles_count; i++ ) {
-		z = get_row_by_timestamp(&dataset->details->sc_negles[i].timestamp, (HOURLY_TIMERES == dataset->details->timeres));
+		z = get_row_by_timestamp(&dataset->details->sc_negles[i].timestamp, dataset->details->timeres);
 		for ( y = z; y < dataset->rows_count; y++ ) {
 			dataset->rows[y].value[SC_NEGL] = dataset->details->sc_negles[i].flag;
 		}
@@ -3374,7 +3377,7 @@ int main(int argc, char *argv[]) {
 	printf(msg_output_path, output_path);
 
 	/* get files */
-	files_founded = get_files(program_path, input_path, &files_founded_count, &error);
+	files_found = get_files(program_path, input_path, &files_found_count, &error);
 	if ( error ) {
 		return 1;
 	}
@@ -3385,13 +3388,13 @@ int main(int argc, char *argv[]) {
 	total_files_count = 0;
 
 	/* loop for searching file */
-	for ( z = 0; z < files_founded_count; z++) {
+	for ( z = 0; z < files_found_count; z++) {
 		/* inc */
 		++total_files_count;
 
 		/* import dataset */
-		printf("processing %s...", files_founded[z].list[0].name);
-		dataset = import_dataset(files_founded[z].list[0].fullpath);
+		printf("processing %s...", files_found[z].list[0].name);
+		dataset = import_dataset(files_found[z].list[0].fullpath);
 		if ( !dataset ) {
 			puts("nothing found.");
 			++files_not_processed_count;

@@ -1,7 +1,10 @@
 /*
 	main.c
 
-	this file is part of SW_IN_POT_Calculator
+	This file is part of SW_IN_POT_Calculator that
+	calculates the extra-atmosphere potential short-wave
+	incoming radiation based on geographical location
+	and time.
 
 	author: Alessio Ribeca <a.ribeca@unitus.it>
 	owner: DIBAF - University of Tuscia, Viterbo, Italy
@@ -16,7 +19,7 @@
 #include "../../../common/common.h"
 	
 /* constants */
-#define PROGRAM_VERSION		"1.0"
+#define PROGRAM_VERSION		"1.01"
 #define DEFAULT_EXT			".csv"
 #define MAX_FILENAME_SIZE	64
 
@@ -220,10 +223,10 @@ int main(int argc, char *argv[]) {
 			char* p;
 
 			/* TIMESTAMP_START */
-			p = timestamp_start_by_row_s(i, details.year, (HOURLY_TIMERES == details.timeres));
+			p = timestamp_start_by_row_s(i, details.year, details.timeres);
 			fputs(p, f);
 			/* TIMESTAMP_END */
-			p = timestamp_end_by_row_s(i, details.year, (HOURLY_TIMERES == details.timeres));
+			p = timestamp_end_by_row_s(i, details.year, details.timeres);
 
 			fprintf(f, ",%s,%g\n", p, rpot[i]);
 		}

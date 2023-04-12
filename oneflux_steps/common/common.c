@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 #endif /* _DEBUG */
-#pragma comment(lib, "kernel32.lib")
+#pragma comment(lib, "kernel32")
 static WIN32_FIND_DATA wfd;
 static HANDLE handle;
 #elif defined (linux) || defined (__linux) || defined (__linux__) || defined (__APPLE__)
@@ -78,7 +78,7 @@ int isinf_f  (float       x) { return !isnan (x) && isnan (x - x); }
 int isinf_d  (double      x) { return !isnan (x) && isnan (x - x); }
 int isinf_ld (long double x) { return !isnan (x) && isnan (x - x); }
 
-/* stolen to http://www.codeproject.com/Articles/10606/Folder-Utility-Create-Path-Remove-Folder-Remove-Al */
+/* */
 int create_dir(char *Path) {
 #if defined (_WIN32)
 	char DirName[256];
@@ -186,7 +186,7 @@ static int get_files_from_path(const char *const path, FILES **files, int *const
 			strcpy((*files)[*count-1].list[(*files)[*count-1].count-1].path, path);
 
 			strcpy((*files)[*count-1].list[(*files)[*count-1].count-1].fullpath, path);
-			if ( !mystrcat((*files)[*count-1].list[(*files)[*count-1].count-1].fullpath, wfd.cFileName, PATH_SIZE) ) {
+			if ( !string_concat((*files)[*count-1].list[(*files)[*count-1].count-1].fullpath, wfd.cFileName, PATH_SIZE) ) {
 				printf(err_filename_too_big, wfd.cFileName);
 				free_files(*files, *count);
 				return 0;
@@ -244,7 +244,7 @@ static int get_files_from_path(const char *const path, FILES **files, int *const
 			strcpy((*files)[*count-1].list[(*files)[*count-1].count-1].path, path);
 
 			strcpy((*files)[*count-1].list[(*files)[*count-1].count-1].fullpath, path);
-			if ( !mystrcat((*files)[*count-1].list[(*files)[*count-1].count-1].fullpath, dit->d_name, PATH_SIZE) ) {
+			if ( !string_concat((*files)[*count-1].list[(*files)[*count-1].count-1].fullpath, dit->d_name, PATH_SIZE) ) {
 				printf(err_filename_too_big, dit->d_name);
 				free_files(*files, *count);
 				return 0;
@@ -273,6 +273,7 @@ void free_files(FILES *files, const int count) {
 }
 
 /*
+	TODO
 	CHECK: on ubuntu fopen erroneously open a path (maybe a bug on NTFS partition driver ?)
 */
 FILES *get_files(const char *const program_path, char *string, int *const count, int *const error) {
@@ -495,7 +496,7 @@ FILES *get_files(const char *const program_path, char *string, int *const count,
 						if ( program_path ) {
 							strcpy(files[*count-1].list->path, program_path);
 							strcpy(files[*count-1].list->fullpath, program_path);
-							if ( !mystrcat(files[*count-1].list->fullpath, token_by_comma, PATH_SIZE) ) {
+							if ( !string_concat(files[*count-1].list->fullpath, token_by_comma, PATH_SIZE) ) {
 								printf(err_filename_too_big, token_by_comma);
 								free_files(files, *count);
 								return 0;
@@ -526,7 +527,7 @@ FILES *get_files(const char *const program_path, char *string, int *const count,
 				/* get token length */
 				i = strlen(token_by_plus);
 				/* token is a path ? */
-				if ( token_by_plus[token_length-1] == FOLDER_DELIMITER ) {
+				if ( token_by_plus[i-1] == FOLDER_DELIMITER ) {
 					/* add length of filter */
 					token_length += strlen(filter);
 
@@ -642,7 +643,7 @@ FILES *get_files(const char *const program_path, char *string, int *const count,
 						if ( program_path ) {
 							strcpy(files[*count-1].list[files[*count-1].count-1].path, program_path);
 							strcpy(files[*count-1].list[files[*count-1].count-1].fullpath, program_path);
-							if ( !mystrcat(files[*count-1].list[files[*count-1].count-1].fullpath, token_by_plus, PATH_SIZE) ) {
+							if ( !string_concat(files[*count-1].list[files[*count-1].count-1].fullpath, token_by_plus, PATH_SIZE) ) {
 								printf(err_filename_too_big, token_by_plus);
 								free_files(files, *count);
 								return 0;
@@ -1029,7 +1030,7 @@ int add_char_to_string(char *const string, char c, const int size) {
 }
 
 /* */
-int mystrcat(char *const string, const char *const string_to_add, const int size) {
+int string_concat(char *const string, const char *const string_to_add, const int size) {
 	int i;
 	int y;
 
@@ -1738,6 +1739,70 @@ void info_free(INFO *info) {
 */
 
 /* */
+int get_rows_count_by_timeres(const int timeres, const int year) {
+	int rows_count;
+
+	assert((timeres > SPOT_TIMERES) && (timeres <= HOURLY_TIMERES));
+
+	/* assume HALFHOUR_TIMERES */
+	rows_count = IS_LEAP_YEAR(year) ? LEAP_YEAR_ROWS : YEAR_ROWS;
+
+	switch ( timeres ) {
+		case QUATERHOURLY_TIMERES:
+			rows_count *= 2;
+		break;
+
+		case HOURLY_TIMERES:
+			rows_count /= 2;
+		break;
+	}
+
+	return rows_count;
+}
+
+/* */
+int get_rows_per_day_by_timeres(const int timeres) {
+	int rows_per_day;
+
+	assert((timeres > SPOT_TIMERES) && (timeres <= HOURLY_TIMERES));
+
+	rows_per_day = 48; /* assume HALFHOUR_TIMERES */
+
+	switch ( timeres ) {
+		case QUATERHOURLY_TIMERES:
+			rows_per_day *= 2;
+		break;
+
+		case HOURLY_TIMERES:
+			rows_per_day /= 2;
+		break;
+	}
+
+	return rows_per_day;
+}
+
+/* */
+int get_rows_per_hour_by_timeres(const int timeres) {
+	int rows_per_hour;
+
+	assert((timeres > SPOT_TIMERES) && (timeres <= HOURLY_TIMERES));
+
+	rows_per_hour = 2; /* assume HALFHOUR_TIMERES */
+
+	switch ( timeres ) {
+		case QUATERHOURLY_TIMERES:
+			rows_per_hour *= 2;
+		break;
+
+		case HOURLY_TIMERES:
+			rows_per_hour /= 2;
+		break;
+	}
+
+	return rows_per_hour;
+}
+
+/* */
 TIMESTAMP *get_timestamp(const char *const string) {
 	int i;
 	int j;
@@ -1748,6 +1813,12 @@ TIMESTAMP *get_timestamp(const char *const string) {
 	TIMESTAMP *t;
 	const char *field[] = { "year", "month", "day", "hour", "minute", "second" };
 	const int field_size[] = { 4, 2, 2, 2, 2, 2 };
+
+	for ( i = 0; string[i]; i++ );
+	if ( (i < 0) || (i > 14) || (i & 1) ) {
+		puts("bad length for timestamp");
+		return NULL;
+	}
 
 	t = malloc(sizeof*t);
 	if ( ! t ) {
@@ -1760,12 +1831,6 @@ TIMESTAMP *get_timestamp(const char *const string) {
 	t->hh = 0;
 	t->mm = 0;
 	t->ss = 0;
-
-	for ( i = 0; string[i]; i++ );
-	if ( (i < 0) || (i > 14) || (i & 1) ) {
-		printf("bad length for %s\n", TIMESTAMP_STRING);
-		return NULL;
-	}
 
 	p = (char *)string;
 	index = 0;
@@ -1820,41 +1885,29 @@ TIMESTAMP *get_timestamp(const char *const string) {
 }
 
 /* */
-int get_row_by_timestamp(const TIMESTAMP *const t, const int hourly_dataset) {
+int get_row_by_timestamp(const TIMESTAMP *const t, const int timeres) {
 	int i;
 	int y;
 	int rows_per_day;
 	int rows_per_hour;
 	const int days_in_month[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
+	assert((timeres > SPOT_TIMERES) && (timeres <= HOURLY_TIMERES));
+
 	/* */
 	if ( ! t ) {
 		return -1;
 	}
 
-	/* */
-	rows_per_day = 48;
-	if ( hourly_dataset ) {
-		rows_per_day = 24;
-	}
-	rows_per_hour = 2;
-	if ( hourly_dataset ) {
-		rows_per_hour = 1;
-	}
+	rows_per_day = get_rows_per_day_by_timeres(timeres);
+	rows_per_hour = get_rows_per_hour_by_timeres(timeres);
 
 	/* check for last row */
 	if (	(1 == t->DD) &&
 			(1 == t->MM) &&
 			(0 == t->hh) &&
 			(0 == t->mm) ) {
-		if ( IS_LEAP_YEAR(t->YYYY-1) ) {
-			i = LEAP_YEAR_ROWS;
-		} else {
-			i = YEAR_ROWS;
-		}
-		if ( hourly_dataset ) {
-			i /= 2;
-		}
+		i = get_rows_count_by_timeres(timeres, t->YYYY-1);
 	} else {
 		i = 0;
 		for (y = 0; y < t->MM - 1; y++ ) {
@@ -1901,12 +1954,83 @@ int get_year_from_timestamp_string(const char *const string) {
 }
 
 /* */
-TIMESTAMP *timestamp_get_by_row(int row, int yy, const int hourly_dataset, const int start) {
+int check_timestamp(const TIMESTAMP* const p)
+{
+	int hour;
+
+	const int days_per_month[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+
+	assert(p);
+
+	if ( p->YYYY <= 0 ) return 0;
+	if ( (p->MM <= 0) || (p->MM > 12) ) return 0;
+	if ( p->DD <= 0 ) return 0;
+
+	if ( 2 == p->MM ) // check for february leap
+	{
+		if ( p->DD > days_per_month[p->MM-1]
+				+ IS_LEAP_YEAR(p->YYYY) )
+		{
+			return 0;
+		}
+	}
+	else if ( p->DD > days_per_month[p->MM-1] )
+	{
+		return 0;
+	}
+
+	// fix 24 hh
+	hour = p->hh;
+	if ( (hour < 0) || (hour > 23) ) return 0;
+	if ( (p->mm < 0) || (p->hh > 59) ) return 0;
+	if ( (p->ss < 0) || (p->ss > 59) ) return 0;
+
+	return 1;
+}
+
+/* static - used by timestamp_difference_in_seconds */
+static int timestamp_to_epoch(const TIMESTAMP* const p)
+{
+#define YEAR_0 (1900)
+	int iYear;
+	int iDoy;
+
+	const int _iDoy[] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+
+	iYear = p->YYYY - YEAR_0;
+	iDoy = _iDoy[p->MM-1] + (p->DD-1);
+	if ( IS_LEAP_YEAR(p->YYYY) && (p->MM > 2) ) ++iDoy;
+
+	return p->ss + p->mm*60 + p->hh*3600 + iDoy*86400 +
+	(iYear-70)*31536000 + ((iYear-69)/4)*86400 -
+	((iYear-1)/100)*86400 + ((iYear+299)/400)*86400;
+#undef YEAR_0
+}
+
+/* */
+int timestamp_difference_in_seconds(const TIMESTAMP* const p1, const TIMESTAMP* const p2)
+{
+	int s1;
+	int s2;
+
+	assert(p1);
+	assert(p2);
+
+	s1 = timestamp_to_epoch(p1);
+	s2 = timestamp_to_epoch(p2);
+
+	return s1-s2;
+}
+
+/* */
+TIMESTAMP *timestamp_get_by_row(int row, int yy, const int timeres, const int start) {
 	int i;
 	int is_leap;
 	int rows_per_day;
 	int days_per_month[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 	static TIMESTAMP t = { 0 };
+
+	assert((timeres > SPOT_TIMERES) && (timeres <= HOURLY_TIMERES));
 
 	/* reset */
 	t.YYYY = yy;
@@ -1924,7 +2048,7 @@ TIMESTAMP *timestamp_get_by_row(int row, int yy, const int hourly_dataset, const
 	}
 	
 	/* compute rows per day */
-	rows_per_day = hourly_dataset ? 24: 48;
+	rows_per_day = get_rows_per_day_by_timeres(timeres);
 	
 	/* get day and month */
 	t.DD = row / rows_per_day;
@@ -1945,10 +2069,12 @@ TIMESTAMP *timestamp_get_by_row(int row, int yy, const int hourly_dataset, const
 	++t.MM;
 
 	/* get hour */
-	if ( hourly_dataset ) {
-		t.hh = row % rows_per_day;
-		t.mm = 0;
-	} else {
+	if ( QUATERHOURLY_TIMERES == timeres ) {
+		// TODO
+		// CHECK THIS!
+		t.hh = (row % rows_per_day) / 4;
+		t.mm = (row % 15) * 15;
+	} else if ( HALFHOURLY_TIMERES == timeres ) {
 		t.hh = (row % rows_per_day) / 2;
 		/* even row ? */
 		if ( row & 1 ) {
@@ -1956,6 +2082,9 @@ TIMESTAMP *timestamp_get_by_row(int row, int yy, const int hourly_dataset, const
 		} else {
 			t.mm = 0;
 		}
+	} else if ( HOURLY_TIMERES == timeres ) {
+		t.hh = row % rows_per_day;
+		t.mm = 0;
 	}
 
 	/* ok */
@@ -1963,35 +2092,35 @@ TIMESTAMP *timestamp_get_by_row(int row, int yy, const int hourly_dataset, const
 }
 
 /* */
-char *timestamp_get_by_row_s(int row, int yy, const int hourly_dataset, const int start) {
+char *timestamp_get_by_row_s(int row, int yy, const int timeres, const int start) {
 	TIMESTAMP *t;
 	static char buffer[12+1] = { 0 };
 
-	t = timestamp_get_by_row(row, yy, hourly_dataset, start);
+	assert((timeres > SPOT_TIMERES) && (timeres <= HOURLY_TIMERES));
+
+	t = timestamp_get_by_row(row, yy, timeres, start);
 	sprintf(buffer, "%04d%02d%02d%02d%02d", t->YYYY, t->MM, t->DD, t->hh, t->mm);
 	return buffer;
 }
 
 /* */
-TIMESTAMP *timestamp_ww_get_by_row(int row, int year, const int hourly_dataset, int start) {
+TIMESTAMP *timestamp_ww_get_by_row(int row, int year, const int timeres, int start) {
 	int i;
 	int last;
 
 	/* */
 	assert((row >= 0) &&(row < 52));
+	assert((timeres > SPOT_TIMERES) && (timeres <= HOURLY_TIMERES));
 
 	/* */
 	last = (52-1 == row);
-	i = 7 * (hourly_dataset ? 24 : 48);
+	i = 7 * get_rows_per_day_by_timeres(timeres);
 	row *= i;
 
 	/* */
 	if ( ! start ) {
 		if ( last ) {
-			row = IS_LEAP_YEAR(year) ? 17568 : 17520;
-			if ( hourly_dataset ) {
-				row /= 2;
-			}
+			row = get_rows_count_by_timeres(timeres, year);			
 		} else {
 			row += i;
 		}
@@ -2000,20 +2129,22 @@ TIMESTAMP *timestamp_ww_get_by_row(int row, int year, const int hourly_dataset, 
 	}
 
 	/* */
-	return timestamp_get_by_row(row, year, hourly_dataset, start);
+	return timestamp_get_by_row(row, year, timeres, start);
 }
 
 /* */
-char *timestamp_ww_get_by_row_s(int row, int yy, const int hourly_dataset, const int start) {
+char *timestamp_ww_get_by_row_s(int row, int yy, const int timeres, const int start) {
 	TIMESTAMP *t;
 	static char buffer[8+1] = { 0 };
 
-	t = timestamp_ww_get_by_row(row, yy, hourly_dataset, start);
+	assert((timeres > SPOT_TIMERES) && (timeres <= HOURLY_TIMERES));
+
+	t = timestamp_ww_get_by_row(row, yy, timeres, start);
 	sprintf(buffer, "%04d%02d%02d", t->YYYY, t->MM, t->DD);
 	return buffer;
 }
 
-/* private function for gapfilling */
+/* static function for gapfilling. Calculates the mean */
 static PREC gf_get_similiar_mean(const GF_ROW *const gf_rows, const int rows_count) {
  	int i;
 	PREC mean;
@@ -2037,7 +2168,72 @@ static PREC gf_get_similiar_mean(const GF_ROW *const gf_rows, const int rows_cou
 	return mean;
 }
 
-/* gapfilling */
+/* static function for gapfilling. Calculates the symmetric mean */
+static void gf_get_similiar_mean_sym_mean(GF_ROW *const gf_rows, const int rows_count, const int current_row) {
+ 	int i;
+	int n;
+	int n_above;
+	int n_below;
+	PREC mean;
+	PREC mean_above;
+	PREC mean_below;
+	
+	/* check parameter */
+	assert(gf_rows);
+
+	/* reset */
+	mean = 0.0;
+	mean_above = 0.0;
+	mean_below = 0.0;
+	n = 0;
+	n_above = 0;
+	n_below = 0;
+
+	/* get means */
+	for ( i = 0; i < rows_count; i++ ) {
+		if ( gf_rows[i].value1_w_sym_mean >= gf_rows[i].value1_sym_mean ) {
+			mean_above += gf_rows[i].similiar;
+			++n_above;
+		}
+
+		if ( gf_rows[i].value1_w_sym_mean <= gf_rows[i].value1_sym_mean ) {
+			mean_below += gf_rows[i].similiar;
+			++n_below;
+		}
+	}
+
+	mean_above /= n_above;
+	mean_below /= n_below;
+
+	if ( n_above ) {
+		mean += mean_above;
+		++n;
+	}
+
+	if ( n_below ) {
+		mean += mean_below;
+		++n;
+	}
+
+	if ( ! n ) {
+		mean = INVALID_VALUE;
+	} else {
+		mean /= n;
+	}
+
+	/* check for NAN */
+	if ( mean != mean ) {
+		mean = INVALID_VALUE;
+	}
+
+	gf_rows[current_row].filled_sym_mean = mean;
+	gf_rows[current_row].mean_above = mean_above;
+	gf_rows[current_row].n_above = n_above;
+	gf_rows[current_row].mean_below = mean_below;
+	gf_rows[current_row].n_below = n_below;
+}
+
+/* gapfilling function to calculate the standard deviation */
 PREC gf_get_similiar_standard_deviation(const GF_ROW *const gf_rows, const int rows_count) {
 	int i;
 	PREC mean;
@@ -2073,7 +2269,7 @@ PREC gf_get_similiar_standard_deviation(const GF_ROW *const gf_rows, const int r
 	return sum2;
 }
 
-/* gapfilling */
+/* gapfilling function to calculate the median */
 PREC gf_get_similiar_median(const GF_ROW *const gf_rows, const int rows_count, int *const error) {
 	int i;
 	PREC *p_median;
@@ -2123,7 +2319,7 @@ PREC gf_get_similiar_median(const GF_ROW *const gf_rows, const int rows_count, i
 	return result;
 }
 
-/* private function for gapfilling */
+/* static function for gapfilling. This is the core gapfillign function called only internally */
 static int gapfill(	PREC *values,
 					const int struct_size,
 					GF_ROW *const gf_rows,
@@ -2134,15 +2330,21 @@ static int gapfill(	PREC *values,
 					const int end,
 					const int step,
 					const int method,
-					const int hourly_dataset,
+					const int timeres,
 					const PREC value1_tolerance_min,
 					const PREC value1_tolerance_max,
-					const PREC value2_tolerance,
-					const PREC value3_tolerance,
+					const PREC value2_tolerance_min,
+					const PREC value2_tolerance_max,
+					const PREC value3_tolerance_min,
+					const PREC value3_tolerance_max,
 					const int tofill_column,
 					const int value1_column,
 					const int value2_column,
-					const int value3_column) {
+					const int value3_column,
+					const int sym_mean,
+					const int debug,
+					const char* debug_file_name,
+					int debug_start_year) {
 	int i;
 	int y;
 	int j;
@@ -2153,11 +2355,14 @@ static int gapfill(	PREC *values,
 	int window_current;
 	int samples_count;
 	PREC value1_tolerance;
+	PREC value2_tolerance;
+	PREC value3_tolerance;
 	PREC *window_current_values;
 	PREC *row_current_values;
 
 	/* check parameter */
 	assert(values && gf_rows && (method >=0 && method < GF_METHODS));
+	assert((timeres > SPOT_TIMERES) && (timeres <= HOURLY_TIMERES));
 
 	/* reset */
 	window = 0;
@@ -2165,19 +2370,41 @@ static int gapfill(	PREC *values,
 	window_end = 0;
 	window_current = 0;
 	samples_count = 0;
-	value1_tolerance = 0.0;
+	value1_tolerance = value1_tolerance_min;
+	value2_tolerance = value2_tolerance_min;
+	value3_tolerance = value3_tolerance_min;
 
-	/* j is and index checker for hourly method */
-	if ( hourly_dataset ) {
-		j = 3;
-	} else {
-		j = 5;
+	/* j is an index checker for timeres */
+	switch ( timeres ) {
+		case QUATERHOURLY_TIMERES:
+			j = 9;
+		break;
+
+		case HALFHOURLY_TIMERES:
+			j = 5;
+		break;
+
+		case HOURLY_TIMERES:
+			j = 3;
+		break;
 	}
 
 	/* */
 	i = start;
 	if ( GF_TOFILL_METHOD == method ) {
-		z = hourly_dataset ? 24 : 48;
+		switch ( timeres ) {
+			case QUATERHOURLY_TIMERES:
+				z = 96;
+			break;
+
+			case HALFHOURLY_TIMERES:
+				z = 48;
+			break;
+
+			case HOURLY_TIMERES:
+				z = 24;
+			break;
+		}
 	} else {
 		z = 1;
 	}
@@ -2186,18 +2413,35 @@ static int gapfill(	PREC *values,
 		samples_count = 0;
 
 		/* compute window */
-		window = 48 * i;
-		if ( hourly_dataset ) {
-			window /= 2;
+		switch ( timeres ) {
+			case QUATERHOURLY_TIMERES:
+				window = 96 * i;
+			break;
+
+			case HALFHOURLY_TIMERES:
+				window = 48 * i;
+			break;
+
+			case HOURLY_TIMERES:
+				window = 24 * i;
+			break;
 		}
 
 		/* get window start index */
 		window_start = current_row - window;
 		if ( GF_TOFILL_METHOD == method ) {
-			if ( hourly_dataset ) {
-				window_start -= 1;
-			} else {
-				window_start -= 2;
+			switch ( timeres ) {
+				case QUATERHOURLY_TIMERES:
+					window_start -= 4;
+				break;
+
+				case HALFHOURLY_TIMERES:
+					window_start -= 2;
+				break;
+
+				case HOURLY_TIMERES:
+					window_start -= 1;
+				break;
 			}
 		}
 
@@ -2209,17 +2453,22 @@ static int gapfill(	PREC *values,
 		/* get window end index */
 		window_end = current_row + window;
 		if (GF_TOFILL_METHOD == method ) {
-			if ( hourly_dataset ) {
-				window_end += 2;
-			} else {
-				window_end += 3;
+			switch ( timeres ) {
+				case QUATERHOURLY_TIMERES:
+					window_end += 5;
+				break;
+
+				case HALFHOURLY_TIMERES:
+					window_end += 3;
+				break;
+
+				case HOURLY_TIMERES:
+					window_end += 2;
+				break;
 			}
 		}
 
-		/*	fix bounds for first two methods
-			cause in hour method (NEE_METHOD) a window start at -32 and window end at 69,
-			it will be fixed to window start at 0 and this is an error...
-		*/
+		/*	fix bounds for first two methods */
 		if ( GF_TOFILL_METHOD != method ) {
 			if ( window_start < 0 ) {
 				window_start = 0;
@@ -2229,10 +2478,9 @@ static int gapfill(	PREC *values,
 				window_end = end_window;
 			}
 
-			/* modified on June 25, 2013 */
 			/* compute tolerance for value1 */
 			if ( IS_INVALID_VALUE(value1_tolerance_min) ) {
-				value1_tolerance = value1_tolerance_max;
+				value1_tolerance = GF_DRIVER_1_TOLERANCE_MIN;
 			} else if ( IS_INVALID_VALUE(value1_tolerance_max) ) {
 				value1_tolerance = value1_tolerance_min;
 			} else {
@@ -2243,14 +2491,47 @@ static int gapfill(	PREC *values,
 					value1_tolerance = value1_tolerance_max;
 				}
 			}
+
+			/* compute tolerance for value2 */
+			if ( IS_INVALID_VALUE(value2_tolerance_min) ) {
+				value2_tolerance = GF_DRIVER_2A_TOLERANCE_MIN;
+			} else if ( IS_INVALID_VALUE(value2_tolerance_max) ) {
+				value2_tolerance = value2_tolerance_min;
+			} else {
+				value2_tolerance = ((PREC *)(((char *)values)+current_row*struct_size))[value2_column];
+				if ( value2_tolerance < value2_tolerance_min ) {
+					value2_tolerance = value2_tolerance_min;
+				} else if ( value2_tolerance > value2_tolerance_max ) {
+					value2_tolerance = value2_tolerance_max;
+				}
+			}
+
+			/* compute tolerance for value3 */
+			if ( IS_INVALID_VALUE(value3_tolerance_min) ) {
+				value3_tolerance = GF_DRIVER_2B_TOLERANCE_MIN;
+			} else if ( IS_INVALID_VALUE(value3_tolerance_max) ) {
+				value3_tolerance = value3_tolerance_min;
+			} else {
+				value3_tolerance = ((PREC *)(((char *)values)+current_row*struct_size))[value3_column];
+				if ( value3_tolerance < value3_tolerance_min ) {
+					value3_tolerance = value3_tolerance_min;
+				} else if ( value3_tolerance > value3_tolerance_max ) {
+					value3_tolerance = value3_tolerance_max;
+				}
+			}
 		}
 
-		/* loop through window */
+		assert(! IS_INVALID_VALUE(value1_tolerance));
+		assert(! IS_INVALID_VALUE(value2_tolerance));
+		assert(! IS_INVALID_VALUE(value3_tolerance));
+
+		/* gapfilling loop, it is called passing window size and method to use */
 		for ( window_current = window_start; window_current < window_end; window_current += z ) {
 			window_current_values = ((PREC *)(((char *)values)+window_current*struct_size));
 			row_current_values = ((PREC *)(((char *)values)+current_row*struct_size));
 
 			switch ( method ) {
+				/* gapfilling method 1 when all the three drivers are available */
 				case GF_ALL_METHOD:
 					if ( IS_FLAG_SET(gf_rows[window_current].mask, GF_ALL_VALID) ) {
 						if (
@@ -2258,26 +2539,47 @@ static int gapfill(	PREC *values,
 								(FABS(window_current_values[value1_column]-row_current_values[value1_column]) < value1_tolerance) &&
 								(FABS(window_current_values[value3_column]-row_current_values[value3_column]) < value3_tolerance)
 							) {
-							gf_rows[samples_count++].similiar = window_current_values[tofill_column];
+							gf_rows[samples_count].similiar = window_current_values[tofill_column];
+							gf_rows[samples_count].index = window_current;
+
+							/* if specified by parameter sets the information to use the symmetric mean */
+							if ( sym_mean ) {
+								gf_rows[samples_count].value1_sym_mean = row_current_values[value1_column];
+								gf_rows[samples_count].value1_w_sym_mean = window_current_values[value1_column];	
+							}
+
+							++samples_count;
 						}
 					}
 				break;
 
+				/* gapfilling method 2 when only the main driver is available */
 				case GF_VALUE1_METHOD:
 					if ( IS_FLAG_SET(gf_rows[window_current].mask, (GF_TOFILL_VALID|GF_VALUE1_VALID)) ) {
 						if ( FABS(window_current_values[value1_column]-row_current_values[value1_column]) < value1_tolerance ) {
-							gf_rows[samples_count++].similiar = window_current_values[tofill_column];
+							gf_rows[samples_count].similiar = window_current_values[tofill_column];
+							gf_rows[samples_count].index = window_current;
+
+							/* if specified by parameter sets the information to use the symmetric mean */
+							if ( sym_mean ) {
+								gf_rows[samples_count].value1_sym_mean = row_current_values[value1_column];
+								gf_rows[samples_count].value1_w_sym_mean = window_current_values[value1_column];
+							}
+
+							++samples_count;
 						}
 					}
 				break;
 
+				/* gapfilling method 3 based only on time, when the main driver is not available */
 				case GF_TOFILL_METHOD:
 					for ( y = 0; y < j; y++ ) {
 						if ( ((window_current+y) < 0) || (window_current+y) >= end_window ) {
 							continue;
 						}
 						if ( IS_FLAG_SET(gf_rows[window_current+y].mask, GF_TOFILL_VALID) ) {
-							gf_rows[samples_count++].similiar = ((PREC *)(((char *)values)+((window_current+y)*struct_size)))[tofill_column];
+							gf_rows[samples_count].similiar = ((PREC *)(((char *)values)+((window_current+y)*struct_size)))[tofill_column];
+							gf_rows[samples_count++].index = window_current+y;
 						}
 					}
 				break;
@@ -2301,9 +2603,42 @@ static int gapfill(	PREC *values,
 			if ( GF_TOFILL_METHOD == method ) {
 				++gf_rows[current_row].time_window;
 			}
+			
+			/* compute symmetrical mean (if enabled) */
+			if ( sym_mean && (method < GF_TOFILL_METHOD) ) {
+				gf_get_similiar_mean_sym_mean(gf_rows, samples_count, current_row);
+			}
 
 			/* set samples */
 			gf_rows[current_row].samples_count = samples_count;
+
+			/* debug file. only for internal use */
+			if ( debug ) {
+				char buf[FILENAME_SIZE];
+				FILE* f;
+				
+				sprintf(buf, "%s_%s.txt", debug_file_name, timestamp_end_by_row_s(current_row, debug_start_year, timeres));
+				f  = fopen(buf, "w");
+				if ( ! f ) {
+					printf("unable to create %s\n", buf);
+				} else {
+					fprintf(f, "filled = %g\n", gf_rows[current_row].filled);
+					fprintf(f, "stddev = %g\n", gf_rows[current_row].stddev);
+					fprintf(f, "method = %d\n", gf_rows[current_row].method);
+
+					if ( sym_mean && (method < GF_TOFILL_METHOD) ) {
+						fprintf(f, "filled_sym_mean = %g\n", gf_rows[current_row].filled_sym_mean);
+					}
+
+					fprintf(f, "time_window = %d\n", gf_rows[current_row].time_window);
+					fprintf(f, "window_start=%d, window_end=%d\n", window_start, window_end);
+					fprintf(f, "samples_count = %d\n", gf_rows[current_row].samples_count);
+					for ( y = 0; y < samples_count; ++y ) {
+						fprintf(f, "%s,%g\n", timestamp_end_by_row_s(gf_rows[y].index, debug_start_year, timeres), gf_rows[y].similiar);
+					}
+					fclose(f);
+				}
+			}
 
 			/* ok */
 			return 1;
@@ -2322,545 +2657,195 @@ static int gapfill(	PREC *values,
 	return 0;
 }
 
-/* DEV version */
-static int dev_mds_gf(	PREC *values,
+
+/* gap-filling function called by the different tools and codes. Uses the gapfill function above */
+GF_ROW *gf_mds(	PREC *values,
 				const int struct_size,
-				GF_ROW *const gf_rows,
-				const int start_window,
-				const int end_window,
-				const int current_row,
-				const int hourly_dataset,
-				const PREC value1_tolerance_min,
-				const PREC value1_tolerance_max,
-				const PREC value2_tolerance,
-				const PREC value3_tolerance,
+				const int rows_count,
+				const int columns_count,
+				const int timeres,
+				PREC value1_tolerance_min,
+				PREC value1_tolerance_max,
+				PREC value2_tolerance_min,
+				PREC value2_tolerance_max,
+				PREC value3_tolerance_min,
+				PREC value3_tolerance_max,
 				const int tofill_column,
 				const int value1_column,
 				const int value2_column,
-				const int value3_column) {
+				const int value3_column,
+				const int value1_qc_column,
+				const int value2_qc_column,
+				const int value3_qc_column,
+				const int qc_thrs1,
+				const int qc_thrs2,
+				const int qc_thrs3,
+				const int values_min,
+				const int compute_hat,
+				int start_row,
+				int end_row,
+				int *no_gaps_filled_count,
+				int sym_mean,
+				int max_mdv_win,
+				int debug,
+				const char* debug_file_name,
+				int debug_start_year) {
 	int i;
-	int y;
-	int j;
-	int z;
-	int window;
-	int window_start;
-	int window_end;
-	int window_current;
-	int samples_count;
-	int current_method;
-	int start;
-	int end;
-	int step;
-	int method;
-	PREC value1_tolerance;
-	PREC *window_current_values;
-	PREC *row_current_values;
-
-	struct {
-		int start;
-		int end;
-		int step;
-		int method;
-	}  mds[] = {
-		{  7, 14, 7, GF_ALL_METHOD }
-		, { 7, 7, 7, GF_VALUE1_METHOD }
-		, { 0, 2, 1, GF_TOFILL_METHOD }
-		, { 21, 77, 7, GF_ALL_METHOD }
-		, { 14, 77, 7, GF_VALUE1_METHOD }
-		, { 3, 0, 3, GF_TOFILL_METHOD }
-	};
-
-	/* check parameter */
-	assert(values && gf_rows);
-
-	/* reset */
-	window = 0;
-	window_start = 0;
-	window_end = 0;
-	window_current = 0;
-	samples_count = 0;
-	value1_tolerance = 0.0;
-	
-	/* fix last method */
-	mds[5].end = end_window + 1;
-
-	/* j is and index checker for hourly method */
-	if ( hourly_dataset ) {
-		j = 3;
-	} else {
-		j = 5;
-	}
+	int c;
+	int valids_count;
+	GF_ROW *gf_rows;
 
 	/* */
-	current_method = 0;
-	while ( current_method < SIZEOF_ARRAY(mds) ) {
-		start = mds[current_method].start;
-		end = mds[current_method].end;
-		step = mds[current_method].step;
-		method = mds[current_method].method;
+	assert(values && rows_count && no_gaps_filled_count);
 
-		i = start;
-		if ( GF_TOFILL_METHOD == method ) {
-			z = hourly_dataset ? 24 : 48;
-		} else {
-			z = 1;
+	/* reset */
+	*no_gaps_filled_count = 0;
+	if ( start_row < 0  ) {
+		start_row = 0;
+	}
+	if ( -1 == end_row ) {
+		end_row = rows_count;
+	} else if ( end_row > rows_count ) {
+		end_row = rows_count;
+	}
+
+	/* allocate memory */
+	gf_rows = malloc(rows_count*sizeof*gf_rows);
+	if ( !gf_rows ) {
+		puts(err_out_of_memory);
+		return NULL;
+	}
+
+	/* reset */
+	for ( i = 0; i < rows_count; i++ ) {
+		gf_rows[i].mask = 0;
+		gf_rows[i].similiar = INVALID_VALUE;
+		gf_rows[i].stddev = INVALID_VALUE;
+		gf_rows[i].filled = INVALID_VALUE;
+		gf_rows[i].quality = INVALID_VALUE;
+		gf_rows[i].time_window = 0;
+		gf_rows[i].samples_count = 0;
+		gf_rows[i].method = 0;
+
+		if ( sym_mean ) {
+			gf_rows[i].value1_sym_mean = INVALID_VALUE;
+			gf_rows[i].value1_w_sym_mean = INVALID_VALUE;
+			gf_rows[i].similiar_sym_mean = INVALID_VALUE;
+			gf_rows[i].filled_sym_mean = INVALID_VALUE;
+			gf_rows[i].mean_above = INVALID_VALUE;
+			gf_rows[i].mean_below = INVALID_VALUE;
+			gf_rows[i].n_above = INVALID_VALUE;
+			gf_rows[i].n_below = INVALID_VALUE;
 		}
-		while ( i <= end ) {
-			/* reset */
-			samples_count = 0;
+	}
 
-			/* compute window */
-			window = 48 * i;
-			if ( hourly_dataset ) {
-				window /= 2;
-			}
-
-			/* get window start index */
-			window_start = current_row - window;
-			if ( GF_TOFILL_METHOD == method ) {
-				if ( hourly_dataset ) {
-					window_start -= 1;
-				} else {
-					window_start -= 2;
+	/* update mask and count valids TO FILL */
+	/* creates a bitmask to identify for each record is target value
+	and the different drivers are available or not */
+	valids_count = 0;
+	for ( i = start_row; i < end_row; i++ ) {
+		for ( c = 0; c < columns_count; c++ ) {
+			if ( !IS_INVALID_VALUE(((PREC *)(((char *)values)+i*struct_size))[c]) ) {
+				if ( tofill_column == c ) {
+					gf_rows[i].mask |= GF_TOFILL_VALID;
+				} else if ( value1_column == c ) {
+					gf_rows[i].mask |= GF_VALUE1_VALID;
+				} else if ( value2_column == c ) {
+					gf_rows[i].mask |= GF_VALUE2_VALID;
+				} else if ( value3_column == c ) {
+					gf_rows[i].mask |= GF_VALUE3_VALID;
 				}
 			}
+		}
 
-			if ( GF_TOFILL_METHOD != method ) {
-				/* fix for recreate markus code */
-				++window_start;
+		/* check for QC */
+		/* sets as invalid in the bitmask drivers with QC above the threshold */
+		if (	!IS_INVALID_VALUE(qc_thrs1) &&
+				(value1_qc_column != -1) &&
+				!IS_INVALID_VALUE(((PREC *)(((char *)values)+i*struct_size))[value1_qc_column]) ) {
+			if ( ((PREC *)(((char *)values)+i*struct_size))[value1_qc_column] > qc_thrs1 ) {
+				gf_rows[i].mask &= ~GF_VALUE1_VALID;
 			}
+		}
 
-			/* get window end index */
-			window_end = current_row + window;
-			if (GF_TOFILL_METHOD == method ) {
-				if ( hourly_dataset ) {
-					window_end += 2;
-				} else {
-					window_end += 3;
-				}
+		if (	!IS_INVALID_VALUE(qc_thrs2) &&
+				(value2_qc_column != -1) &&
+				!IS_INVALID_VALUE(((PREC *)(((char *)values)+i*struct_size))[value2_qc_column]) ) {
+			if ( ((PREC *)(((char *)values)+i*struct_size))[value2_qc_column] > qc_thrs2 ) {
+				gf_rows[i].mask &= ~GF_VALUE2_VALID;
 			}
+		}
 
-			/*	fix bounds for first two methods
-				cause in hour method (NEE_METHOD) a window start at -32 and window end at 69,
-				it will be fixed to window start at 0 and this is an error...
-			*/
-			if ( GF_TOFILL_METHOD != method ) {
-				if ( window_start < 0 ) {
-					window_start = 0;
-				}
+		if (	!IS_INVALID_VALUE(qc_thrs3) &&
+				(value3_qc_column != -1) &&
+				!IS_INVALID_VALUE(((PREC *)(((char *)values)+i*struct_size))[value3_qc_column]) ) {
+			if ( ((PREC *)(((char *)values)+i*struct_size))[value3_qc_column] > qc_thrs3 ) {
+				gf_rows[i].mask &= ~GF_VALUE3_VALID;
+			}
+		}
 
-				if ( window_end > end_window ) {
-					window_end = end_window;
-				}
+		if ( IS_FLAG_SET(gf_rows[i].mask, GF_TOFILL_VALID) ) {
+			++valids_count;
+		}
+	}
 
-				/* modified on June 25, 2013 */
-				/* compute tolerance for value1 */
-				if ( IS_INVALID_VALUE(value1_tolerance_min) ) {
-					value1_tolerance = value1_tolerance_max;
-				} else if ( IS_INVALID_VALUE(value1_tolerance_max) ) {
-					value1_tolerance = value1_tolerance_min;
-				} else {
-					value1_tolerance = ((PREC *)(((char *)values)+current_row*struct_size))[value1_column];
-					if ( value1_tolerance < value1_tolerance_min ) {
-						value1_tolerance = value1_tolerance_min;
-					} else if ( value1_tolerance > value1_tolerance_max ) {
-						value1_tolerance = value1_tolerance_max;
+	if ( valids_count < values_min ) {
+		puts(err_gf_too_less_values);
+		free(gf_rows);
+		return NULL;
+	}
+
+	/* sets the tolerance values for the drivers */
+	if ( IS_INVALID_VALUE(value1_tolerance_min) && IS_INVALID_VALUE(value1_tolerance_max) ) {
+		value1_tolerance_min = GF_DRIVER_1_TOLERANCE_MIN;
+		value1_tolerance_max = GF_DRIVER_1_TOLERANCE_MAX;
+	} else if ( IS_INVALID_VALUE(value1_tolerance_min) ) {
+		value1_tolerance_min = GF_DRIVER_1_TOLERANCE_MIN;
+	} 
+
+	if ( IS_INVALID_VALUE(value2_tolerance_min) && IS_INVALID_VALUE(value2_tolerance_max) ) {
+		value2_tolerance_min = GF_DRIVER_2A_TOLERANCE_MIN;
+		value2_tolerance_max = GF_DRIVER_2A_TOLERANCE_MAX;
+	} else if ( IS_INVALID_VALUE(value2_tolerance_min) ) {
+		value2_tolerance_min = GF_DRIVER_2A_TOLERANCE_MIN;
+	}
+
+	if ( IS_INVALID_VALUE(value3_tolerance_min) && IS_INVALID_VALUE(value3_tolerance_max) ) {
+		value3_tolerance_min = GF_DRIVER_2B_TOLERANCE_MIN;
+		value3_tolerance_max = GF_DRIVER_2B_TOLERANCE_MAX;
+	} else if ( IS_INVALID_VALUE(value3_tolerance_min) ) {
+		value3_tolerance_min = GF_DRIVER_2B_TOLERANCE_MIN;
+	}
+
+	/* gapfilling call loop for each row */
+	for ( i = start_row; i < end_row; i++ ) {
+		/* copy value from TOFILL to FILLED */
+		gf_rows[i].filled = ((PREC *)(((char *)values)+i*struct_size))[tofill_column];
+
+		/* compute hat ? */
+		if ( !IS_INVALID_VALUE(gf_rows[i].filled) && !compute_hat ) {
+			continue;
+		}
+
+		/*	fill gaps. If a values is impossible to fill it remains -9999 with QC also -9999 */
+		if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 7, 14, 7, GF_ALL_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, debug, debug_file_name, debug_start_year) ) {
+			if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 7, 7, 7, GF_VALUE1_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, debug, debug_file_name, debug_start_year) ) {
+				if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 0, 2, 1, GF_TOFILL_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, debug, debug_file_name, debug_start_year) ) {
+					if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 21, 77, 7, GF_ALL_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, debug, debug_file_name, debug_start_year) ) {
+						if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 14, 77, 7, GF_VALUE1_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, debug, debug_file_name, debug_start_year) ) {
+							int max_win = end_row + 1;
+							if ( (max_mdv_win > 0) && ((max_mdv_win * 2) + 1 < end_row + 1) ) {
+								max_win = (max_mdv_win * 2) + 1;
+							}
+							if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 3, max_win, 3, GF_TOFILL_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, debug, debug_file_name, debug_start_year) ) {
+								++*no_gaps_filled_count;
+								continue;
+							}
+						}
 					}
 				}
 			}
-
-			/* loop through window */
-			for ( window_current = window_start; window_current < window_end; window_current += z ) {
-				window_current_values = ((PREC *)(((char *)values)+window_current*struct_size));
-				row_current_values = ((PREC *)(((char *)values)+current_row*struct_size));
-
-				switch ( method ) {
-					case GF_ALL_METHOD:
-						if ( IS_FLAG_SET(gf_rows[window_current].mask, GF_ALL_VALID) ) {
-							if (
-									(FABS(window_current_values[value2_column]-row_current_values[value2_column]) < value2_tolerance) &&
-									(FABS(window_current_values[value1_column]-row_current_values[value1_column]) < value1_tolerance) &&
-									(FABS(window_current_values[value3_column]-row_current_values[value3_column]) < value3_tolerance)
-								) {
-								gf_rows[samples_count++].similiar = window_current_values[tofill_column];
-							}
-						}
-					break;
-
-					case GF_VALUE1_METHOD:
-						if ( IS_FLAG_SET(gf_rows[window_current].mask, (GF_TOFILL_VALID|GF_VALUE1_VALID)) ) {
-							if ( FABS(window_current_values[value1_column]-row_current_values[value1_column]) < value1_tolerance ) {
-								gf_rows[samples_count++].similiar = window_current_values[tofill_column];
-							}
-						}
-					break;
-
-					case GF_TOFILL_METHOD:
-						for ( y = 0; y < j; y++ ) {
-							if ( ((window_current+y) < 0) || (window_current+y) >= end_window ) {
-								continue;
-							}
-							if ( IS_FLAG_SET(gf_rows[window_current+y].mask, GF_TOFILL_VALID) ) {
-								gf_rows[samples_count++].similiar = ((PREC *)(((char *)values)+((window_current+y)*struct_size)))[tofill_column];
-							}
-						}
-					break;
-				}
-			}
-
-			if ( samples_count > 1 ) {
-				/* set mean */
-				gf_rows[current_row].filled = gf_get_similiar_mean(gf_rows, samples_count);
-
-				/* set standard deviation */
-				gf_rows[current_row].stddev = gf_get_similiar_standard_deviation(gf_rows, samples_count);
-
-				/* set method */
-				gf_rows[current_row].method = method + 1;
-
-				/* set time-window */
-				gf_rows[current_row].time_window = i * 2;
-
-				/* fix hour method timewindow */
-				if ( GF_TOFILL_METHOD == method ) {
-					++gf_rows[current_row].time_window;
-				}
-
-				/* set samples */
-				gf_rows[current_row].samples_count = samples_count;
-
-				/* ok */
-				return 1;
-			}
-
-			/* inc loop */
-			i += step;
-
-			/* break if window bigger than  */
-			if ( (window_start < start_window) && (window_end > end_window) ) {
-				break;
-			}
 		}
-		++current_method;
-	}
-
-	/* */
-	return 0;
-}
-
-/* */
-GF_ROW *dev_gf_mds_with_bounds(	PREC *values,
-							const int struct_size,
-							const int rows_count,
-							const int columns_count,
-							const int hourly_dataset,
-							PREC value1_tolerance_min,
-							PREC value1_tolerance_max,
-							PREC value2_tolerance,
-							PREC value3_tolerance,
-							const int tofill_column,
-							const int value1_column,
-							const int value2_column,
-							const int value3_column,
-							const int value1_qc_column,
-							const int value2_qc_column,
-							const int value3_qc_column,
-							const int qc_thrs,
-							const int values_min,
-							const int compute_hat,
-							int start_row,
-							int end_row,
-							int *no_gaps_filled_count) {
-	int i;
-	int c;
-	int valids_count;
-	GF_ROW *gf_rows;
-
-	/* */
-	assert(values && rows_count && no_gaps_filled_count);
-
-	/* reset */
-	*no_gaps_filled_count = 0;
-	if ( start_row < 0  ) {
-		start_row = 0;
-	}
-	if ( -1 == end_row ) {
-		end_row = rows_count;
-	} else if ( end_row > rows_count ) {
-		end_row = rows_count;
-	}
-
-	/* allocate memory */
-	gf_rows = malloc(rows_count*sizeof*gf_rows);
-	if ( !gf_rows ) {
-		puts(err_out_of_memory);
-		return NULL;
-	}
-
-	/* reset */
-	for ( i = 0; i < rows_count; i++ ) {
-		gf_rows[i].mask = 0;
-		gf_rows[i].similiar = INVALID_VALUE;
-		gf_rows[i].stddev = INVALID_VALUE;
-		gf_rows[i].filled = INVALID_VALUE;
-		gf_rows[i].quality = INVALID_VALUE;
-		gf_rows[i].time_window = 0;
-		gf_rows[i].samples_count = 0;
-		gf_rows[i].method = 0;
-	}
-
-	/* update mask and count valids TO FILL */
-	valids_count = 0;
-	for ( i = start_row; i < end_row; i++ ) {
-		for ( c = 0; c < columns_count; c++ ) {
-			if ( !IS_INVALID_VALUE(((PREC *)(((char *)values)+i*struct_size))[c]) ) {
-				if ( tofill_column == c ) {
-					gf_rows[i].mask |= GF_TOFILL_VALID;
-				} else if ( value1_column == c ) {
-					gf_rows[i].mask |= GF_VALUE1_VALID;
-				} else if ( value2_column == c ) {
-					gf_rows[i].mask |= GF_VALUE2_VALID;
-				} else if ( value3_column == c ) {
-					gf_rows[i].mask |= GF_VALUE3_VALID;
-				}
-			}
-		}
-
-		/* check for QC */
-		if (	!IS_INVALID_VALUE(qc_thrs) &&
-				(value1_qc_column != -1) &&
-				!IS_INVALID_VALUE(((PREC *)(((char *)values)+i*struct_size))[value1_qc_column]) ) {
-			if ( ((PREC *)(((char *)values)+i*struct_size))[value1_qc_column] > qc_thrs ) {
-				gf_rows[i].mask &= ~GF_VALUE1_VALID;
-			}
-		}
-
-		if (	!IS_INVALID_VALUE(qc_thrs) &&
-				(value2_qc_column != -1) &&
-				!IS_INVALID_VALUE(((PREC *)(((char *)values)+i*struct_size))[value2_qc_column]) ) {
-			if ( ((PREC *)(((char *)values)+i*struct_size))[value2_qc_column] > qc_thrs ) {
-				gf_rows[i].mask &= ~GF_VALUE2_VALID;
-			}
-		}
-
-		if (	!IS_INVALID_VALUE(qc_thrs) &&
-				(value3_qc_column != -1) &&
-				!IS_INVALID_VALUE(((PREC *)(((char *)values)+i*struct_size))[value3_qc_column]) ) {
-			if ( ((PREC *)(((char *)values)+i*struct_size))[value3_qc_column] > qc_thrs ) {
-				gf_rows[i].mask &= ~GF_VALUE3_VALID;
-			}
-		}
-
-		if ( IS_FLAG_SET(gf_rows[i].mask, GF_TOFILL_VALID) ) {
-			++valids_count;
-		}
-	}
-
-	if ( valids_count < values_min ) {
-		puts(err_gf_too_less_values);
-		free(gf_rows);
-		return NULL;
-	}
-
-	/* */
-	if ( IS_INVALID_VALUE(value1_tolerance_min) && IS_INVALID_VALUE(value1_tolerance_max) ) {
-		value1_tolerance_min = GF_SW_IN_TOLERANCE_MIN;
-		value1_tolerance_max = GF_SW_IN_TOLERANCE_MAX;
-	}
-
-	/* */
-	if ( IS_INVALID_VALUE(value2_tolerance) ) {
-		value2_tolerance = GF_TA_TOLERANCE;
-	}
-
-	/* */
-	if ( IS_INVALID_VALUE(value3_tolerance) ) {
-		value3_tolerance = GF_VPD_TOLERANCE;
-	}
-
-	/* loop for each row */
-	for ( i = start_row; i < end_row; i++ ) {
-		/* copy value from TOFILL to FILLED */
-		gf_rows[i].filled = ((PREC *)(((char *)values)+i*struct_size))[tofill_column];
-
-		/* compute hat ? */
-		if ( !IS_INVALID_VALUE(gf_rows[i].filled) && !compute_hat ) {
-			continue;
-		}
-
-		/*	fill
-			Added 20140422: if a gap is impossible to fill, e.g. if with MDV there are no data in the whole dataset acquired in a range +/- one hour,
-			the data point is not filled and the qc is set to -9999
-		*/
-		if ( ! dev_mds_gf(values, struct_size, gf_rows, start_row, end_row, i, hourly_dataset, value1_tolerance_min, value1_tolerance_max, value2_tolerance, value3_tolerance, tofill_column, value1_column, value2_column, value3_column) ) {
-			++*no_gaps_filled_count;
-			continue;
-
-		}
-		
-		/* compute quality */
-		gf_rows[i].quality =	(gf_rows[i].method > 0) +
-								((gf_rows[i].method == 1 && gf_rows[i].time_window > 14) || (gf_rows[i].method == 2 && gf_rows[i].time_window > 14) || (gf_rows[i].method == 3 && gf_rows[i].time_window > 1)) +
-								((gf_rows[i].method == 1 && gf_rows[i].time_window > 56) || (gf_rows[i].method == 2 && gf_rows[i].time_window > 28) || (gf_rows[i].method == 3 && gf_rows[i].time_window > 5));
-	}
-
-	/* ok */
-	return gf_rows;
-}
-
-/* */
-GF_ROW *gf_mds_with_bounds(	PREC *values,
-							const int struct_size,
-							const int rows_count,
-							const int columns_count,
-							const int hourly_dataset,
-							PREC value1_tolerance_min,
-							PREC value1_tolerance_max,
-							PREC value2_tolerance,
-							PREC value3_tolerance,
-							const int tofill_column,
-							const int value1_column,
-							const int value2_column,
-							const int value3_column,
-							const int value1_qc_column,
-							const int value2_qc_column,
-							const int value3_qc_column,
-							const int qc_thrs,
-							const int values_min,
-							const int compute_hat,
-							int start_row,
-							int end_row,
-							int *no_gaps_filled_count) {
-	int i;
-	int c;
-	int valids_count;
-	GF_ROW *gf_rows;
-
-	/* */
-	assert(values && rows_count && no_gaps_filled_count);
-
-	/* reset */
-	*no_gaps_filled_count = 0;
-	if ( start_row < 0  ) {
-		start_row = 0;
-	}
-	if ( -1 == end_row ) {
-		end_row = rows_count;
-	} else if ( end_row > rows_count ) {
-		end_row = rows_count;
-	}
-
-	/* allocate memory */
-	gf_rows = malloc(rows_count*sizeof*gf_rows);
-	if ( !gf_rows ) {
-		puts(err_out_of_memory);
-		return NULL;
-	}
-
-	/* reset */
-	for ( i = 0; i < rows_count; i++ ) {
-		gf_rows[i].mask = 0;
-		gf_rows[i].similiar = INVALID_VALUE;
-		gf_rows[i].stddev = INVALID_VALUE;
-		gf_rows[i].filled = INVALID_VALUE;
-		gf_rows[i].quality = INVALID_VALUE;
-		gf_rows[i].time_window = 0;
-		gf_rows[i].samples_count = 0;
-		gf_rows[i].method = 0;
-	}
-
-	/* update mask and count valids TO FILL */
-	valids_count = 0;
-	for ( i = start_row; i < end_row; i++ ) {
-		for ( c = 0; c < columns_count; c++ ) {
-			if ( !IS_INVALID_VALUE(((PREC *)(((char *)values)+i*struct_size))[c]) ) {
-				if ( tofill_column == c ) {
-					gf_rows[i].mask |= GF_TOFILL_VALID;
-				} else if ( value1_column == c ) {
-					gf_rows[i].mask |= GF_VALUE1_VALID;
-				} else if ( value2_column == c ) {
-					gf_rows[i].mask |= GF_VALUE2_VALID;
-				} else if ( value3_column == c ) {
-					gf_rows[i].mask |= GF_VALUE3_VALID;
-				}
-			}
-		}
-
-		/* check for QC */
-		if (	!IS_INVALID_VALUE(qc_thrs) &&
-				(value1_qc_column != -1) &&
-				!IS_INVALID_VALUE(((PREC *)(((char *)values)+i*struct_size))[value1_qc_column]) ) {
-			if ( ((PREC *)(((char *)values)+i*struct_size))[value1_qc_column] > qc_thrs ) {
-				gf_rows[i].mask &= ~GF_VALUE1_VALID;
-			}
-		}
-
-		if (	!IS_INVALID_VALUE(qc_thrs) &&
-				(value2_qc_column != -1) &&
-				!IS_INVALID_VALUE(((PREC *)(((char *)values)+i*struct_size))[value2_qc_column]) ) {
-			if ( ((PREC *)(((char *)values)+i*struct_size))[value2_qc_column] > qc_thrs ) {
-				gf_rows[i].mask &= ~GF_VALUE2_VALID;
-			}
-		}
-
-		if (	!IS_INVALID_VALUE(qc_thrs) &&
-				(value3_qc_column != -1) &&
-				!IS_INVALID_VALUE(((PREC *)(((char *)values)+i*struct_size))[value3_qc_column]) ) {
-			if ( ((PREC *)(((char *)values)+i*struct_size))[value3_qc_column] > qc_thrs ) {
-				gf_rows[i].mask &= ~GF_VALUE3_VALID;
-			}
-		}
-
-		if ( IS_FLAG_SET(gf_rows[i].mask, GF_TOFILL_VALID) ) {
-			++valids_count;
-		}
-	}
-
-	if ( valids_count < values_min ) {
-		puts(err_gf_too_less_values);
-		free(gf_rows);
-		return NULL;
-	}
-
-	/* */
-	if ( IS_INVALID_VALUE(value1_tolerance_min) && IS_INVALID_VALUE(value1_tolerance_max) ) {
-		value1_tolerance_min = GF_SW_IN_TOLERANCE_MIN;
-		value1_tolerance_max = GF_SW_IN_TOLERANCE_MAX;
-	}
-
-	/* */
-	if ( IS_INVALID_VALUE(value2_tolerance) ) {
-		value2_tolerance = GF_TA_TOLERANCE;
-	}
-
-	/* */
-	if ( IS_INVALID_VALUE(value3_tolerance) ) {
-		value3_tolerance = GF_VPD_TOLERANCE;
-	}
-
-	/* loop for each row */
-	for ( i = start_row; i < end_row; i++ ) {
-		/* copy value from TOFILL to FILLED */
-		gf_rows[i].filled = ((PREC *)(((char *)values)+i*struct_size))[tofill_column];
-
-		/* compute hat ? */
-		if ( !IS_INVALID_VALUE(gf_rows[i].filled) && !compute_hat ) {
-			continue;
-		}
-
-		/*	fill
-			Added 20140422: if a gap is impossible to fill, e.g. if with MDV there are no data in the whole dataset acquired in a range +/- one hour,
-			the data point is not filled and the qc is set to -9999
-		*/
-		if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 7, 14, 7, GF_ALL_METHOD, hourly_dataset, value1_tolerance_min, value1_tolerance_max, value2_tolerance, value3_tolerance, tofill_column, value1_column, value2_column, value3_column) )
-			if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 7, 7, 7, GF_VALUE1_METHOD, hourly_dataset, value1_tolerance_min, value1_tolerance_max, value2_tolerance, value3_tolerance, tofill_column, value1_column, value2_column, value3_column) )
-				if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 0, 2, 1, GF_TOFILL_METHOD, hourly_dataset, value1_tolerance_min, value1_tolerance_max, value2_tolerance, value3_tolerance, tofill_column, value1_column, value2_column, value3_column) )
-					if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 21, 77, 7, GF_ALL_METHOD, hourly_dataset, value1_tolerance_min, value1_tolerance_max, value2_tolerance, value3_tolerance, tofill_column, value1_column, value2_column, value3_column) )
-						if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 14, 77, 7, GF_VALUE1_METHOD, hourly_dataset, value1_tolerance_min, value1_tolerance_max, value2_tolerance, value3_tolerance, tofill_column, value1_column, value2_column, value3_column) )
-							if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 3, end_row + 1, 3, GF_TOFILL_METHOD, hourly_dataset, value1_tolerance_min, value1_tolerance_max, value2_tolerance, value3_tolerance, tofill_column, value1_column, value2_column, value3_column) ) {
-								++*no_gaps_filled_count;
-								continue;
-							}
 
 		/* compute quality */
 		gf_rows[i].quality =	(gf_rows[i].method > 0) +
@@ -2872,251 +2857,7 @@ GF_ROW *gf_mds_with_bounds(	PREC *values,
 	return gf_rows;
 }
 
-/* */
-GF_ROW *gf_mds(PREC *values, const int struct_size, const int rows_count, const int columns_count, const int hourly_dataset,
-																									PREC value1_tolerance_min,
-																									PREC value1_tolerance_max,
-																									PREC value2_tolerance,
-																									PREC value3_tolerance,
-																									const int tofill_column,
-																									const int value1_column,
-																									const int value2_column,
-																									const int value3_column,
-																									const int values_min,
-																									const int compute_hat,
-																									int *no_gaps_filled_count) {
-	return gf_mds_with_bounds(	values,
-								struct_size,
-								rows_count,
-								columns_count,
-								hourly_dataset,
-								value1_tolerance_min,
-								value1_tolerance_max,
-								value2_tolerance,
-								value3_tolerance,
-								tofill_column,
-								value1_column,
-								value2_column,
-								value3_column,
-								-1,
-								-1,
-								-1,
-								INVALID_VALUE,
-								values_min,
-								compute_hat,
-								-1,
-								-1,
-								no_gaps_filled_count
-	);
-}
-
-/* */
-GF_ROW *gf_mds_with_qc(PREC *values, const int struct_size, const int rows_count, const int columns_count, const int hourly_dataset,
-																										PREC value1_tolerance_min,
-																										PREC value1_tolerance_max,
-																										PREC value2_tolerance,
-																										PREC value3_tolerance,
-																										const int tofill_column,
-																										const int value1_column,
-																										const int value2_column,
-																										const int value3_column,
-																										const int value1_qc_column,
-																										const int value2_qc_column,
-																										const int value3_qc_column,
-																										const int qc_thrs,
-																										const int values_min,
-																										const int compute_hat,
-																										int *no_gaps_filled_count) {
-	return gf_mds_with_bounds(	values,
-								struct_size,
-								rows_count,
-								columns_count,
-								hourly_dataset,
-								value1_tolerance_min,
-								value1_tolerance_max,
-								value2_tolerance,
-								value3_tolerance,
-								tofill_column,
-								value1_column,
-								value2_column,
-								value3_column,
-								value1_qc_column,
-								value2_qc_column,
-								value3_qc_column,
-								qc_thrs,
-								values_min,
-								compute_hat,
-								-1,
-								-1,
-								no_gaps_filled_count
-	);
-}
-
-/* temp functions used for G in energy_proc */
-GF_ROW *temp_gf_mds(	PREC *values,
-						const int struct_size,
-						const int rows_count,
-						const int columns_count,
-						const int hourly_dataset,
-						PREC value1_tolerance_min,
-						PREC value1_tolerance_max,
-						PREC value2_tolerance,
-						PREC value3_tolerance,
-						const int tofill_column,
-						const int value1_column,
-						const int value2_column,
-						const int value3_column,
-						const int value1_qc_column,
-						const int value2_qc_column,
-						const int value3_qc_column,
-						const int qc_thrs,
-						const int values_min,
-						const int compute_hat,
-						int *no_gaps_filled_count) {
-	int i;
-	int c;
-	int start_row = -1;
-	int end_row = -1;
-	int valids_count;
-	GF_ROW *gf_rows;
-
-	/* */
-	assert(values && rows_count && no_gaps_filled_count);
-
-	/* reset */
-	*no_gaps_filled_count = 0;
-	if ( start_row < 0  ) {
-		start_row = 0;
-	}
-	if ( -1 == end_row ) {
-		end_row = rows_count;
-	} else if ( end_row > rows_count ) {
-		end_row = rows_count;
-	}
-
-	/* allocate memory */
-	gf_rows = malloc(rows_count*sizeof*gf_rows);
-	if ( !gf_rows ) {
-		puts(err_out_of_memory);
-		return NULL;
-	}
-
-	/* reset */
-	for ( i = 0; i < rows_count; i++ ) {
-		gf_rows[i].mask = 0;
-		gf_rows[i].similiar = INVALID_VALUE;
-		gf_rows[i].stddev = INVALID_VALUE;
-		gf_rows[i].filled = INVALID_VALUE;
-		gf_rows[i].quality = INVALID_VALUE;
-		gf_rows[i].time_window = 0;
-		gf_rows[i].samples_count = 0;
-		gf_rows[i].method = 0;
-	}
-
-	/* update mask and count valids TO FILL */
-	valids_count = 0;
-	for ( i = start_row; i < end_row; i++ ) {
-		for ( c = 0; c < columns_count; c++ ) {
-			if ( !IS_INVALID_VALUE(((PREC *)(((char *)values)+i*struct_size))[c]) ) {
-				if ( tofill_column == c ) {
-					gf_rows[i].mask |= GF_TOFILL_VALID;
-				} else if ( value1_column == c ) {
-					gf_rows[i].mask |= GF_VALUE1_VALID;
-				} else if ( value2_column == c ) {
-					gf_rows[i].mask |= GF_VALUE2_VALID;
-				} else if ( value3_column == c ) {
-					gf_rows[i].mask |= GF_VALUE3_VALID;
-				}
-			}
-		}
-
-		/* check for QC */
-		if (	!IS_INVALID_VALUE(qc_thrs) &&
-				(value1_qc_column != -1) &&
-				!IS_INVALID_VALUE(((PREC *)(((char *)values)+i*struct_size))[value1_qc_column]) ) {
-			if ( ((PREC *)(((char *)values)+i*struct_size))[value1_qc_column] > qc_thrs ) {
-				gf_rows[i].mask &= ~GF_VALUE1_VALID;
-			}
-		}
-
-		if (	!IS_INVALID_VALUE(qc_thrs) &&
-				(value2_qc_column != -1) &&
-				!IS_INVALID_VALUE(((PREC *)(((char *)values)+i*struct_size))[value2_qc_column]) ) {
-			if ( ((PREC *)(((char *)values)+i*struct_size))[value2_qc_column] > qc_thrs ) {
-				gf_rows[i].mask &= ~GF_VALUE2_VALID;
-			}
-		}
-
-		if (	!IS_INVALID_VALUE(qc_thrs) &&
-				(value3_qc_column != -1) &&
-				!IS_INVALID_VALUE(((PREC *)(((char *)values)+i*struct_size))[value3_qc_column]) ) {
-			if ( ((PREC *)(((char *)values)+i*struct_size))[value3_qc_column] > qc_thrs ) {
-				gf_rows[i].mask &= ~GF_VALUE3_VALID;
-			}
-		}
-
-		if ( IS_FLAG_SET(gf_rows[i].mask, GF_TOFILL_VALID) ) {
-			++valids_count;
-		}
-	}
-
-	if ( valids_count < values_min ) {
-		puts(err_gf_too_less_values);
-		free(gf_rows);
-		return NULL;
-	}
-
-	/* */
-	if ( IS_INVALID_VALUE(value1_tolerance_min) && IS_INVALID_VALUE(value1_tolerance_max) ) {
-		value1_tolerance_min = GF_SW_IN_TOLERANCE_MIN;
-		value1_tolerance_max = GF_SW_IN_TOLERANCE_MAX;
-	}
-
-	/* */
-	if ( IS_INVALID_VALUE(value2_tolerance) ) {
-		value2_tolerance = GF_TA_TOLERANCE;
-	}
-
-	/* */
-	if ( IS_INVALID_VALUE(value3_tolerance) ) {
-		value3_tolerance = GF_VPD_TOLERANCE;
-	}
-
-	/* loop for each row */
-	for ( i = start_row; i < end_row; i++ ) {
-		/* copy value from TOFILL to FILLED */
-		gf_rows[i].filled = ((PREC *)(((char *)values)+i*struct_size))[tofill_column];
-
-		/* compute hat ? */
-		if ( !IS_INVALID_VALUE(gf_rows[i].filled) && !compute_hat ) {
-			continue;
-		}
-
-		/*	fill
-			Added 20140422: if a gap is impossible to fill, e.g. if with MDV there are no data in the whole dataset acquired in a range +/- one hour,
-			the data point is not filled and the qc is set to -9999
-		*/
-		if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 7, 14, 7, GF_ALL_METHOD, hourly_dataset, value1_tolerance_min, value1_tolerance_max, value2_tolerance, value3_tolerance, tofill_column, value1_column, value2_column, value3_column) )
-			if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 7, 7, 7, GF_VALUE1_METHOD, hourly_dataset, value1_tolerance_min, value1_tolerance_max, value2_tolerance, value3_tolerance, tofill_column, value1_column, value2_column, value3_column) )
-				if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 0, 2, 1, GF_TOFILL_METHOD, hourly_dataset, value1_tolerance_min, value1_tolerance_max, value2_tolerance, value3_tolerance, tofill_column, value1_column, value2_column, value3_column) )
-					if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 21, 77, 7, GF_ALL_METHOD, hourly_dataset, value1_tolerance_min, value1_tolerance_max, value2_tolerance, value3_tolerance, tofill_column, value1_column, value2_column, value3_column) )
-						if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 14, 77, 7, GF_VALUE1_METHOD, hourly_dataset, value1_tolerance_min, value1_tolerance_max, value2_tolerance, value3_tolerance, tofill_column, value1_column, value2_column, value3_column) )
-							if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 3, 91, 3, GF_TOFILL_METHOD, hourly_dataset, value1_tolerance_min, value1_tolerance_max, value2_tolerance, value3_tolerance, tofill_column, value1_column, value2_column, value3_column) ) {
-								++*no_gaps_filled_count;
-								continue;
-							}
-
-		/* compute quality */
-		gf_rows[i].quality =	(gf_rows[i].method > 0) +
-								((gf_rows[i].method == 1 && gf_rows[i].time_window > 14) || (gf_rows[i].method == 2 && gf_rows[i].time_window > 14) || (gf_rows[i].method == 3 && gf_rows[i].time_window > 1)) +
-								((gf_rows[i].method == 1 && gf_rows[i].time_window > 56) || (gf_rows[i].method == 2 && gf_rows[i].time_window > 28) || (gf_rows[i].method == 3 && gf_rows[i].time_window > 5));
-	}
-
-	/* ok */
-	return gf_rows;
-}
-
-/* private function for parse_dd */
+/* static function for parse_dd */
 static int parse_time_zone(DD *const dd, char *const string) {
 	int i;
 	PREC v;
@@ -3204,7 +2945,7 @@ static int parse_time_zone(DD *const dd, char *const string) {
 	return !(check & 1);
 }
 
-/* private function for parse_dd */
+/* static function for parse_dd */
 static int parse_htower(DD *const dd, char *const string) {
 	int i;
 	PREC h;
@@ -3260,7 +3001,7 @@ static int parse_htower(DD *const dd, char *const string) {
 	return !(check & 1);
 }
 
-/* private function for parse_dd */
+/* static function for parse_dd */
 static int parse_sc_negles(DD *const dd, char *const string) {
 	int i;
 	int flag;
@@ -3345,7 +3086,7 @@ static int parse_sc_negles(DD *const dd, char *const string) {
 }
 
 
-/* private function for parse_dd */
+/* static function for parse_dd */
 static int parse_timeres(DD *const dd, const char *const string) {
 	int i;
 
@@ -4492,8 +4233,8 @@ void check_memory_leak(void) {
 	_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
 	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
 	_CrtDumpMemoryLeaks();
-#else /* _WIN32 */
-	assert(0 && "no memory leak available for this platform");
+//#else /* _WIN32 */
+	//	no memory leak checker available for this platform!
 #endif
 #endif /* _DEBUG */
 }

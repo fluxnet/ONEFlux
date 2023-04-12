@@ -15,16 +15,12 @@
 /* includes */
 #include "../../../common/common.h"
 
-/* defines */
-#define DTIME_TO_ROW(x)					(int)(((x*48)-48)+0.5)
-#define DTIME_TO_ROW_HOURLY(x)			(int)(((x*24)-24)+0.5)
-
 /* enums */
 enum {
 	GF_TOFILL = 0,
-	GF_SWIN,
-	GF_TA,
-	GF_VPD,
+	GF_DRIVER_1,
+	GF_DRIVER_2A,
+	GF_DRIVER_2B,
 	GF_ROW_INDEX,
 
 	GF_REQUIRED_DATASET_VALUES,
