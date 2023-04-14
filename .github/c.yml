@@ -1,0 +1,22 @@
+name: ONEFlux CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build and run C unit tests
+      run: |
+        cd tests/C
+        make
+        ./test_01
+
