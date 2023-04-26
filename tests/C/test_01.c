@@ -1,13 +1,5 @@
 /*
 	test_01.c 
-		
-	check library output for reference:
-	
-	Running suite(s): Meteo
-	66%: Checks: 3, Failures: 1, Errors: 0
-	test_01.c:13:F:Sanity checks:sanity_check:0: this should fail
-	test_01.c:18:P:Sanity checks:sanity_check_2:0: Passed
-	test_01.c:53:P:Dataset files:test_is_valid_era_filename:0: Passed
 */
 
 #include "utest_oneflux.h"
@@ -20,17 +12,6 @@
 char *qc_auto_files_path = NULL;	/* mandatory */
 char *era_files_path = NULL;		/* mandatory */
 char *output_files_path = NULL;		/* mandatory */
-
-UTEST(sanity_check, 1)
-{
-	FAIL_UNLESS(5 == 5, "this should succeed");
-    FAIL_UNLESS(6 == 5, "this should fail");
-}
-
-UTEST(sanity_check, 2)
-{
-	FAIL_UNLESS(5 == 5, "this should succeed");
-}
 
 UTEST(test_is_valid_era_filename, 1)
 {
