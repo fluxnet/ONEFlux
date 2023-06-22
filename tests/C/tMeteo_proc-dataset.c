@@ -29,19 +29,19 @@ UTEST(test_is_valid_era_filename, 1)
 	
 	// correct string will return True
 	filename = "US-ARc_2009.csv";
-	ASSERT_MSG(is_valid_era_filename(filename), "Check that function detects correct string", filename);
+	ASSERT_MSG(is_valid_era_filename(filename), "Check detection of correct string", filename);
 	
 	// test that year check returns false
 	filename = "US-ARc_YYYY.csv";
-	ASSERT_MSG(!is_valid_era_filename(filename), "Check that function correctly tests for absent digits", filename);
+	ASSERT_MSG(!is_valid_era_filename(filename), "Check detection of absent digits", filename);
 	
 	// test that hyphen and underscore check works
 	filename = "US_ARc-YYYY.csv";
-	ASSERT_MSG(!is_valid_era_filename(filename), "Check that function detects hypen and underscore absence", filename);
+	ASSERT_MSG(!is_valid_era_filename(filename), "Check absence of underscores", filename);
 
 	// minimally correct string will still return True
 	filename = "  -   _9999.csv";
-	ASSERT_MSG(is_valid_era_filename(filename), "Check that function allows minimally correct filename string", filename);
+	ASSERT_MSG(is_valid_era_filename(filename), "Check that minimally correct filename string passes", filename);
 	
 	// test extension check works - will return False
 	filename = "US-ARc_2009.txt";
