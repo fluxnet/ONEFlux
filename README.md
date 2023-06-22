@@ -164,6 +164,17 @@ and the outputs will be generated, respectively, in the directories:
 - ```11_nee_partition_dt/```
 
 
+## Testing
+
+Testing of C code can be performed in the following way:
+
+```
+cd tests/C
+make
+./test_*
+```
+
+With CI specified in the ```.github/workflows/c.yml``` file. 
 
 ## Caveats and known limitations
 
