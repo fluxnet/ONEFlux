@@ -107,14 +107,16 @@ Run all steps in the pipeline:
 - *2005*: First year to be processed
 - *2006*: Last year to be processed
 - *-l partitioning_nt_US-ARc.log*: Uses file to store execution log
+- *--era-fy 1989*: first year of data for the ERA product
+- *--era-ly 2014*: last year of data for the ERA product
 ```
-python runoneflux.py all "../datadir/" US-ARc "US-ARc_sample_input" 2005 2006 -l fluxnet_pipeline_US-ARc.log --mcr ~/bin/matlab/v94/ --recint hh
+python runoneflux.py all "../datadir/" US-ARc "US-ARc_sample_input" 2005 2006 -l fluxnet_pipeline_US-ARc.log --mcr ~/bin/matlab/v94/ --recint hh --era-fy 1989 --era-ly 2014
 ```
 
 
 Run nighttime partitioning method:
 ```
-python runoneflux.py partition_nt "../datadir/" US-ARc "US-ARc_sample_input" 2005 2006 -l fluxnet_pipeline_US-ARc.log
+python runoneflux.py partition_nt "../datadir/" US-ARc "US-ARc_sample_input" 2005 2006 -l fluxnet_pipeline_US-ARc.log --era-fy 1989 --era-ly 2014
 ```
 
 Run daytime partitioning with only single percentile and/or a single USTAR threshold type data product (recommended for first executions), use:
@@ -122,12 +124,14 @@ Run daytime partitioning with only single percentile and/or a single USTAR thres
 - *--perc 50*: processes only 50-percentile USTAR threshold
 - *--force-py*: forces execution of Python partitioning code (replaces existing outputs)
 ```
-python runoneflux.py partition_dt "../datadir/" US-ARc "US-ARc_sample_input" 2005 2006 -l fluxnet_pipeline_US-ARc.log --prod y --perc 50 --force-py
+python runoneflux.py partition_dt "../datadir/" US-ARc "US-ARc_sample_input" 2005 2006 -l fluxnet_pipeline_US-ARc.log --prod y --perc 50 --force-py --era-fy 1989 --era-ly 2014
 ```
 
 Note that for the execution of the partitioning steps, only if the output ```*.csv``` file doesn’t exist (e.g., ```nee_y_50_US-ARc_2005.csv```), the code will run and generate the file. If it exists, nothing will be done (unless the flag --force-py is used).
 
+Issues Related to Running Sample US-ARc
 
+- https://github.com/fluxnet/ONEFlux/issues/39
 
 ## Required input data
 
