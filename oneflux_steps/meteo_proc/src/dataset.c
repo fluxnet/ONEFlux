@@ -776,6 +776,11 @@ static int get_dataset_details(DATASET *const dataset) {
 
 /* */
 static int import_meteo_values(DATASET *const dataset) {
+	typedef struct {
+		int profile;
+		int index;
+	} COLUMN;
+
 	int i;
 	int y;
 	int j;
@@ -789,8 +794,10 @@ static int import_meteo_values(DATASET *const dataset) {
 	int columns_index[MET_VALUES];
 	int profile;
 	int *int_no_leak;
-	int *swc_columns;
-	int *ts_columns;
+	COLUMN *column_no_leak;
+	COLUMN *swc_columns;
+	COLUMN *ts_columns;
+
 	int swc_columns_count;
 	int ts_columns_count;
 	int *ts_profiles;
@@ -855,8 +862,13 @@ static int import_meteo_values(DATASET *const dataset) {
 		for ( token = string_tokenizer(buffer, dataset_delimiter, &p), i = 0; token; token = string_tokenizer(NULL, dataset_delimiter, &p), ++i ) {
 			/* check for Ts */
 			if ( ! string_n_compare_i(token, "TS_", 3) || ! string_n_compare_i(token, "itpTS_", 6) ) {
-				/* get profile */
-				profile = convert_string_to_int(token+3, &error);
+				if ( ! string_n_compare_i(token, "TS_", 3) ) {
+					/* get profile */
+					profile = convert_string_to_int(token+3, &error);
+				} else {
+					profile = convert_string_to_int(token+6, &error);
+				}
+
 				if ( error ) {
 					printf("unable to get profile from var %s\n", token);
 					free(ts_profiles);
@@ -932,8 +944,12 @@ static int import_meteo_values(DATASET *const dataset) {
 			} else
 			/* check for SWC */
 			if ( ! string_n_compare_i(token, "SWC_", 4) || ! string_n_compare_i(token, "itpSWC_", 7) ) {
-				/* get profile */
-				profile = convert_string_to_int(token+4, &error);
+				if ( ! string_n_compare_i(token, "SWC_", 4) ) {
+					/* get profile */
+					profile = convert_string_to_int(token+4, &error);
+				} else {
+					profile = convert_string_to_int(token+7, &error);
+				}
 				if ( error ) {
 					printf("unable to get profile from var %s\n", token);
 					free(ts_profiles);
@@ -1020,6 +1036,7 @@ static int import_meteo_values(DATASET *const dataset) {
 
 	/* alloc memory for ts ? */
 	if ( dataset->ts_count ) {
+		qsort(dataset->ts_profiles, dataset->ts_count, sizeof*dataset->ts_profiles, compare_int);
 		/* row */
 		dataset->tss = malloc(dataset->rows_count*sizeof*dataset->tss);
 		if ( !dataset->tss ) {
@@ -1111,6 +1128,7 @@ static int import_meteo_values(DATASET *const dataset) {
 
 	/* alloc memory for swcs ? */
 	if ( dataset->swc_count ) {
+		qsort(dataset->swc_profiles, dataset->swc_count, sizeof*dataset->swc_profiles, compare_int);
 		/* row */
 		dataset->swcs = malloc(dataset->rows_count*sizeof*dataset->swcs);
 		if ( !dataset->swcs ) {
@@ -1303,34 +1321,63 @@ static int import_meteo_values(DATASET *const dataset) {
 
 				/* check for TS */
 				if ( ! string_n_compare_i(token, "TS_", 3) || ! string_n_compare_i(token, "itpTS_", 6) ) {			
-					/* realloc memory for indexes */
-					int_no_leak = realloc(ts_columns, (ts_columns_count+1)*sizeof*int_no_leak);
-					if ( !int_no_leak ) {
-						puts(err_out_of_memory);
+					/* get profile */
+					if ( ! string_n_compare_i(token, "TS_", 3) ) {
+						profile = convert_string_to_int(token+3, &error);
+					} else {
+						profile = convert_string_to_int(token+6, &error);
+					}
+					if ( error ) {
+						printf("unable to get profile from var %s\n", token);
 						free(swc_columns);		
 						free(ts_columns);
 						fclose(f);
 						return 0;
 					}
-					ts_columns = int_no_leak;
-					ts_columns[ts_columns_count] = i;
+					/* realloc memory for indexes */
+					column_no_leak = realloc(ts_columns, (ts_columns_count+1)*sizeof*column_no_leak);
+					if ( !column_no_leak ) {
+						puts(err_out_of_memory);
+						free(swc_columns);		
+						free(ts_columns);
+						fclose(f);
+						return 0;
+					}					
+					ts_columns = column_no_leak;
+					ts_columns[ts_columns_count].profile = profile;
+					ts_columns[ts_columns_count].index = i;
 
 					/* inc columns count */
 					++ts_columns_count;
 				} else
 				/* check for SWC */
 				if ( ! string_n_compare_i(token, "SWC_", 4) || ! string_n_compare_i(token, "itpSWC_", 7) ) {
-					/* realloc memory for indexes */
-					int_no_leak = realloc(swc_columns, (swc_columns_count+1)*sizeof*int_no_leak);
-					if ( !int_no_leak ) {
-					puts(err_out_of_memory);
+					/* get profile */
+					if ( ! string_n_compare_i(token, "SWC_", 4) ) {
+						profile = convert_string_to_int(token+4, &error);
+					} else {
+						profile = convert_string_to_int(token+7, &error);
+					}
+					if ( error ) {
+						printf("unable to get profile from var %s\n", token);
 						free(swc_columns);		
 						free(ts_columns);
 						fclose(f);
 						return 0;
 					}
-					swc_columns = int_no_leak;
-					swc_columns[swc_columns_count] = i;
+					/* realloc memory for indexes */
+					column_no_leak = realloc(swc_columns, (swc_columns_count+1)*sizeof*column_no_leak);
+					if ( !column_no_leak ) {
+						puts(err_out_of_memory);
+						free(swc_columns);		
+						free(ts_columns);
+						fclose(f);
+						return 0;
+					}
+					
+					swc_columns = column_no_leak;
+					swc_columns[swc_columns_count].profile = profile;
+					swc_columns[swc_columns_count].index = i;
 
 					/* inc columns count */
 					++swc_columns_count;
@@ -1390,11 +1437,12 @@ static int import_meteo_values(DATASET *const dataset) {
 				for ( token = string_tokenizer(buffer, dataset_delimiter, &p), i = 0; token; token = string_tokenizer(NULL, dataset_delimiter, &p), ++i ) {
 					/* check for ts */
 					for ( y = 0; y < ts_columns_count; y++ ) {
-						if ( i == ts_columns[y] ) {
+						if ( i == ts_columns[y].index ) {
+							int profile = ts_columns[y].profile;
 							/* convert string to prec */
 							value = convert_string_to_prec(token, &error);
 							if ( error ) {
-								printf("unable to convert value %s at row %d, column TS_%d\n", token, element+1, dataset->ts_profiles[y]);
+								printf("unable to convert value %s at row %d, column TS_%d\n", token, element+1, profile);
 								free(swc_columns);		
 								free(ts_columns);
 								fclose(f);
@@ -1404,20 +1452,29 @@ static int import_meteo_values(DATASET *const dataset) {
 							/* convert nan to invalid value */
 							if ( value != value ) {
 								value = INVALID_VALUE;
+							}
+
+							for ( y = 0; y < dataset->ts_count; ++y ) {
+								if ( dataset->ts_profiles[y] == profile ) {
+									break;
+								}
 							}
 
 							/* assign value */
 							dataset->tss[index+element-1][y].value = value;
 							++assigned;
+
+							break;
 						}
 					}
 					/* check for swc */
 					for ( y = 0; y < swc_columns_count; y++ ) {
-						if ( i == swc_columns[y] ) {
+						if ( i == swc_columns[y].index ) {
+							int profile = swc_columns[y].profile;
 							/* convert string to prec */
 							value = convert_string_to_prec(token, &error);
 							if ( error ) {
-								printf("unable to convert value %s at row %d, column SWC_%d\n", token, element+1, dataset->swc_profiles[y]);
+								printf("unable to convert value %s at row %d, column SWC_%d\n", token, element+1, profile);
 								free(swc_columns);		
 								free(ts_columns);
 								fclose(f);
@@ -1429,9 +1486,17 @@ static int import_meteo_values(DATASET *const dataset) {
 								value = INVALID_VALUE;
 							}
 
+							for ( y = 0; y < dataset->ts_count; ++y ) {
+								if ( dataset->ts_profiles[y] == profile ) {
+									break;
+								}
+							}
+
 							/* assign value */
 							dataset->swcs[index+element-1][y].value = value;
 							++assigned;
+
+							break;
 						}
 					}
 					/* check other vars */
