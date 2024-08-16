@@ -1,0 +1,11 @@
+
+
+Ustar Threshold Computation by Alan Barr
+
+input in /home/portnoy/u0/gzpastorello/data/FLUXNET2015_rocky/US-ARc/05_ustar_cp/input/
+output in /home/portnoy/u0/gzpastorello/data/FLUXNET2015_rocky/US-ARc/05_ustar_cp/
+
+2 files founded.
+
+processing n.01, US-ARc_qca_ustar_2005.csv...Too few selected change points: 0/400
+processing n.02, US-ARc_qca_ustar_2006.csv...Too few selected change points: 0/400
