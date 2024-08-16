@@ -1,11 +1,19 @@
+import pytest
+import os
+import matlab.engine
+import shutil
+
 @pytest.fixture()
-def matlab_engine():
+def matlab_engine(refactored = False):
     # Start MATLAB engine
     eng = matlab.engine.start_matlab()
 
     current_dir = os.getcwd()
-
     code_path = 'oneflux_steps/ustar_cp/'
+    if refactored:
+        code_path = 'oneflux_steps/ustar_cp_refactor_wip/'
+    else:
+        code_path = 'oneflux_steps/ustar_cp'
 
     # Add the directory containing your MATLAB functions to the MATLAB path
     matlab_function_path = os.path.join(current_dir, code_path) # Adjust this path to where your MATLAB files are located
