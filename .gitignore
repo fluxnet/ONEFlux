@@ -106,7 +106,7 @@ tramp
 
 
 # csvs
-*.csv
+#*.csv
 
 # mac files
 *.DS_Store
