@@ -12,7 +12,7 @@ import pytest
 import io
 
 test_cases = [
-    ("US_ARc_sample", [1]),
+    ("US_ARc", [1]),
     # Add more test cases with their respective expected values
     # Expected values format: [exitvalue]
 ]
