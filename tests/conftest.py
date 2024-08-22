@@ -7,6 +7,7 @@ import pytest
 import os
 import matlab.engine
 import shutil
+import glob
 
 @pytest.fixture()
 def matlab_engine(refactored=True):
@@ -46,7 +47,7 @@ def matlab_engine(refactored=True):
     eng.quit()
 
 @pytest.fixture
-def setup_folders(tmp_path, testcase: str = "US_ARc_sample"):
+def setup_folders(tmp_path, testcase: str = "US_ARc"):
     """
     Fixture to set up input and output folders for tests by copying all files 
     from a specified local directory.
@@ -74,15 +75,26 @@ def setup_folders(tmp_path, testcase: str = "US_ARc_sample"):
     # Create the output directory (starts empty)
     output_folder.mkdir()
 
-    # Path to the local directory containing files to be copied
-    testcase_path = os.path.join('tests/test_artifacts', testcase)
+    # Pattern to match directories starting with 'US_ARc'
+    pattern = os.path.join('tests/test_artifacts', f'{testcase}*')
 
-    # Ensure the local directory exists
-    if not os.path.exists(testcase_path):
-        raise FileNotFoundError(f"Local directory {testcase_path} does not exist")
+    # Use glob to find directories that match the pattern
+    matching_dirs = glob.glob(pattern)
+
+    # Assuming you want the first matching directory
+    if matching_dirs:
+        if len(matching_dirs) == 1:
+            testcase_path = matching_dirs[0]
+        else:
+            raise ValueError(f"{pattern}: is not unique")
+    else:
+        raise FileNotFoundError(f"No matching directory found for pattern: {pattern}")
+
+    
+    data_path= os.path.join(testcase_path, '05_ustar_cp')
 
     # Copy all files and directories from the testcase input dir to the temporary input folder
-    inputs = os.path.join(testcase_path, 'input')
+    inputs = os.path.join(data_path, 'input')
     if os.path.exists(inputs):
         try:
             shutil.copytree(inputs, str(input_folder), dirs_exist_ok=True)
@@ -92,7 +104,7 @@ def setup_folders(tmp_path, testcase: str = "US_ARc_sample"):
         raise FileNotFoundError(f"Input directory {inputs} does not exist in testcase {testcase}")
 
     # Copy all files from the testcase ref_output dir to the temporary reference output folder
-    ref_outputs = testcase_path
+    ref_outputs = data_path
     if os.path.exists(ref_outputs):
         shutil.copytree(ref_outputs, str(reference_output_folder), dirs_exist_ok=True)
     else:
