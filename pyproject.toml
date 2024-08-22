@@ -4,7 +4,7 @@ addopts = """
   -p no:warnings
   --doctest-modules
   --ignore=tests/test_context.py
-  --show-progress --verbose
+  --show-progress
   """
 python_files = 'test_*.py'
 testpaths = ['tests']
