@@ -1,28 +1,3 @@
-
-
-Ustar Threshold Computation by Alan Barr
-
-input in /global/scratch/users/gzpastorello/US-Bar_accessed20230926151810_78b0347b-da70-4cd8-82c4-4476e7b3c517/05_ustar_cp/input/
-output in /global/scratch/users/gzpastorello/US-Bar_accessed20230926151810_78b0347b-da70-4cd8-82c4-4476e7b3c517/05_ustar_cp/
-
-18 files founded.
-
-processing n.01, US-Bar_qca_ustar_2004.csv...Too few selected change points: 0/400
-processing n.02, US-Bar_qca_ustar_2005.csv...Too few selected change points: 0/400
-processing n.03, US-Bar_qca_ustar_2006.csv...Too few selected change points: 0/400
-processing n.04, US-Bar_qca_ustar_2007.csv...Too few selected change points: 0/400
-processing n.05, US-Bar_qca_ustar_2008.csv...Too few selected change points: 0/400
-processing n.06, US-Bar_qca_ustar_2009.csv...Too few selected change points: 0/400
-processing n.07, US-Bar_qca_ustar_2010.csv...Too few selected change points: 0/400
-processing n.08, US-Bar_qca_ustar_2011.csv...Too few selected change points: 0/400
-processing n.09, US-Bar_qca_ustar_2012.csv...Too few selected change points: 0/400
-processing n.10, US-Bar_qca_ustar_2013.csv...Too few selected change points: 0/400
-processing n.11, US-Bar_qca_ustar_2014.csv...Function cpdBin aborted. dx cannot be <=0. 
-ok
-processing n.12, US-Bar_qca_ustar_2015.csv...ok
-processing n.13, US-Bar_qca_ustar_2016.csv...ok
-processing n.14, US-Bar_qca_ustar_2017.csv...Too few selected change points: 0/400
-processing n.15, US-Bar_qca_ustar_2018.csv...Too few selected change points: 0/400
-processing n.16, US-Bar_qca_ustar_2019.csv...Too few selected change points: 0/400
-processing n.17, US-Bar_qca_ustar_2020.csv...Too few selected change points: 0/400
-processing n.18, US-Bar_qca_ustar_2021.csv...Too few selected change points: 0/400
+version https://git-lfs.github.com/spec/v1
+oid sha256:959eb1ccc94ab8612b92de636550f2f39913a96d382578d8061dcbeb40cf8199
+size 1752

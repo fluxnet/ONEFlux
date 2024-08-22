@@ -1,15 +1,3 @@
-
-
-Ustar Threshold Computation by Alan Barr
-
-input in /global/scratch/users/gzpastorello/US-xNG_accessed20230613215746_b12ba7c5-8f06-4f43-a81f-96de01d14a16/05_ustar_cp/input/
-output in /global/scratch/users/gzpastorello/US-xNG_accessed20230613215746_b12ba7c5-8f06-4f43-a81f-96de01d14a16/05_ustar_cp/
-
-5 files founded.
-
-processing n.01, US-xNG_qca_ustar_2017.csv...Too few selected change points: 0/400
-processing n.02, US-xNG_qca_ustar_2018.csv...Function cpdBin aborted. dx cannot be <=0. 
-ok
-processing n.03, US-xNG_qca_ustar_2019.csv...ok
-processing n.04, US-xNG_qca_ustar_2020.csv...ok
-processing n.05, US-xNG_qca_ustar_2021.csv...Too few selected change points: 0/400
+version https://git-lfs.github.com/spec/v1
+oid sha256:f211467fd2a78b68acc5c063d4aede70a8bf5a760fa18e63f1fa0f40604a5b4c
+size 672

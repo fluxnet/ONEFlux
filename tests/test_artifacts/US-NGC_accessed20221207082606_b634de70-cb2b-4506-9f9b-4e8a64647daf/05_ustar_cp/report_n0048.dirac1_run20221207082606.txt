@@ -1,12 +1,3 @@
-
-
-Ustar Threshold Computation by Alan Barr
-
-input in /global/scratch/users/gzpastorello/US-NGC_accessed20221207082606_b634de70-cb2b-4506-9f9b-4e8a64647daf/05_ustar_cp/input/
-output in /global/scratch/users/gzpastorello/US-NGC_accessed20221207082606_b634de70-cb2b-4506-9f9b-4e8a64647daf/05_ustar_cp/
-
-3 files founded.
-
-processing n.01, US-NGC_qca_ustar_2017.csv...Too few selected change points: 0/400
-processing n.02, US-NGC_qca_ustar_2018.csv...Too few selected change points: 0/400
-processing n.03, US-NGC_qca_ustar_2019.csv...Too few selected change points: 0/400
+version https://git-lfs.github.com/spec/v1
+oid sha256:db75679a23e996bfa42599926108ef58ee77f6076be84eaa042a0f6687bb1603
+size 567

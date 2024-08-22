@@ -1,30 +1,3 @@
-
-
-Ustar Threshold Computation by Alan Barr
-
-input in /global/scratch/users/gzpastorello/US-Syv_accessed20231024164908_fc316db8-ce7d-46b5-a53e-ddc478bfd2ef/05_ustar_cp/input/
-output in /global/scratch/users/gzpastorello/US-Syv_accessed20231024164908_fc316db8-ce7d-46b5-a53e-ddc478bfd2ef/05_ustar_cp/
-
-21 files founded.
-
-processing n.01, US-Syv_qca_ustar_2001.csv...Too few selected change points: 0/400
-processing n.02, US-Syv_qca_ustar_2002.csv...ok
-processing n.03, US-Syv_qca_ustar_2003.csv...ok
-processing n.04, US-Syv_qca_ustar_2004.csv...ok
-processing n.05, US-Syv_qca_ustar_2005.csv...ok
-processing n.06, US-Syv_qca_ustar_2006.csv...ok
-processing n.07, US-Syv_qca_ustar_2007.csv...Too few selected change points: 0/400
-processing n.08, US-Syv_qca_ustar_2008.csv...NEE is empty!
-processing n.09, US-Syv_qca_ustar_2009.csv...column SW_IN not found!
-processing n.10, US-Syv_qca_ustar_2010.csv...column SW_IN not found!
-processing n.11, US-Syv_qca_ustar_2011.csv...column SW_IN not found!
-processing n.12, US-Syv_qca_ustar_2012.csv...Too few selected change points: 0/400
-processing n.13, US-Syv_qca_ustar_2013.csv...Too few selected change points: 0/400
-processing n.14, US-Syv_qca_ustar_2014.csv...Too few selected change points: 371/400
-processing n.15, US-Syv_qca_ustar_2015.csv...ok
-processing n.16, US-Syv_qca_ustar_2016.csv...ok
-processing n.17, US-Syv_qca_ustar_2017.csv...ok
-processing n.18, US-Syv_qca_ustar_2018.csv...Too few selected change points: 370/400
-processing n.19, US-Syv_qca_ustar_2019.csv...Too few selected change points: 0/400
-processing n.20, US-Syv_qca_ustar_2020.csv...ok
-processing n.21, US-Syv_qca_ustar_2021.csv...ok
+version https://git-lfs.github.com/spec/v1
+oid sha256:935b2068bc41949fad9d4b2543a8eb7eeb3a0fa2862c75a26412bc8db8dd9e23
+size 1650

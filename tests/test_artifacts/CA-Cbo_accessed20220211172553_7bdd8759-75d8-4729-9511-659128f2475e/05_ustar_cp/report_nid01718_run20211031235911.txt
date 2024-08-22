@@ -1,36 +1,3 @@
-
-
-Ustar Threshold Computation by Alan Barr
-
-input in /global/cscratch1/sd/gilberto/CA-Cbo_accessed20211031235911_f3c7f56e-a918-4463-b652-2f4a4d1bd087/05_ustar_cp/input/
-output in /global/cscratch1/sd/gilberto/CA-Cbo_accessed20211031235911_f3c7f56e-a918-4463-b652-2f4a4d1bd087/05_ustar_cp/
-
-27 files founded.
-
-processing n.01, CA-Cbo_qca_ustar_1994.csv...(PPFD_IN from SW_IN)...NEE is empty!
-processing n.02, CA-Cbo_qca_ustar_1995.csv...Too few selected change points: 0/400
-processing n.03, CA-Cbo_qca_ustar_1996.csv...ok
-processing n.04, CA-Cbo_qca_ustar_1997.csv...ok
-processing n.05, CA-Cbo_qca_ustar_1998.csv...ok
-processing n.06, CA-Cbo_qca_ustar_1999.csv...ok
-processing n.07, CA-Cbo_qca_ustar_2000.csv...ok
-processing n.08, CA-Cbo_qca_ustar_2001.csv...ok
-processing n.09, CA-Cbo_qca_ustar_2002.csv...ok
-processing n.10, CA-Cbo_qca_ustar_2003.csv...ok
-processing n.11, CA-Cbo_qca_ustar_2004.csv...(PPFD_IN from SW_IN)...NEE is empty!
-processing n.12, CA-Cbo_qca_ustar_2005.csv...ok
-processing n.13, CA-Cbo_qca_ustar_2006.csv...ok
-processing n.14, CA-Cbo_qca_ustar_2007.csv...ok
-processing n.15, CA-Cbo_qca_ustar_2008.csv...ok
-processing n.16, CA-Cbo_qca_ustar_2009.csv...ok
-processing n.17, CA-Cbo_qca_ustar_2010.csv...ok
-processing n.18, CA-Cbo_qca_ustar_2011.csv...ok
-processing n.19, CA-Cbo_qca_ustar_2012.csv...ok
-processing n.20, CA-Cbo_qca_ustar_2013.csv...ok
-processing n.21, CA-Cbo_qca_ustar_2014.csv...ok
-processing n.22, CA-Cbo_qca_ustar_2015.csv...Too few selected change points: 0/400
-processing n.23, CA-Cbo_qca_ustar_2016.csv...ok
-processing n.24, CA-Cbo_qca_ustar_2017.csv...ok
-processing n.25, CA-Cbo_qca_ustar_2018.csv...ok
-processing n.26, CA-Cbo_qca_ustar_2019.csv...ok
-processing n.27, CA-Cbo_qca_ustar_2020.csv...ok
+version https://git-lfs.github.com/spec/v1
+oid sha256:db4f65d8c58faa2c4a11060e71a4a4f1028c90e87058de64201389a2656db00c
+size 1743

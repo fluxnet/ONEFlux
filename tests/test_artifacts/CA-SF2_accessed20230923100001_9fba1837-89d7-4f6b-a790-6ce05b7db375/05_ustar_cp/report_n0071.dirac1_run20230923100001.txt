@@ -1,15 +1,3 @@
-
-
-Ustar Threshold Computation by Alan Barr
-
-input in /global/scratch/users/gzpastorello/CA-SF2_accessed20230923100001_9fba1837-89d7-4f6b-a790-6ce05b7db375/05_ustar_cp/input/
-output in /global/scratch/users/gzpastorello/CA-SF2_accessed20230923100001_9fba1837-89d7-4f6b-a790-6ce05b7db375/05_ustar_cp/
-
-6 files founded.
-
-processing n.01, CA-SF2_qca_ustar_2001.csv...Too few selected change points: 0/400
-processing n.02, CA-SF2_qca_ustar_2002.csv...Too few selected change points: 0/400
-processing n.03, CA-SF2_qca_ustar_2003.csv...Too few selected change points: 0/400
-processing n.04, CA-SF2_qca_ustar_2004.csv...Too few selected change points: 0/400
-processing n.05, CA-SF2_qca_ustar_2005.csv...Too few selected change points: 0/400
-processing n.06, CA-SF2_qca_ustar_2006.csv...NEE is empty!
+version https://git-lfs.github.com/spec/v1
+oid sha256:0a8934a6329b76daeef0807b2ba93b036e3418aaea3d446d730908f7d45d3fac
+size 792
