@@ -1,0 +1,11 @@
+
+
+Ustar Threshold Computation by Alan Barr
+
+input in /global/scratch/users/gzpastorello/US-Me1_accessed20221207070437_9047f130-251b-431e-8139-30a39505ee84/05_ustar_cp/input/
+output in /global/scratch/users/gzpastorello/US-Me1_accessed20221207070437_9047f130-251b-431e-8139-30a39505ee84/05_ustar_cp/
+
+2 files founded.
+
+processing n.01, US-Me1_qca_ustar_2004.csv...Too few selected change points: 0/400
+processing n.02, US-Me1_qca_ustar_2005.csv...Too few selected change points: 0/400

@@ -1,0 +1,13 @@
+
+
+Ustar Threshold Computation by Alan Barr
+
+input in /global/scratch/users/gzpastorello/US-AR2_accessed20230925114906_dae87748-83aa-4065-abff-bdf09fe61393/05_ustar_cp/input/
+output in /global/scratch/users/gzpastorello/US-AR2_accessed20230925114906_dae87748-83aa-4065-abff-bdf09fe61393/05_ustar_cp/
+
+4 files founded.
+
+processing n.01, US-AR2_qca_ustar_2009.csv...Too few selected change points: 0/400
+processing n.02, US-AR2_qca_ustar_2010.csv...Too few selected change points: 339/400
+processing n.03, US-AR2_qca_ustar_2011.csv...Too few selected change points: 354/400
+processing n.04, US-AR2_qca_ustar_2012.csv...Too few selected change points: 0/400

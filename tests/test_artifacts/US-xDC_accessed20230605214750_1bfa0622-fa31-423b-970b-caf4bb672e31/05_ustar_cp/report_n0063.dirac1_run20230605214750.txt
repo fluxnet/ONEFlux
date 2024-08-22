@@ -1,0 +1,14 @@
+
+
+Ustar Threshold Computation by Alan Barr
+
+input in /global/scratch/users/gzpastorello/US-xDC_accessed20230605214750_1bfa0622-fa31-423b-970b-caf4bb672e31/05_ustar_cp/input/
+output in /global/scratch/users/gzpastorello/US-xDC_accessed20230605214750_1bfa0622-fa31-423b-970b-caf4bb672e31/05_ustar_cp/
+
+5 files founded.
+
+processing n.01, US-xDC_qca_ustar_2017.csv...Too few selected change points: 0/400
+processing n.02, US-xDC_qca_ustar_2018.csv...Too few selected change points: 0/400
+processing n.03, US-xDC_qca_ustar_2019.csv...ok
+processing n.04, US-xDC_qca_ustar_2020.csv...ok
+processing n.05, US-xDC_qca_ustar_2021.csv...ok

@@ -1,0 +1,17 @@
+
+
+Ustar Threshold Computation by Alan Barr
+
+input in /global/scratch/users/gzpastorello/CA-Qfo_accessed20230925114835_78eafe2d-41ee-4ac4-b364-2fb6bee1f474/05_ustar_cp/input/
+output in /global/scratch/users/gzpastorello/CA-Qfo_accessed20230925114835_78eafe2d-41ee-4ac4-b364-2fb6bee1f474/05_ustar_cp/
+
+8 files founded.
+
+processing n.01, CA-Qfo_qca_ustar_2003.csv...Too few selected change points: 0/400
+processing n.02, CA-Qfo_qca_ustar_2004.csv...ok
+processing n.03, CA-Qfo_qca_ustar_2005.csv...ok
+processing n.04, CA-Qfo_qca_ustar_2006.csv...ok
+processing n.05, CA-Qfo_qca_ustar_2007.csv...ok
+processing n.06, CA-Qfo_qca_ustar_2008.csv...ok
+processing n.07, CA-Qfo_qca_ustar_2009.csv...ok
+processing n.08, CA-Qfo_qca_ustar_2010.csv...ok

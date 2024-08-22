@@ -1,0 +1,13 @@
+
+
+Ustar Threshold Computation by Alan Barr
+
+input in /global/scratch/users/gzpastorello/US-Dix_accessed20230928114646_208f5955-03bf-40de-84e8-1e6255c53182/05_ustar_cp/input/
+output in /global/scratch/users/gzpastorello/US-Dix_accessed20230928114646_208f5955-03bf-40de-84e8-1e6255c53182/05_ustar_cp/
+
+4 files founded.
+
+processing n.01, US-Dix_qca_ustar_2005.csv...ok
+processing n.02, US-Dix_qca_ustar_2006.csv...ok
+processing n.03, US-Dix_qca_ustar_2007.csv...ok
+processing n.04, US-Dix_qca_ustar_2008.csv...Too few selected change points: 0/400

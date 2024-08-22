@@ -1,0 +1,18 @@
+
+
+Ustar Threshold Computation by Alan Barr
+
+input in /global/scratch/users/gzpastorello/US-Tw4_accessed20231024164952_0e3b5fc1-b401-45ee-af55-da0b90334b44/05_ustar_cp/input/
+output in /global/scratch/users/gzpastorello/US-Tw4_accessed20231024164952_0e3b5fc1-b401-45ee-af55-da0b90334b44/05_ustar_cp/
+
+9 files founded.
+
+processing n.01, US-Tw4_qca_ustar_2013.csv...Too few selected change points: 0/400
+processing n.02, US-Tw4_qca_ustar_2014.csv...ok
+processing n.03, US-Tw4_qca_ustar_2015.csv...ok
+processing n.04, US-Tw4_qca_ustar_2016.csv...ok
+processing n.05, US-Tw4_qca_ustar_2017.csv...ok
+processing n.06, US-Tw4_qca_ustar_2018.csv...ok
+processing n.07, US-Tw4_qca_ustar_2019.csv...ok
+processing n.08, US-Tw4_qca_ustar_2020.csv...ok
+processing n.09, US-Tw4_qca_ustar_2021.csv...Too few selected change points: 0/400
