@@ -450,15 +450,23 @@ int ecbcf_hh(DATASET *const dataset, const int current_row, PREC *const ECBcfs, 
 				/* no method */
 				dataset->rows[current_row].ecbcf_method = INVALID_VALUE-1;
 				dataset->rows[current_row].ecbcf_samples_count = INVALID_VALUE;
-				dataset->gf_rows[LE_INDEX][current_row].quality = INVALID_VALUE;
-				dataset->gf_rows[H_INDEX][current_row].quality = INVALID_VALUE;
+
+				// commented out on July 25, 2019. It was a bug, changing the value of the QC to -9999 when it was 
+				// not possible to calculate the energy balance and create the LE_Corr. It is also a "known issue" in 
+				// FLUXNET2015 release
+				//dataset->gf_rows[LE_INDEX][current_row].quality = INVALID_VALUE;
+				//dataset->gf_rows[H_INDEX][current_row].quality = INVALID_VALUE;
 			}
 		} else {
 			/* no method */
 			dataset->rows[current_row].ecbcf_method = INVALID_VALUE-1;
 			dataset->rows[current_row].ecbcf_samples_count = INVALID_VALUE;
-			dataset->gf_rows[LE_INDEX][current_row].quality = INVALID_VALUE;
-			dataset->gf_rows[H_INDEX][current_row].quality = INVALID_VALUE;
+
+			// commented out on July 25, 2019. It was a bug, changing the value of the QC to -9999 when it was 
+			// not possible to calculate the energy balance and create the LE_Corr. It is also a "known issue" in 
+			// FLUXNET2015 release
+			//dataset->gf_rows[LE_INDEX][current_row].quality = INVALID_VALUE;
+			//dataset->gf_rows[H_INDEX][current_row].quality = INVALID_VALUE;
 		}
 	} else if ( SECOND == dataset->rows[current_row].ecbcf_method ) {
 		window = (windows_size_alt / 2) * rows_per_day;
@@ -887,15 +895,23 @@ int ecbcf_dd(DATASET *const dataset, const int current_row, PREC *const ECBcfs, 
 				/* no method */
 				dataset->rows_aggr[current_row].ecbcf_method = INVALID_VALUE-1;
 				dataset->rows_aggr[current_row].ecbcf_samples_count = INVALID_VALUE;
-				dataset->rows_aggr[current_row].quality[LE_INDEX] = INVALID_VALUE;
-				dataset->rows_aggr[current_row].quality[H_INDEX] = INVALID_VALUE;
+
+				// commented out on July 25, 2019. It was a bug, changing the value of the QC to -9999 when it was 
+				// not possible to calculate the energy balance and create the LE_Corr. It is also a "known issue" in 
+				// FLUXNET2015 release
+				//dataset->rows_aggr[current_row].quality[LE_INDEX] = INVALID_VALUE;
+				//dataset->rows_aggr[current_row].quality[H_INDEX] = INVALID_VALUE;
 			}
 		} else {
 			/* no method */
 			dataset->rows_aggr[current_row].ecbcf_method = INVALID_VALUE-1;
 			dataset->rows_aggr[current_row].ecbcf_samples_count = INVALID_VALUE;
-			dataset->rows_aggr[current_row].quality[LE_INDEX] = INVALID_VALUE;
-			dataset->rows_aggr[current_row].quality[H_INDEX] = INVALID_VALUE;
+
+			// commented out on July 25, 2019. It was a bug, changing the value of the QC to -9999 when it was 
+			// not possible to calculate the energy balance and create the LE_Corr. It is also a "known issue" in 
+			// FLUXNET2015 release
+			//dataset->rows_aggr[current_row].quality[LE_INDEX] = INVALID_VALUE;
+			//dataset->rows_aggr[current_row].quality[H_INDEX] = INVALID_VALUE;
 		}
 	} else if ( SECOND == dataset->rows_aggr[current_row].ecbcf_method ) {
 		window = windows_size_alt / 2;
@@ -1197,15 +1213,23 @@ int ecbcf_ww(DATASET *const dataset, const int current_row, PREC *const ECBcfs, 
 				/* no method */
 				dataset->rows_aggr[current_row].ecbcf_method = INVALID_VALUE-1;
 				dataset->rows_aggr[current_row].ecbcf_samples_count = INVALID_VALUE;
-				dataset->rows_aggr[current_row].quality[LE_INDEX] = INVALID_VALUE;
-				dataset->rows_aggr[current_row].quality[H_INDEX] = INVALID_VALUE;
+
+				// commented out on July 25, 2019. It was a bug, changing the value of the QC to -9999 when it was 
+				// not possible to calculate the energy balance and create the LE_Corr. It is also a "known issue" in 
+				// FLUXNET2015 release
+				//dataset->rows_aggr[current_row].quality[LE_INDEX] = INVALID_VALUE;
+				//dataset->rows_aggr[current_row].quality[H_INDEX] = INVALID_VALUE;
 			}
 		} else {
 			/* no method */
 			dataset->rows_aggr[current_row].ecbcf_method = INVALID_VALUE-1;
 			dataset->rows_aggr[current_row].ecbcf_samples_count = INVALID_VALUE;
-			dataset->rows_aggr[current_row].quality[LE_INDEX] = INVALID_VALUE;
-			dataset->rows_aggr[current_row].quality[H_INDEX] = INVALID_VALUE;
+
+			// commented out on July 25, 2019. It was a bug, changing the value of the QC to -9999 when it was 
+			// not possible to calculate the energy balance and create the LE_Corr. It is also a "known issue" in 
+			// FLUXNET2015 release
+			//dataset->rows_aggr[current_row].quality[LE_INDEX] = INVALID_VALUE;
+			//dataset->rows_aggr[current_row].quality[H_INDEX] = INVALID_VALUE;
 		}
 	} else if ( SECOND == dataset->rows_aggr[current_row].ecbcf_method ) {
 		window = window_size / 2;
@@ -1396,15 +1420,23 @@ int ecbcf_mm(DATASET *const dataset, const int current_row, PREC *const ECBcfs, 
 				/* no method */
 				dataset->rows_aggr[current_row].ecbcf_method = INVALID_VALUE-1;
 				dataset->rows_aggr[current_row].ecbcf_samples_count = INVALID_VALUE;
-				dataset->rows_aggr[current_row].quality[LE_INDEX] = INVALID_VALUE;
-				dataset->rows_aggr[current_row].quality[H_INDEX] = INVALID_VALUE;
+
+				// commented out on July 25, 2019. It was a bug, changing the value of the QC to -9999 when it was 
+				// not possible to calculate the energy balance and create the LE_Corr. It is also a "known issue" in 
+				// FLUXNET2015 release
+				//dataset->rows_aggr[current_row].quality[LE_INDEX] = INVALID_VALUE;
+				//dataset->rows_aggr[current_row].quality[H_INDEX] = INVALID_VALUE;
 			}
 		} else {
 			/* no method */
 			dataset->rows_aggr[current_row].ecbcf_method = INVALID_VALUE-1;
 			dataset->rows_aggr[current_row].ecbcf_samples_count = INVALID_VALUE;
-			dataset->rows_aggr[current_row].quality[LE_INDEX] = INVALID_VALUE;
-			dataset->rows_aggr[current_row].quality[H_INDEX] = INVALID_VALUE;
+
+			// commented out on July 25, 2019. It was a bug, changing the value of the QC to -9999 when it was 
+			// not possible to calculate the energy balance and create the LE_Corr. It is also a "known issue" in 
+			// FLUXNET2015 release
+			//dataset->rows_aggr[current_row].quality[LE_INDEX] = INVALID_VALUE;
+			//dataset->rows_aggr[current_row].quality[H_INDEX] = INVALID_VALUE;
 		}
 	} else if ( SECOND == dataset->rows_aggr[current_row].ecbcf_method ) {
 		window = window_size / 2;
@@ -1520,15 +1552,23 @@ int ecbcf_yy(DATASET *const dataset, const int current_row, PREC *const ECBcfs) 
 				/* no method */
 				dataset->rows_aggr[current_row].ecbcf_method = INVALID_VALUE-1;
 				dataset->rows_aggr[current_row].ecbcf_samples_count = INVALID_VALUE;
-				dataset->rows_aggr[current_row].quality[LE_INDEX] = INVALID_VALUE;
-				dataset->rows_aggr[current_row].quality[H_INDEX] = INVALID_VALUE;
+
+				// commented out on July 25, 2019. It was a bug, changing the value of the QC to -9999 when it was 
+				// not possible to calculate the energy balance and create the LE_Corr. It is also a "known issue" in 
+				// FLUXNET2015 release
+				//dataset->rows_aggr[current_row].quality[LE_INDEX] = INVALID_VALUE;
+				//dataset->rows_aggr[current_row].quality[H_INDEX] = INVALID_VALUE;
 			}
 		} else {
 			/* no method */
 			dataset->rows_aggr[current_row].ecbcf_method = INVALID_VALUE-1;
 			dataset->rows_aggr[current_row].ecbcf_samples_count = INVALID_VALUE;
-			dataset->rows_aggr[current_row].quality[LE_INDEX] = INVALID_VALUE;
-			dataset->rows_aggr[current_row].quality[H_INDEX] = INVALID_VALUE;
+
+			// commented out on July 25, 2019. It was a bug, changing the value of the QC to -9999 when it was 
+			// not possible to calculate the energy balance and create the LE_Corr. It is also a "known issue" in 
+			// FLUXNET2015 release
+			//dataset->rows_aggr[current_row].quality[LE_INDEX] = INVALID_VALUE;
+			//dataset->rows_aggr[current_row].quality[H_INDEX] = INVALID_VALUE;
 		}
 	} else if ( SECOND == dataset->rows_aggr[current_row].ecbcf_method ) {
 		/* how many dataset we have ? */

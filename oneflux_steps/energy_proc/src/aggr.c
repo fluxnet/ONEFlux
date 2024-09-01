@@ -182,14 +182,31 @@ int aggr_by_days(DATASET *const dataset, PREC *const ECBcfs, PREC *const ECBcfs_
 
 		/* loop on each qc */
 		for ( y = 0; y < VARS_TO_FILL; y++ ) {
-			dataset->rows_aggr[day].quality[y] = 0;
-			/* loop on agg */
-			for ( j = 0; j < rows_per_day; j++ ) {
-				if ( dataset->gf_rows[y][i+j].quality < 2 ) {
-					++dataset->rows_aggr[day].quality[y];
+			PREC v;
+            
+            /*
+                July 25th 2019 - bug on quality flags for gapfilled LE and H fixed in ecbcf.c,
+                here also fixed with the following four IF statements
+                in order to correctly calculate the QC value in case of missing data
+            */
+
+			if ( H_INDEX == y ) v = dataset->rows_aggr[day].value[H];
+			if ( LE_INDEX == y ) v = dataset->rows_aggr[day].value[LE];
+			if ( G_INDEX == y ) v = dataset->rows_aggr[day].value[G];
+
+			if ( IS_INVALID_VALUE(v) ) {
+				dataset->rows_aggr[day].quality[y] = INVALID_VALUE;
+			} else {			
+				dataset->rows_aggr[day].quality[y] = 0;
+				/* loop on agg */
+				for ( j = 0; j < rows_per_day; j++ ) {
+					if ( ! IS_INVALID_VALUE(dataset->gf_rows[y][i+j].quality)
+							&& (dataset->gf_rows[y][i+j].quality < 2) ) {
+						++dataset->rows_aggr[day].quality[y];
+					}
 				}
+				dataset->rows_aggr[day].quality[y] /= rows_per_day;
 			}
-			dataset->rows_aggr[day].quality[y] /= rows_per_day;
 		}
 
 		/* update values */
@@ -379,14 +396,31 @@ int aggr_by_weeks(DATASET *const dataset, PREC *const ECBcfs, PREC *const ECBcfs
 
 			/* loop on each qc */
 			for ( i = 0; i < VARS_TO_FILL; i++ ) {
-				dataset->rows_aggr[week+(year*52)].quality[i] = 0;
-				/* loop on agg */
-				for ( j = 0; j < rows_per_day*days_per_week; j++ ) {
-					if ( dataset->gf_rows[i][index+k+j].quality < 2 ) {
-						++dataset->rows_aggr[week+(year*52)].quality[i];
+				PREC v;
+                
+                /*
+                    July 25th 2019 - bug on quality flags for gapfilled LE and H fixed in ecbcf.c,
+                    here also fixed with the following four IF statements
+                    in order to correctly calculate the QC value in case of missing data
+                */
+
+				if ( H_INDEX == i ) v = dataset->rows_aggr[week+(year*52)].h_mean;
+				if ( LE_INDEX == i ) v = dataset->rows_aggr[week+(year*52)].le_mean;
+				if ( G_INDEX == i ) v = dataset->rows_aggr[week+(year*52)].value[G_FILLED]; 
+
+				if ( IS_INVALID_VALUE(v) ) {
+					dataset->rows_aggr[week+(year*52)].quality[i] = INVALID_VALUE;
+				} else {
+					dataset->rows_aggr[week+(year*52)].quality[i] = 0;
+					/* loop on agg */
+					for ( j = 0; j < rows_per_day*days_per_week; j++ ) {
+						if ( ! IS_INVALID_VALUE(dataset->gf_rows[i][index+k+j].quality)
+								&& (dataset->gf_rows[i][index+k+j].quality < 2) ) {
+							++dataset->rows_aggr[week+(year*52)].quality[i];
+						}
 					}
+					dataset->rows_aggr[week+(year*52)].quality[i] /= rows_per_day*days_per_week;
 				}
-				dataset->rows_aggr[week+(year*52)].quality[i] /= rows_per_day*days_per_week;
 			}
 
 			k += rows_per_day*days_per_week;
@@ -672,14 +706,31 @@ int aggr_by_months(DATASET *const dataset, PREC *const ECBcfs, PREC *const ECBcf
 
 			/* loop on each qc */
 			for ( i = 0; i < VARS_TO_FILL; i++ ) {
-				dataset->rows_aggr[month+(year*12)].quality[i] = 0;
-				/* loop on agg */
-				for ( j = 0; j < rows_per_day*days_per_month_count; j++ ) {
-					if ( dataset->gf_rows[i][index+k+j].quality < 2 ) {
-						++dataset->rows_aggr[month+(year*12)].quality[i];
+				PREC v;
+                
+                /*
+                    July 25th 2019 - bug on quality flags for gapfilled LE and H fixed in ecbcf.c,
+                    here also fixed with the following four IF statements
+                    in order to correctly calculate the QC value in case of missing data
+                */
+
+				if ( H_INDEX == i ) v = dataset->rows_aggr[month+(year*12)].h_mean;
+				if ( LE_INDEX == i ) v = dataset->rows_aggr[month+(year*12)].le_mean;
+				if ( G_INDEX == i ) v = dataset->rows_aggr[month+(year*12)].value[G_FILLED];
+
+				if ( IS_INVALID_VALUE(v) ) {
+					dataset->rows_aggr[month+(year*12)].quality[i] = INVALID_VALUE;
+				} else {
+					dataset->rows_aggr[month+(year*12)].quality[i] = 0;
+					/* loop on agg */
+					for ( j = 0; j < rows_per_day*days_per_month_count; j++ ) {
+						if ( ! IS_INVALID_VALUE(dataset->gf_rows[i][index+k+j].quality)
+								&& (dataset->gf_rows[i][index+k+j].quality < 2) ) {
+							++dataset->rows_aggr[month+(year*12)].quality[i];
+						}
 					}
+					dataset->rows_aggr[month+(year*12)].quality[i] /= rows_per_day*days_per_month_count;
 				}
-				dataset->rows_aggr[month+(year*12)].quality[i] /= rows_per_day*days_per_month_count;
 			}
 
 			k += rows_per_day*days_per_month_count;
@@ -953,14 +1004,31 @@ int aggr_by_years(DATASET *const dataset, PREC *const ECBcfs, PREC *const ECBcfs
 
 		/* loop on each qc */
 		for ( i = 0; i < VARS_TO_FILL; i++ ) {
-			dataset->rows_aggr[year].quality[i] = 0;
-			/* loop on agg */
-			for ( j = 0; j < rows_per_year; j++ ) {
-				if ( dataset->gf_rows[i][index+j].quality < 2 ) {
-					++dataset->rows_aggr[year].quality[i];
+			PREC v;
+            
+            /*
+                July 25th 2019 - bug on quality flags for gapfilled LE and H fixed in ecbcf.c,
+                here also fixed with the following four IF statements
+                in order to correctly calculate the QC value in case of missing data
+            */
+
+			if ( H_INDEX == i ) v = dataset->rows_aggr[year].h_mean;
+			if ( LE_INDEX == i ) v = dataset->rows_aggr[year].le_mean;
+			if ( G_INDEX == i ) v = dataset->rows_aggr[year].value[G_FILLED]; 
+
+			if ( IS_INVALID_VALUE(v) ) {
+				dataset->rows_aggr[year].quality[i] = INVALID_VALUE;
+			} else {
+				dataset->rows_aggr[year].quality[i] = 0;
+				/* loop on agg */
+				for ( j = 0; j < rows_per_year; j++ ) {
+					if ( ! IS_INVALID_VALUE(dataset->gf_rows[i][index+j].quality)
+							&& (dataset->gf_rows[i][index+j].quality < 2) ) {
+						++dataset->rows_aggr[year].quality[i];
+					}
 				}
+				dataset->rows_aggr[year].quality[i] /= rows_per_year;
 			}
-			dataset->rows_aggr[year].quality[i] /= rows_per_year;
 		}
 
 		/* */
