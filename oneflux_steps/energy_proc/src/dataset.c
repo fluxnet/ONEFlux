@@ -1514,10 +1514,12 @@ static int get_meteo(DATASET *const dataset) {
 		}
 		while ( fgets(buffer, BUFFER_SIZE, f) ) {
 			for ( token = string_tokenizer(buffer, dataset_delimiter, &p), i = 0; token; token = string_tokenizer(NULL, dataset_delimiter, &p), i++ ) {
-				if ( !i ) {
-					// skip timestamp start
+				if ( ! i ) {
+					// skip TIMESTAMP_START
 					continue;
-				} else if ( 1 == i ) {
+				}
+				// get TIMESTAMP_END
+				if ( 1 == i ) {
 					t = get_timestamp(token);
 					if ( ! t ) {
 						fclose(f);
@@ -1543,7 +1545,7 @@ static int get_meteo(DATASET *const dataset) {
 					current_row = get_row_by_timestamp(t, dataset->details->timeres);
 					free(t);
 					if ( element != current_row ) {
-						printf("bad timestamp: %s", token);
+						printf("bad timestamp: %s\n", token);
 						fclose(f);
 						return 0;
 					}							
