@@ -64,7 +64,8 @@ def test_launch_missing_file(setup_test_environment, matlab_engine, setup_folder
 
     Asserts:
         The test asserts that the MATLAB function returns an exit code of 0, indicating 
-        that the function identified the missing file scenario.
+        that the function identified the missing file scenario, and tests for the std 
+        output under this condition.
     """
     _, _, empty_output = setup_folders
 
