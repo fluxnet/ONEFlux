@@ -75,7 +75,7 @@ def setup_folders(tmp_path, testcase: str = "US_ARc"):
     # Create the output directory (starts empty)
     output_folder.mkdir()
 
-    # Pattern to match directories starting with 'US_ARc'
+    # Pattern to match directories starting with the `testcase` name
     pattern = os.path.join('tests/test_artifacts', f'{testcase}*')
 
     # Use glob to find directories that match the pattern
