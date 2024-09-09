@@ -90,7 +90,7 @@ def setup_folders(tmp_path, testcase: str = "US_ARc"):
     else:
         raise FileNotFoundError(f"No matching directory found for pattern: {pattern}")
 
-    
+
     data_path= os.path.join(testcase_path, '05_ustar_cp')
 
     # Copy all files and directories from the testcase input dir to the temporary input folder
