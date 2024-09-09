@@ -129,7 +129,59 @@ def test_launch_empty_folder(setup_test_environment, matlab_engine):
 
     # Run the MATLAB function
     exitcode = eng.launch(input_folder, output_folder)
-    
+
     # Check that the exitcode indicates an error
     assert exitcode == 0, "Expected zero exitcode for empty input folder."
 
+def test_missing_keywords(setup_test_environment, matlab_engine, extract_section_between_keywords):
+    """
+    Test the MATLAB `launch` function's behavior when a keyword is missing from the data
+    in the initial lines.
+
+    Args:
+        setup_test_environment (fixture): A fixture that sets up input and output folders
+                                          with dummy data for the test.
+        matlab_engine (fixture): A fixture that initializes and manages the MATLAB engine session.
+
+    Asserts:
+        The test asserts that the MATLAB function returns an exit code of 1 with the appropriate
+        error message
+    """
+    input_folder, output_folder = setup_test_environment
+    eng = matlab_engine
+
+    # List of sample data fields and values
+    sample_data_fields = [("site","US-Arc"),
+                    ("year","2006"),
+                    ("lat","35.5465"),
+                    ("lon","-98.0401"),
+                    ("timezone","200601010030,-6"),
+                    ("htower","200601010030,4.05"),
+                    ("timeres","halfhourly"),
+                    ("sc_negl","1"),
+                    ("notes","Sample note")]
+
+    # String with 10 newlines
+    endbuffer = "bad,bad" * 10
+
+    # Build up successive partial sample files from the above data and
+    # try to launch
+    partial_sample_data = ""
+    for line in sample_data_fields:
+        # Write the current partial data to the file
+        with open(Path(input_folder) / "US-ARc_qca_ustar_2023.csv", "w") as f:
+          f.write(partial_sample_data + endbuffer)
+
+        # Run the MATLAB function
+        output = io.StringIO("")
+        eng.launch(input_folder, output_folder, stdout=output)
+
+        # Read standard out and get last line
+        output.seek(0)
+        output_string = output.readlines()[-1]
+
+        assert (output_string == ("processing n.01, US-ARc_qca_ustar_2023.csv..." + line[0] + " keyword not found.\n")), \
+                 "Expected error message for missing keyword"
+
+        # Add the current line to the partial data  for the next test
+        partial_sample_data += ",".join(line) + "\n"
