@@ -133,7 +133,7 @@ def test_launch_empty_folder(setup_test_environment, matlab_engine):
     # Check that the exitcode indicates an error
     assert exitcode == 0, "Expected zero exitcode for empty input folder."
 
-def test_missing_keywords(setup_test_environment, matlab_engine, extract_section_between_keywords):
+def test_missing_keywords(setup_test_environment, matlab_engine):
     """
     Test the MATLAB `launch` function's behavior when a keyword is missing from the data
     in the initial lines.
