@@ -69,7 +69,7 @@ def test_launch_missing_file(setup_test_environment, matlab_engine, setup_folder
     # Run the MATLAB function
     exitcode = matlab_engine.launch(empty_output, empty_output)
 
-    # Check that the exitcode indicates an error
+    # Check that the exitcode does not indicate an error
     assert exitcode == 0, "Expected zero exitcode for missing file."
 
 def test_launch_invalid_data(setup_test_environment, matlab_engine):
