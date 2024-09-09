@@ -67,10 +67,18 @@ def test_launch_missing_file(setup_test_environment, matlab_engine, setup_folder
     _, _, empty_output = setup_folders
 
     # Run the MATLAB function
+    out = io.StringIO()
     exitcode = matlab_engine.launch(empty_output, empty_output)
+
+    # Retrieve the captured output
+    captured_output = out.getvalue()
 
     # Check that the exitcode does not indicate an error
     assert exitcode == 0, "Expected zero exitcode for missing file."
+
+    # Check for a specific string in the output
+    expected_string = "0 files founded."
+    assert expected_string in captured_output, f"Expected string '{expected_string}' not found in output."
 
 def test_launch_invalid_data(setup_test_environment, matlab_engine):
     """
