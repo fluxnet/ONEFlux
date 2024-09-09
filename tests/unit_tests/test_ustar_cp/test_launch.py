@@ -8,6 +8,8 @@ pytest fixtures to set up the necessary test environments and simulate these con
 import os
 import pytest
 from pathlib import Path
+import io
+from tests.conftest import process_std_out, compare_text_blocks
 
 @pytest.fixture
 def setup_test_environment(tmp_path):
@@ -67,18 +69,20 @@ def test_launch_missing_file(setup_test_environment, matlab_engine, setup_folder
     _, _, empty_output = setup_folders
 
     # Run the MATLAB function
-    out = io.StringIO()
-    exitcode = matlab_engine.launch(empty_output, empty_output)
+    output = io.StringIO()
+    exitcode = matlab_engine.launch(empty_output, empty_output, stdout=output)
 
     # Retrieve the captured output
-    captured_output = out.getvalue()
+    output.seek(0)
+    output_string = output.readlines()[-2]
+
 
     # Check that the exitcode does not indicate an error
     assert exitcode == 0, "Expected zero exitcode for missing file."
 
     # Check for a specific string in the output
     expected_string = "0 files founded."
-    assert expected_string in captured_output, f"Expected string '{expected_string}' not found in output."
+    assert compare_text_blocks(expected_string, output_string), f"Expected string '{expected_string}' not found in output."
 
 def test_launch_invalid_data(setup_test_environment, matlab_engine):
     """
