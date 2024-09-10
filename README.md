@@ -11,12 +11,6 @@ The pipeline controlling code uses **Python version 2.7** (it should work with P
 **(THERE ARE CAVEATS AND KNOWN LIMITATIONS TO THIS CODE, PLEASE SEE [CAVEATS LIST](#caveats-and-known-limitations) BELOW.)** This iteration of the code is not fully in line with open source/free software development practices, but we intend to steadily move in that direction.
 
 
-## Citation
-
-When using ONEFlux or referring to data products generated with ONEFlux, please consider citing our reference paper:
-> Pastorello et al. The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data. Scientific Data 7:225 (2020). [10.1038/s41597-020-0534-3](https://doi.org/10.1038/s41597-020-0534-3)
-
-
 ## Required data and metadata variables
 
 To run ONEFlux, certain data variables and addtional information about the site and instrument configuration are needed. *Required* data variables must be available in the input data, otherwise the ONEFlux will not run. *Encouraged* data variables must be present for realated derived data products to be generated, and although ONEFlux will run if these are missing, not all products will be generated. *Suggested* data variables are supported by ONEFlux, but are not directly used for the generation of any derived data products.
@@ -249,6 +243,13 @@ research and innovation programme - grant agreement No 824068
 ### Evaluation ###
 * Deb Agarwal, daagarwal &lt;at&gt; lbl &lt;DOT&gt; gov
 * Sebastien Biraud, scbiraud &lt;at&gt; lbl &lt;DOT&gt; gov
+
+
+## Citation
+
+When using ONEFlux or referring to data products generated with ONEFlux, please consider citing our reference paper:
+> Pastorello et al. The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data. Scientific Data 7:225 (2020). [10.1038/s41597-020-0534-3](https://doi.org/10.1038/s41597-020-0534-3)
+
 
 
 **(THERE ARE CAVEATS AND KNOWN LIMITATIONS TO THIS CODE, PLEASE SEE [CAVEATS LIST](#caveats-and-known-limitations) (ABOVE)**
