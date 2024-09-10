@@ -12,7 +12,7 @@ import pytest
 import io
 
 test_cases = [
-    ("US_ARc", [1]),
+    ("US_ARc", [1]),("CA-Cbo", [1]), ("US-ARM", [1]), ("US-Ne1",[1]), ("US-Syv", [1]),("US-Vcm", [1])
     # Add more test cases with their respective expected values
     # Expected values format: [exitvalue]
 ]
