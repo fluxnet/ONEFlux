@@ -1,2 +1,2 @@
-tests/test_artifacts/** filter=lfs diff=lfs merge=lfs -text
+
 . !text !filter !merge !diff
