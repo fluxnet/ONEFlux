@@ -12,9 +12,65 @@ import pytest
 import io
 import filecmp
 
+"""
+  Chosen test cases to giev adequate coverage:
+    CA-Cbo, US-ARM, US-Ne1, US-Syv, US-Vcm
+  Additional test case:
+    US_ARc_sample: Listed on Github as reference test case
+  Analysis of supplied test cases:
+    Error report types (reported against at least one case in case report file):
+      Type A: "Too few selected change points:"
+      Type B: "Function cpdBin aborted. dx cannot be <=0"
+      Type C: "(PPFD_IN from SW_IN)...NEE is empty!"
+      Type D: "NEE is empty!"
+      Type E: "Less than 10% successful detections."
+      Type F: "column SW_IN not found!"
+      Type G: "(PPFD_IN from SW_IN)...ok"
+      Type H: "(PPFD_IN from SW_IN)...Too few selected change points"
+    Analysis case summary:
+      BR_Npw: A,  B
+      CA-Cbo: A,  C
+      Ca_Qfo: A
+      Ca_SF1: A
+      Ca_SF2: A,  D
+      US_A32: A,  B
+      US_A74: A
+      US_AR1: A
+      US_AR2: A
+      US-ARM: A,  E
+      US_Bar: A,  B
+      US_Ced: A,  B
+      US_Dix: A
+      US_Elm: A,  D
+      US_Gle: A
+      US_HA1: A,  B
+      US_Me1: A
+      US_Me6: A
+      US_MMS: A
+      US_Myb: A,  F
+      US_Nc1: A
+      US_NE1: A,  G,  H
+      US_NGC: A
+      US_NR1: A,  D
+      US_Oho: A
+      US_Seg: A
+      US_Ses: A
+      US_Snd: A
+      US_Srs: A
+      US_Syv: A,  D,  F
+      US_Tom: A
+      US_Tw4: A
+      US_UMB: A
+      US_Umd: A
+      US_Var: A
+      US_Vcm: A,  B,  H
+      US_xBR: A
+      US_xDC: A
+      US_xNG: A,  B
+    """
+
 test_cases = [
     ("US_ARc", [1]),("CA-Cbo", [1]), ("US-ARM", [1]), ("US-Ne1",[1]), ("US-Syv", [1]),("US-Vcm", [1])
-    # Add more test cases with their respective expected values
     # Expected values format: [exitvalue]
 ]
 
