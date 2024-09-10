@@ -1041,6 +1041,13 @@ static int import_uts(const char *const filename, PREC *const ust, const int met
 	/* skip rows on ustar_mp */
 	if ( USTAR_MP == method ) {
 		error = 0;
+		
+	#if 1
+		// PLEASE NOTE:
+		// FOLLOWING CODE SKIP "USTAR_MP_SKIP" ROWS AND THEN CHECK FOR " forward mode 2" string!
+		// MORE FAST BUT LESS ROBUST THAN THE DISABLED ONES!
+		// ENABLED FOR CONSISTENCY!
+		// Alessio - June 27, 2022
 		for ( i = 0; i < USTAR_MP_SKIP; i++ ) {
 			if ( !fgets(buffer, BUFFER_SIZE, f) ) {
 				sprintf(err, "bad %s file", methods[method]);
@@ -1066,6 +1073,35 @@ static int import_uts(const char *const filename, PREC *const ust, const int met
 			fclose(f);
 			return 0;
 		}
+	#else
+		// PLEASE NOTE:
+		// FOLLOWING CODE CHECK EACH ROWS FOR " forward mode 2" string!
+		// MORE SLOW BUT MORE ROBUST THAN THE ENABLED ONES!
+		// DISABLED FOR CONSISTENCY!
+		// Alessio - June 27, 2022
+		{
+			int flag = 0;
+			while ( fgets(buffer, BUFFER_SIZE, f) ) {
+				for ( i = 0; buffer[i]; i++ ) {
+					if ( ('\r' == buffer[i]) || ('\n' == buffer[i]) ) {
+						buffer[i] = '\0';
+						break;
+					}
+				}
+
+				if ( ! string_compare_i(buffer, " forward mode 2") ) {
+					flag = 1;
+					break;
+				}
+			}
+
+			if ( ! flag ) {
+				sprintf(err, "bad %s file", methods[method]);
+				fclose(f);
+				return 0;
+			}
+		}
+	#endif
 	}
 
 	/* read file */
@@ -4051,12 +4087,17 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 								datasets[dataset].rows[index+row].value[NEE_VALUE] = INVALID_VALUE;
 								++element;
 							}
+							/* flag for the USTAR filtering (also in the else if below): flag=0  for data not filtered,
+							flag=1 for the first value of a period removed due to low USTAR, flag=2 for hh removed due to
+							low USTAR but with also the previous hh removed, flag=3 for hh of high ustar removed because at
+							the end of the low USTAR period*/
 							if ( compute_nee_flags ) {
 								nee_flags_y[index+row].value[percentile] = 1;	
 								if ( row && ((nee_flags_y[index+row-1].value[percentile] >= 1) && (nee_flags_y[index+row-1].value[percentile] < 3)) ) {
 									++nee_flags_y[index+row].value[percentile];
 								}
 							}
+							/* filter out also the first value after a low turbulence period (even if just one hh) */
 							if ( row < rows_count-1 ) {
 								if ( !IS_INVALID_VALUE(datasets[dataset].rows[index+row+1].value[NEE_VALUE]) ) {
 									datasets[dataset].rows[index+row+1].value[NEE_VALUE] = INVALID_VALUE;
@@ -4291,19 +4332,24 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 					if ( compute_nee_flags ) {
 						nee_flags_c[row].value[percentile] = 0;
 					}
+
 					if ( datasets[dataset].rows[row].value[USTAR_VALUE] < percentiles_c[percentile] ) {
 						if ( !IS_INVALID_VALUE(datasets[dataset].rows[row].value[NEE_VALUE]) ) {
 							datasets[dataset].rows[row].value[NEE_VALUE] = INVALID_VALUE;
 							++element;
 						}
-
+						/* flag for the USTAR filtering (also in the else if below): flag=0  for data not filtered,
+							flag=1 for the first value of a period removed due to low USTAR, flag=2 for hh removed due to
+							low USTAR but with also the previous hh removed, flag=3 for hh of high ustar removed because at
+							the end of the low USTAR period
+						*/
 						if ( compute_nee_flags ) {
 							nee_flags_c[row].value[percentile] = 1;	
 							if ( row && ((nee_flags_c[row-1].value[percentile] >= 1) && (nee_flags_c[row-1].value[percentile] < 3)) ) {
 								++nee_flags_c[row].value[percentile];
 							}
 						}
-
+						/* filter out also the first value after a low turbulence period (even if just one hh) */
 						if ( row < datasets[dataset].rows_count-1 ) {
 							if ( !IS_INVALID_VALUE(datasets[dataset].rows[row+1].value[NEE_VALUE]) ) {
 								datasets[dataset].rows[row+1].value[NEE_VALUE] = INVALID_VALUE;

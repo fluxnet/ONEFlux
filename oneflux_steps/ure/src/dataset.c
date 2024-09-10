@@ -41,8 +41,8 @@
 /* externs */
 extern char *input_path;
 extern char *output_path;
-const char *types_suffix[TYPES_SUFFIX];
-const char *authors_suffix[AUTHORS_SUFFIX];
+extern const char *types_suffix[TYPES_SUFFIX];
+extern const char *authors_suffix[AUTHORS_SUFFIX];
 
 /* constants */
 #define GPP_FILENAME_LEN	22		/* .ext included */
