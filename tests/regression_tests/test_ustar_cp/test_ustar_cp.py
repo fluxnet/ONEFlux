@@ -10,10 +10,33 @@ output and the exit code returned by the MATLAB function.
 
 import pytest
 import io
+import filecmp
+
+"""
+  Chosen test cases (identified by their site code; first 5 characters) to give adequate coverage (with data files in `tests/test_artifacts`)
+    CA-Cbo, US-ARM, US-Ne1, US-Syv, US-Vcm
+  Additional test case:
+    US_ARc_sample: Listed on Github as reference test case
+  Analysis of supplied test cases:
+    Error report types (reported against at least one case in case report file):
+      Type A: "Too few selected change points:"
+      Type B: "Function cpdBin aborted. dx cannot be <=0"
+      Type C: "(PPFD_IN from SW_IN)...NEE is empty!"
+      Type D: "NEE is empty!"
+      Type E: "Less than 10% successful detections."
+      Type F: "column SW_IN not found!"
+      Type G: "(PPFD_IN from SW_IN)...ok"
+      Type H: "(PPFD_IN from SW_IN)...Too few selected change points"
+    Analysis case summary:
+      CA-Cbo: A,  C
+      US-ARM: A,  E
+      US_NE1: A,  G,  H
+      US_Syv: A,  D,  F
+      US_Vcm: A,  B,  H
+    """
 
 test_cases = [
-    ("US_ARc", [1]),
-    # Add more test cases with their respective expected values
+    ("US_ARc", [1]),("CA-Cbo", [1]), ("US-ARM", [1]), ("US-Ne1",[1]), ("US-Syv", [1]),("US-Vcm", [1])
     # Expected values format: [exitvalue]
 ]
 
@@ -48,6 +71,7 @@ def test_ustar_cp(testcase, expected_values, setup_folders, matlab_engine, find_
     4. Extract the corresponding output section from the captured MATLAB `stdout`.
     5. Compare the processed MATLAB output with the expected output.
     6. Assert that the MATLAB function returns the expected exit code.
+    7. Assert ref and test output fodlers conatin the same files.
     """
 
     # Step 1: Setup input, reference output, and test output folders using the provided fixture
@@ -77,7 +101,9 @@ def test_ustar_cp(testcase, expected_values, setup_folders, matlab_engine, find_
     # Step 6: Assert that the MATLAB function returns the expected exit code
     assert exitcode == expected_values[0], f"Expected exit code {expected_values[0]}, but got {exitcode}."
 
-
+    # Step 7: Assert that the reference output folder and test run output contain the same files
+    comparison = filecmp.dircmp(ref_outputs, test_outputs)
+    assert comparison, f"Expected test and reference output folders have same contents, but comparison test fails"
 
 
 

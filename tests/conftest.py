@@ -90,7 +90,6 @@ def setup_folders(tmp_path, testcase: str = "US_ARc"):
     else:
         raise FileNotFoundError(f"No matching directory found for pattern: {pattern}")
 
-
     data_path= os.path.join(testcase_path, '05_ustar_cp')
 
     # Copy all files and directories from the testcase input dir to the temporary input folder
@@ -125,7 +124,7 @@ def find_text_file():
     def _find_text_file_in_folder(folder):
         # Search for a .txt file in the given folder
         for filename in os.listdir(folder):
-            if filename.endswith('.txt'):
+            if filename.startswith('report'):
                 # Construct the full file path
                 file_path = os.path.join(folder, filename)
                 
