@@ -75,7 +75,7 @@ def setup_folders(tmp_path, testcase: str = "US_ARc"):
     # Create the output directory (starts empty)
     output_folder.mkdir()
 
-    # Pattern to match directories starting with 'US_ARc'
+    # Pattern to match directories starting with the `testcase` name
     pattern = os.path.join('tests/test_artifacts', f'{testcase}*')
 
     # Use glob to find directories that match the pattern
@@ -90,7 +90,6 @@ def setup_folders(tmp_path, testcase: str = "US_ARc"):
     else:
         raise FileNotFoundError(f"No matching directory found for pattern: {pattern}")
 
-    
     data_path= os.path.join(testcase_path, '05_ustar_cp')
 
     # Copy all files and directories from the testcase input dir to the temporary input folder
@@ -115,7 +114,7 @@ def setup_folders(tmp_path, testcase: str = "US_ARc"):
 @pytest.fixture
 def find_text_file():
     """
-    Fixture to find the first file in the given folder thats begins with 'report', open it, 
+    Fixture to find the first `.txt` file in the given folder, open it, 
     extract its contents as a list of lines, and return the contents.
 
     Returns:
