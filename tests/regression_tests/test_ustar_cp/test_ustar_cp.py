@@ -28,45 +28,11 @@ import filecmp
       Type G: "(PPFD_IN from SW_IN)...ok"
       Type H: "(PPFD_IN from SW_IN)...Too few selected change points"
     Analysis case summary:
-      BR_Npw: A,  B
       CA-Cbo: A,  C
-      Ca_Qfo: A
-      Ca_SF1: A
-      Ca_SF2: A,  D
-      US_A32: A,  B
-      US_A74: A
-      US_AR1: A
-      US_AR2: A
       US-ARM: A,  E
-      US_Bar: A,  B
-      US_Ced: A,  B
-      US_Dix: A
-      US_Elm: A,  D
-      US_Gle: A
-      US_HA1: A,  B
-      US_Me1: A
-      US_Me6: A
-      US_MMS: A
-      US_Myb: A,  F
-      US_Nc1: A
       US_NE1: A,  G,  H
-      US_NGC: A
-      US_NR1: A,  D
-      US_Oho: A
-      US_Seg: A
-      US_Ses: A
-      US_Snd: A
-      US_Srs: A
       US_Syv: A,  D,  F
-      US_Tom: A
-      US_Tw4: A
-      US_UMB: A
-      US_Umd: A
-      US_Var: A
       US_Vcm: A,  B,  H
-      US_xBR: A
-      US_xDC: A
-      US_xNG: A,  B
     """
 
 test_cases = [
