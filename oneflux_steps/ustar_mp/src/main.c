@@ -1,7 +1,10 @@
 /*
 	main.c
 
-	this file is part of ustar_mp
+	This file is part of ustar_mp tool.
+	It calculates the ustar threshold to filter out NEE
+	using the method described in Reichstein 2005 and 
+	Papale 2006
 
 	author: Alessio Ribeca <a.ribeca@unitus.it>
 	owner: DIBAF - University of Tuscia, Viterbo, Italy
@@ -24,7 +27,7 @@
 #include "../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION		"v1.0"
+#define PROGRAM_VERSION		"v1.01"
 
 /* static global variables */
 static char *input_path;
@@ -926,7 +929,7 @@ int main(int argc, char *argv[]) {
 		/* reset */
 		seasons_group_count = seasons_group_count_bak;
 
-		/* inc total files founded */
+		/* inc total files found */
 		total_files_count += files[z].count;
 
 		/* processing and create output filename */
@@ -947,7 +950,7 @@ int main(int argc, char *argv[]) {
 			}
 
 			/* add to filename */
-			if ( !mystrcat(filename, string, FILENAME_MAX) && '\0' == filename[0]) {
+			if ( !string_concat(filename, string, FILENAME_MAX) && '\0' == filename[0]) {
 				puts(err_unable_create_output_filename);
 				files_not_processed_count += files[z].count;
 				free(string);
@@ -1226,7 +1229,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* summary */
-	printf("%d file%s founded: %d processed, %d skipped.\n\n",
+	printf("%d file%s found: %d processed, %d skipped.\n\n",
 																total_files_count,
 																total_files_count > 1 ? "s" : "",
 																files_processed_count,
