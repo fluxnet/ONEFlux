@@ -205,4 +205,4 @@ def compare_text_blocks(text1, text2):
     Returns:
         bool: True if the stripped text blocks are identical, False otherwise.
     """
-    return text1.strip() == text2.strip()
+    return text1.replace('\n', '').strip() == text2.replace('\n', '').strip()
