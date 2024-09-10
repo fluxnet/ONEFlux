@@ -115,7 +115,7 @@ def setup_folders(tmp_path, testcase: str = "US_ARc"):
 @pytest.fixture
 def find_text_file():
     """
-    Fixture to find the first `.txt` file in the given folder, open it, 
+    Fixture to find the first file in the given folder thats begins with 'report', open it, 
     extract its contents as a list of lines, and return the contents.
 
     Returns:
@@ -125,7 +125,7 @@ def find_text_file():
     def _find_text_file_in_folder(folder):
         # Search for a .txt file in the given folder
         for filename in os.listdir(folder):
-            if filename.endswith('.txt'):
+            if filename.startswith('report'):
                 # Construct the full file path
                 file_path = os.path.join(folder, filename)
                 
