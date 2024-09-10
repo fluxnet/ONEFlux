@@ -13,7 +13,7 @@ import io
 import filecmp
 
 """
-  Chosen test cases to giev adequate coverage:
+  Chosen test cases (identified by their site code; first 5 characters) to give adequate coverage (with data files in `tests/test_artifacts`)
     CA-Cbo, US-ARM, US-Ne1, US-Syv, US-Vcm
   Additional test case:
     US_ARc_sample: Listed on Github as reference test case
