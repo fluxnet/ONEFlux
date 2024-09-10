@@ -1,0 +1,12 @@
+[tool.pytest.ini_options]
+addopts = """
+  -v 
+  -p no:warnings
+  --doctest-modules
+  --ignore=tests/test_context.py
+  --show-progress
+  --cov=pyrealm  
+  --cov=ONEFlux/ tests/
+  """
+python_files = 'test_*.py'
+testpaths = ['tests']
