@@ -10,6 +10,7 @@ output and the exit code returned by the MATLAB function.
 
 import pytest
 import io
+import filecmp
 
 test_cases = [
     ("US_ARc", [1]),("CA-Cbo", [1]), ("US-ARM", [1]), ("US-Ne1",[1]), ("US-Syv", [1]),("US-Vcm", [1])
@@ -48,6 +49,7 @@ def test_ustar_cp(testcase, expected_values, setup_folders, matlab_engine, find_
     4. Extract the corresponding output section from the captured MATLAB `stdout`.
     5. Compare the processed MATLAB output with the expected output.
     6. Assert that the MATLAB function returns the expected exit code.
+    7. Assert ref and test output fodlers conatin the same files.
     """
 
     # Step 1: Setup input, reference output, and test output folders using the provided fixture
@@ -77,7 +79,9 @@ def test_ustar_cp(testcase, expected_values, setup_folders, matlab_engine, find_
     # Step 6: Assert that the MATLAB function returns the expected exit code
     assert exitcode == expected_values[0], f"Expected exit code {expected_values[0]}, but got {exitcode}."
 
-
+    # Step 7: Assert that the reference output folder and test run output contain the same files
+    comparison = filecmp.dircmp(ref_outputs, test_outputs)
+    assert comparison, f"Expected True, but returned False"
 
 
 
