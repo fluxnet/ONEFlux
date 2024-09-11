@@ -129,7 +129,6 @@ python runoneflux.py partition_dt "../datadir/" US-ARc "US-ARc_sample_input" 200
 
 Note that for the execution of the partitioning steps, only if the output ```*.csv``` file doesn’t exist (e.g., ```nee_y_50_US-ARc_2005.csv```), the code will run and generate the file. If it exists, nothing will be done (unless the flag --force-py is used).
 
-Issues Related to Running Sample US-ARc
 
 - https://github.com/fluxnet/ONEFlux/issues/39
 
