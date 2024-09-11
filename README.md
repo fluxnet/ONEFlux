@@ -124,7 +124,7 @@ Run daytime partitioning with only single percentile and/or a single USTAR thres
 - *--perc 50*: processes only 50-percentile USTAR threshold
 - *--force-py*: forces execution of Python partitioning code (replaces existing outputs)
 ```
-python runoneflux.py partition_dt "../datadir/" US-ARc "US-ARc_sample_input" 2005 2006 -l fluxnet_pipeline_US-ARc.log --prod y --perc 50 --force-py --era-fy 1989 --era-ly 2014
+python runoneflux.py partition_dt "../datadir/" US-ARc "US-ARc_sample_input" 2005 2006 -l fluxnet_pipeline_US-ARc.log --prod y --perc 50 --force-py
 ```
 
 Note that for the execution of the partitioning steps, only if the output ```*.csv``` file doesn’t exist (e.g., ```nee_y_50_US-ARc_2005.csv```), the code will run and generate the file. If it exists, nothing will be done (unless the flag --force-py is used).
