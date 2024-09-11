@@ -116,7 +116,7 @@ python runoneflux.py all "../datadir/" US-ARc "US-ARc_sample_input" 2005 2006 -l
 
 Run nighttime partitioning method:
 ```
-python runoneflux.py partition_nt "../datadir/" US-ARc "US-ARc_sample_input" 2005 2006 -l fluxnet_pipeline_US-ARc.log --era-fy 1989 --era-ly 2014
+python runoneflux.py partition_nt "../datadir/" US-ARc "US-ARc_sample_input" 2005 2006 -l fluxnet_pipeline_US-ARc.log
 ```
 
 Run daytime partitioning with only single percentile and/or a single USTAR threshold type data product (recommended for first executions), use:
