@@ -1,0 +1,6 @@
+"""Test module for the cpdBootstrapUStarTh4Season20100901 matlab function.
+
+This module contains the unit tests for the cpdBootstrapUStarTh4Season20100901. 
+These tests cover basic behaviour, edge cases and errors.
+"""
+
