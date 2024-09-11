@@ -15,19 +15,46 @@ def matlab_engine():
     yield eng
     eng.quit()
 
-def generate_mock_data(nt):
-    """Generates mock time series data for testing."""
-    t = np.linspace(0, 1, nt)  # Generate time vector
+@pytest.fixture(scope="module")
+def mock_data(nt=200, tspan=(0, 1), uStar_pars=(0.1, 3.5), T_pars=(-10, 30), fNight=None):
+    """
+    Fixture to generate mock time series data for testing purposes. This fixture 
+    creates a set of synthetic data typically used in environmental studies, 
+    such as Net Ecosystem Exchange (NEE), uStar values, temperature, and day/night flags.
+
+    Args:
+        nt (int, optional): Number of time points to generate in the series. 
+                            Defaults to 200.
+        tspan (tuple, optional): Start and end time for the time vector. 
+                                 Defaults to (0, 1).
+        uStar_pars (tuple, optional): Minimum and maximum values for the random 
+                                      generation of u* values. Defaults to (0.1, 3.5).
+        T_pars (tuple, optional): Minimum and maximum values for the random 
+                                  generation of temperature values. Defaults to (-10, 30).
+        fNight (array-like or None, optional): Binary values indicating day (0) or 
+                                               night (1). If None, a random assignment 
+                                               is made. Defaults to None.
+
+    Returns:
+        tuple: A tuple containing:
+            - t (np.ndarray): Time vector of length `nt`.
+            - NEE (np.ndarray): Randomly generated Net Ecosystem Exchange values.
+            - uStar (np.ndarray): Randomly generated u* values.
+            - T (np.ndarray): Randomly generated temperature values.
+            - fNight (np.ndarray): Array indicating day (0) or night (1) conditions.
+    """
+    t = np.linspace(*tspan, nt)  # Generate time vector
     NEE = np.random.normal(size=nt)  # Random Net Ecosystem Exchange values
-    uStar = np.random.uniform(0.1, 3.5, size=nt)  # u* values between typical ranges
-    T = np.random.uniform(-10, 30, size=nt)  # Temperature values
-    fNight = np.random.choice([0, 1], size=nt)  # Randomly assign day/night
+    uStar = np.random.uniform(*uStar_pars, size=nt)  # u* values between typical ranges
+    T = np.random.uniform(*T_pars, size=nt)  # Temperature values
+    if fNight == None:
+        fNight = np.random.choice([0, 1], size=nt)  # Randomly assign day/night
+    else:
+        fNight = np.resize(fNight, nt)
     return t, NEE, uStar, T, fNight
 
-def test_cpdBootstrapUStarTh4Season20100901_basic(matlab_engine):
-    # Generate mock inputs
-    nt = 200  # Number of time points
-    t, NEE, uStar, T, fNight = generate_mock_data(nt)
+def test_cpdBootstrapUStarTh4Season20100901_basic(matlab_engine, mock_data):
+    t, NEE, uStar, T, fNight = mock_data
     fPlot = 0
     cSiteYr = "Site_2024"
     nBoot = 10
@@ -85,10 +112,9 @@ def test_cpdBootstrapUStarTh4Season20100901_invalid_input(matlab_engine):
     assert Cp3 == [], "Cp3 should be empty for insufficient data."
     assert Stats3 == [], "Stats3 should be empty for insufficient data."
 
-def test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap(matlab_engine):
+def test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap(matlab_engine, mock_data):
     # Test with a high number of bootstraps
-    nt = 500  # More extensive dataset
-    t, NEE, uStar, T, fNight = generate_mock_data(nt)
+    t, NEE, uStar, T, fNight = mock_data
     fPlot = 0
     cSiteYr = "Site_2024"
     nBoot = 100  # Large number of bootstraps
