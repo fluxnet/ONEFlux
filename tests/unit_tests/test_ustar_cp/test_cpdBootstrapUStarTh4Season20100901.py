@@ -114,7 +114,6 @@ def test_cpdBootstrapUStarTh4Season20100901_invalid_input(matlab_engine):
 
 def test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap(matlab_engine, mock_data):
     # Test with a high number of bootstraps
-    nt = 500  # More extensive dataset
     t, NEE, uStar, T, fNight = mock_data
     fPlot = 0
     cSiteYr = "Site_2024"
