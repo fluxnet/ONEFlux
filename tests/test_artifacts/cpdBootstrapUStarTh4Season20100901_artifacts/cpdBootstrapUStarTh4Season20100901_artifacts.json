@@ -1,0 +1,25 @@
+
+{
+  "test_cases": [
+    {
+      "id": "Testcase_1",
+      "description": "Basic functionality test using US_ARC_sample reference data",
+      "input": {
+        "0": "t.csv",
+        "1": "NEE.csv",
+        "2": "uStar.csv",
+        "3": "T.csv",
+        "4": "fNight.csv",
+        "5": 0,
+        "6": "US-ARc_qca_ustar_2005.csv",
+        "7": 100
+      },
+      "expected_output": {
+        "0": "Cp2.csv",
+        "1": "Stats2.csv",
+        "2": "Cp3.csv",
+        "3": "Stats3.csv"
+      }
+    }
+  ]
+}
