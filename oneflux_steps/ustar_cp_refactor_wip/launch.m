@@ -87,50 +87,18 @@ function exitcode = launch(input_folder, output_folder)
         NEE = data(:, columns_index(NEE_INDEX));
         Ta = data(:, columns_index(TA_INDEX));
         Rg = data(:, columns_index(RG_INDEX));
-        if 0 == ppfd_from_rg
-            PPFD = data(:, columns_index(PPFD_INDEX));
-            % check if ppfd is invalid
-            q = find(PPFD < -9990); 
-            if numel(q) == numel(PPFD);
-                ppfd_from_rg = 1;
-            end        
-        end
+
+        [PPFD, ppfd_from_rg] = are_all_ppfd_values_invalid(ppfd_from_rg, columns_index, PPFD_INDEX, data);
         
         if 1 == ppfd_from_rg
-            fprintf('(PPFD_IN from SW_IN)...');
-            PPFD = Rg * 2.24;
-            p = find(Rg < -9990);
-            PPFD(p) = -9999;
-            clear p;
+            PPFD = derive_ppfd_col_from_Rg(Rg);
         end
 
         clear data;
         
-        %[t,uStar,NEE,Ta,PPFD,Rg] = textread([cIn,d(n).name],'%f %f %f %f %f %f %f','headerlines',0,'delimiter',',');   
+        [exitcode, uStar, NEE, Ta, PPFD, Rg] = any_columns_empty_and_set_nan(uStar, NEE, Ta, PPFD, Rg);
         
-    %     load([cIn,d(n).name]);
-        uStar(uStar==-9999) = NaN;
-        NEE(NEE==-9999) = NaN;
-        Ta(Ta==-9999) = NaN;
-        PPFD(PPFD==-9999) = NaN;
-        Rg(Rg==-9999) = NaN;
-    %         data_L3(data_L3==-9999)=NaN; data_L3(data_L3==-6999)=NaN;
-
-        % by carlo, added by alessio on February 21, 2014
-        if sum(isnan(NEE)) == numel(NEE); 
-            fprintf('NEE is empty!\n');
-            continue;
-        end
-        if sum(isnan(uStar)) == numel(uStar); 
-            fprintf('uStar is empty!\n');
-            continue;
-        end
-        if isempty(Ta); 
-            fprintf('Ta is empty!\n');
-            continue;
-        end
-        if isempty(Rg); 
-            fprintf('Rg is empty!\n');
+        if exitcode == 1
             continue;
         end
 
@@ -144,25 +112,16 @@ function exitcode = launch(input_folder, output_folder)
 
         %by alessio ( by carlo)
         % insert Dtime
-        nrPerDay = mod(numel(uStar),365);
-        if nrPerDay == 0; nrPerDay = mod(numel(uStar),364);end
-        t = 1 + (1 / nrPerDay);
-        for n2 = 2:numel(uStar); t(n2,1) = t(n2-1,1)+ (1 / nrPerDay);end
-        clear n2
+        
+        t = create_time_array(uStar);
+
         
         fNight=Rg<5; % flag nighttime periods
         T=Ta;
         
     %	Look at inputs.	
         
-        fPlot=0; 
-        if fPlot;
-            plot(t,uStar,'.'); mydatetick(t,'Mo',4,1); pause;
-            plot(t,NEE,'.'); mydatetick(t,'Mo',4,1); pause;
-            plot(t,Ta,'.'); mydatetick(t,'Mo',4,1); pause;
-            plot(t,PPFD,'.'); mydatetick(t,'Mo',4,1); pause;
-            plot(t,Rg,'.'); mydatetick(t,'Mo',4,1); pause;
-        end;
+        fPlot = plot_data(t, uStar, NEE, Ta, PPFD, Rg);
         
     %	Call uStarTh bootstrappng program (2 versions) 
     %	and assign annual Cp arrays.	
@@ -437,4 +396,69 @@ function [PPFD, ppfd_from_rg] = are_all_ppfd_values_invalid(ppfd_from_rg, column
             ppfd_from_rg = 1;
         end        
     end
+end
+
+function PPFD = derive_ppfd_col_from_Rg(Rg)
+
+    fprintf('(PPFD_IN from SW_IN)...');
+    PPFD = Rg * 2.24;
+    p = find(Rg < -9990);
+    PPFD(p) = -9999;
+    clear p;
+
+end
+
+function [exitcode, uStar, NEE, Ta, PPFD, Rg] = any_columns_empty_and_set_nan(uStar, NEE, Ta, PPFD, Rg)
+
+    exitcode = 0;
+    uStar(uStar==-9999) = NaN;
+    NEE(NEE==-9999) = NaN;
+    Ta(Ta==-9999) = NaN;
+    PPFD(PPFD==-9999) = NaN;
+    Rg(Rg==-9999) = NaN;
+    %         data_L3(data_L3==-9999)=NaN; data_L3(data_L3==-6999)=NaN;
+
+    % by carlo, added by alessio on February 21, 2014
+    if sum(isnan(NEE)) == numel(NEE); 
+        fprintf('NEE is empty!\n');
+        exitcode = 1
+        return;
+    end
+    if sum(isnan(uStar)) == numel(uStar); 
+        fprintf('uStar is empty!\n');
+        exitcode = 1
+        return;
+    end
+    if isempty(Ta); 
+        fprintf('Ta is empty!\n');
+        exitcode = 1
+        return;
+    end
+    if isempty(Rg); 
+        fprintf('Rg is empty!\n');
+        exitcode = 1
+        return;
+    end
+    
+end
+
+
+function t = create_time_array(uStar)
+    nrPerDay = mod(numel(uStar),365);
+    if nrPerDay == 0; nrPerDay = mod(numel(uStar),364);end
+    t = 1 + (1 / nrPerDay);
+    for n2 = 2:numel(uStar); t(n2,1) = t(n2-1,1)+ (1 / nrPerDay);end
+    clear n2
+end
+
+
+function fPlot = plot_data(t, uStar, NEE, Ta, PPFD, Rg)
+    fPlot=0;
+	if fPlot;
+		plot(t,uStar,'.'); mydatetick(t,'Mo',4,1); pause;
+		plot(t,NEE,'.'); mydatetick(t,'Mo',4,1); pause;
+		plot(t,Ta,'.'); mydatetick(t,'Mo',4,1); pause;
+		plot(t,PPFD,'.'); mydatetick(t,'Mo',4,1); pause;
+		plot(t,Rg,'.'); mydatetick(t,'Mo',4,1); pause;
+	end
 end
