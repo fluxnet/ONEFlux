@@ -68,10 +68,7 @@ function exitcode = launch(input_folder, output_folder)
         clear i temp r fid;
         
         
-        imported_data = importdata([input_folder,d(n).name], ',', (9+length(notes)));  
-        header = imported_data.('textdata');
-        data = imported_data.('data');
-        columns_index = ones(numel(input_columns_names), 1) * -1;
+        [header, data, columns_index] = load_data(input_folder, d, notes, n, input_columns_names);
         
         % parse header, by alessio
         on_error = 0;
@@ -393,5 +390,16 @@ function [exitcode, site, year, lat, lon, timezone, htower, timeres, sc_negl, no
     end       
     notes = dataset(9);
     notes = strrep(notes, 'notes,', '');
+
+end
+
+
+function [header, data, columns_index] ...
+    = load_data(input_folder, d, notes, n, input_columns_names)
+
+    imported_data = importdata([input_folder,d(n).name], ',', (9+length(notes)));  
+    header = imported_data.('textdata');
+    data = imported_data.('data');
+    columns_index = ones(numel(input_columns_names), 1) * -1;
 
 end
