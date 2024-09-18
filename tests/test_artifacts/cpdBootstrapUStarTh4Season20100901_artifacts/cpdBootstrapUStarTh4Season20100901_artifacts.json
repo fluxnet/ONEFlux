@@ -15,10 +15,10 @@
         "7": 100
       },
       "expected_output": {
-        "0": "Cp2.csv",
-        "1": "Stats2.csv",
-        "2": "Cp3.csv",
-        "3": "Stats3.csv"
+        "0": "Cp2_json.json",
+        "1": "Stats2_json.json",
+        "2": "Cp3_json.json",
+        "3": "Stats3_json.json"
       }
     }
   ]

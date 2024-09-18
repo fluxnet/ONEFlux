@@ -7,6 +7,16 @@ These tests cover basic behaviour, edge cases and errors.
 import pytest
 import matlab.engine
 import numpy as np
+import json
+import csv
+import os
+
+@pytest.fixture
+def load_json(name):
+    """Loads json."""
+
+    with open(name, 'r') as file:
+        return json.load(file)
 
 @pytest.fixture(scope="module")
 def matlab_engine():
@@ -136,3 +146,81 @@ def test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap(matlab_engi
     assert len(Cp3[0][0]) == nBoot, "Each Cp3 season entry should have `nBoot` bootstraps."
     assert len(Stats2[0][0]) == nBoot, "Stats2 should match the number of bootstraps."
     assert len(Stats3[0][0]) == nBoot, "Stats3 should match the number of bootstraps."
+
+def read_csv_with_csv_module(file_path):
+    with open(file_path, mode='r') as file:
+        reader = csv.reader(file)
+        data = [row for row in reader]
+    return data
+
+def read_file(file_path):
+    # Check the file extension to differentiate between CSV and JSON
+    if file_path.endswith('.csv'):
+        return read_csv_with_csv_module(file_path).to_list()
+    elif file_path.endswith('.json'):
+        with open(file_path, 'r') as f:
+            return json.load(f)  # Load JSON file
+    else:
+        raise ValueError(f"Unsupported file type: {file_path}")
+
+def to_matlab_type(data):
+    if isinstance(data, dict):
+        # Convert a Python dictionary to a MATLAB struct
+        matlab_struct = matlab.struct()
+        for key, value in data.items():
+            matlab_struct[key] = to_matlab_type(value)  # Recursively handle nested structures
+        return matlab_struct
+    elif isinstance(data, list):
+        # Convert Python list to MATLAB double array if all elements are numbers
+        if all(isinstance(elem, (int, float)) for elem in data):
+            return matlab.double(data)
+        else:
+            # Create a cell array for lists containing non-numeric data
+            return [to_matlab_type(elem) for elem in data]
+    elif isinstance(data, (int, float)):
+        return matlab.double([data])  # Convert single numbers
+    else:
+        return data  # If the data type is already MATLAB-compatible
+
+#argnames="t,NEE,ustar,T,fNight, fPlot,cSiteYr,nBoot, Cp2, Stats2,Cp3,Stats3")
+def test_cpdBootstrap_against_testcases(matlab_engine):
+    """Test to compare function output to testcases."""
+    path_to_artifcats= "ONEFLUX/tests/test_artifacts/cpdBootstrapUStarTh4Season20100901_artifacts/"
+
+    data = json.loads(path_to_artifcats + "cpdBootstrapUStarTh4Season20100901_artifacts.json")
+    for test_case in data["test_cases"]:
+        inputs_list = []
+        for key, value in test_case['input'].items():
+            if isinstance(value, str):  # Check if the value is a string (likely a file path)
+                if os.path.exists(value):  # Check if the file exists
+                    # Read the file using the fixture function and store the data
+                    file_data = read_file(value)
+                    inputs_list[key] = file_data
+                else:
+                    inputs_list[key] = value
+            else:
+                # If it's not a string, directly store the value in the inputs list
+                inputs_list[key] = value
+        
+        matlab_args = to_matlab_type(inputs_list)
+
+        Cp2, Stats2, Cp3, Stats3 = matlab_engine.cpdBootstrapUStarTh4Season20100901(*matlab_args)
+
+        outputs_list = []     
+        for key, value in test_case['output'].items():
+            if isinstance(value, str):  # Check if the value is a string (likely a file path)
+                if os.path.exists(value):  # Check if the file exists
+                    # Read the file using the fixture function and store the data
+                    file_data = read_file(value)
+                    outputs_list[key] = file_data
+                else:
+                    outputs_list[key] = value
+            else:
+                # If it's not a string, directly store the value in the inputs list
+                outputs_list[key] = value
+
+        assert Cp2 == outputs_list[0]
+        assert Stats2 == outputs_list[1]
+        assert Cp3 == outputs_list[2]
+        assert Stats3 == outputs_list[3]
+            
