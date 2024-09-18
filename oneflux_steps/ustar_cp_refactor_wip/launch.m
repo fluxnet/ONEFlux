@@ -426,3 +426,15 @@ function [ppfd_from_rg, exitcode] = ppfd_col_exists(PPFD_INDEX, columns_index, i
     end
 
 end
+
+function [PPFD, ppfd_from_rg] = are_all_ppfd_values_invalid(ppfd_from_rg, columns_index, PPFD_INDEX, data)
+
+    if 0 == ppfd_from_rg
+        PPFD = data(:, columns_index(PPFD_INDEX));
+        % check if ppfd is invalid
+        q = find(PPFD < -9990); 
+        if numel(q) == numel(PPFD);
+            ppfd_from_rg = 1;
+        end        
+    end
+end
