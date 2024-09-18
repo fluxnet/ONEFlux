@@ -71,44 +71,15 @@ function exitcode = launch(input_folder, output_folder)
         [header, data, columns_index] = load_data(input_folder, d, notes, n, input_columns_names);
         
         % parse header, by alessio
-        on_error = 0;
-        for y = 1:length(header(9+length(notes),:))
-            for i = 1:numel(input_columns_names)
-                if (strcmpi(header((9+length(notes)), y), input_columns_names(i))) | (strcmpi(header((9+length(notes)), y), strcat('itp',input_columns_names(i))))
-                    if columns_index(i) ~= -1
-                        fprintf('column %s already founded at index %d\n', char(input_columns_names(i)), i);
-                        on_error = 1;
-                        break;
-                    else
-                        columns_index(i) = y;
-                    end                       
-                end
-            end
-            if ( 1 == on_error )
-                break;
-            end
-        end
+        [exitcode, columns_index] = map_column_names_to_indices(header, input_columns_names, notes, columns_index);
         
-        if 1 == on_error 
-            exitcode = 1;
+        if exitcode == 1
             continue;
         end
             
-        on_error = 0;
-        ppfd_from_rg = 0;
-        for i = 1:numel(columns_index)
-            if -1 == columns_index(i)
-                if i == PPFD_INDEX
-                    ppfd_from_rg = 1;
-                else
-                    fprintf('column %s not found!\n', char(input_columns_names(i)));
-                    on_error = 1;
-                end
-            end        
-        end
+        [ppfd_from_rg, exitcode] = ppfd_col_exists(PPFD_INDEX, columns_index, input_columns_names);
         
-        if 1 == on_error
-            exitcode = 1;
+        if exitcode == 1
             continue;
         end
         
@@ -401,5 +372,57 @@ function [header, data, columns_index] ...
     header = imported_data.('textdata');
     data = imported_data.('data');
     columns_index = ones(numel(input_columns_names), 1) * -1;
+
+end
+
+
+function [exitcode, columns_index] = ...
+    map_column_names_to_indices(header, input_columns_names, notes, columns_index)
+
+    on_error = 0;
+    exitcode = 0;
+    for y = 1:length(header(9+length(notes),:))
+        for i = 1:numel(input_columns_names)
+            if (strcmpi(header((9+length(notes)), y), input_columns_names(i))) | (strcmpi(header((9+length(notes)), y), strcat('itp',input_columns_names(i))))
+                if columns_index(i) ~= -1
+                    fprintf('column %s already founded at index %d\n', char(input_columns_names(i)), i);
+                    on_error = 1;
+                    break;
+                else
+                    columns_index(i) = y;
+                end                       
+            end
+        end
+        if ( 1 == on_error )
+            break;
+        end
+    end
+    
+    if 1 == on_error 
+        exitcode = 1;
+        return;
+    end
+end
+
+function [ppfd_from_rg, exitcode] = ppfd_col_exists(PPFD_INDEX, columns_index, input_columns_names)
+
+    exitcode = 0;
+    on_error = 0;
+    ppfd_from_rg = 0;
+    for i = 1:numel(columns_index)
+        if -1 == columns_index(i)
+            if i == PPFD_INDEX
+                ppfd_from_rg = 1;
+            else
+                fprintf('column %s not found!\n', char(input_columns_names(i)));
+                on_error = 1;
+            end
+        end        
+    end
+    
+    if 1 == on_error
+        exitcode = 1;
+        return;
+    end
 
 end
