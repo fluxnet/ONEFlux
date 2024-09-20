@@ -22,6 +22,7 @@ def load_json(name):
 def matlab_engine():
     # Initialize MATLAB engine
     eng = matlab.engine.start_matlab()
+    eng.addpath('/home/tcai/Projects/ONEFlux/oneflux_steps/ustar_cp')
     yield eng
     eng.quit()
 
