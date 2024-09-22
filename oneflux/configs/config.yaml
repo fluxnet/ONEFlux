@@ -1,0 +1,5 @@
+run:
+  siteid: US-ARc
+  sitedir: US-ARc_sample_input
+  mcr: /home/toanngo/Documents/GitHub/MATLAB_Runtime/v94
+
