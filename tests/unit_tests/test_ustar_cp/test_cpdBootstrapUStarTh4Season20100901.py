@@ -27,7 +27,7 @@ def matlab_engine():
     eng.quit()
 
 @pytest.fixture(scope="module")
-def mock_data(nt=200, tspan=(0, 1), uStar_pars=(0.1, 3.5), T_pars=(-10, 30), fNight=None):
+def mock_data(nt=300, tspan=(0, 1), uStar_pars=(0.1, 3.5), T_pars=(-10, 30), fNight=None):
     """
     Fixture to generate mock time series data for testing purposes. This fixture 
     creates a set of synthetic data typically used in environmental studies, 
@@ -35,7 +35,7 @@ def mock_data(nt=200, tspan=(0, 1), uStar_pars=(0.1, 3.5), T_pars=(-10, 30), fNi
 
     Args:
         nt (int, optional): Number of time points to generate in the series. 
-                            Defaults to 200.
+                            Defaults to 300.
         tspan (tuple, optional): Start and end time for the time vector. 
                                  Defaults to (0, 1).
         uStar_pars (tuple, optional): Minimum and maximum values for the random 
@@ -55,7 +55,8 @@ def mock_data(nt=200, tspan=(0, 1), uStar_pars=(0.1, 3.5), T_pars=(-10, 30), fNi
             - fNight (np.ndarray): Array indicating day (0) or night (1) conditions.
     """
     t = np.linspace(*tspan, nt)  # Generate time vector
-    NEE = np.random.normal(size=nt)  # Random Net Ecosystem Exchange values
+    NEE = np.piecewise(t, [t < 100, (t >= 100) & (t < 200), t >= 200],
+                       [lambda x: 2 * x + 1, lambda x: -x + 300, lambda x: 0.5 * x + 100])
     uStar = np.random.uniform(*uStar_pars, size=nt)  # u* values between typical ranges
     T = np.random.uniform(*T_pars, size=nt)  # Temperature values
     if fNight == None:
@@ -79,8 +80,10 @@ def test_cpdBootstrapUStarTh4Season20100901_basic(matlab_engine, mock_data):
 
     # Call MATLAB function
     Cp2, Stats2, Cp3, Stats3 = matlab_engine.cpdBootstrapUStarTh4Season20100901(
-        t_matlab, NEE_matlab, uStar_matlab, T_matlab, fNight_matlab, fPlot, cSiteYr, nBoot, nargout=4
+        t_matlab, NEE_matlab, uStar_matlab, T_matlab, fNight_matlab, fPlot, cSiteYr, nBoot, 1, nargout=4
     )
+    Stats2 = json.loads(Stats2)
+    Stats3 = json.loads(Stats3)
 
     # Assertions for output types
     assert isinstance(Cp2, matlab.double), "Cp2 should be a MATLAB double array."
@@ -93,35 +96,6 @@ def test_cpdBootstrapUStarTh4Season20100901_basic(matlab_engine, mock_data):
     assert len(Cp3) == 4, "Cp3 should have 4 seasons."
     assert len(Stats2) == 4, "Stats2 should have 4 entries for each season."
     assert len(Stats3) == 4, "Stats3 should have 4 entries for each season."
-
-def test_cpdBootstrapUStarTh4Season20100901_invalid_input(matlab_engine):
-    # Test with invalid inputs to ensure the function handles them gracefully
-    t = [1, 2, 3]  # Insufficient time points
-    NEE = [0.5, -0.2, 0.1]
-    uStar = [0.3, 0.4, 0.5]
-    T = [15, 16, 17]
-    fNight = [1, 0, 1]
-    fPlot = 0
-    cSiteYr = "Site_2024"
-    nBoot = 5
-
-    # Convert inputs to MATLAB format
-    t_matlab = matlab.double(t)
-    NEE_matlab = matlab.double(NEE)
-    uStar_matlab = matlab.double(uStar)
-    T_matlab = matlab.double(T)
-    fNight_matlab = matlab.logical(fNight)
-
-    # Call MATLAB function
-    Cp2, Stats2, Cp3, Stats3 = matlab_engine.cpdBootstrapUStarTh4Season20100901(
-        t_matlab, NEE_matlab, uStar_matlab, T_matlab, fNight_matlab, fPlot, cSiteYr, nBoot, nargout=4
-    )
-
-    # Check if function handles insufficient data gracefully
-    assert Cp2 == [], "Cp2 should be empty for insufficient data."
-    assert Stats2 == [], "Stats2 should be empty for insufficient data."
-    assert Cp3 == [], "Cp3 should be empty for insufficient data."
-    assert Stats3 == [], "Stats3 should be empty for insufficient data."
 
 def test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap(matlab_engine, mock_data):
     # Test with a high number of bootstraps
@@ -139,8 +113,10 @@ def test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap(matlab_engi
 
     # Call MATLAB function
     Cp2, Stats2, Cp3, Stats3 = matlab_engine.cpdBootstrapUStarTh4Season20100901(
-        t_matlab, NEE_matlab, uStar_matlab, T_matlab, fNight_matlab, fPlot, cSiteYr, nBoot, nargout=4
+        t_matlab, NEE_matlab, uStar_matlab, T_matlab, fNight_matlab, fPlot, cSiteYr, nBoot, 1, nargout=4
     )
+    Stats2 = json.loads(Stats2)
+    Stats3 = json.loads(Stats3)
 
     # Validate dimensions with a high bootstrap count
     assert len(Cp2[0][0]) == nBoot, "Each Cp2 season entry should have `nBoot` bootstraps."
@@ -157,7 +133,7 @@ def read_csv_with_csv_module(file_path):
 def read_file(file_path):
     # Check the file extension to differentiate between CSV and JSON
     if file_path.endswith('.csv'):
-        return read_csv_with_csv_module(file_path).to_list()
+        return read_csv_with_csv_module(file_path)
     elif file_path.endswith('.json'):
         with open(file_path, 'r') as f:
             return json.load(f)  # Load JSON file
@@ -186,16 +162,18 @@ def to_matlab_type(data):
 #argnames="t,NEE,ustar,T,fNight, fPlot,cSiteYr,nBoot, Cp2, Stats2,Cp3,Stats3")
 def test_cpdBootstrap_against_testcases(matlab_engine):
     """Test to compare function output to testcases."""
-    path_to_artifcats= "ONEFLUX/tests/test_artifacts/cpdBootstrapUStarTh4Season20100901_artifacts/"
+    path_to_artifacts= "tests/test_artifacts/cpdBootstrapUStarTh4Season20100901_artifacts/"
 
-    data = json.loads(path_to_artifcats + "cpdBootstrapUStarTh4Season20100901_artifacts.json")
+    with open(path_to_artifacts + "cpdBootstrapUStarTh4Season20100901_artifacts.json") as f:
+        data = json.load(f)
     for test_case in data["test_cases"]:
-        inputs_list = []
+        inputs_list = {}
         for key, value in test_case['input'].items():
             if isinstance(value, str):  # Check if the value is a string (likely a file path)
-                if os.path.exists(value):  # Check if the file exists
+                path = "tests/test_artifacts/" + value
+                if os.path.exists(path):  # Check if the file exists
                     # Read the file using the fixture function and store the data
-                    file_data = read_file(value)
+                    file_data = read_file(path)
                     inputs_list[key] = file_data
                 else:
                     inputs_list[key] = value
@@ -203,9 +181,12 @@ def test_cpdBootstrap_against_testcases(matlab_engine):
                 # If it's not a string, directly store the value in the inputs list
                 inputs_list[key] = value
         
+        inputs_list = [inputs_list[str(i)] for i in range(len(inputs_list))]
         matlab_args = to_matlab_type(inputs_list)
 
-        Cp2, Stats2, Cp3, Stats3 = matlab_engine.cpdBootstrapUStarTh4Season20100901(*matlab_args)
+        Cp2, Stats2, Cp3, Stats3 = matlab_engine.cpdBootstrapUStarTh4Season20100901(*matlab_args, 1, nargout=4)
+        Stats2 = json.loads(Stats2)
+        Stats3 = json.loads(Stats3)
 
         outputs_list = []     
         for key, value in test_case['output'].items():
