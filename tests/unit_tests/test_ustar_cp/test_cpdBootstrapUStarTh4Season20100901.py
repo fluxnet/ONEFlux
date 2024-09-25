@@ -97,6 +97,48 @@ def test_cpdBootstrapUStarTh4Season20100901_basic(matlab_engine, mock_data):
     assert len(Stats2) == 4, "Stats2 should have 4 entries for each season."
     assert len(Stats3) == 4, "Stats3 should have 4 entries for each season."
 
+    # Check the structure of Stats2 and Stats3
+    for s2, s3 in zip(Stats2, Stats3):
+        for i in range(8):  # Assuming nStrataX = 8
+            for j in range(nBoot):
+                assert 'n' in s2[i][j]
+                assert 'Cp' in s2[i][j]
+                assert 'Fmax' in s2[i][j]
+                assert 'p' in s2[i][j]
+                assert 'b0' in s2[i][j]
+                assert 'b1' in s2[i][j]
+                assert 'b2' in s2[i][j]
+                assert 'c2' in s2[i][j]
+                assert 'cib0' in s2[i][j]
+                assert 'cib1' in s2[i][j]
+                assert 'cic2' in s2[i][j]
+                assert 'mt' in s2[i][j]
+                assert 'ti' in s2[i][j]
+                assert 'tf' in s2[i][j]
+                assert 'ruStarVsT' in s2[i][j]
+                assert 'puStarVsT' in s2[i][j]
+                assert 'mT' in s2[i][j]
+                assert 'ciT' in s2[i][j]
+
+                assert 'n' in s3[i][j]
+                assert 'Cp' in s3[i][j]
+                assert 'Fmax' in s3[i][j]
+                assert 'p' in s3[i][j]
+                assert 'b0' in s3[i][j]
+                assert 'b1' in s3[i][j]
+                assert 'b2' in s3[i][j]
+                assert 'c2' in s3[i][j]
+                assert 'cib0' in s3[i][j]
+                assert 'cib1' in s3[i][j]
+                assert 'cic2' in s3[i][j]
+                assert 'mt' in s3[i][j]
+                assert 'ti' in s3[i][j]
+                assert 'tf' in s3[i][j]
+                assert 'ruStarVsT' in s3[i][j]
+                assert 'puStarVsT' in s3[i][j]
+                assert 'mT' in s3[i][j]
+                assert 'ciT' in s3[i][j]
+
 def test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap(matlab_engine, mock_data):
     # Test with a high number of bootstraps
     t, NEE, uStar, T, fNight = mock_data
@@ -125,10 +167,11 @@ def test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap(matlab_engi
     assert len(Stats3[0][0]) == nBoot, "Stats3 should match the number of bootstraps."
 
 def read_csv_with_csv_module(file_path):
-    with open(file_path, mode='r') as file:
-        reader = csv.reader(file)
-        data = [row for row in reader]
-    return data
+    return np.loadtxt(file_path, delimiter=',')
+    # with open(file_path, mode='r') as file:
+    #     reader = csv.reader(file)
+    #     data = [row for row in reader]
+    # return data
 
 def read_file(file_path):
     # Check the file extension to differentiate between CSV and JSON
@@ -147,6 +190,13 @@ def to_matlab_type(data):
         for key, value in data.items():
             matlab_struct[key] = to_matlab_type(value)  # Recursively handle nested structures
         return matlab_struct
+    elif isinstance(data, np.ndarray):
+        if data.dtype == bool:
+            return matlab.logical(data.tolist())
+        elif np.isreal(data).all():
+            return matlab.double(data.tolist())
+        else:
+            return data.tolist()  # Convert non-numeric arrays to lists
     elif isinstance(data, list):
         # Convert Python list to MATLAB double array if all elements are numbers
         if all(isinstance(elem, (int, float)) for elem in data):
@@ -159,7 +209,6 @@ def to_matlab_type(data):
     else:
         return data  # If the data type is already MATLAB-compatible
 
-#argnames="t,NEE,ustar,T,fNight, fPlot,cSiteYr,nBoot, Cp2, Stats2,Cp3,Stats3")
 def test_cpdBootstrap_against_testcases(matlab_engine):
     """Test to compare function output to testcases."""
     path_to_artifacts= "tests/test_artifacts/cpdBootstrapUStarTh4Season20100901_artifacts/"
@@ -170,7 +219,7 @@ def test_cpdBootstrap_against_testcases(matlab_engine):
         inputs_list = {}
         for key, value in test_case['input'].items():
             if isinstance(value, str):  # Check if the value is a string (likely a file path)
-                path = "tests/test_artifacts/" + value
+                path = os.path.join(path_to_artifacts, test_case["id"], value)
                 if os.path.exists(path):  # Check if the file exists
                     # Read the file using the fixture function and store the data
                     file_data = read_file(path)
@@ -185,24 +234,30 @@ def test_cpdBootstrap_against_testcases(matlab_engine):
         matlab_args = to_matlab_type(inputs_list)
 
         Cp2, Stats2, Cp3, Stats3 = matlab_engine.cpdBootstrapUStarTh4Season20100901(*matlab_args, 1, nargout=4)
+        Cp2 = mat2list(Cp2)
+        Cp3 = mat2list(Cp3)
         Stats2 = json.loads(Stats2)
         Stats3 = json.loads(Stats3)
 
-        outputs_list = []     
-        for key, value in test_case['output'].items():
+        outputs_list = {}
+        for key, value in test_case['expected_output'].items():
             if isinstance(value, str):  # Check if the value is a string (likely a file path)
-                if os.path.exists(value):  # Check if the file exists
+                path = os.path.join(path_to_artifacts, test_case["id"], value)
+                if os.path.exists(path):  # Check if the file exists
                     # Read the file using the fixture function and store the data
-                    file_data = read_file(value)
+                    file_data = read_file(path)
                     outputs_list[key] = file_data
                 else:
                     outputs_list[key] = value
             else:
                 # If it's not a string, directly store the value in the inputs list
                 outputs_list[key] = value
+        outputs_list = [outputs_list[str(i)] for i in range(len(outputs_list))]
 
         assert Cp2 == outputs_list[0]
         assert Stats2 == outputs_list[1]
         assert Cp3 == outputs_list[2]
         assert Stats3 == outputs_list[3]
-            
+
+def mat2list(arr):
+    return np.where(np.isnan(arr), None, arr).tolist()

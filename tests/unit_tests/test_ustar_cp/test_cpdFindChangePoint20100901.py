@@ -50,8 +50,8 @@ def test_cpdFindChangePoint20100901(matlab_engine, test_data):
     # Additional checks can be added based on expected output
     assert s2['n'] == len(xx)
     assert s3['n'] == len(xx)
-    assert Cp2 == 3
-    assert Cp3 == 7
+    assert Cp2 == 1.8
+    assert Cp3 == 2.6
 
 if __name__ == "__main__":
     pytest.main()

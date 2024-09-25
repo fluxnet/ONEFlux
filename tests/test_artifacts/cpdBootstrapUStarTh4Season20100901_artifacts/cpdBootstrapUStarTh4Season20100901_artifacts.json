@@ -4,13 +4,13 @@
       "id": "Testcase_1",
       "description": "Basic functionality test using US_ARC_sample reference data",
       "input": {
-        "0": "cpdBootstrapUStarTh4Season20100901_artifacts/Testcase_1/t.csv",
-        "1": "cpdBootstrapUStarTh4Season20100901_artifacts/Testcase_1/NEE.csv",
-        "2": "cpdBootstrapUStarTh4Season20100901_artifacts/Testcase_1/uStar.csv",
-        "3": "cpdBootstrapUStarTh4Season20100901_artifacts/Testcase_1/T.csv",
-        "4": "cpdBootstrapUStarTh4Season20100901_artifacts/Testcase_1/fNight.csv",
+        "0": "t.csv",
+        "1": "NEE.csv",
+        "2": "uStar.csv",
+        "3": "T.csv",
+        "4": "fNight.csv",
         "5": 0,
-        "6": "US_ARc_sample/05_ustar_cp/US-ARc_qca_ustar_2005.csv",
+        "6": "TestSiteYear",
         "7": 100
       },
       "expected_output": {
