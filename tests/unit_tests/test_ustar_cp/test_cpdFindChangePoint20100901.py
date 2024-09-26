@@ -2,14 +2,6 @@ import pytest
 import matlab.engine
 import numpy as np
 
-@pytest.fixture(scope="module")
-def matlab_engine():
-    # Initialize MATLAB engine
-    eng = matlab.engine.start_matlab()
-    eng.addpath('/home/tcai/Projects/ONEFlux/oneflux_steps/ustar_cp')
-    yield eng
-    eng.quit()
-
 @pytest.fixture
 def test_data():
     # Generate synthetic data with change points

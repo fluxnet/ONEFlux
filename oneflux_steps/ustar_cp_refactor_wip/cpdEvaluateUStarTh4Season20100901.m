@@ -1,6 +1,6 @@
 	function [Cp2,Stats2,Cp3,Stats3] = ... 
 		cpdEvaluateUStarTh4Season20100901 ...
-		(t,NEE,uStar,T,fNight,fPlot,cSiteYr) 
+		(t,NEE,uStar,T,fNight,fPlot,cSiteYr,varargin) 
 
 %	nacpEvaluateUStarTh4Season20100901
 
@@ -179,6 +179,10 @@
 		
 	end; % for iSeason
 		
+	if size(varargin) > 0
+		Stats2 = jsonencode(Stats2);
+		Stats3 = jsonencode(Stats3);
+	end;
 %	========================================================================
 %	========================================================================
 	

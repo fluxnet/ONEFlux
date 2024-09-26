@@ -1,6 +1,6 @@
 	function [Cp2,Stats2,Cp3,Stats3] = ... 
 		cpdBootstrapUStarTh4Season20100901 ...
-			(t,NEE,uStar,T,fNight,fPlot,cSiteYr,nBoot,varargin) 
+			(t,NEE,uStar,T,fNight,fPlot,cSiteYr,nBoot) 
 	
 %	cpdBootstrapUStarTh4Season20100901
 
@@ -143,8 +143,3 @@
 		end; % for iBoot
 		
 	end; % if ntNee>=ntN;
-	
-	if size(varargin)>0;
-		Stats2 = jsonencode(Stats2);
-		Stats3 = jsonencode(Stats3);
-	end;

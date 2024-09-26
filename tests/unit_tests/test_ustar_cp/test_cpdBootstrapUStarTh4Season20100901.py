@@ -19,14 +19,6 @@ def load_json(name):
         return json.load(file)
 
 @pytest.fixture(scope="module")
-def matlab_engine():
-    # Initialize MATLAB engine
-    eng = matlab.engine.start_matlab()
-    eng.addpath('/home/tcai/Projects/ONEFlux/oneflux_steps/ustar_cp')
-    yield eng
-    eng.quit()
-
-@pytest.fixture(scope="module")
 def mock_data(nt=300, tspan=(0, 1), uStar_pars=(0.1, 3.5), T_pars=(-10, 30), fNight=None):
     """
     Fixture to generate mock time series data for testing purposes. This fixture 
