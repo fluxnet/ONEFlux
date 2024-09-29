@@ -1,6 +1,16 @@
 """
 This module contains pytest fixtures and utility functions to set up the test environment,
 handle MATLAB engine interactions, and process text files for comparison in unit tests.
+
+Contents:
+    Fixtures:
+        matlab_engine
+        setup_folders
+        find_text_file
+        extract_section_between_keywords
+    Helper_functions:
+        process_std_out
+        compare_text_blocks
 """
 
 import pytest
@@ -114,7 +124,7 @@ def setup_folders(tmp_path, testcase: str = "US_ARc"):
 @pytest.fixture
 def find_text_file():
     """
-    Fixture to find the first `.txt` file in the given folder, open it, 
+    Fixture to find the `report` file in the given folder, open it, 
     extract its contents as a list of lines, and return the contents.
 
     Returns:

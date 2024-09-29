@@ -90,46 +90,12 @@ def test_cpdBootstrapUStarTh4Season20100901_basic(matlab_engine, mock_data):
     assert len(Stats3) == 4, "Stats3 should have 4 entries for each season."
 
     # Check the structure of Stats2 and Stats3
+    struct = ['n', 'Cp', 'Fmax', 'p', 'b0', 'b1', 'b2', 'c2', 'cib0', 'cib1', 'cic2', 'mt' , 'ti', 'tf', 'ruStarVsT', 'puStarVsT', 'mT', 'ciT']
     for s2, s3 in zip(Stats2, Stats3):
         for i in range(8):  # Assuming nStrataX = 8
             for j in range(nBoot):
-                assert 'n' in s2[i][j]
-                assert 'Cp' in s2[i][j]
-                assert 'Fmax' in s2[i][j]
-                assert 'p' in s2[i][j]
-                assert 'b0' in s2[i][j]
-                assert 'b1' in s2[i][j]
-                assert 'b2' in s2[i][j]
-                assert 'c2' in s2[i][j]
-                assert 'cib0' in s2[i][j]
-                assert 'cib1' in s2[i][j]
-                assert 'cic2' in s2[i][j]
-                assert 'mt' in s2[i][j]
-                assert 'ti' in s2[i][j]
-                assert 'tf' in s2[i][j]
-                assert 'ruStarVsT' in s2[i][j]
-                assert 'puStarVsT' in s2[i][j]
-                assert 'mT' in s2[i][j]
-                assert 'ciT' in s2[i][j]
-
-                assert 'n' in s3[i][j]
-                assert 'Cp' in s3[i][j]
-                assert 'Fmax' in s3[i][j]
-                assert 'p' in s3[i][j]
-                assert 'b0' in s3[i][j]
-                assert 'b1' in s3[i][j]
-                assert 'b2' in s3[i][j]
-                assert 'c2' in s3[i][j]
-                assert 'cib0' in s3[i][j]
-                assert 'cib1' in s3[i][j]
-                assert 'cic2' in s3[i][j]
-                assert 'mt' in s3[i][j]
-                assert 'ti' in s3[i][j]
-                assert 'tf' in s3[i][j]
-                assert 'ruStarVsT' in s3[i][j]
-                assert 'puStarVsT' in s3[i][j]
-                assert 'mT' in s3[i][j]
-                assert 'ciT' in s3[i][j]
+                for k in struct:
+                    assert k in (s2[i][j] and s3[i][j])
 
 def test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap(matlab_engine, mock_data):
     # Test with a high number of bootstraps
