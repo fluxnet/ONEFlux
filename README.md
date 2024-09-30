@@ -119,8 +119,10 @@ Run all steps in the pipeline:
 - *2005*: First year to be processed
 - *2006*: Last year to be processed
 - *-l partitioning_nt_US-ARc.log*: Uses file to store execution log
+- *--era-fy 1989*: first year of data for the ERA product
+- *--era-ly 2014*: last year of data for the ERA product
 ```
-python runoneflux.py all "../datadir/" US-ARc "US-ARc_sample_input" 2005 2006 -l fluxnet_pipeline_US-ARc.log --mcr ~/bin/matlab/v94/ --recint hh
+python runoneflux.py all "../datadir/" US-ARc "US-ARc_sample_input" 2005 2006 -l fluxnet_pipeline_US-ARc.log --mcr ~/bin/matlab/v94/ --recint hh --era-fy 1989 --era-ly 2014
 ```
 
 
