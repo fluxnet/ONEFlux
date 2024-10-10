@@ -8,15 +8,8 @@ import pytest
 import matlab.engine
 import numpy as np
 import json
-import csv
 import os
-
-@pytest.fixture
-def load_json(name):
-    """Loads json."""
-
-    with open(name, 'r') as file:
-        return json.load(file)
+from tests.conftest import to_matlab_type, read_file, mat2list
 
 @pytest.fixture(scope="module")
 def mock_data(nt=300, tspan=(0, 1), uStar_pars=(0.1, 3.5), T_pars=(-10, 30), fNight=None):
@@ -124,49 +117,6 @@ def test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap(matlab_engi
     assert len(Stats2[0][0]) == nBoot, "Stats2 should match the number of bootstraps."
     assert len(Stats3[0][0]) == nBoot, "Stats3 should match the number of bootstraps."
 
-def read_csv_with_csv_module(file_path):
-    return np.loadtxt(file_path, delimiter=',')
-    # with open(file_path, mode='r') as file:
-    #     reader = csv.reader(file)
-    #     data = [row for row in reader]
-    # return data
-
-def read_file(file_path):
-    # Check the file extension to differentiate between CSV and JSON
-    if file_path.endswith('.csv'):
-        return read_csv_with_csv_module(file_path)
-    elif file_path.endswith('.json'):
-        with open(file_path, 'r') as f:
-            return json.load(f)  # Load JSON file
-    else:
-        raise ValueError(f"Unsupported file type: {file_path}")
-
-def to_matlab_type(data):
-    if isinstance(data, dict):
-        # Convert a Python dictionary to a MATLAB struct
-        matlab_struct = matlab.struct()
-        for key, value in data.items():
-            matlab_struct[key] = to_matlab_type(value)  # Recursively handle nested structures
-        return matlab_struct
-    elif isinstance(data, np.ndarray):
-        if data.dtype == bool:
-            return matlab.logical(data.tolist())
-        elif np.isreal(data).all():
-            return matlab.double(data.tolist())
-        else:
-            return data.tolist()  # Convert non-numeric arrays to lists
-    elif isinstance(data, list):
-        # Convert Python list to MATLAB double array if all elements are numbers
-        if all(isinstance(elem, (int, float)) for elem in data):
-            return matlab.double(data)
-        else:
-            # Create a cell array for lists containing non-numeric data
-            return [to_matlab_type(elem) for elem in data]
-    elif isinstance(data, (int, float)):
-        return matlab.double([data])  # Convert single numbers
-    else:
-        return data  # If the data type is already MATLAB-compatible
-
 def test_cpdBootstrap_against_testcases(matlab_engine):
     """Test to compare function output to testcases."""
     path_to_artifacts= "tests/test_artifacts/cpdBootstrapUStarTh4Season20100901_artifacts/"
@@ -216,6 +166,3 @@ def test_cpdBootstrap_against_testcases(matlab_engine):
         assert Stats2 == outputs_list[1]
         assert Cp3 == outputs_list[2]
         assert Stats3 == outputs_list[3]
-
-def mat2list(arr):
-    return np.where(np.isnan(arr), None, arr).tolist()

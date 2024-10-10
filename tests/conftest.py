@@ -8,9 +8,14 @@ Contents:
         setup_folders
         find_text_file
         extract_section_between_keywords
+        load_json
     Helper_functions:
         process_std_out
         compare_text_blocks
+        to_matlab_type
+        read_csv_with_csv_module
+        read_file
+        mat2list
 """
 
 import pytest
@@ -18,6 +23,8 @@ import os
 import matlab.engine
 import shutil
 import glob
+import json
+import numpy as np
 
 @pytest.fixture()
 def matlab_engine(refactored=True):
@@ -204,6 +211,7 @@ def process_std_out(std_out):
     output_lines = output.splitlines()
     return output_lines
 
+
 def compare_text_blocks(text1, text2):
     """
     Compare two blocks of text after stripping whitespace.
@@ -216,3 +224,49 @@ def compare_text_blocks(text1, text2):
         bool: True if the stripped text blocks are identical, False otherwise.
     """
     return text1.replace('\n', '').strip() == text2.replace('\n', '').strip()
+
+def to_matlab_type(data):
+    if isinstance(data, dict):
+        # Convert a Python dictionary to a MATLAB struct
+        matlab_struct = matlab.struct()
+        for key, value in data.items():
+            matlab_struct[key] = to_matlab_type(value)  # Recursively handle nested structures
+        return matlab_struct
+    elif isinstance(data, np.ndarray):
+        if data.dtype == bool:
+            return matlab.logical(data.tolist())
+        elif np.isreal(data).all():
+            return matlab.double(data.tolist())
+        else:
+            return data.tolist()  # Convert non-numeric arrays to lists
+    elif isinstance(data, list):
+        # Convert Python list to MATLAB double array if all elements are numbers
+        if all(isinstance(elem, (int, float)) for elem in data):
+            return matlab.double(data)
+        else:
+            # Create a cell array for lists containing non-numeric data
+            return [to_matlab_type(elem) for elem in data]
+    elif isinstance(data, (int, float)):
+        return matlab.double([data])  # Convert single numbers
+    else:
+        return data  # If the data type is already MATLAB-compatible
+    
+def read_csv_with_csv_module(file_path):
+    return np.loadtxt(file_path, delimiter=',')
+    # with open(file_path, mode='r') as file:
+    #     reader = csv.reader(file)
+    #     data = [row for row in reader]
+    # return data
+
+def read_file(file_path):
+    # Check the file extension to differentiate between CSV and JSON
+    if file_path.endswith('.csv'):
+        return read_csv_with_csv_module(file_path)
+    elif file_path.endswith('.json'):
+        with open(file_path, 'r') as f:
+            return json.load(f)  # Load JSON file
+    else:
+        raise ValueError(f"Unsupported file type: {file_path}")
+    
+def mat2list(arr):
+    return np.where(np.isnan(arr), None, arr).tolist()
