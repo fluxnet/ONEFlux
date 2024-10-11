@@ -9,7 +9,7 @@ import matlab.engine
 import numpy as np
 import json
 import os
-from tests.conftest import to_matlab_type, read_file, mat2list
+from tests.conftest import to_matlab_type, read_file, mat2list, parse_testcase
 
 @pytest.fixture(scope="module")
 def mock_data(nt=300, tspan=(0, 1), uStar_pars=(0.1, 3.5), T_pars=(-10, 30), fNight=None):
@@ -44,7 +44,7 @@ def mock_data(nt=300, tspan=(0, 1), uStar_pars=(0.1, 3.5), T_pars=(-10, 30), fNi
                        [lambda x: 2 * x + 1, lambda x: -x + 300, lambda x: 0.5 * x + 100])
     uStar = np.random.uniform(*uStar_pars, size=nt)  # u* values between typical ranges
     T = np.random.uniform(*T_pars, size=nt)  # Temperature values
-    if fNight == None:
+    if fNight is None:
         fNight = np.random.choice([0, 1], size=nt)  # Randomly assign day/night
     else:
         fNight = np.resize(fNight, nt)
@@ -118,50 +118,33 @@ def test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap(matlab_engi
     assert len(Stats3[0][0]) == nBoot, "Stats3 should match the number of bootstraps."
 
 def test_cpdBootstrap_against_testcases(matlab_engine):
-    """Test to compare function output to testcases."""
-    path_to_artifacts= "tests/test_artifacts/cpdBootstrapUStarTh4Season20100901_artifacts/"
+    """Test to compare function output to test cases."""
+    path_to_artifacts = "tests/test_artifacts/cpdBootstrapUStarTh4Season20100901_artifacts/"
 
+    # Load the JSON test cases file
     with open(path_to_artifacts + "cpdBootstrapUStarTh4Season20100901_artifacts.json") as f:
         data = json.load(f)
+
+    # Iterate over each test case in the loaded JSON
     for test_case in data["test_cases"]:
-        inputs_list = {}
-        for key, value in test_case['input'].items():
-            if isinstance(value, str):  # Check if the value is a string (likely a file path)
-                path = os.path.join(path_to_artifacts, test_case["id"], value)
-                if os.path.exists(path):  # Check if the file exists
-                    # Read the file using the fixture function and store the data
-                    file_data = read_file(path)
-                    inputs_list[key] = file_data
-                else:
-                    inputs_list[key] = value
-            else:
-                # If it's not a string, directly store the value in the inputs list
-                inputs_list[key] = value
-        
-        inputs_list = [inputs_list[str(i)] for i in range(len(inputs_list))]
+        # Ensure test_case is passed correctly to parse_testcase
+        inputs, outputs = parse_testcase(test_case, path_to_artifacts)
+
+        # Convert inputs into a list for MATLAB function call
+        inputs_list = [inputs[str(i)] for i in range(len(inputs))]
         matlab_args = to_matlab_type(inputs_list)
 
+        # Call the MATLAB function and capture its output
         Cp2, Stats2, Cp3, Stats3 = matlab_engine.cpdBootstrapUStarTh4Season20100901(*matlab_args, 1, nargout=4)
         Cp2 = mat2list(Cp2)
         Cp3 = mat2list(Cp3)
         Stats2 = json.loads(Stats2)
         Stats3 = json.loads(Stats3)
 
-        outputs_list = {}
-        for key, value in test_case['expected_output'].items():
-            if isinstance(value, str):  # Check if the value is a string (likely a file path)
-                path = os.path.join(path_to_artifacts, test_case["id"], value)
-                if os.path.exists(path):  # Check if the file exists
-                    # Read the file using the fixture function and store the data
-                    file_data = read_file(path)
-                    outputs_list[key] = file_data
-                else:
-                    outputs_list[key] = value
-            else:
-                # If it's not a string, directly store the value in the inputs list
-                outputs_list[key] = value
-        outputs_list = [outputs_list[str(i)] for i in range(len(outputs_list))]
+        # Extract the expected outputs for comparison
+        outputs_list = [outputs[str(i)] for i in range(len(outputs))]
 
+        # Assertions to compare MATLAB results to expected outputs
         assert Cp2 == outputs_list[0]
         assert Stats2 == outputs_list[1]
         assert Cp3 == outputs_list[2]

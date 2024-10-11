@@ -16,6 +16,7 @@ Contents:
         read_csv_with_csv_module
         read_file
         mat2list
+        parse_testcase
 """
 
 import pytest
@@ -226,6 +227,26 @@ def compare_text_blocks(text1, text2):
     return text1.replace('\n', '').strip() == text2.replace('\n', '').strip()
 
 def to_matlab_type(data):
+    """
+    Converts various Python data types to their MATLAB equivalents.
+
+    This function handles conversion of Python dictionaries, NumPy arrays, lists,
+    and numeric types to MATLAB-compatible types using the `matlab` library.
+
+    Args:
+        data (any): The input data to be converted. Can be a dictionary, NumPy array,
+                    list, integer, float, or other types.
+
+    Returns:
+        any: The converted data in a MATLAB-compatible format. The specific return type
+             depends on the input data type:
+             - dict: Converted to a MATLAB struct.
+             - np.ndarray: Converted to MATLAB logical, double, or list.
+             - list: Converted to MATLAB double array or cell array.
+             - int, float: Converted to MATLAB double.
+             - Other types: Returned as-is if already MATLAB-compatible.
+
+    """
     if isinstance(data, dict):
         # Convert a Python dictionary to a MATLAB struct
         matlab_struct = matlab.struct()
@@ -252,13 +273,31 @@ def to_matlab_type(data):
         return data  # If the data type is already MATLAB-compatible
     
 def read_csv_with_csv_module(file_path):
+    """
+    Reads a CSV file and returns its contents as a NumPy array.
+
+    Args:
+        file_path (str): The path to the CSV file.
+
+    Returns:
+        numpy.ndarray: The contents of the CSV file as a NumPy array.
+    """
     return np.loadtxt(file_path, delimiter=',')
-    # with open(file_path, mode='r') as file:
-    #     reader = csv.reader(file)
-    #     data = [row for row in reader]
-    # return data
 
 def read_file(file_path):
+    """
+    Reads a file and returns its contents based on the file extension.
+
+    Args:
+        file_path (str): The path to the file to be read. The file can be either a CSV or a JSON file.
+
+    Returns:
+        dict or list: The contents of the file. Returns a list of dictionaries if the file is a CSV, 
+                      or a dictionary if the file is a JSON.
+
+    Raises:
+        ValueError: If the file extension is not supported.
+    """
     # Check the file extension to differentiate between CSV and JSON
     if file_path.endswith('.csv'):
         return read_csv_with_csv_module(file_path)
@@ -270,3 +309,44 @@ def read_file(file_path):
     
 def mat2list(arr):
     return np.where(np.isnan(arr), None, arr).tolist()
+
+def parse_testcase(test_case: dict, path_to_artifacts: str):
+    """
+    Parses the test case data by reading file-based inputs and outputs if necessary.
+
+    Args:
+        test_case (dict): A dictionary containing a single test case's input and expected_output.
+        path_to_artifacts (str): The path to the directory where test case artifacts are stored.
+
+    Returns:
+        tuple: A tuple containing two dictionaries:
+            - inputs (dict): A dictionary with processed input data.
+            - outputs (dict): A dictionary with processed expected output data.
+    """
+    inputs: dict = {}
+    outputs: dict = {}
+    
+    for io_type in ['input', 'expected_output']:
+        for key, value in test_case[io_type].items():  # Use test_case here
+            if isinstance(value, str):  # Check if the value is a string (likely a file path)
+                path = os.path.join(path_to_artifacts, test_case["id"], value)  # Use test_case here
+                if os.path.exists(path):  # Check if the file exists
+                    # Read the file using the fixture function and store the data
+                    file_data = read_file(path)
+                    if io_type == 'input':
+                        inputs[key] = file_data
+                    else:
+                        outputs[key] = file_data
+                else:
+                    if io_type == 'input':
+                        inputs[key] = value
+                    else:
+                        outputs[key] = value
+            else:
+                # If it's not a string, directly store the value in the inputs or outputs dictionary
+                if io_type == 'input':
+                    inputs[key] = value
+                else:
+                    outputs[key] = value
+    
+    return inputs, outputs
