@@ -59,6 +59,17 @@ def matlab_engine(refactored=True):
     matlab_function_path = os.path.join(current_dir, code_path)
     eng.addpath(matlab_function_path, nargout=0)
 
+    def _add_all_subdirs_to_matlab_path(path, matlab_engine):
+        # Recursively find all subdirectories
+        for root, dirs, files in os.walk(path):
+            # Add each directory to the MATLAB path
+            matlab_engine.addpath(root, nargout=0)  # nargout=0 suppresses output
+
+        return
+    
+    # Add the base directory and all its subdirectories to MATLAB path
+    _add_all_subdirs_to_matlab_path(matlab_function_path, eng)
+
     yield eng
 
     # Close MATLAB engine after tests are done
@@ -271,6 +282,32 @@ def to_matlab_type(data):
         return matlab.double([data])  # Convert single numbers
     else:
         return data  # If the data type is already MATLAB-compatible
+    
+# Helper function to compare MATLAB double arrays element-wise, handling NaN comparisons
+def compare_matlab_arrays(result, expected):
+    # Convert MATLAB double to list for comparison
+    result_list = result if isinstance(result, list) else list(result)
+    expected_list = expected if isinstance(expected, list) else list(expected)
+
+    # Check if lengths are the same
+    if len(result_list) != len(expected_list):
+        return False
+    
+    # Compare each element
+    for r, e in zip(result_list, expected_list):
+        # Extract scalar value if wrapped in an array-like structure
+        r_value = r[0] if isinstance(r, (list, np.ndarray, matlab.double)) and len(r) > 0 else r
+        e_value = e[0] if isinstance(e, (list, np.ndarray, matlab.double)) and len(e) > 0 else e
+    
+        # Handle NaN comparisons
+        if np.isnan(r_value) and np.isnan(e_value):
+            continue  # NaNs are considered equal
+        elif np.isnan(r_value) ^ np.isnan(e_value):
+            return False  # One is NaN and the other is not
+        elif not np.allclose(r_value, e_value):  # Check if values are approximately equal
+            return False
+    
+    return True
     
 def read_csv_with_csv_module(file_path):
     """
