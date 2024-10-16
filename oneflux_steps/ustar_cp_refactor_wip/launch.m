@@ -150,24 +150,6 @@ function exitcode = launch(input_folder, output_folder)
         %end    
     %     print -djpeg100 Plot2_4Season_CACa1-2001; 
         
-    % commented by alessio
-    % 	% multi-season analysis
-    %     if exist([cOut,'multi-season_analysis_',strrep(cSiteYr,'.txt',''),'.mat']) == 0 
-    %         [Cp2,Stats2,Cp3,Stats3] = ... 
-    %             cpdBootstrapUStarTh20100901 ...
-    %                 (t,NEE,uStar,T,fNight,fPlot,cSiteYr,nBoot); 
-    % 
-    %         [Cp,n,tW,CpW,cMode,cFailure,fSelect,sSine,FracSig,FracModeD,FracSelect] ... 
-    %             = cpdAssignUStarTh20100901(Stats2,fPlot,cSiteYr); 
-    %     % 	print -djpeg100 Plot2_CACa1-2001; 
-    % 
-    %         if isempty(cFailure)
-    %             save([cOut,'multi-season_analysis_',strrep(cSiteYr,'.txt',''),'.mat'],'Cp2','Stats2','Cp3','Stats3',...
-    %                 'Cp','n','tW','CpW','cMode','cFailure','fSelect','sSine','FracSig','FracModeD','FracSelect');
-    %         else
-    %             error_str = [error_str;{cSiteYr},'multi-season_analysis',cFailure];
-    %         end        
-    %     end
 
         clear uStar cFailure cMode cSiteYr fNight fPlot fSelect n nBoot sSine t 
         clear tW Cp3 CpW FracModeD FracSelect FracSig NEE PPFD Rg Stats2 Stats3 T Ta Cp Cp2
