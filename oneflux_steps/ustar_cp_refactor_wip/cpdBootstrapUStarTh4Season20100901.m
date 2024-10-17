@@ -85,8 +85,8 @@ function [Cp2, Stats2, Cp3, Stats3] = cpdBootstrapUStarTh4Season20100901(t, NEE,
     Cp2 = setup_Cp(nSeasons, nStrataX, nBoot);
     Cp3 = setup_Cp(nSeasons, nStrataX, nBoot);
 
-    Stats2 = setup_Stats(nBoot, nSeasons, nStrataX, 0);
-    Stats3 = setup_Stats(nBoot, nSeasons, nStrataX, 0);
+    Stats2 = setup_Stats(nBoot, nSeasons, nStrataX);
+    Stats3 = setup_Stats(nBoot, nSeasons, nStrataX);
 	
     % by alessio
 	%disp(' ');
