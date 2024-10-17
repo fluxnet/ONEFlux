@@ -31,7 +31,7 @@ jobs:
         wget ftp://ftp.fluxdata.org/.ameriflux_downloads/.test/US-ARc_sample_input.zip
         wget ftp://ftp.fluxdata.org/.ameriflux_downloads/.test/US-ARc_sample_output.zip
         unzip US-ARc_sample_input.zip -d ./tests/data/test_input
-        unzip US-ARc_sample_output.zip -d ./tests/data/test_output
+        unzip US-ARc_sample_output.zip -d ./tests/data/test_reference
     - name: Run pytest
       run: |
         export PYTHONPATH=/home/runner/work/ONEFlux/ONEFlux:$PYTHONPATH

@@ -12,8 +12,8 @@ _log = logging.getLogger(__name__)
 @pytest.fixture(scope="module")
 def get_data():
     '''
-    Utilising python to obtain sample test data. Function currently unused. 
-    as a fixture in this class. 
+    Obtain sample test data using a fixture
+    Function currently unused.
     '''
     from zipfile import ZipFile
     urllib.urlopen('ftp://ftp.fluxdata.org/.ameriflux_downloads/.test/US-ARc_sample_output.zip') 
@@ -24,7 +24,7 @@ def get_data():
     
     with ZipFile(input_zip) as zi, ZipFile(output_zip) as zo:
         zi.extractall(path='tests/data/test_input')
-        zo.extractall(path='tests/data/test_output')
+        zo.extractall(path='tests/data/test_reference')
 
 def equal_csv(csv_1, csv_2):
     '''
@@ -55,6 +55,7 @@ def setup_data():
     '''
     try:
         os.mkdir('tests/integration/data/step_10')
+        os.mkdir('tests/data/test_reference')
     except OSError as e:
         if e.errno == errno.EEXIST:
             print("directory exists")
@@ -63,7 +64,7 @@ def setup_data():
     
     copy_tree('tests/data/test_input/', testdata)
 
-    refoutdir = 'tests/data/test_output/US-ARc_sample_output'
+    refoutdir = 'tests/data/test_reference/US-ARc_sample_output'
 
     copy_tree(os.path.join(refoutdir, '07_meteo_proc'), \
         os.path.join(testdata, '07_meteo_proc'))
@@ -78,7 +79,7 @@ def test_run_partition_nt(setup_data):
     Run partition_nt on single percentile.
     '''
     datadir = "./tests/python/integration/input/step_10/"
-    refoutdir = "./tests/data/test_output/"
+    refoutdir = "./tests/data/test_reference/"
     siteid = "US-ARc"
     sitedir = "US-ARc_sample_input"
     years = [2005] # years = [2005, 2006]
@@ -95,7 +96,7 @@ def test_run_partition_nt(setup_data):
     run_python(datadir=datadir, siteid=siteid, sitedir=sitedir, prod_to_compare=PROD_TO_COMPARE,
                perc_to_compare=PERC_TO_COMPARE, years_to_compare=years)
     
-    # check whether csv of "output" is same as csv of reference
+    # check whether csv of output in input directory is same as csv of reference
 
     # the generated output is actually in the "input" directory.
     rootdir = os.path.join(datadir, sitedir, "10_nee_partition_nt")
@@ -107,10 +108,9 @@ def test_run_partition_nt(setup_data):
     ref_nee_y_files = glob.glob(os.path.join(refoutdir, "nee_y_1.25_US-ARc_2005*"))
    
     assert len(nee_y_files) == len(ref_nee_y_files)
-    retval = True 
     for f, b in zip(nee_y_files, ref_nee_y_files):
         print(f, b)
-        assert equal_csv(f, b) == True
+        assert equal_csv(f, b) 
 
     # clean up data. 
     # shutil.rmtree(datadir)

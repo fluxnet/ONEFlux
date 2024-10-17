@@ -11,4 +11,5 @@ Simple context/import setup test
 
 def test_import_oneflux():
     import oneflux
-    assert hasattr(oneflux, '__version__') == True
+
+    assert hasattr(oneflux, "__version__")
