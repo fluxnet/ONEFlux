@@ -1,4 +1,4 @@
-function [Stats] = setup_Stats(nBoot, nSeasons, nStrataX)
+function [Stats] = setup_Stats(nBoot, nSeasons, nStrataX, varargin)
 
     StatsMT = generate_statsMT();
 
@@ -11,4 +11,6 @@ function [Stats] = setup_Stats(nBoot, nSeasons, nStrataX)
 			end; 
 		end; 
 	end;
+	if size(varargin)>0;
+		Stats = jsonencode(Stats);
 end
