@@ -1,6 +1,22 @@
 """
 This module contains pytest fixtures and utility functions to set up the test environment,
 handle MATLAB engine interactions, and process text files for comparison in unit tests.
+
+Contents:
+    Fixtures:
+        matlab_engine
+        setup_folders
+        find_text_file
+        extract_section_between_keywords
+        load_json
+    Helper_functions:
+        process_std_out
+        compare_text_blocks
+        to_matlab_type
+        read_csv_with_csv_module
+        read_file
+        mat2list
+        parse_testcase
 """
 
 import pytest
@@ -8,6 +24,8 @@ import os
 import matlab.engine
 import shutil
 import glob
+import json
+import numpy as np
 
 @pytest.fixture()
 def matlab_engine(refactored=True):
@@ -40,6 +58,17 @@ def matlab_engine(refactored=True):
     # Add the directory containing your MATLAB functions to the MATLAB path
     matlab_function_path = os.path.join(current_dir, code_path)
     eng.addpath(matlab_function_path, nargout=0)
+
+    def _add_all_subdirs_to_matlab_path(path, matlab_engine):
+        # Recursively find all subdirectories
+        for root, dirs, files in os.walk(path):
+            # Add each directory to the MATLAB path
+            matlab_engine.addpath(root, nargout=0)  # nargout=0 suppresses output
+
+        return
+    
+    # Add the base directory and all its subdirectories to MATLAB path
+    _add_all_subdirs_to_matlab_path(matlab_function_path, eng)
 
     yield eng
 
@@ -114,7 +143,7 @@ def setup_folders(tmp_path, testcase: str = "US_ARc"):
 @pytest.fixture
 def find_text_file():
     """
-    Fixture to find the first `.txt` file in the given folder, open it, 
+    Fixture to find the `report` file in the given folder, open it, 
     extract its contents as a list of lines, and return the contents.
 
     Returns:
@@ -194,6 +223,7 @@ def process_std_out(std_out):
     output_lines = output.splitlines()
     return output_lines
 
+
 def compare_text_blocks(text1, text2):
     """
     Compare two blocks of text after stripping whitespace.
@@ -206,3 +236,154 @@ def compare_text_blocks(text1, text2):
         bool: True if the stripped text blocks are identical, False otherwise.
     """
     return text1.replace('\n', '').strip() == text2.replace('\n', '').strip()
+
+def to_matlab_type(data):
+    """
+    Converts various Python data types to their MATLAB equivalents.
+
+    This function handles conversion of Python dictionaries, NumPy arrays, lists,
+    and numeric types to MATLAB-compatible types using the `matlab` library.
+
+    Args:
+        data (any): The input data to be converted. Can be a dictionary, NumPy array,
+                    list, integer, float, or other types.
+
+    Returns:
+        any: The converted data in a MATLAB-compatible format. The specific return type
+             depends on the input data type:
+             - dict: Converted to a MATLAB struct.
+             - np.ndarray: Converted to MATLAB logical, double, or list.
+             - list: Converted to MATLAB double array or cell array.
+             - int, float: Converted to MATLAB double.
+             - Other types: Returned as-is if already MATLAB-compatible.
+
+    """
+    if isinstance(data, dict):
+        # Convert a Python dictionary to a MATLAB struct
+        matlab_struct = matlab.struct()
+        for key, value in data.items():
+            matlab_struct[key] = to_matlab_type(value)  # Recursively handle nested structures
+        return matlab_struct
+    elif isinstance(data, np.ndarray):
+        if data.dtype == bool:
+            return matlab.logical(data.tolist())
+        elif np.isreal(data).all():
+            return matlab.double(data.tolist())
+        else:
+            return data.tolist()  # Convert non-numeric arrays to lists
+    elif isinstance(data, list):
+        # Convert Python list to MATLAB double array if all elements are numbers
+        if all(isinstance(elem, (int, float)) for elem in data):
+            return matlab.double(data)
+        else:
+            # Create a cell array for lists containing non-numeric data
+            return [to_matlab_type(elem) for elem in data]
+    elif isinstance(data, (int, float)):
+        return matlab.double([data])  # Convert single numbers
+    else:
+        return data  # If the data type is already MATLAB-compatible
+    
+# Helper function to compare MATLAB double arrays element-wise, handling NaN comparisons
+def compare_matlab_arrays(result, expected):
+    # Convert MATLAB double to list for comparison
+    result_list = result if isinstance(result, list) else list(result)
+    expected_list = expected if isinstance(expected, list) else list(expected)
+
+    # Check if lengths are the same
+    if len(result_list) != len(expected_list):
+        return False
+    
+    # Compare each element
+    for r, e in zip(result_list, expected_list):
+        # Extract scalar value if wrapped in an array-like structure
+        r_value = r[0] if isinstance(r, (list, np.ndarray, matlab.double)) and len(r) > 0 else r
+        e_value = e[0] if isinstance(e, (list, np.ndarray, matlab.double)) and len(e) > 0 else e
+    
+        # Handle NaN comparisons
+        if np.isnan(r_value) and np.isnan(e_value):
+            continue  # NaNs are considered equal
+        elif np.isnan(r_value) ^ np.isnan(e_value):
+            return False  # One is NaN and the other is not
+        elif not np.allclose(r_value, e_value):  # Check if values are approximately equal
+            return False
+    
+    return True
+    
+def read_csv_with_csv_module(file_path):
+    """
+    Reads a CSV file and returns its contents as a NumPy array.
+
+    Args:
+        file_path (str): The path to the CSV file.
+
+    Returns:
+        numpy.ndarray: The contents of the CSV file as a NumPy array.
+    """
+    return np.loadtxt(file_path, delimiter=',')
+
+def read_file(file_path):
+    """
+    Reads a file and returns its contents based on the file extension.
+
+    Args:
+        file_path (str): The path to the file to be read. The file can be either a CSV or a JSON file.
+
+    Returns:
+        dict or list: The contents of the file. Returns a list of dictionaries if the file is a CSV, 
+                      or a dictionary if the file is a JSON.
+
+    Raises:
+        ValueError: If the file extension is not supported.
+    """
+    # Check the file extension to differentiate between CSV and JSON
+    if file_path.endswith('.csv'):
+        return read_csv_with_csv_module(file_path)
+    elif file_path.endswith('.json'):
+        with open(file_path, 'r') as f:
+            return json.load(f)  # Load JSON file
+    else:
+        raise ValueError(f"Unsupported file type: {file_path}")
+    
+def mat2list(arr):
+    return np.where(np.isnan(arr), None, arr).tolist()
+
+def parse_testcase(test_case: dict, path_to_artifacts: str):
+    """
+    Parses the test case data by reading file-based inputs and outputs if necessary.
+
+    Args:
+        test_case (dict): A dictionary containing a single test case's input and expected_output.
+        path_to_artifacts (str): The path to the directory where test case artifacts are stored.
+
+    Returns:
+        tuple: A tuple containing two dictionaries:
+            - inputs (dict): A dictionary with processed input data.
+            - outputs (dict): A dictionary with processed expected output data.
+    """
+    inputs: dict = {}
+    outputs: dict = {}
+    
+    for io_type in ['input', 'expected_output']:
+        for key, value in test_case[io_type].items():  # Use test_case here
+            if isinstance(value, str):  # Check if the value is a string (likely a file path)
+                path = os.path.join(path_to_artifacts, test_case["id"], value)  # Use test_case here
+                if os.path.exists(path):  # Check if the file exists
+                    # Read the file using the fixture function and store the data
+                    file_data = read_file(path)
+                    if io_type == 'input':
+                        inputs[key] = file_data
+                    else:
+                        outputs[key] = file_data
+                else:
+                    if io_type == 'input':
+                        inputs[key] = value
+                    else:
+                        outputs[key] = value
+            else:
+                # If it's not a string, directly store the value in the inputs or outputs dictionary
+                if io_type == 'input':
+                    inputs[key] = value
+                else:
+                    outputs[key] = value
+    
+    return inputs, outputs
