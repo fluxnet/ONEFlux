@@ -315,7 +315,7 @@ for n = 1:numel(d)
       
         [Cp2,Stats2,Cp3,Stats3] = ... 
             cpdBootstrapUStarTh4Season20100901 ...
-                (t,NEE,uStar,T,fNight,fPlot,cSiteYr,nBoot, 0); 
+                (t,NEE,uStar,T,fNight,fPlot,cSiteYr,nBoot); 
 
     % 	print -djpeg100 Plot1_4Season_CACa1-2001; 
 
