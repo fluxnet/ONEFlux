@@ -15,7 +15,7 @@ from tests.conftest import to_matlab_type, read_file, mat2list, parse_testcase, 
 def mock_data(nt=300, tspan=(0, 1), uStar_pars=(0.1, 3.5), T_pars=(-10, 30), fNight=None):
     """
     Fixture to generate mock time series data for testing purposes. This fixture 
-    creates a set of synthetic data typically used in environmental studies, 
+    creates a set of synthetic data corresponding to cpdBootstap* function arguments, 
     such as Net Ecosystem Exchange (NEE), uStar values, temperature, and day/night flags.
 
     Args:
