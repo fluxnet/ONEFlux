@@ -11,10 +11,10 @@ _log = logging.getLogger(__name__)
 
 @pytest.fixture(scope="module")
 def get_data():
-    '''
+    """
     Obtain sample test data using a fixture
     Function currently unused.
-    '''
+    """
     from zipfile import ZipFile
     urllib.urlopen('ftp://ftp.fluxdata.org/.ameriflux_downloads/.test/US-ARc_sample_output.zip') 
     urllib.urlopen('ftp://ftp.fluxdata.org/.ameriflux_downloads/.test/US-ARc_sample_input.zip') 
@@ -27,9 +27,9 @@ def get_data():
         zo.extractall(path='tests/data/test_reference')
 
 def equal_csv(csv_1, csv_2):
-    '''
+    """
     Check equality of two csv files.
-    '''
+    """
     _log.info("Check csv equality")
     start = time.time()
     with open(csv_1, 'r') as t1, open(csv_2, 'r') as t2:
@@ -46,13 +46,13 @@ def equal_csv(csv_1, csv_2):
 
 @pytest.fixture
 def setup_data():
-    '''
+    """
     Set up input data for run_partition_nt test. 
     
     Create data directory for tests './tests/integration/step10' and copy 
     data from expected output ('./datadir/test_output/US-ARc_sample_output')
     to this directory.
-    '''
+    """
     try:
         os.mkdir('tests/integration/data/step_10')
         os.mkdir('tests/data/test_reference')
@@ -75,9 +75,9 @@ def setup_data():
     
     
 def test_run_partition_nt(setup_data):
-    '''
+    """
     Run partition_nt on single percentile.
-    '''
+    """
     datadir = "./tests/python/integration/input/step_10/"
     refoutdir = "./tests/data/test_reference/"
     siteid = "US-ARc"

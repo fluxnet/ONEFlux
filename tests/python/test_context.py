@@ -10,6 +10,9 @@ Simple context/import setup test
 '''
 
 def test_import_oneflux():
+    """
+    Test import by checking imported 'oneflux' module has '__version__' attribute
+    """
     import oneflux
 
     assert hasattr(oneflux, "__version__")
