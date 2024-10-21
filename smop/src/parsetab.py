@@ -13,7 +13,8 @@ _lr_action_items = {'END_STMT':([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
    for _x,_y in zip(_v[0],_v[1]):
-      if not _x in _lr_action:  _lr_action[_x] = {}
+      if _x not in _lr_action:
+         _lr_action[_x] = {}
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
@@ -22,8 +23,9 @@ _lr_goto_items = {'top':([0,],[1,]),'stmt':([1,41,43,130,133,202,207,209,210,239
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
    for _x, _y in zip(_v[0], _v[1]):
-       if not _x in _lr_goto: _lr_goto[_x] = {}
-       _lr_goto[_x][_k] = _y
+      if _x not in _lr_goto:
+         _lr_goto[_x] = {}
+      _lr_goto[_x][_k] = _y
 del _lr_goto_items
 _lr_productions = [
   ("S' -> top","S'",1,None,None,None),

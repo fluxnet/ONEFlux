@@ -3,7 +3,9 @@
  
 
 from collections import namedtuple
-import copy,sys,inspect
+import copy
+import sys
+import inspect
 
 from . recipes import recordtype
 from . import options
@@ -112,7 +114,8 @@ class stmt_list(node,list):
 #
 #  ATOMS
 
-class atom(node): pass
+class atom(node):
+    pass
 
 class string(atom,recordtype("string", "value lineno lexpos", default=None)):
     def __str__(self):
@@ -138,7 +141,8 @@ class param(ident):
 #  STATEMENTS
 #
 
-class stmt(node): pass
+class stmt(node):
+    pass
 
 class let(stmt,recordtype("let",
                           "ret args lineno lexpos nargout",
@@ -389,17 +393,17 @@ class matrix(builtins):
 #    def __str__(self):
 #        return "[%s]" % ",".join([str(t) for t in self.args])
 
-@extend(node)
-def is_const(self):
-    return False
-@extend(number)
-@extend(string)
-def is_const(self):
-    return True
-@extend(expr_list)
-def is_const(self):
-    return all(t.is_const() for t in self)
-@extend(matrix)
-def is_const(self):
-    return not self.args or self.args[0].is_const()
+# @extend(node)
+# def is_const(self):
+#     return False
+# @extend(number)
+# @extend(string)
+# def is_const(self):
+#     return True
+# @extend(expr_list)
+# def is_const(self):
+#     return all(t.is_const() for t in self)
+# @extend(matrix)
+# def is_const(self):
+#     return not self.args or self.args[0].is_const()
 # vim: ts=8:sw=4:et

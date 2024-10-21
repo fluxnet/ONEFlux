@@ -126,7 +126,8 @@ def recordtype(typename, field_names, verbose=False, **default_kwds):
     namespace = {}
     try:
         exec(template, namespace)
-        if verbose: print(template)
+        if verbose:
+            print(template)
     except SyntaxError as e:
         raise SyntaxError(e.message + ':\n' + template)
     cls = namespace[typename]
