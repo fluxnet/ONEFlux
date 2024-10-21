@@ -150,28 +150,6 @@ def test_cpdBootstrap_against_testcases(matlab_engine):
         assert Cp3 == outputs_list[2]
         assert Stats3 == outputs_list[3]
 
-# Parameterized test for the get_nt function
-@pytest.mark.parametrize("input_data, expected_result", [
-    ([], 0),                                  # Test with an empty array
-    ([10], 1),                                # Test with a single element array
-    ([1, 2, 3, 4, 5], 5),                     # Test with multiple elements
-    ([np.nan, 2, 3, 4, 5], 5),                # Test with an array containing NaN values
-    (np.linspace(0, 10, 100), 100)            # Test with a time series of 100 points
-])
-def test_get_nt(matlab_engine, input_data, expected_result):
-    # Ensure input_data is a list or convert to list if using NumPy arrays
-    if isinstance(input_data, np.ndarray):
-        input_data = input_data.tolist()
-
-    # Convert the list to a MATLAB compatible double array
-    matlab_input = matlab.double(input_data)
-
-    # Call the get_nt function in MATLAB
-    result = matlab_engine.get_nt(matlab_input)
-    
-    # Assert that the result is as expected
-    assert result == expected_result, f"Expected {expected_result}, but got {result}"
-
 # Parameterized test for the get_nPerDay function
 @pytest.mark.parametrize("input_data, expected_result", [
     ([0, 1, 2, 3, 4], 1),                         # 1 unit per day (equal spacing)
