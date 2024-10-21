@@ -240,13 +240,13 @@ class cellarray(matlabarray):
         a : list, ndarray, matlabarray, etc.
 
         >>> a=cellarray([123,"hello"])
-        >>> print a.shape
+        >>> print(a.shape)
         (1, 2)
 
-        >>> print a[1]
+        >>> print(a[1])
         123
 
-        >>> print a[2]
+        >>> print(a[2])
         hello
         """
         obj = np.array(a, dtype=object, order="F", ndmin=2).view(cls).copy(order="F")
@@ -273,7 +273,7 @@ class cellstr(matlabarray):
     >>> s=cellstr(char('helloworldkitty').reshape(3,5))
     >>> s
     cellstr([['hello', 'world', 'kitty']], dtype=object)
-    >>> print s
+    >>> print(s)
     hello
     world
     kitty
@@ -322,7 +322,7 @@ class char(matlabarray):
 
     >>> s=char([104, 101, 108, 108, 111, 119, 111, 114, 108, 100])
     >>> s.shape = 2,5
-    >>> print s
+    >>> print(s)
     hello
     world
     """
@@ -387,7 +387,7 @@ def arange(start, stop, step=1, **kwargs):
 
 def concat(args):
     """
-    >>> concat([1,2,3,4,5] , [1,2,3,4,5]])
+    >>> concat([[1,2,3,4,5] , [1,2,3,4,5]])
     [1, 2, 3, 4, 5, 1, 2, 3, 4, 5]
     """
     import pdb
@@ -395,6 +395,10 @@ def concat(args):
     pdb.set_trace()
     t = [matlabarray(a) for a in args]
     return np.concatenate(t)
+
+
+def reshape(a, shape):
+    return np.reshape(a, shape)
 
 
 def ceil(a):

@@ -1,10 +1,10 @@
-source_files=oneflux_steps/ustar_cp_refactor_wip
+source_files=oneflux_steps/ustar_cp_refactor_wip/launch.m
 target_dir="oneflux_steps/ustar_cp_py"
 
 translate() {
     python smop/smop.py "$source_files" -d "$target_dir" -v
-    cp smop/libsmop.py "$target_dir/libsmop.py"
-    find "$target_dir" -name "*.py" -exec 2to3 -w {} +
+    cp smop/src/libsmop.py "$target_dir/libsmop.py"
+    # find "$target_dir" -name "*.py" -exec 2to3 -w {} +
 }
 
 translate || {

@@ -124,8 +124,8 @@ filename = ""
 def foo():
     """
     >>> args = parser.parse_args("a b c".split())
-    >>> print args.filelist
-    ['a', 'b', 'c'
+    >>> args.filelist
+    ['a', 'b', 'c']
 
     """
 if __name__ == "__main__":
