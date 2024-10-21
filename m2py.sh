@@ -12,5 +12,5 @@ translate || {
 
 cp smop/src/libsmop.py "$target_dir/libsmop.py"
 find "$target_dir" -name "*.py" -exec 2to3 -w -n {} +
-ruff check "$target_dir" --fix
 ruff format "$target_dir"
+ruff check "$target_dir" --fix
