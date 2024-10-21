@@ -25,6 +25,7 @@ from scipy.special import gamma
 
 pwd = os.getcwd()
 eps = np.finfo(float).eps
+NaN = np.nan
 
 
 # def _load_matlab_builtins(*names):
@@ -402,8 +403,8 @@ def concat(args):
     return np.concatenate(t)
 
 
-def reshape(a, shape):
-    return np.reshape(a, shape)
+def reshape(a, *shape):
+    return np.reshape(a, *shape)
 
 
 def ceil(a):
@@ -851,13 +852,6 @@ def min(a, axis=None):
     Return the minimum of an array or minimum along an axis.
     """
     return np.amin(np.asarray(a), axis=axis)
-
-
-def NaN():
-    """
-    Return a NaN (Not a Number) value.
-    """
-    return float("nan")
 
 
 def isnan(a):

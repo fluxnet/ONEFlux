@@ -1,2 +1,70 @@
 - [x] Fix indexing (from `()` to `[]`)
 - [x] Fix backslash in strings
+- [ ] Fix matlabarray
+- [ ] Fix the NameError for 'get_iNight' in the following tests:
+    - test_cpdBootstrapUStarTh4Season20100901_basic
+    - test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap
+    - test_cpdBootstrap_against_testcases
+- [ ] Fix the NameError for 'diff' in the following tests:
+    - test_get_nPerDay[translated-input_data0-1]
+    - test_get_nPerDay[translated-input_data1-2]
+    - test_get_nPerDay[translated-input_data2-1.0]
+    - test_get_nPerDay[translated-input_data3-1]
+    - test_get_nPerDay[translated-input_data4-1]
+- [ ] Fix the NameError for 'get_nPerDay' in the following tests:
+    - test_get_nPerBin[translated-input_data0-3]
+    - test_get_nPerBin[translated-input_data1-5]
+    - test_get_nPerBin[translated-input_data2-5]
+    - test_get_nPerBin[translated-input_data3-5]
+    - test_get_nPerBin[translated-input_data4-5]
+- [ ] Fix the ValueError: "The truth value of an array with more than one element is ambiguous" in the following tests:
+    - test_get_iNight[translated-input_data0-expected_result0]
+    - test_get_iNight[translated-input_data1-expected_result1]
+    - test_get_iNight[translated-input_data2-expected_result2]
+    - test_get_iNight[translated-input_data3-expected_result3]
+- [ ] Fix the NotImplementedError: "inequality operators not supported" in the following tests:
+    - test_update_uStar[translated-input_data0-expected_result0]
+    - test_update_uStar[translated-input_data1-expected_result1]
+    - test_update_uStar[translated-input_data2-expected_result2]
+    - test_update_uStar[translated-input_data3-expected_result3]
+    - test_update_uStar[translated-input_data4-expected_result4]
+- [ ] Fix the AttributeError: "'float' object has no attribute 'flat'" in the following test:
+    - test_generate_statsMT[translated]
+- [ ] Fix the NameError for 'get_nPerBin' in the following tests:
+    - test_get_ntN[translated-t_input0-2-2000]
+    - test_get_ntN[translated-t_input1-1-1000]
+    - test_get_ntN[translated-t_input2-3-3000]
+    - test_get_ntN[translated-t_input3-1-1000]
+    - test_get_ntN[translated-t_input4-5-5000]
+- [ ] Fix the TypeError: "unsupported operand type(s) for +: 'matlab.double' and 'matlab.double'" in the following tests:
+    - test_get_itNee[translated-NEE0-uStar0-T0-iNight0-expected_itNee0]
+    - test_get_itNee[translated-NEE1-uStar1-T1-iNight1-1.0]
+    - test_get_itNee[translated-NEE2-uStar2-T2-iNight2-expected_itNee2]
+    - test_get_itNee[translated-NEE3-uStar3-T3-iNight3-expected_itNee3]
+    - test_get_itNee[translated-NEE4-uStar4-T4-iNight4-expected_itNee4]
+    - test_get_itNee[translated-NEE5-uStar5-T5-iNight5-expected_itNee5]
+- [ ] Fix the AssertionError: "Expected shape ... for Cp, but got ..." in the following tests:
+    - test_setup_Cp[translated-2-2-2-expected_shape0]
+    - test_setup_Cp[translated-1-1-1-expected_shape1]
+    - test_setup_Cp[translated-3-4-5-expected_shape2]
+    - test_setup_Cp[translated-2-3-0-expected_shape3]
+    - test_setup_Cp[translated-1-5-4-expected_shape4]
+- [ ] Fix the NameError for 'generate_statsMT' in the following tests:
+    - test_setup_Stats[translated-2-2-2-expected_shape0]
+    - test_setup_Stats[translated-1-1-1-expected_shape1]
+    - test_setup_Stats[translated-0-2-3-expected_shape2]
+- [ ] Fix the TypeError: "expected str, bytes or os.PathLike object, not matlabarray" in the following tests:
+    - test_ustar_cp[translated-US_ARc-expected_values0]
+    - test_ustar_cp[translated-CA-Cbo-expected_values1]
+    - test_ustar_cp[translated-US-ARM-expected_values2]
+    - test_ustar_cp[translated-US-Ne1-expected_values3]
+    - test_ustar_cp[translated-US-Syv-expected_values4]
+    - test_ustar_cp[translated-US-Vcm-expected_values5]
+- [ ] Fix the TypeError in the following tests:
+    - test_launch_missing_file[translated]
+    - test_launch_invalid_data[translated]
+    - test_launch_empty_folder[translated]
+    - test_missing_keywords[translated]
+- [ ] Fix the TypeError: "order must be str, not int" in the following test:
+    - test_cpdFindChangePoint20100901[translated]
+- [ ] Pass all Pytest cases
