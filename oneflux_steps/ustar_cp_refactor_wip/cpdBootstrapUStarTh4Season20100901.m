@@ -70,7 +70,7 @@ function [Cp2, Stats2, Cp3, Stats3] = cpdBootstrapUStarTh4Season20100901(t, NEE,
     nStrataX = 8;
     
     % Initialize parameters
-    nt = get_nt(t);
+    nt = length(t);
     
     iNight = get_iNight(fNight);
 
