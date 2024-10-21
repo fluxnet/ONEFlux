@@ -13,12 +13,7 @@ def cpdBootstrapUStarTh20100901(
     fPlot=None,
     cSiteYr=None,
     nBoot=None,
-    *args,
-    **kwargs,
 ):
-    varargin = cpdBootstrapUStarTh20100901.varargin
-    nargin = cpdBootstrapUStarTh20100901.nargin
-
     # cpdBootstrapUStarTh20100901
 
     # estimates uStarTh uncertainty for one site-year of data

@@ -4,10 +4,7 @@ from libsmop import *
 
 
 @function
-def fcReadFields(s=None, FieldName=None, *args, **kwargs):
-    varargin = fcReadFields.varargin
-    nargin = fcReadFields.nargin
-
+def fcReadFields(s=None, FieldName=None):
     nd = ndims(s)
     # oneflux_steps/ustar_cp_refactor_wip/fcReadFields.m:3
     ns = size(s)

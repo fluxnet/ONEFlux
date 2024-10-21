@@ -4,12 +4,7 @@ from libsmop import *
 
 
 @function
-def cpdFindChangePoint20100901(
-    xx=None, yy=None, fPlot=None, cPlot=None, *args, **kwargs
-):
-    varargin = cpdFindChangePoint20100901.varargin
-    nargin = cpdFindChangePoint20100901.nargin
-
+def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
     # cpdFindChangePoint20100901
 
     # is an operational version of the Lund and Reeves (2002)

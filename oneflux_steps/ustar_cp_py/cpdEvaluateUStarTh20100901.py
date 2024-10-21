@@ -5,19 +5,8 @@ from libsmop import *
 
 @function
 def cpdEvaluateUStarTh20100901(
-    t=None,
-    NEE=None,
-    uStar=None,
-    T=None,
-    fNight=None,
-    fPlot=None,
-    cSiteYr=None,
-    *args,
-    **kwargs,
+    t=None, NEE=None, uStar=None, T=None, fNight=None, fPlot=None, cSiteYr=None
 ):
-    varargin = cpdEvaluateUStarTh20100901.varargin
-    nargin = cpdEvaluateUStarTh20100901.nargin
-
     # cpdEvaluateUStarTh20100901
 
     # estimates uStarTh for one site-year of data using change-point

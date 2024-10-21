@@ -4,10 +4,7 @@ from libsmop import *
 
 
 @function
-def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *args, **kwargs):
-    varargin = cpdAssignUStarTh20100901.varargin
-    nargin = cpdAssignUStarTh20100901.nargin
-
+def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None):
     # cpdAssignUStarTh20100901
     # aggregates and assigns uStarTh from the Stats* structured records
     # as output by cpdBootstrapUStarTh20100901.

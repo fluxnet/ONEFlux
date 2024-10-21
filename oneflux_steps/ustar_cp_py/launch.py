@@ -12,10 +12,7 @@ from libsmop import *
 
 
 @function
-def launch(input_folder=None, output_folder=None, *args, **kwargs):
-    varargin = launch.varargin
-    nargin = launch.nargin
-
+def launch(input_folder=None, output_folder=None):
     exitcode = 0
     # oneflux_steps/ustar_cp_refactor_wip/launch.m:10
     warning("off")

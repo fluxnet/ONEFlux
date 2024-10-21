@@ -4,10 +4,7 @@ from libsmop import *
 
 
 @function
-def update_uStar(uStar=None, *args, **kwargs):
-    varargin = update_uStar.varargin
-    nargin = update_uStar.nargin
-
+def update_uStar(uStar=None):
     updated_ustar = copy(uStar)
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/update_uStar.m:3
 

@@ -4,10 +4,7 @@ from libsmop import *
 
 
 @function
-def get_iNight(fNight=None, *args, **kwargs):
-    varargin = get_iNight.varargin
-    nargin = get_iNight.nargin
-
+def get_iNight(fNight=None):
     iNight = find(fNight)
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/get_iNight.m:2
     return iNight

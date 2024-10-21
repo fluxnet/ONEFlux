@@ -4,10 +4,7 @@ from libsmop import *
 
 
 @function
-def generate_statsMT(*args, **kwargs):
-    varargin = generate_statsMT.varargin
-    nargin = generate_statsMT.nargin
-
+def generate_statsMT():
     StatsMT = matlabarray([])
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/generate_statsMT.m:2
 

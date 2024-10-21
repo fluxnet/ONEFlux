@@ -4,10 +4,7 @@ from libsmop import *
 
 
 @function
-def r2Calc(y=None, yHat=None, *args, **kwargs):
-    varargin = r2Calc.varargin
-    nargin = r2Calc.nargin
-
+def r2Calc(y=None, yHat=None):
     n = length(y)
     # oneflux_steps/ustar_cp_refactor_wip/fcr2Calc.m:3
     ym = mean(y)

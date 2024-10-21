@@ -12,12 +12,9 @@ def cpdEvaluateUStarTh4Season20100901(
     fNight=None,
     fPlot=None,
     cSiteYr=None,
-    varargin=None,
-    *args,
-    **kwargs,
+    *varargin,
 ):
-    varargin = cpdEvaluateUStarTh4Season20100901.varargin
-    nargin = cpdEvaluateUStarTh4Season20100901.nargin
+    nargin = len(varargin)
 
     # nacpEvaluateUStarTh4Season20100901
 

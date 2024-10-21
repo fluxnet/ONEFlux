@@ -4,10 +4,7 @@ from libsmop import *
 
 
 @function
-def myFigLoc(iFig=None, dx=None, dy=None, cLoc=None, *args, **kwargs):
-    varargin = myFigLoc.varargin
-    nargin = myFigLoc.nargin
-
+def myFigLoc(iFig=None, dx=None, dy=None, cLoc=None):
     # fcFigLoc(iFig,dx,dy,cLoc)
 
     # creates a figure window of fractional size (dx by dy) at location cLoc.
