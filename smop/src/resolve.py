@@ -61,8 +61,9 @@ def resolve(t, symtab=None, fp=None, func_name=None):
         elif G.out_edges(n):
             u.props = "R" # ref
         else:
-            u.props = "F" # ???
-        d["label"] = "%s\\n%s" % (n, u.props)
+            u.props = "X" # ???
+        d["label"] = "%s_%s" % (n, u.props)
+    rewrite(t)
     return G
 
 def do_resolve(t,symtab):
@@ -248,3 +249,53 @@ def _resolve(self,symtab):
     self.body._resolve(symtab)
     self.head.ret._resolve(symtab)
 
+def rewrite(parsetree):
+    for u in parsetree:
+        if isinstance(u, node.node):
+            rewrite(u)
+            fix_arrayref(u)
+            # fix_colon_subscripts(u)
+            fix_end_expressions(u)
+            fix_let_statement(u)
+
+def fix_arrayref(u):
+    """
+    To the parser, funcall is indistinguishable
+    from rhs array reference.  But LHS references
+    can be converted to arrayref nodes.
+    """
+    if isinstance(u, node.funcall):
+        try:
+            if u.func_expr.props in "DUR": # def,upd,ref
+                u.__class__ = node.arrayref
+        except:
+            pass # FIXME
+
+def fix_colon_subscripts(u):
+    """
+    Array colon subscripts foo(1:10) and colon expressions 1:10 look
+    too similar to each other.  Now is the time to find out who is who.
+    """
+    if isinstance(u, (node.arrayref, node.cellarrayref)):
+        for w in u.args:
+            if isinstance(w, node.expr) and w.op == ":":
+                w._replace(op="::")
+
+def fix_end_expressions(u):
+    if isinstance(u, (node.arrayref, node.cellarrayref)):
+        for w in u.args:
+            if isinstance(w, node.expr) and w.op == "end":
+                w.args[0] = u.func_expr
+                w.args[1] = node.number(None)  # FIXME
+
+def fix_let_statement(u):
+    """
+    If LHS is a plain variable, and RHS is a matrix
+    enclosed in square brackets, replace the matrix
+    expr with a funcall.
+    """
+    if isinstance(u, node.let):
+        if (isinstance(u.ret, node.ident) and
+            isinstance(u.args, node.matrix)):
+            u.args = node.funcall(func_expr=node.ident("matlabarray"),
+                                  args=node.expr_list([u.args]))

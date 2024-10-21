@@ -552,7 +552,7 @@ def isequal(a, b):
 
 
 def isfield(a, b):
-    return str(b) in a.__dict__.keys()
+    return str(b) in list(a.__dict__.keys())
 
 
 def ismatrix(a):
@@ -668,8 +668,7 @@ def shared(a):
 
 
 def rand(*args, **kwargs):
-    """from core aka libsmop.py"""
-    return np.random.rand()
+    return np.random.rand(*args, **kwargs)
     # if not args:
     #     return np.random.rand()
     # if len(args) == 1:
