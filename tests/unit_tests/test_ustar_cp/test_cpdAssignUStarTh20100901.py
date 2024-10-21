@@ -1,14 +1,6 @@
-
 import pytest
 import matlab.engine
 import numpy as np
-
-@pytest.fixture(scope="module")
-def matlab_engine():
-    # Initialize MATLAB engine
-    eng = matlab.engine.start_matlab()
-    yield eng
-    eng.quit()
 
 @pytest.fixture
 def mock_stats():
@@ -67,26 +59,25 @@ def test_cpdAssignUStarTh20100901_plotting(matlab_engine, mock_stats):
     # Check if the function runs without errors when plotting is enabled
     assert len(results) == 11, "Function should return 11 outputs even with plotting enabled"
 
-def test_cpdAssignUStarTh20100901_invalid_input(matlab_engine):
+@pytest.mark.parametrize("invalid_input", [[], None, "invalid"])
+def test_cpdAssignUStarTh20100901_invalid_input(matlab_engine, invalid_input):
     # Test with invalid input
-    invalid_stats = matlab_engine.struct()
-    invalid_stats.mt = matlab.double([])  # Empty array
+    invalid_stats = matlab.engine.struct()
+    invalid_stats.mt = matlab.double(invalid_input)  # Invalid input
 
     fPlot = 0
     cSiteYr = "TestSite_2024"
 
     # Call MATLAB function
-    CpA, nA, tW, CpW, cMode, cFailure, fSelect, sSine, FracSig, FracModeD, FracSelect = matlab_engine.cpdAssignUStarTh20100901(
-        invalid_stats, fPlot, cSiteYr, nargout=11
-    )
+    results = matlab_engine.cpdAssignUStarTh20100901(invalid_stats, fPlot, cSiteYr, nargout=11)
 
     # Check if function handles invalid input gracefully
-    assert len(CpA) == 0, "CpA should be empty for invalid input"
-    assert len(cFailure) > 0, "cFailure should contain an error message for invalid input"
+    assert len(results[0]) == 0, "CpA should be empty for invalid input"
+    assert len(results[5]) > 0, "cFailure should contain an error message for invalid input"
 
 def test_cpdAssignUStarTh20100901_edge_cases(matlab_engine, mock_stats):
     # Test edge cases (e.g., all significant change points, no significant change points)
-    edge_stats = matlab_engine.struct()
+    edge_stats = matlab.engine.struct()
     
     # Case 1: All significant change points
     edge_stats.mt = matlab.double(mock_stats.mt.tolist())

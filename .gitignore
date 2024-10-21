@@ -112,6 +112,7 @@ tramp
 *.DS_Store
 
 *.png
+.cursorignore
 
 .cursorignore
 
