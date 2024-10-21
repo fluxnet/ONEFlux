@@ -133,7 +133,7 @@ def recordtype(typename, field_names, verbose=False, **default_kwds):
     if sys.version_info.major == 3:
         cls.__init__.__defaults__ = init_defaults
     elif sys.version_info.major == 2:
-        cls.__init__.im_func.func_defaults = init_defaults
+        cls.__init__.__func__.__defaults__ = init_defaults
     else:
         #import pdb
         #pdb.set_trace()

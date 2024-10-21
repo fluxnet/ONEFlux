@@ -3,8 +3,6 @@
 
 # MIT license
 
-import __builtin__
-
 import numpy
 from numpy import sqrt, prod, exp, log, dot, multiply, inf
 from numpy.fft import fft2
@@ -573,7 +571,7 @@ def isscalar(a):
 
 def length(a):
     try:
-        return __builtin__.max(np.asarray(a).shape)
+        return max(np.asarray(a).shape)
     except ValueError:
         return 1
 
@@ -738,7 +736,7 @@ def size_equal(a, b):
 
 from numpy import sqrt
 
-sort = __builtin__.sorted
+sort = sorted
 
 
 def strcmp(a, b):
