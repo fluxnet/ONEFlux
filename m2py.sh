@@ -1,5 +1,13 @@
-source_files="oneflux_steps/ustar_cp/*.m"
+source_files=oneflux_steps/ustar_cp_refactor_wip
 target_dir="oneflux_steps/ustar_cp_py"
 
-pip install -r smop/requirements.txt
-python smop/smop.py $source_files -d $target_dir -v
+translate() {
+    python smop/smop.py "$source_files" -d "$target_dir" -v
+    cp smop/libsmop.py "$target_dir/libsmop.py"
+    # find "$target_dir" -name "*.py" -exec 2to3 -w {} +
+}
+
+translate || {
+    pip install -r smop/requirements.txt
+    translate
+}

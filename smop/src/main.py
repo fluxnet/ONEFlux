@@ -9,8 +9,9 @@ import fnmatch
 import tarfile
 import sys
 import os
+import os.path as osp
 import traceback
-from os.path import basename, splitext
+from pathlib import Path
 
 from . import options
 from . import parse
@@ -42,22 +43,36 @@ def main():
     if fp:
         print_header(fp)
 
-    rootdir = options.dir or ""
+    rootdir = Path(options.dir or "")
     try:
         os.makedirs(rootdir)
     except:
         pass
+    
+    files = []
+    for s in options.filelist:
+        p = Path(s)
+        if p.is_dir():
+            for f in p.rglob("*.m"):
+                t = rootdir.joinpath(f.relative_to(p)).with_suffix(".py")
+                files.append([f, t])
+        elif '*' in s:
+            for f in Path().rglob(s):
+                t = rootdir.joinpath(f.relative_to(p)).with_suffix(".py")
+                files.append([f, t])
+        else:
+            files.append([p, p.with_suffix(".py")])
 
     nerrors = 0
-    for i, options.filename in enumerate(options.filelist):
+    for i, (options.filename, tgt_file) in enumerate(files):
         try:
             if options.verbose:
                 print(i, options.filename)
-            if not options.filename.endswith(".m"):
+            if not options.filename.suffix == ".m":
                 print("\tIgnored: '%s' (unexpected file type)" %
                       options.filename)
                 continue
-            if basename(options.filename) in options.xfiles:
+            if options.filename.name in options.xfiles:
                 if options.verbose:
                     print("\tExcluded: '%s'" % options.filename)
                 continue
@@ -73,8 +88,8 @@ def main():
             if not options.no_backend:
                 s = backend.backend(stmt_list)
             if not options.output:
-                f = os.path.join(rootdir, splitext(basename(options.filename))[0] + ".py")
-                with open(f, "w") as fp:
+                tgt_file.parent.mkdir(parents=True, exist_ok=True)
+                with open(tgt_file, "w") as fp:
                     print_header(fp)
                     fp.write(s)
             else:
