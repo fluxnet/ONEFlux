@@ -403,12 +403,6 @@ def p_expr_end(p):
 @exceptions
 def p_expr_ident(p):
     "ident : IDENT"
-    global use_nargin, use_varargin
-    if p[1] == "varargin":
-        use_varargin = 1
-    if p[1] == "nargin":
-        use_nargin = 1
-    # import pdb; pdb.set_trace()
     p[0] = node.ident(
         name=p[1],
         lineno=p.lineno(1),
@@ -528,9 +522,8 @@ def p_func_stmt(p):
     """
     # stmt_list of func_stmt is set below
     # marked with XYZZY
-    global ret_expr, use_nargin, use_varargin
+    global ret_expr
     ret_expr = node.expr_list()
-    use_varargin = use_nargin = 0
 
     if len(p) == 5:
         assert isinstance(p[3], node.expr_list)
