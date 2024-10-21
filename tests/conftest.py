@@ -88,8 +88,8 @@ def mf_factory(cls, *args, **kwargs):
 MatlabFunc.__new__ = mf_factory
 
 
-@pytest.fixture(scope="session")
-def matlab_engine(refactored=True):
+@pytest.fixture(scope="session", params=["translated", "original"])
+def matlab_engine(request, refactored=True):
     """
     Pytest fixture to start a MATLAB engine session, add a specified directory
     to the MATLAB path, and clean up after the tests.
@@ -110,6 +110,10 @@ def matlab_engine(refactored=True):
 
     After the tests complete, the MATLAB engine is closed automatically.
     """
+    if request.param == "translated":  # return the translated python module
+        module_name = "oneflux_steps.ustar_cp_python_auto"
+        yield importlib.import_module(module_name)
+        return
 
     # Start MATLAB engine
     eng = matlab.engine.start_matlab()
