@@ -1,7 +1,7 @@
 # SMOP compiler -- Simple Matlab/Octave to Python compiler
 # Copyright 2011-2013 Victor Leikehman
  
-from __future__ import print_function
+
 from collections import namedtuple
 import copy,sys,inspect
 
@@ -392,9 +392,9 @@ class cellarray(expr):
 class matrix(builtins):
     """
     Anything enclosed in square brackets counts as matrix
-    >>> print matrix([1,2,3])
+    >>> matrix([1,2,3])
     [1,2,3]
-    >>> print matrix()
+    >>> matrix()
     []
     """
 #    def __init__(self,args=expr_list()):

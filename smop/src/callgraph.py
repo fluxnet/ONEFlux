@@ -1,6 +1,6 @@
 import parse,sys,os
 import networkx as nx
-import node,resolve,options
+from . import node,resolve,options
 
 def callgraph(G, stmt_list):
     """
