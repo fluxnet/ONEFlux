@@ -113,6 +113,8 @@ tramp
 
 *.png
 
+.cursorignore
+
 error_mistake/
 gap_fill/
 with_error_range/
