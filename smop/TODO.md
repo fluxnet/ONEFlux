@@ -1,2 +1,2 @@
-- [ ] Fix indexing (from `()` to `[]`)
+- [x] Fix indexing (from `()` to `[]`)
 - [x] Fix backslash in strings

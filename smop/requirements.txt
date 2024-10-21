@@ -1,3 +1,4 @@
 ply
 scipy
 networkx
+ruff
