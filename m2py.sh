@@ -11,6 +11,7 @@ translate || {
 }
 
 cp smop/src/libsmop.py "$target_dir/libsmop.py"
-find "$target_dir" -name "*.py" -exec 2to3 -w -n {} +
+find "$target_dir" -name "*.py" -exec 2to3 -x import -w -n {} +
 ruff format "$target_dir"
 ruff check "$target_dir" --fix
+pytest tests --pdb -n0

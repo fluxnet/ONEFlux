@@ -3,8 +3,8 @@
 
 # MIT license
 
-import numpy
-from numpy import sqrt, prod, exp, log, dot, multiply, inf
+import numpy as np
+from numpy import sqrt, prod, exp, log, dot, multiply, inf, rint as fix
 from numpy.fft import fft2
 from numpy.linalg import inv
 from numpy.linalg import qr as _qr
@@ -13,7 +13,6 @@ try:
     from scipy.linalg import schur as _schur
 except ImportError:
     pass
-import numpy as np
 
 import os
 import sys
@@ -22,7 +21,21 @@ from sys import stdin, stdout, stderr
 
 from scipy.io import loadmat
 from scipy.special import gamma
-from numpy import rint as fix
+
+
+pwd = os.getcwd()
+eps = np.finfo(float).eps
+
+
+# def _load_matlab_builtins(*names):
+#     import oct2py
+#     oc = oct2py.Oct2Py()
+#     globals().update(
+#         (k, getattr(oc, k)) for k in names
+#     )
+
+# _load_matlab_builtins("""
+# """.split())
 
 
 def isvector_or_scalar(a):
@@ -356,19 +369,16 @@ class struct(object):
             setattr(self, str(args[i]), args[i + 1])
 
 
-NA = numpy.NaN
-
-
 def abs(a):
-    return numpy.abs(a)
+    return np.abs(a)
 
 
 def all(a):
-    return numpy.all(a)
+    return np.all(a)
 
 
 def any(a):
-    return numpy.any(a)
+    return np.any(a)
 
 
 def arange(start, stop, step=1, **kwargs):
@@ -388,9 +398,6 @@ def concat(args):
     >>> concat([[1,2,3,4,5] , [1,2,3,4,5]])
     [1, 2, 3, 4, 5, 1, 2, 3, 4, 5]
     """
-    import pdb
-
-    pdb.set_trace()
     t = [matlabarray(a) for a in args]
     return np.concatenate(t)
 
@@ -400,7 +407,7 @@ def reshape(a, shape):
 
 
 def ceil(a):
-    return numpy.ceil(a)
+    return np.ceil(a)
 
 
 def cell(*args):
@@ -432,23 +439,40 @@ def eig(a):
 
 
 def logical_not(a):
-    return numpy.logical_not(a)
+    return np.logical_not(a)
 
 
 def logical_and(a, b):
-    return numpy.logical_and(a, b)
+    return np.logical_and(a, b)
 
 
 def logical_or(a, b):
-    return numpy.logical_or(a, b)
+    return np.logical_or(a, b)
 
 
-def exist(a, b):
+def exist(a, b="file"):
     if str(b) == "builtin":
         return str(a) in globals()
     if str(b) == "file":
         return os.path.exists(str(a))
     raise NotImplementedError
+
+
+def mkdir(directory):
+    """
+    Create a directory if it does not exist.
+
+    Parameters:
+    directory : str
+        The path of the directory to create.
+    """
+    os.makedirs(directory, exist_ok=True)
+
+
+def true(*args):
+    if len(args) == 1:
+        args += args
+    return matlabarray(np.ones(args, dtype=bool, order="F"))
 
 
 def false(*args):
@@ -485,7 +509,7 @@ def find(a, n=None, d=None, nargout=1):
 
 
 def floor(a):
-    return int(numpy.floor(a))
+    return int(np.floor(a))
 
 
 def fopen(*args):
@@ -501,28 +525,24 @@ def fflush(fp):
     fp.flush()
 
 
-def fprintf(fp, fmt, *args):
-    fp.write(str(fmt) % args)
-
-
 def fullfile(*args):
     return os.path.join(*args)
 
 
-# implemented in "scripts/set/intersect.m"
-# def intersect(a,b,nargout=1):
-#    if nargout == 1:
-#        c = sorted(set(a) & set(b))
-#        if isinstance(a,str):
-#            return "".join(c)
-#        elif isinstance(a,list):
-#            return c
-#        else:
-#            # FIXME: the result is a column vector if
-#            # both args are column vectors; otherwise row vector
-#            return np.array(c)
-#    raise NotImplementedError
-#
+def intersect(a, b, nargout=1):
+    if nargout == 1:
+        c = sorted(set(a) & set(b))
+        if isinstance(a, str):
+            return "".join(c)
+        elif isinstance(a, list):
+            return c
+        else:
+            # FIXME: the result is a column vector if
+            # both args are column vectors; otherwise row vector
+            return np.array(c)
+    raise NotImplementedError
+
+
 def iscellstr(a):
     # TODO return isinstance(a,cellarray) and all(ischar(t) for t in a.flat)
     return isinstance(a, cellarray) and all(isinstance(t, str) for t in a.flat)
@@ -580,18 +600,6 @@ def load(a):
     return loadmat(a)  # FIXME
 
 
-def max(a, d=0, nargout=0):
-    if d or nargout:
-        raise NotImplementedError
-    return np.amax(a)
-
-
-def min(a, d=0, nargout=0):
-    if d or nargout:
-        raise NotImplementedError
-    return np.amin(a)
-
-
 def mod(a, b):
     try:
         return a % b
@@ -607,21 +615,14 @@ def numel(a):
     return np.asarray(a).size
 
 
-def ones(*args, **kwargs):
-    if not args:
-        return 1
-    if len(args) == 1:
-        args += args
-    return matlabarray(np.ones(args, order="F", **kwargs))
-
-
 # def primes2(upto):
 #    primes=np.arange(2,upto+1)
 #    isprime=np.ones(upto-1,dtype=bool)
 #    for factor in primes[:int(math.sqrt(upto))]:
 #        if isprime[factor-2]: isprime[factor*2-2::factor]=0
 #    return primes[isprime]
-#
+
+
 # def primes(*args):
 #    return _primes.primes(*args)
 
@@ -641,6 +642,20 @@ def rand(*args, **kwargs):
         pass
 
 
+def randn(*args, **kwargs):
+    if not args:
+        return np.random.randn()
+    if len(args) == 1:
+        args += args
+    return np.random.randn(np.prod(args)).reshape(args, order="F")
+
+
+def randi(hi, *args, **kwargs):
+    if len(args) == 1:
+        args += args
+    return np.random.randint(1, hi + 1, args).reshape(args, order="F")
+
+
 def assert_(a, b=None, c=None):
     if c:
         if c >= 0:
@@ -657,14 +672,6 @@ def assert_(a, b=None, c=None):
 
 def shared(a):
     pass
-
-
-def randn(*args, **kwargs):
-    if not args:
-        return np.random.randn()
-    if len(args) == 1:
-        args += args
-    return np.random.randn(np.prod(args)).reshape(args, order="F")
 
 
 def ravel(a):
@@ -714,9 +721,6 @@ def size_equal(a, b):
     return True
 
 
-sort = sorted
-
-
 def strcmp(a, b):
     return str(a) == str(b)
 
@@ -751,12 +755,6 @@ def toc(t):
     return time.clock() - t
 
 
-def true(*args):
-    if len(args) == 1:
-        args += args
-    return matlabarray(np.ones(args, dtype=bool, order="F"))
-
-
 def version():
     return char("0.29")
 
@@ -769,8 +767,12 @@ def zeros(*args, **kwargs):
     return matlabarray(np.zeros(args, **kwargs))
 
 
-def isa(a, b):
-    return True
+def ones(*args, **kwargs):
+    if not args:
+        return 1
+    if len(args) == 1:
+        args += args
+    return matlabarray(np.ones(args, order="F", **kwargs))
 
 
 def print_usage():
@@ -778,12 +780,20 @@ def print_usage():
 
 
 def function(f):
-    def helper(*args, **kwargs):
-        helper.nargin = len(args)
-        helper.varargin = cellarray(args)
-        return f(*args, **kwargs)
+    from contextlib import redirect_stdout, redirect_stderr
+    from functools import wraps
 
-    return helper
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        with (
+            redirect_stdout(kwargs.pop("stdout", stdout)),
+            redirect_stderr(kwargs.pop("stderr", stderr)),
+        ):
+            nargout = kwargs.pop("nargout", None)
+            assert not kwargs
+            return f(*args)[:nargout]
+
+    return wrapper
 
 
 def error(s):
@@ -794,12 +804,285 @@ def isreal(a):
     return True
 
 
-eps = np.finfo(float).eps
-# print(np.finfo(np.float32).eps)
+def linspace(start, stop, num=50):
+    """
+    Return evenly spaced numbers over a specified interval.
+    """
+    return matlabarray(np.linspace(start, stop, num))
+
+
+def logspace(start, stop, num=50, base=10.0):
+    """
+    Return numbers spaced evenly on a log scale.
+    """
+    return matlabarray(np.logspace(start, stop, num, base=base))
+
+
+def mean(a, axis=None):
+    """
+    Compute the mean of the elements along the specified axis.
+    """
+    return np.mean(np.asarray(a), axis=axis)
+
+
+def std(a, axis=None):
+    """
+    Compute the standard deviation of the elements along the specified axis.
+    """
+    return np.std(np.asarray(a), axis=axis)
+
+
+def var(a, axis=None):
+    """
+    Compute the variance of the elements along the specified axis.
+    """
+    return np.var(np.asarray(a), axis=axis)
+
+
+def max(a, axis=None):
+    """
+    Return the maximum of an array or maximum along an axis.
+    """
+    return np.amax(np.asarray(a), axis=axis)
+
+
+def min(a, axis=None):
+    """
+    Return the minimum of an array or minimum along an axis.
+    """
+    return np.amin(np.asarray(a), axis=axis)
+
+
+def NaN():
+    """
+    Return a NaN (Not a Number) value.
+    """
+    return float("nan")
+
+
+def isnan(a):
+    """
+    Return a boolean array indicating whether each element is NaN.
+    """
+    return np.isnan(np.asarray(a))
+
+
+def unique(a):
+    """
+    Return the unique elements of an array.
+    """
+    return matlabarray(np.unique(np.asarray(a)))
+
+
+def interp1(x, y, xi):
+    """
+    One-dimensional linear interpolation.
+    """
+    return matlabarray(np.interp(xi, x, y))
+
+
+def prctile(a, q):
+    """
+    Compute the q-th percentile of the data along the specified axis.
+    """
+    return np.percentile(np.asarray(a), q)
+
+
+def datenum(date):
+    """
+    Convert a date string to a MATLAB datenum.
+    """
+    return (np.datetime64(date) - np.datetime64("1970-01-01")).astype(
+        "timedelta64[D]"
+    ).astype(int) + 719529
+
+
+def datevec(datenum):
+    """
+    Convert a MATLAB datenum to a date vector.
+    """
+    dt = np.datetime64("1970-01-01") + np.timedelta64(datenum - 719529, "D")
+    return matlabarray(
+        [
+            dt.astype("datetime64[Y]").astype(int) + 1970,
+            dt.astype("datetime64[M]").astype(int) % 12 + 1,
+            dt.astype("datetime64[D]").astype(int) % 31 + 1,
+            dt.astype("datetime64[h]").astype(int) % 24,
+            dt.astype("datetime64[m]").astype(int) % 60,
+            dt.astype("datetime64[s]").astype(int) % 60,
+        ]
+    )
+
+
+def nanmean(a, axis=None):
+    """
+    Compute the mean of an array while ignoring NaNs.
+    """
+    return np.nanmean(np.asarray(a), axis=axis)
+
+
+def nanmedian(a, axis=None):
+    """
+    Compute the median of an array while ignoring NaNs.
+    """
+    return np.nanmedian(np.asarray(a), axis=axis)
+
+
+def fcdf(x, dfn, dfd):
+    """
+    Cumulative distribution function of the F-distribution.
+    """
+    from scipy.stats import f
+
+    return f.cdf(x, dfn, dfd)
+
+
+def finv(p, dfn, dfd):
+    """
+    Inverse of the cumulative distribution function of the F-distribution.
+    """
+    from scipy.stats import f
+
+    return f.ppf(p, dfn, dfd)
+
+
+def regress(y, x):
+    """
+    Perform linear regression.
+    """
+
+    x = np.column_stack((np.ones(x.shape[0]), x))  # Add intercept
+    return inv(x.T @ x) @ x.T @ y
+
+
+def corrcoef(x, y):
+    """
+    Return the correlation coefficients.
+    """
+    return np.corrcoef(np.asarray(x), np.asarray(y))
+
+
+def sort(a, axis=-1, kind="quicksort", order=None):
+    """
+    Return a sorted copy of an array.
+    """
+    return matlabarray(np.sort(np.asarray(a), axis=axis, kind=kind))
+
+
+def fprintf(format_string, *args):
+    """
+    Print formatted output to the console.
+    """
+    print((format_string % args))
+
+
+def sprintf(format_string, *args):
+    """
+    Return a formatted string.
+    """
+    return format_string % args
+
+
+def plot(*args, **kwargs):
+    """
+    Basic plotting function.
+    """
+    import matplotlib.pyplot as plt
+
+    plt.plot(*args, **kwargs)
+    plt.show()
+
+
+def hold():
+    """
+    Hold the current plot.
+    """
+    import matplotlib.pyplot as plt
+
+    plt.gca().set_prop_cycle(None)
+
+
+def grid(on=True):
+    """
+    Turn the grid on or off.
+    """
+    import matplotlib.pyplot as plt
+
+    plt.grid(on)
+
+
+def box(on=True):
+    """
+    Turn the box around the plot on or off.
+    """
+    import matplotlib.pyplot as plt
+
+    plt.box(on)
+
+
+def xlim(left=None, right=None):
+    """
+    Set the x limits of the current axes.
+    """
+    import matplotlib.pyplot as plt
+
+    plt.xlim(left, right)
+
+
+def ylim(bottom=None, top=None):
+    """
+    Set the y limits of the current axes.
+    """
+    import matplotlib.pyplot as plt
+
+    plt.ylim(bottom, top)
+
+
+def set(artist, **kwargs):
+    """
+    Set the properties of a matplotlib artist.
+    """
+    for key, value in list(kwargs.items()):
+        setattr(artist, key, value)
+
+
+def figure():
+    """
+    Create a new figure.
+    """
+    import matplotlib.pyplot as plt
+
+    plt.figure()
+
+
+def clf():
+    """
+    Clear the current figure.
+    """
+    import matplotlib.pyplot as plt
+
+    plt.clf()
+
+
+def warning(message):
+    """
+    Display a warning message to the user.
+
+    Parameters:
+    message : str
+        The warning message to display.
+    """
+    import warnings
+
+    if message == "off":
+        warnings.filterwarnings("ignore")
+    elif message == "on":
+        warnings.filterwarnings("default")
+    else:
+        warnings.warn(message)
+
 
 if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
-
-# vim:et:sw=4:si:tw=60

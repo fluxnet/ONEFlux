@@ -4,10 +4,7 @@ from libsmop import *
 
 
 @function
-def mydoy(t=None, *args, **kwargs):
-    varargin = mydoy.varargin
-    nargin = mydoy.nargin
-
+def mydoy(t=None):
     # d=doy(t);
 
     # doy is a day-of-year function

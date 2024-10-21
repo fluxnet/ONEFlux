@@ -4,10 +4,7 @@ from libsmop import *
 
 
 @function
-def myrv(x=None, *args, **kwargs):
-    varargin = myrv.varargin
-    nargin = myrv.nargin
-
+def myrv(x=None):
     rv = reshape(x, 1, prod(size(x)))
 
 

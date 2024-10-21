@@ -4,10 +4,7 @@ from libsmop import *
 
 
 @function
-def fcEqnAnnualSine(b=None, t=None, *args, **kwargs):
-    varargin = fcEqnAnnualSine.varargin
-    nargin = fcEqnAnnualSine.nargin
-
+def fcEqnAnnualSine(b=None, t=None):
     nDaysPerYr = datenum(2000 - 1, 12, 31) / 2000
     # oneflux_steps/ustar_cp_refactor_wip/fcEqnAnnualSine.m:3
     Omega = dot(2, pi) / nDaysPerYr

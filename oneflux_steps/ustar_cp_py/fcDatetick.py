@@ -4,10 +4,7 @@ from libsmop import *
 
 
 @function
-def myDateTick(t=None, sFrequency=None, iDateStr=None, fLimits=None, *args, **kwargs):
-    varargin = myDateTick.varargin
-    nargin = myDateTick.nargin
-
+def myDateTick(t=None, sFrequency=None, iDateStr=None, fLimits=None):
     y, m, d, h, mn, s = mydatevec(t, nargout=6)
     # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:3
     iYrs = unique(y)

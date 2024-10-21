@@ -4,10 +4,7 @@ from libsmop import *
 
 
 @function
-def get_ntN(t=None, nSeasons=None, *args, **kwargs):
-    varargin = get_ntN.varargin
-    nargin = get_ntN.nargin
-
+def get_ntN(t=None, nSeasons=None):
     nStrataN = 4
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/get_ntN.m:3
 

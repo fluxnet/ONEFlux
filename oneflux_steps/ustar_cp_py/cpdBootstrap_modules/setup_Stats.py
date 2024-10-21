@@ -4,11 +4,8 @@ from libsmop import *
 
 
 @function
-def setup_Stats(
-    nBoot=None, nSeasons=None, nStrataX=None, varargin=None, *args, **kwargs
-):
-    varargin = setup_Stats.varargin
-    nargin = setup_Stats.nargin
+def setup_Stats(nBoot=None, nSeasons=None, nStrataX=None, *varargin):
+    nargin = len(varargin)
 
     StatsMT = generate_statsMT()
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/setup_Stats.m:3

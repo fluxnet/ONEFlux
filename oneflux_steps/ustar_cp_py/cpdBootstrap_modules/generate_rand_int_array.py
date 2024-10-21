@@ -4,10 +4,7 @@ from libsmop import *
 
 
 @function
-def generate_rand_int_array(n=None, *args, **kwargs):
-    varargin = generate_rand_int_array.varargin
-    nargin = generate_rand_int_array.nargin
-
+def generate_rand_int_array(n=None):
     array_ = sort(randi(n, n, 1))
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/generate_rand_int_array.m:3
     return array_

@@ -13,12 +13,9 @@ def cpdBootstrapUStarTh4Season20100901(
     fPlot=None,
     cSiteYr=None,
     nBoot=None,
-    varargin=None,
-    *args,
-    **kwargs,
+    *varargin,
 ):
-    varargin = cpdBootstrapUStarTh4Season20100901.varargin
-    nargin = cpdBootstrapUStarTh4Season20100901.nargin
+    nargin = len(varargin)
 
     # cpdBootstrapUStarTh4Season20100901
 

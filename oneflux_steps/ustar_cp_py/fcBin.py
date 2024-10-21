@@ -4,10 +4,7 @@ from libsmop import *
 
 
 @function
-def cpdBin(x=None, y=None, dx=None, nPerBin=None, *args, **kwargs):
-    varargin = cpdBin.varargin
-    nargin = cpdBin.nargin
-
+def cpdBin(x=None, y=None, dx=None, nPerBin=None):
     # cpdBin
 
     # calculates binned mean values of vectors x and y

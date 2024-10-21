@@ -4,10 +4,7 @@ from libsmop import *
 
 
 @function
-def get_nPerBin(t=None, *args, **kwargs):
-    varargin = get_nPerBin.varargin
-    nargin = get_nPerBin.nargin
-
+def get_nPerBin(t=None):
     nPerDay = get_nPerDay(t)
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/get_nPerBin.m:3
     if 24 == nPerDay:

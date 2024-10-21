@@ -4,10 +4,7 @@ from libsmop import *
 
 
 @function
-def fcnaniqr(X=None, *args, **kwargs):
-    varargin = fcnaniqr.varargin
-    nargin = fcnaniqr.nargin
-
+def fcnaniqr(X=None):
     # fcnaniqr computes the interquartile range, ignoring NaNs.
 
     # IQR = fcnaniqr(X)

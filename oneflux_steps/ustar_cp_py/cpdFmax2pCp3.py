@@ -4,10 +4,7 @@ from libsmop import *
 
 
 @function
-def cpdFmax2pCp3(Fmax=None, n=None, *args, **kwargs):
-    varargin = cpdFmax2pCp3.varargin
-    nargin = cpdFmax2pCp3.nargin
-
+def cpdFmax2pCp3(Fmax=None, n=None):
     # p = cpdFmax2pCp3(Fmax,n)
 
     # assigns the probability p that the 3-parameter,

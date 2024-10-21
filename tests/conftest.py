@@ -83,7 +83,10 @@ def mf_factory(cls, *args, **kwargs):
 MatlabFunc.__new__ = mf_factory
 
 
-@pytest.fixture(scope="session", params=["translated", "original"])
+@pytest.fixture(scope="session", params=[
+    "translated",
+    "original",
+])
 def matlab_engine(request, refactored=True):
     """
     Pytest fixture to start a MATLAB engine session, add a specified directory 

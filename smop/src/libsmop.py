@@ -450,13 +450,24 @@ def logical_or(a, b):
     return np.logical_or(a, b)
 
 
-def exist(a, b):
+def exist(a, b='file'):
     if str(b) == "builtin":
         return str(a) in globals()
     if str(b) == "file":
         return os.path.exists(str(a))
     raise NotImplementedError
 
+
+def mkdir(directory):
+    """
+    Create a directory if it does not exist.
+
+    Parameters:
+    directory : str
+        The path of the directory to create.
+    """
+    os.makedirs(directory, exist_ok=True)
+        
 
 def true(*args):
     if len(args) == 1:
@@ -1053,7 +1064,25 @@ def clf():
     plt.clf()
 
 
+def warning(message):
+    """
+    Display a warning message to the user.
+    
+    Parameters:
+    message : str
+        The warning message to display.
+    """
+    import warnings
+    if message == 'off':
+        warnings.filterwarnings("ignore")
+    elif message == 'on':
+        warnings.filterwarnings("default")
+    else:
+        warnings.warn(message)
+
+
 if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
+
