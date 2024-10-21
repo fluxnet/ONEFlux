@@ -15,14 +15,10 @@ except ImportError:
     pass
 import numpy as np
 
-import os, sys, copy, time
+import os, sys, time
 from sys import stdin, stdout, stderr
 
-try:
-    from scipy.io import loadmat
-except:
-    pass
-import unittest
+from scipy.io import loadmat
 from scipy.special import gamma
 from numpy import rint as fix
 
@@ -38,7 +34,7 @@ def isvector_or_scalar(a):
     """
     try:
         return a.size and a.ndim - a.shape.count(1) <= 1
-    except:
+    except AttributeError:
         return False
 
 
@@ -51,7 +47,7 @@ def isvector(a):
     """
     try:
         return a.ndim - a.shape.count(1) == 1
-    except:
+    except AttributeError:
         return False
 
 
@@ -108,7 +104,7 @@ class matlabarray(np.ndarray):
             else:
                 try:
                     indices.append(int(ix) - 1)
-                except:
+                except TypeError:
                     indices.append(np.asarray(ix).astype("int32") - 1)
         if len(indices) == 2 and isvector(indices[0]) and isvector(indices[1]):
             indices[0].shape = (-1, 1)
@@ -504,8 +500,6 @@ def fflush(fp):
 
 
 def fprintf(fp, fmt, *args):
-    if not isinstance(fp, file):
-        fp = stdout
     fp.write(str(fmt) % args)
 
 
@@ -580,12 +574,8 @@ def length(a):
         return 1
 
 
-try:
-
-    def load(a):
-        return loadmat(a)  # FIXME
-except:
-    pass
+def load(a):
+    return loadmat(a)  # FIXME
 
 
 def max(a, d=0, nargout=0):
@@ -640,7 +630,7 @@ def qr(a):
 
 def rand(*args, **kwargs):
     if not args:
-        return np.random.rand()
+        return np.random.rand()  # No arguments, return a single random float
     if len(args) == 1:
         args += args
     try:
@@ -667,27 +657,12 @@ def shared(a):
     pass
 
 
-def rand(*args, **kwargs):
-    return np.random.rand(*args, **kwargs)
-    # if not args:
-    #     return np.random.rand()
-    # if len(args) == 1:
-    #     args += args
-    # try:
-    #     return np.random.rand(np.prod(args)).reshape(args,order="F")
-    # except:
-    #     pass
-
-
 def randn(*args, **kwargs):
     if not args:
         return np.random.randn()
     if len(args) == 1:
         args += args
-    try:
-        return np.random.randn(np.prod(args)).reshape(args, order="F")
-    except:
-        pass
+    return np.random.randn(np.prod(args)).reshape(args, order="F")
 
 
 def ravel(a):
@@ -765,9 +740,6 @@ def sum(a, dim=None):
 
 def toupper(a):
     return char(str(a.data).upper())
-
-
-true = True
 
 
 def tic():
