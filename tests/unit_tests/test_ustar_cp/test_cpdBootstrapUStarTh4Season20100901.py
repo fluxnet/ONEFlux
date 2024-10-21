@@ -316,8 +316,8 @@ stats_entry = {'n': None, 'Cp': None, 'Fmax': None, 'p': None, 'b0': None, 'b1':
         # Case 2: Single season, single strata, single boot
         (1, 1, 1, stats_entry),
 
-        # Case 4: No bootstrap iterations (nBoot=0)
-        (0, 2, 3, stats_entry),
+        # Case 3: No bootstrap iterations (nBoot=0)
+        (0, 2, 3, []),
     ]
 )
 def test_setup_Stats(matlab_engine, nBoot, nSeasons, nStrataX, expected_shape):
