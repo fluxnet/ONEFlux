@@ -140,17 +140,6 @@ class param(ident):
 
 class stmt(node): pass
 
-# class call_stmt(stmt,recordtype("call_stmt","func_expr args ret")):
-#     """Sometimes called multiple assignment, call statements represent
-#     something like [x,y]=foo(a,b,c); Note the square brackets around
-#     the lhs.
-#     SEE ALSO: funcall,let
-#     """
-#     def __str__(self):
-#         return "%s=%s(%s)" % (str(self.ret),
-#                               str(self.func_expr),
-#                               str(self.args))
-
 class let(stmt,recordtype("let",
                           "ret args lineno lexpos nargout",
                           default=None)):
@@ -285,9 +274,7 @@ class builtins(funcall):
 
 class arrayref(funcall):
     def __repr__(self):
-        return "%s%s[%s]" % (self.__class__, 
-                             self.func_expr,
-                             self.args)
+        return "%s[%s]" % (self.func_expr, self.args)
 
 
 ########################## EXPR
@@ -306,7 +293,7 @@ class expr(node,recordtype("expr","op args")):
             return "%s%s%s" % (self.args[0]._backend(),
                                self.op,
                                self.args[1]._backend())
-        ret = "%s=" % str(self.ret) if self.ret else ""
+        ret = "%s=" % str(self.ret) if getattr(self, 'ret', None) else ""
         return ret+"%s(%s)" % (self.op,
                                ",".join([str(t) for t in self.args]))
 

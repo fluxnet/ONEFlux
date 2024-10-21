@@ -12,8 +12,9 @@ from . import options
 # ----------------------------------
 # G global
 # P persistent
+# F function name
 # A function argument
-# F function return value
+# O function return value
 # I for-loop iteration index
 #
 # ident properties (set in resolve.py)
@@ -548,6 +549,8 @@ def p_func_stmt(p):
     else:
         assert 0
 
+    p[0].ident.props = 'F'
+
 
 @exceptions
 def p_funcall_expr(p):
@@ -684,7 +687,7 @@ def p_ret(p):
     else:
         assert 0
     for ident in p[0]:
-        ident.props = "F"
+        ident.props = "O"
 
 
 # end func_decl

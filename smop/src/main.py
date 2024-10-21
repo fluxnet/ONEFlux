@@ -64,7 +64,7 @@ def main():
     for i, (options.filename, tgt_file) in enumerate(files):
         try:
             if options.verbose:
-                print(i, options.filename)
+                print(i, '<=', options.filename)
             if not options.filename.suffix == ".m":
                 print("\tIgnored: '%s' (unexpected file type)" %
                       options.filename)
@@ -87,7 +87,7 @@ def main():
             if not options.output:
                 tgt_file.parent.mkdir(parents=True, exist_ok=True)
                 if options.verbose:
-                    print(tgt_file)
+                    print(i, '=>', tgt_file)
                 with open(tgt_file, "w") as fp:
                     print_header(fp)
                     fp.write(s)
