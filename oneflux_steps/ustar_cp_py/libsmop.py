@@ -15,7 +15,10 @@ except ImportError:
     pass
 import numpy as np
 
-import os, sys, copy, time
+import os
+import sys
+import copy
+import time
 from sys import stdin, stdout, stderr
 
 try:
