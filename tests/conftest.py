@@ -295,17 +295,19 @@ def compare_matlab_arrays(result, expected):
     
     # Compare each element
     for r, e in zip(result_list, expected_list):
-        # Extract scalar value if wrapped in an array-like structure
-        r_value = r[0] if isinstance(r, (list, np.ndarray, matlab.double)) and len(r) > 0 else r
-        e_value = e[0] if isinstance(e, (list, np.ndarray, matlab.double)) and len(e) > 0 else e
-    
-        # Handle NaN comparisons
-        if np.isnan(r_value) and np.isnan(e_value):
-            continue  # NaNs are considered equal
-        elif np.isnan(r_value) ^ np.isnan(e_value):
-            return False  # One is NaN and the other is not
-        elif not np.allclose(r_value, e_value):  # Check if values are approximately equal
-            return False
+
+        # Recursively compare arrays or lists
+        if isinstance(r, (list, np.ndarray, matlab.double)) and isinstance(e, (list, np.ndarray, matlab.double)):
+            if not compare_matlab_arrays(r, e):
+                return False
+        else:
+            # Handle NaN comparisons
+            if np.isnan(r) and np.isnan(e):
+                continue  # NaNs are considered equal
+            elif np.isnan(r) ^ np.isnan(e):
+                return False  # One is NaN and the other is not
+            elif not np.allclose(r, e):  # Check if values are approximately equal
+                return False
     
     return True
     
