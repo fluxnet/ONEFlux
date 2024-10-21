@@ -366,6 +366,8 @@ def _backend(self,level=0):
 
 @extend(node.string)
 def _backend(self,level=0):
+    # if '\\' in self.value:
+    #     print(self.value)
     try:
         return "'%s'" % str(self.value).encode("string_escape")
     except:

@@ -136,6 +136,12 @@ world"''')
         tok = next(self.lexer)
         self.assertEqual(tok.value,'hello\n')
 
+    def test117(self):
+        "Quotes and backslashes in octave strings"
+        self.lexer.input(r'"\\"')
+        tok = next(self.lexer)
+        self.assertEqual(tok.value,'\\')
+        
     def test118(self):
         "Quotes and backslashes in octave strings"
         self.lexer.input(r'"hello\\world"')

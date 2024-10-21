@@ -97,12 +97,12 @@ def new():
 
     def unescape(s):
         if s[0] == "'":
-            return s[1:-1].replace("''", "'")
+            s = s[1:-1].replace("''", "'")
         else:
-            try:
-                return s[1:-1].decode("string_escape")
-            except:
-                return s[1:-1]
+            s = s[1:-1]
+        if s.endswith('\\') and not s.endswith(r'\\'):
+            s += '\\'
+        return s
 
     @TOKEN(mos)
     def t_afterkeyword_STRING(t):
@@ -337,18 +337,6 @@ def raise_exception(error_type, message, my_lexer):
                                my_lexer.lineno,
                                1 + my_lexer.lexpos - startpos,
                                my_lexer.lexdata[startpos:endpos]))
-def main():
-    lexer = new()
-    line = ""
-    while 1:
-        try:
-            line += input("=>> ").decode("string_escape")
-            print(len(line), [c for c in line])
-        except EOFError:
-            importlib.reload(sys.modules["lexer.py"])
-            lexer.input(line)
-            print(list(tok for tok in lexer))
-            line = ""
 
 
 if __name__ == "__main__":
