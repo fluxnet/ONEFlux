@@ -217,17 +217,16 @@ def _backend(self,level=0):
 
 @extend(node.func_stmt)
 def _backend(self,level=0):
-    self.args.append(node.ident("*args"))
-    self.args.append(node.ident("**kwargs"))
+    bindings = []
+    if self.args and str((self.args[-1])) == "varargin":
+        self.args[-1] = node.ident("*varargin")
+        bindings.append(('nargin', 'len(varargin)'))
     s = """
 @function
-def %s(%s):
-    varargin = %s.varargin
-    nargin = %s.nargin
+def %s(%s):%s
 """ % (self.ident._backend(),
        self.args._backend(),
-       self.ident._backend(),
-       self.ident._backend())
+       ''.join(f"\n    {k} = {v}" for k, v in bindings))
     return s
 
 @extend(node.funcall)
