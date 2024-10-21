@@ -22,7 +22,7 @@ def _graphviz(self,fp):
     for i,s in enumerate(self):
         if not isinstance(s,node.node):
             fp.write('"%s" [label="%s",shape=ellipse]\n' % (id(s),s))
-        if not s in [None,0,"",False]:
+        if s not in [None,0,"",False]:
             fp.write('"%s":f%d -> "%s";\n' % (id(self), i+1, id(s)))
 
 @extend(node.number)

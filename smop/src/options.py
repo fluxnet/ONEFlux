@@ -1,5 +1,6 @@
 import sys
-import argparse,textwrap
+import argparse
+import textwrap
 from textwrap import dedent
 
 from . import version

@@ -261,7 +261,7 @@ def test_get_itNee(matlab_engine, NEE, uStar, T, iNight, expected_itNee):
     itNee = matlab_engine.get_itNee(NEE_matlab, uStar_matlab, T_matlab, iNight_matlab)
     
     # Compare results
-    if type(itNee) != float:
+    if not isinstance(itNee, float):
         assert compare_matlab_arrays(itNee, expected_itNee), f"Expected {expected_itNee}, but got {itNee}"
     else:
         assert itNee==expected_itNee

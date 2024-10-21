@@ -103,7 +103,7 @@ def test_ustar_cp(testcase, expected_values, setup_folders, matlab_engine, find_
 
     # Step 7: Assert that the reference output folder and test run output contain the same files
     comparison = filecmp.dircmp(ref_outputs, test_outputs)
-    assert comparison, f"Expected test and reference output folders have same contents, but comparison test fails"
+    assert comparison, "Expected test and reference output folders have same contents, but comparison test fails"
 
 
 

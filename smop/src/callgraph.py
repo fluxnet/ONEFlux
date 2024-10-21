@@ -1,4 +1,6 @@
-import parse,sys,os
+import parse
+import sys
+import os
 import networkx as nx
 from . import node,resolve,options
 
@@ -27,5 +29,3 @@ def callgraph(G, stmt_list):
     #for u in G.nodes():
     #    if G.out_degree(u) == 0:
     #        print(u)
-if __name__ == '__main__':
-    main()
