@@ -52,16 +52,13 @@ def main():
     files = []
     for s in options.filelist:
         p = Path(s)
-        if p.is_dir():
-            for f in p.rglob("*.m"):
-                t = rootdir.joinpath(f.relative_to(p)).with_suffix(".py")
-                files.append([f, t])
-        elif '*' in s:
-            for f in Path().rglob(s):
-                t = rootdir.joinpath(f.relative_to(p)).with_suffix(".py")
-                files.append([f, t])
+        if p.is_file():
+            t = rootdir.joinpath(p.with_suffix(".py").name)
+            files.append([p, t])
         else:
-            files.append([p, p.with_suffix(".py")])
+            for f in p.rglob("*.m") if p.is_dir() else Path().rglob(s):
+                t = rootdir.joinpath(f.relative_to(p)).with_suffix(".py")
+                files.append([f, t])
 
     nerrors = 0
     for i, (options.filename, tgt_file) in enumerate(files):
@@ -89,6 +86,8 @@ def main():
                 s = backend.backend(stmt_list)
             if not options.output:
                 tgt_file.parent.mkdir(parents=True, exist_ok=True)
+                if options.verbose:
+                    print(tgt_file)
                 with open(tgt_file, "w") as fp:
                     print_header(fp)
                     fp.write(s)
