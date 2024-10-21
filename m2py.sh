@@ -4,7 +4,7 @@ target_dir="oneflux_steps/ustar_cp_py"
 translate() {
     python smop/smop.py "$source_files" -d "$target_dir" -v
     cp smop/libsmop.py "$target_dir/libsmop.py"
-    # find "$target_dir" -name "*.py" -exec 2to3 -w {} +
+    find "$target_dir" -name "*.py" -exec 2to3 -w {} +
 }
 
 translate || {

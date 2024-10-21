@@ -219,7 +219,7 @@
 		subplot('position',[0.08 0.06 0.60 0.38]); hold on; box on; 
 		switch cMode; case 'G'; c='g'; case 'L'; c='b'; otherwise; c='k'; end; 
 		plot(mt(iSelect),Cp(iSelect),[c '.'],mtHat,CpHat,'r-','LineWidth',3); 
-		plot(tW,CpW,'ro','MarkerFaceColor','y','MarkerSize',9','LineWidth',2); 
+		plot(tW,CpW,'ro','MarkerFaceColor','y','MarkerSize',9,'LineWidth',2); 
 		fcDatetick(mt(iSelect),'Mo',4,1); 
 		ylabel('Select Cp'); ylim([0 prctile(Cp(iSelect),99)]);
 		title(sprintf('Cp = %5.3f + %5.3f sin(wt - %3.0f) (r^2 = %5.3f) ',bSine,r2 )); 
