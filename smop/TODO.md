@@ -67,4 +67,6 @@
     - test_missing_keywords[translated]
 - [ ] Fix the TypeError: "order must be str, not int" in the following test:
     - test_cpdFindChangePoint20100901[translated]
-- [ ] Pass all Pytest cases
+- [ ] Pass all smop tests
+- [ ] Pass all regression tests
+- [ ] Pass all unit tests
