@@ -27,7 +27,7 @@ import glob
 import json
 import numpy as np
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def matlab_engine(refactored=True):
     """
     Pytest fixture to start a MATLAB engine session, add a specified directory 
