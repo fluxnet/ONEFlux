@@ -1,34 +1,63 @@
 import pytest
+import json
 import matlab.engine
 import numpy as np
 
-@pytest.fixture
-def mock_stats():
-    # Create a mock Stats structure
-    class MockStats:
-        def __init__(self):
-            self.mt = np.random.rand(40)
-            self.Cp = np.random.rand(40)
-            self.b1 = np.random.rand(40)
-            self.c2 = np.random.rand(40)
-            self.cib1 = np.random.rand(40)
-            self.cic2 = np.random.rand(40)
-            self.p = np.random.rand(40)
 
-    return MockStats()
+@pytest.fixture(scope="module")
+def mock_data(matlab_engine, nt=300, tspan=(0, 1), uStar_pars=(0.1, 3.5), T_pars=(-10, 30), fNight=None):
+    """
+    Fixture to generate mock time series data for testing purposes. This fixture 
+    creates a set of synthetic data typically used in environmental studies, 
+    such as Net Ecosystem Exchange (NEE), uStar values, temperature, and day/night flags.
 
-def test_cpdAssignUStarTh20100901_basic(matlab_engine, mock_stats):
-    # Convert mock stats to MATLAB structure
-    stats_matlab = matlab_engine.struct()
-    for field in ['mt', 'Cp', 'b1', 'c2', 'cib1', 'cic2', 'p']:
-        setattr(stats_matlab, field, matlab.double(getattr(mock_stats, field).tolist()))
+    Args:
+        nt (int, optional): Number of time points to generate in the series. 
+                            Defaults to 300.
+        tspan (tuple, optional): Start and end time for the time vector. 
+                                 Defaults to (0, 1).
+        uStar_pars (tuple, optional): Minimum and maximum values for the random 
+                                      generation of u* values. Defaults to (0.1, 3.5).
+        T_pars (tuple, optional): Minimum and maximum values for the random 
+                                  generation of temperature values. Defaults to (-10, 30).
+        fNight (array-like or None, optional): Binary values indicating day (0) or 
+                                               night (1). If None, a random assignment 
+                                               is made. Defaults to None.
 
+    Returns:
+        tuple: A tuple containing:
+            - t (np.ndarray): Time vector of length `nt`.
+            - NEE (np.ndarray): Randomly generated Net Ecosystem Exchange values.
+            - uStar (np.ndarray): Randomly generated u* values.
+            - T (np.ndarray): Randomly generated temperature values.
+            - fNight (np.ndarray): Array indicating day (0) or night (1) conditions.
+    """
     fPlot = 0
-    cSiteYr = "TestSite_2024"
+    nBoot = 10
+    cSiteYr = "Site_2024"
+    t = np.linspace(*tspan, nt)  # Generate time vector
+    NEE = np.piecewise(t, [t < 100, (t >= 100) & (t < 200), t >= 200],
+                       [lambda x: 2 * x + 1, lambda x: -x + 300, lambda x: 0.5 * x + 100])
+    uStar = np.random.uniform(*uStar_pars, size=nt)  # u* values between typical ranges
+    T = np.random.uniform(*T_pars, size=nt)  # Temperature values
+    if fNight is None:
+        fNight = np.random.choice([0, 1], size=nt)  # Randomly assign day/night
+    else:
+        fNight = np.resize(fNight, nt)
+    
+    Cp2, Stats2, Cp3, Stats3 = matlab_engine.cpdBootstrapUStarTh4Season20100901(
+        t,NEE,uStar,T,fNight,fPlot,cSiteYr,nBoot,1,nargout=4
+    )
+    Stats2 = json.loads(Stats2)
+    return Stats2, fPlot, cSiteYr
+
+
+def test_cpdAssignUStarTh20100901_basic(matlab_engine, mock_data):
+    stats, fPlot, cSiteYr = mock_data
 
     # Call MATLAB function
     CpA, nA, tW, CpW, cMode, cFailure, fSelect, sSine, FracSig, FracModeD, FracSelect = matlab_engine.cpdAssignUStarTh20100901(
-        stats_matlab, fPlot, cSiteYr, nargout=11
+        stats, fPlot, cSiteYr, nargout=11
     )
 
     # Assertions
@@ -44,48 +73,39 @@ def test_cpdAssignUStarTh20100901_basic(matlab_engine, mock_stats):
     assert isinstance(FracModeD, float), "FracModeD should be a float"
     assert isinstance(FracSelect, float), "FracSelect should be a float"
 
-def test_cpdAssignUStarTh20100901_plotting(matlab_engine, mock_stats):
-    # Test with plotting enabled
-    stats_matlab = matlab_engine.struct()
-    for field in ['mt', 'Cp', 'b1', 'c2', 'cib1', 'cic2', 'p']:
-        setattr(stats_matlab, field, matlab.double(getattr(mock_stats, field).tolist()))
 
-    fPlot = 1
-    cSiteYr = "TestSite_2024"
+def test_cpdAssignUStarTh20100901_plotting(matlab_engine, mock_data):
+    stats, fPlot, cSiteYr = mock_data
 
     # Call MATLAB function
-    results = matlab_engine.cpdAssignUStarTh20100901(stats_matlab, fPlot, cSiteYr, nargout=11)
+    results = matlab_engine.cpdAssignUStarTh20100901(stats, fPlot, cSiteYr, nargout=11)
 
     # Check if the function runs without errors when plotting is enabled
     assert len(results) == 11, "Function should return 11 outputs even with plotting enabled"
 
-@pytest.mark.parametrize("invalid_input", [[], None, "invalid"])
-def test_cpdAssignUStarTh20100901_invalid_input(matlab_engine, invalid_input):
-    # Test with invalid input
-    invalid_stats = matlab.engine.struct()
-    invalid_stats.mt = matlab.double(invalid_input)  # Invalid input
 
-    fPlot = 0
-    cSiteYr = "TestSite_2024"
+@pytest.mark.parametrize("invalid_input", [[], None, "invalid"])
+def test_cpdAssignUStarTh20100901_invalid_input(matlab_engine, mock_data, invalid_input):
+    stats, fPlot, cSiteYr = mock_data
+    
+    # Test with invalid input
+    stats['mt'] = matlab.double(invalid_input)  # Invalid input
 
     # Call MATLAB function
-    results = matlab_engine.cpdAssignUStarTh20100901(invalid_stats, fPlot, cSiteYr, nargout=11)
+    results = matlab_engine.cpdAssignUStarTh20100901(stats, fPlot, cSiteYr, nargout=11)
 
     # Check if function handles invalid input gracefully
     assert len(results[0]) == 0, "CpA should be empty for invalid input"
     assert len(results[5]) > 0, "cFailure should contain an error message for invalid input"
 
-def test_cpdAssignUStarTh20100901_edge_cases(matlab_engine, mock_stats):
-    # Test edge cases (e.g., all significant change points, no significant change points)
-    edge_stats = matlab.engine.struct()
+
+def test_cpdAssignUStarTh20100901_edge_cases(matlab_engine, mock_data):
+    mock_stats, fPlot, cSiteYr = mock_data
+    edge_stats = mock_stats.copy()
     
     # Case 1: All significant change points
-    edge_stats.mt = matlab.double(mock_stats.mt.tolist())
-    edge_stats.Cp = matlab.double(mock_stats.Cp.tolist())
     edge_stats.b1 = matlab.double(np.ones_like(mock_stats.b1).tolist())  # All positive b1
     edge_stats.c2 = matlab.double(np.zeros_like(mock_stats.c2).tolist())  # All zero c2
-    edge_stats.cib1 = matlab.double(mock_stats.cib1.tolist())
-    edge_stats.cic2 = matlab.double(mock_stats.cic2.tolist())
     edge_stats.p = matlab.double(np.zeros_like(mock_stats.p).tolist())  # All significant
 
     results_all_sig = matlab_engine.cpdAssignUStarTh20100901(edge_stats, 0, "AllSig_2024", nargout=11)
