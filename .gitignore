@@ -113,9 +113,7 @@ tramp
 
 *.png
 .cursorignore
-
-.cursorignore
-
+.vscode/
 error_mistake/
 gap_fill/
 with_error_range/

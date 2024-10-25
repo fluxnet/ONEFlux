@@ -19,13 +19,61 @@ Contents:
         parse_testcase
 """
 
+import matlab.engine.matlabengine
 import pytest
 import os
 import matlab.engine
 import shutil
 import glob
 import json
+import io
+import atexit
 import numpy as np
+
+
+from matlab.engine.matlabengine import MatlabFunc
+
+
+class MFWrapper:
+    def __init__(self, func):
+        self.func = func
+        self.out = io.StringIO()
+        self.err = io.StringIO()
+        name = func._name
+        atexit.register(lambda: (s := self.out.getvalue()) and print(f"{name} stdout:\n{s}"))
+        atexit.register(lambda: (s := self.err.getvalue()) and print(f"{name} stderr:\n{s}"))
+        
+    def __call__(self, *args, jsonencode=(), jsondecode=(), **kwargs):
+        args = list(args)
+        if jsonencode:
+            args.append(['jsonencode'] + [i+1 for i in jsonencode])
+        if jsondecode:
+            for i in jsondecode:
+                args[i] = json.dumps(args[i])
+            args.append(['jsondecode'] + [i+1 for i in jsondecode])
+        ret = self.func(*args, **kwargs, stdout=self.out, stderr=self.err)
+        if jsonencode:
+            nargout = kwargs.get('nargout', 1)
+            if nargout <= 1:
+                ret = [ret]
+            else:
+                ret = list(ret)
+            for j in jsonencode:
+                ret[j] = json.loads(ret[j], object_hook=lambda d: 
+                    {k: np.nan if v is None else v for k, v in d.items()})
+            if nargout <= 1:
+                ret = ret[0]
+        return ret
+
+
+def mf_factory(cls, *args, **kwargs):
+    f = object.__new__(MatlabFunc)
+    f.__init__(*args, **kwargs)
+    return MFWrapper(f)
+
+
+MatlabFunc.__new__ = mf_factory
+
 
 @pytest.fixture(scope="session")
 def matlab_engine(refactored=True):
