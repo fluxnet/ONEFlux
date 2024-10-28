@@ -19,7 +19,6 @@ Contents:
         parse_testcase
 """
 
-import matlab.engine.matlabengine
 import pytest
 import os
 import matlab.engine
@@ -29,8 +28,6 @@ import json
 import io
 import atexit
 import numpy as np
-
-
 from matlab.engine.matlabengine import MatlabFunc
 
 
