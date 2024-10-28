@@ -317,7 +317,7 @@ stats_entry = {'n': None, 'Cp': None, 'Fmax': None, 'p': None, 'b0': None, 'b1':
         (1, 1, 1, stats_entry),
 
         # Case 3: No bootstrap iterations (nBoot=0)
-        (0, 2, 3, []),
+        (0, 2, 3, stats_entry),
     ]
 )
 def test_setup_Stats(matlab_engine, nBoot, nSeasons, nStrataX, expected_shape):
