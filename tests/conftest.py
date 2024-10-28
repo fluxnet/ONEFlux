@@ -40,10 +40,21 @@ class MFWrapper:
         self.out = io.StringIO()
         self.err = io.StringIO()
         name = func._name
+        # make matlab stdout and stderr printed at the end of pytest
         atexit.register(lambda: (s := self.out.getvalue()) and print(f"{name} stdout:\n{s}"))
         atexit.register(lambda: (s := self.err.getvalue()) and print(f"{name} stderr:\n{s}"))
         
     def __call__(self, *args, jsonencode=(), jsondecode=(), **kwargs):
+        """
+        Call the wrapped function with optional JSON encoding/decoding to handle the issue that non-scalar structs (arrays of structs) cannot be returned from MATLAB functions to Python.
+        Args:
+            *args: Positional arguments to pass to the wrapped function.
+            jsonencode (tuple, optional): Indices of output arguments to JSON encode (into string) before the matlab function returns.
+            jsondecode (tuple, optional): Indices of input arguments to JSON decode (from string) at the beginning of the matlab function.
+            **kwargs: Keyword arguments to pass to the wrapped function.
+        Returns:
+            The result of the wrapped function, with specified outputs JSON decoded if necessary.
+        """
         args = list(args)
         if jsonencode:
             args.append(['jsonencode'] + [i+1 for i in jsonencode])
@@ -51,7 +62,9 @@ class MFWrapper:
             for i in jsondecode:
                 args[i] = json.dumps(args[i])
             args.append(['jsondecode'] + [i+1 for i in jsondecode])
-        ret = self.func(*args, **kwargs, stdout=self.out, stderr=self.err)
+        out = kwargs.pop('stdout', self.out)
+        err = kwargs.pop('stderr', self.err)
+        ret = self.func(*args, **kwargs, stdout=out, stderr=err)
         if jsonencode:
             nargout = kwargs.get('nargout', 1)
             if nargout <= 1:
@@ -70,8 +83,6 @@ def mf_factory(cls, *args, **kwargs):
     f = object.__new__(MatlabFunc)
     f.__init__(*args, **kwargs)
     return MFWrapper(f)
-
-
 MatlabFunc.__new__ = mf_factory
 
 

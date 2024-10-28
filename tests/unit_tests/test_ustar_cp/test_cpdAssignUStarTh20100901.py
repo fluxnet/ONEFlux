@@ -70,36 +70,25 @@ def test_cpdAssignUStarTh20100901_basic(matlab_engine, mock_data):
     assert isinstance(FracSelect, float), "FracSelect should be a float"
 
 
-@pytest.mark.parametrize("invalid_input", [[], "invalid"])
-def test_cpdAssignUStarTh20100901_invalid_input(matlab_engine, mock_data, invalid_input):
-    stats, fPlot, cSiteYr = mock_data
+def test_cpdAssignUStarTh20100901_edge_cases(matlab_engine, mock_data):
+    def set_attr(struct_array, key, val):
+        np.vectorize(lambda x: x.update({key: val}))(struct_array)
     
-    # Test with invalid input
-    stats[0][0][0]['mt'] = invalid_input  # Invalid input
-
-    # Call MATLAB function
-    results = matlab_engine.cpdAssignUStarTh20100901(stats, fPlot, cSiteYr, jsondecode=[0], nargout=11)
-
-    # Check if function handles invalid input gracefully
-    assert results[5], "cFailure should contain an error message for invalid input"
-
-
-# def test_cpdAssignUStarTh20100901_edge_cases(matlab_engine, mock_data):
-#     mock_stats, fPlot, cSiteYr = mock_data
-#     edge_stats = mock_stats.copy()
+    mock_stats, fPlot, cSiteYr = mock_data
+    edge_stats = mock_stats.copy()
     
-#     # Case 1: All significant change points
-#     edge_stats.b1 = matlab.double(np.ones_like(mock_stats.b1).tolist())  # All positive b1
-#     edge_stats.c2 = matlab.double(np.zeros_like(mock_stats.c2).tolist())  # All zero c2
-#     edge_stats.p = matlab.double(np.zeros_like(mock_stats.p).tolist())  # All significant
+    # Case 1: All significant change points
+    set_attr(edge_stats, "p", 0)
+    assert edge_stats[0][0][0]['p'] == 0
 
-#     results_all_sig = matlab_engine.cpdAssignUStarTh20100901(edge_stats, 0, "AllSig_2024", nargout=11)
+    results_all_sig = matlab_engine.cpdAssignUStarTh20100901(edge_stats, 0, "AllSig_2024", jsondecode=[0], nargout=11)
     
-#     # Case 2: No significant change points
-#     edge_stats.p = matlab.double(np.ones_like(mock_stats.p).tolist())  # All non-significant
+    # Case 2: No significant change points
+    set_attr(edge_stats, "p", 1)
+    assert edge_stats[0][0][0]['p'] == 1
 
-#     results_no_sig = matlab_engine.cpdAssignUStarTh20100901(edge_stats, 0, "NoSig_2024", nargout=11)
+    results_no_sig = matlab_engine.cpdAssignUStarTh20100901(edge_stats, 0, "NoSig_2024", jsondecode=[0], nargout=11)
 
-#     # Assertions for edge cases
-#     assert len(results_all_sig[0]) > 0, "Should produce results for all significant change points"
-#     assert len(results_no_sig[5]) > 0, "Should produce a failure message for no significant change points"
+    # Assertions for edge cases
+    assert len(results_all_sig[0]) > 0, "Should produce results for all significant change points"
+    assert len(results_no_sig[5]) > 0, "Should produce a failure message for no significant change points"

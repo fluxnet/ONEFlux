@@ -65,10 +65,8 @@ def test_cpdBootstrapUStarTh4Season20100901_basic(matlab_engine, mock_data):
 
     # Call MATLAB function
     Cp2, Stats2, Cp3, Stats3 = matlab_engine.cpdBootstrapUStarTh4Season20100901(
-        t_matlab, NEE_matlab, uStar_matlab, T_matlab, fNight_matlab, fPlot, cSiteYr, nBoot, 1, nargout=4
+        t_matlab, NEE_matlab, uStar_matlab, T_matlab, fNight_matlab, fPlot, cSiteYr, nBoot, jsonencode=[1,3], nargout=4
     )
-    Stats2 = json.loads(Stats2)
-    Stats3 = json.loads(Stats3)
 
     # Assertions for output types
     assert isinstance(Cp2, matlab.double), "Cp2 should be a MATLAB double array."
@@ -106,10 +104,8 @@ def test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap(matlab_engi
 
     # Call MATLAB function
     Cp2, Stats2, Cp3, Stats3 = matlab_engine.cpdBootstrapUStarTh4Season20100901(
-        t_matlab, NEE_matlab, uStar_matlab, T_matlab, fNight_matlab, fPlot, cSiteYr, nBoot, 1, nargout=4
+        t_matlab, NEE_matlab, uStar_matlab, T_matlab, fNight_matlab, fPlot, cSiteYr, nBoot, jsonencode=[1,3], nargout=4
     )
-    Stats2 = json.loads(Stats2)
-    Stats3 = json.loads(Stats3)
 
     # Validate dimensions with a high bootstrap count
     assert len(Cp2[0][0]) == nBoot, "Each Cp2 season entry should have `nBoot` bootstraps."
@@ -135,11 +131,9 @@ def test_cpdBootstrap_against_testcases(matlab_engine):
         matlab_args = to_matlab_type(inputs_list)
 
         # Call the MATLAB function and capture its output
-        Cp2, Stats2, Cp3, Stats3 = matlab_engine.cpdBootstrapUStarTh4Season20100901(*matlab_args, 1, nargout=4)
+        Cp2, Stats2, Cp3, Stats3 = matlab_engine.cpdBootstrapUStarTh4Season20100901(*matlab_args, jsonencode=[1,3], nargout=4)
         Cp2 = mat2list(Cp2)
         Cp3 = mat2list(Cp3)
-        Stats2 = json.loads(Stats2)
-        Stats3 = json.loads(Stats3)
 
         # Extract the expected outputs for comparison
         outputs_list = [outputs[str(i)] for i in range(len(outputs))]
