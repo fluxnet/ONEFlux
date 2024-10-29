@@ -22,13 +22,13 @@ def launch(input_folder=None, output_folder=None):
     # oneflux_steps/ustar_cp_refactor_wip/launch.m:15
     else:
         if length(input_folder) < 2:
-            if input_folder[2] != ":":
+            if take(input_folder, 2) != ":":
                 input_folder = pwd + "/" + input_folder
     # oneflux_steps/ustar_cp_refactor_wip/launch.m:18
 
     if (
-        input_folder[length(input_folder)] != "\\"
-        and input_folder[length(input_folder)] != "/"
+        take(input_folder, length(input_folder)) != "\\"
+        and take(input_folder, length(input_folder)) != "/"
     ):
         input_folder = input_folder + "/"
     # oneflux_steps/ustar_cp_refactor_wip/launch.m:22
@@ -39,13 +39,13 @@ def launch(input_folder=None, output_folder=None):
     # oneflux_steps/ustar_cp_refactor_wip/launch.m:27
     else:
         if length(output_folder) < 2:
-            if output_folder[2] != ":":
+            if take(output_folder, 2) != ":":
                 output_folder = pwd + "/" + output_folder
     # oneflux_steps/ustar_cp_refactor_wip/launch.m:30
 
     if (
-        output_folder[length(output_folder)] != "\\"
-        and output_folder[length(output_folder)] != "/"
+        take(output_folder, length(output_folder)) != "\\"
+        and take(output_folder, length(output_folder)) != "/"
     ):
         output_folder = output_folder + "/"
     # oneflux_steps/ustar_cp_refactor_wip/launch.m:34
@@ -88,115 +88,115 @@ def launch(input_folder=None, output_folder=None):
             continue
         dataset = textscan(fid, "%[^\n]")
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:66
-        dataset = dataset[1]
+        dataset = take(dataset, 1)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:66
-        r = strncmpi(dataset[1], "site", 4)
+        r = strncmpi(take(dataset, 1), "site", 4)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:69
         if 0 == r:
             fprintf("site keyword not found.\n")
             exitcode = 1
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:72
             continue
-        site = dataset[1]
+        site = take(dataset, 1)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:75
         site = strrep(site, "site,", "")
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:76
-        r = strncmpi(dataset[2], "year", 4)
+        r = strncmpi(take(dataset, 2), "year", 4)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:79
         if 0 == r:
             fprintf("year keyword not found.\n")
             exitcode = 1
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:82
             continue
-        year = dataset[2]
+        year = take(dataset, 2)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:85
         year = strrep(year, "year,", "")
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:86
-        r = strncmpi(dataset[3], "lat", 3)
+        r = strncmpi(take(dataset, 3), "lat", 3)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:89
         if 0 == r:
             fprintf("lat keyword not found.\n")
             exitcode = 1
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:92
             continue
-        lat = dataset[3]
+        lat = take(dataset, 3)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:95
         lat = strrep(lat, "lat,", "")
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:96
-        r = strncmpi(dataset[4], "lon", 3)
+        r = strncmpi(take(dataset, 4), "lon", 3)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:99
         if 0 == r:
             fprintf("lon keyword not found.\n")
             exitcode = 1
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:102
             continue
-        lon = dataset[4]
+        lon = take(dataset, 4)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:105
         lon = strrep(lon, "lon,", "")
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:106
-        r = strncmpi(dataset[5], "timezone", 8)
+        r = strncmpi(take(dataset, 5), "timezone", 8)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:109
         if 0 == r:
             fprintf("timezone keyword not found.\n")
             exitcode = 1
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:112
             continue
-        timezone = dataset[5]
+        timezone = take(dataset, 5)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:115
         timezone = strrep(timezone, "timezone,", "")
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:116
-        r = strncmpi(dataset[6], "htower", 6)
+        r = strncmpi(take(dataset, 6), "htower", 6)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:119
         if 0 == r:
             fprintf("htower keyword not found.\n")
             exitcode = 1
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:122
             continue
-        htower = dataset[6]
+        htower = take(dataset, 6)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:125
         htower = strrep(htower, "htower,", "")
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:126
-        r = strncmpi(dataset[7], "timeres", 7)
+        r = strncmpi(take(dataset, 7), "timeres", 7)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:129
         if 0 == r:
             fprintf("timeres keyword not found.\n")
             exitcode = 1
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:132
             continue
-        timeres = dataset[7]
+        timeres = take(dataset, 7)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:135
         timeres = strrep(timeres, "timeres,", "")
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:136
-        r = strncmpi(dataset[8], "Sc_negl", 7)
+        r = strncmpi(take(dataset, 8), "Sc_negl", 7)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:139
         if 0 == r:
             fprintf("sc_negl keyword not found.\n")
             exitcode = 1
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:142
             continue
-        sc_negl = dataset[8]
+        sc_negl = take(dataset, 8)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:145
         sc_negl = strrep(sc_negl, "Sc_negl,", "")
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:146
-        r = strncmpi(dataset[9], "notes", 5)
+        r = strncmpi(take(dataset, 9), "notes", 5)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:149
         if 0 == r:
             fprintf("notes keyword not found.\n")
             exitcode = 1
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:152
             continue
-        notes = dataset[9]
+        notes = take(dataset, 9)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:155
         notes = strrep(notes, "notes,", "")
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:156
         i = 10
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:159
         while 1:
-            r = strncmpi(dataset[i], "notes", 5)
+            r = strncmpi(take(dataset, i), "notes", 5)
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:161
             if 0 == r:
                 break
-            temp = dataset[i]
+            temp = take(dataset, i)
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:165
             temp = strrep(temp, "notes,", "")
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:166
@@ -219,13 +219,19 @@ def launch(input_folder=None, output_folder=None):
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:179
         on_error = 0
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:182
-        for y in arange(1, length(header[9 + length(notes), arange()])).reshape(-1):
+        for y in arange(1, length(take(header, 9 + length(notes), arange()))).reshape(
+            -1
+        ):
             for i in arange(1, numel(input_columns_names)).reshape(-1):
                 if logical_or(
-                    (strcmpi(header[(9 + length(notes)), y], input_columns_names[i])),
                     (
                         strcmpi(
-                            header[(9 + length(notes)), y],
+                            take(header, (9 + length(notes)), y), input_columns_names[i]
+                        )
+                    ),
+                    (
+                        strcmpi(
+                            take(header, (9 + length(notes)), y),
                             strcat("itp", input_columns_names[i]),
                         )
                     ),
@@ -265,16 +271,16 @@ def launch(input_folder=None, output_folder=None):
             exitcode = 1
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:219
             continue
-        uStar = data[arange(), columns_index[USTAR_INDEX]]
+        uStar = take(data, arange(), columns_index[USTAR_INDEX])
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:223
-        NEE = data[arange(), columns_index[NEE_INDEX]]
+        NEE = take(data, arange(), columns_index[NEE_INDEX])
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:224
-        Ta = data[arange(), columns_index[TA_INDEX]]
+        Ta = take(data, arange(), columns_index[TA_INDEX])
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:225
-        Rg = data[arange(), columns_index[RG_INDEX]]
+        Rg = take(data, arange(), columns_index[RG_INDEX])
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:226
         if 0 == ppfd_from_rg:
-            PPFD = data[arange(), columns_index[PPFD_INDEX]]
+            PPFD = take(data, arange(), columns_index[PPFD_INDEX])
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:228
             q = find(PPFD < -9990)
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:230

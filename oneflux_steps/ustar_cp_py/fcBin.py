@@ -46,17 +46,17 @@ def cpdBin(x=None, y=None, dx=None, nPerBin=None):
         # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:27
         dx = prctile(x[iYaN], iprctile)
         # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:28
-        xL = dx[arange(1, (end() - 1))]
+        xL = take(dx, arange(1, (end() - 1)))
         # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:29
-        xU = dx[arange(2, end())]
+        xU = take(dx, arange(2, end()))
         # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:29
         jx = 0
         # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:30
         for i in arange(1, length(xL)).reshape(-1):
             ix = find(
                 logical_and(logical_not(isnan(x + y)), x)
-                >= logical_and(xL[i], x)
-                <= xU[i]
+                >= logical_and(take(xL, i), x)
+                <= take(xU, i)
             )
             # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:31
             if length(ix) >= nPerBin:
@@ -89,15 +89,15 @@ def cpdBin(x=None, y=None, dx=None, nPerBin=None):
                     my[nBins, 1] = mean(y[ix])
         # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:47
         else:
-            xL = dx[arange(1, (end() - 1))]
+            xL = take(dx, arange(1, (end() - 1)))
             # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:51
-            xU = dx[arange(2, end())]
+            xU = take(dx, arange(2, end()))
             # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:51
             for i in arange(1, length(xL)).reshape(-1):
                 ix = find(
                     logical_and(logical_not(isnan(x + y)), x)
-                    >= logical_and(xL[i], x)
-                    <= xU[i]
+                    >= logical_and(take(xL, i), x)
+                    <= take(xU, i)
                 )
                 # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:53
                 if length(ix) >= nPerBin:

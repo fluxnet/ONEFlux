@@ -186,7 +186,14 @@ def cpdBootstrapUStarTh20100901(
                 fPlot = 0
             # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:116
             xCp2, xStats2, xCp3, xStats3 = cpdEvaluateUStarTh20100901(
-                t[it], NEE[it], uStar[it], T[it], fNight[it], fPlot, cSiteYr, nargout=4
+                take(t, it),
+                take(NEE, it),
+                uStar[it],
+                take(T, it),
+                take(fNight, it),
+                fPlot,
+                cSiteYr,
+                nargout=4,
             )
             # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:118
             nW, nS = size(xCp2, nargout=2)

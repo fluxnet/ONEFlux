@@ -29,9 +29,9 @@ def myFigLoc(iFig=None, dx=None, dy=None, cLoc=None):
 
     ss = get(0, "ScreenSize")
     # oneflux_steps/ustar_cp_refactor_wip/fcFigLoc.m:25
-    nxPixels = ss[3]
+    nxPixels = take(ss, 3)
     # oneflux_steps/ustar_cp_refactor_wip/fcFigLoc.m:25
-    nyPixels = ss[4]
+    nyPixels = take(ss, 4)
     # oneflux_steps/ustar_cp_refactor_wip/fcFigLoc.m:25
     if nxPixels == 3200:
         nxPixels = 1600
@@ -121,9 +121,9 @@ def myFigLoc(iFig=None, dx=None, dy=None, cLoc=None):
         # oneflux_steps/ustar_cp_refactor_wip/fcFigLoc.m:54
         iy = strfind(cLoc, "yShift=")
         # oneflux_steps/ustar_cp_refactor_wip/fcFigLoc.m:54
-        xFractionShift = str2num(cLoc[arange((ix + 7), (iy - 1))])
+        xFractionShift = str2num(take(cLoc, arange((ix + 7), (iy - 1))))
         # oneflux_steps/ustar_cp_refactor_wip/fcFigLoc.m:55
-        yFractionShift = str2num(cLoc[arange((iy + 7), end())])
+        yFractionShift = str2num(take(cLoc, arange((iy + 7), end())))
     # oneflux_steps/ustar_cp_refactor_wip/fcFigLoc.m:56
 
     xLocLeft = dot(dot(xFractionShift, (1 - dx)), nxPixelsFull)

@@ -190,13 +190,13 @@ def cpdEvaluateUStarTh4Season20100901(
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:112
     t = t[itReOrder]
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:112
-    T = T[itReOrder]
+    T = take(T, itReOrder)
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:113
     uStar = uStar[itReOrder]
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:113
-    NEE = NEE[itReOrder]
+    NEE = take(NEE, itReOrder)
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:114
-    fNight = fNight[itReOrder]
+    fNight = take(fNight, itReOrder)
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:114
     itAnnual = find(fNight == logical_and(1, logical_not(isnan(NEE + uStar + T))))
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:116
@@ -234,7 +234,7 @@ def cpdEvaluateUStarTh4Season20100901(
                     (dot((iSeason - 1), nPerSeason) + 1), (dot(iSeason, nPerSeason))
                 )
         # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:136
-        itSeason = itAnnual[jtSeason]
+        itSeason = take(itAnnual, jtSeason)
         # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:138
         ntSeason = length(itSeason)
         # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:138
@@ -246,7 +246,7 @@ def cpdEvaluateUStarTh4Season20100901(
         if nStrata > nStrataX:
             nStrata = copy(nStrataX)
         # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:141
-        TTh = prctile(T[itSeason], arange(0, 100, (100 / nStrata)))
+        TTh = prctile(take(T, itSeason), arange(0, 100, (100 / nStrata)))
         # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:143
         for iStrata in arange(1, nStrata).reshape(-1):
             cPlot = ""
@@ -258,35 +258,41 @@ def cpdEvaluateUStarTh4Season20100901(
                 if iSeason == logical_and(1, iStrata) == 1:
                     cPlot = copy(cSiteYr)
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:149
-            itStrata = find(T >= logical_and(TTh[iStrata], T) <= TTh[iStrata + 1])
+            itStrata = find(
+                T >= logical_and(take(TTh, iStrata), T) <= take(TTh, iStrata + 1)
+            )
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:152
             itStrata = intersect(itStrata, itSeason)
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:153
             n, muStar, mNEE = fcBin(
-                uStar[itStrata], NEE[itStrata], [], nPerBin, nargout=3
+                uStar[itStrata], take(NEE, itStrata), [], nPerBin, nargout=3
             )
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:155
             xCp2, xs2, xCp3, xs3 = cpdFindChangePoint20100901(
                 muStar, mNEE, fPlot, cPlot, nargout=4
             )
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:157
-            n, muStar, mT = fcBin(uStar[itStrata], T[itStrata], [], nPerBin, nargout=3)
+            n, muStar, mT = fcBin(
+                uStar[itStrata], take(T, itStrata), [], nPerBin, nargout=3
+            )
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:161
             r, p = corrcoef(muStar, mT, nargout=2)
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:162
             xs2.mt = copy(mean(t[itStrata]))
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:164
-            xs2.ti = copy(t[itStrata[1]])
+            xs2.ti = copy(t[take(itStrata, 1)])
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:164
-            xs2.tf = copy(t[itStrata[end()]])
+            xs2.tf = copy(t[take(itStrata, end())])
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:164
-            xs2.ruStarVsT = copy(r[2, 1])
+            xs2.ruStarVsT = copy(take(r, 2, 1))
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:165
-            xs2.puStarVsT = copy(p[2, 1])
+            xs2.puStarVsT = copy(take(p, 2, 1))
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:165
-            xs2.mT = copy(mean(T[itStrata]))
+            xs2.mT = copy(mean(take(T, itStrata)))
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:166
-            xs2.ciT = copy(dot(0.5, diff(prctile(T[itStrata], concat([2.5, 97.5])))))
+            xs2.ciT = copy(
+                dot(0.5, diff(prctile(take(T, itStrata), concat([2.5, 97.5]))))
+            )
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:166
             xs3.mt = copy(xs2.mt)
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:168

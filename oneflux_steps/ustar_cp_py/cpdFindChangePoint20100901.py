@@ -95,7 +95,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
 
     a = numpy.linalg.solve(concat([ones(n, 1), x]), y)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:57
-    yHat = a[1] + dot(a[2], x)
+    yHat = take(a, 1) + dot(take(a, 2), x)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:57
     dy = y - yHat
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:58
@@ -125,7 +125,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:66
     a = numpy.linalg.solve(concat([ones(n, 1), x]), y)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:67
-    yHat3 = a[1] + dot(a[2], x)
+    yHat3 = take(a, 1) + dot(take(a, 2), x)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:67
     SSERed3 = sum((y - yHat3) ** 2)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:67
@@ -166,7 +166,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:85
         a2 = numpy.linalg.solve(concat([ones(n, 1), x1]), y)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:86
-        yHat2 = a2[1] + dot(a2[2], x1)
+        yHat2 = take(a2, 1) + dot(take(a2, 2), x1)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:87
         SSEFull2 = sum((y - yHat2) ** 2)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:88
@@ -184,7 +184,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:96
         a3 = numpy.linalg.solve(concat([ones(n, 1), x1, x2]), y)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:97
-        yHat3 = a3[1] + dot(a3[2], x1) + dot(a3[3], x2)
+        yHat3 = take(a3, 1) + dot(take(a3, 2), x1) + dot(take(a3, 3), x2)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:98
         SSEFull3 = sum((y - yHat3) ** 2)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:99
@@ -208,7 +208,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:110
     a2, a2int = regress(y, concat([ones(n, 1), x1]), nargout=2)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:111
-    yHat2 = a2[1] + dot(a2[2], x1)
+    yHat2 = take(a2, 1) + dot(take(a2, 2), x1)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:112
     p2 = cpdFmax2pCp2(Fmax2, n)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:113
@@ -234,7 +234,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:118
     a3, a3int = regress(y, concat([ones(n, 1), x1, x2]), nargout=2)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:119
-    yHat3 = a3[1] + dot(a3[2], x1) + dot(a3[3], x2)
+    yHat3 = take(a3, 1) + dot(take(a3, 2), x1) + dot(take(a3, 3), x2)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:120
     p3 = cpdFmax2pCp3(Fmax3, n)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:121
@@ -251,13 +251,13 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
     s3.n = copy(n)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:126
     if iCp2 > logical_and((nEndPts), iCp2) < (n - nEndPts):
-        b0 = a2[1]
+        b0 = take(a2, 1)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:130
-        cib0 = dot(0.5, diff(a2int[1, arange()]))
+        cib0 = dot(0.5, diff(take(a2int, 1, arange())))
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:130
-        b1 = a2[2]
+        b1 = take(a2, 2)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:131
-        cib1 = dot(0.5, diff(a2int[2, arange()]))
+        cib1 = dot(0.5, diff(take(a2int, 2, arange())))
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:131
         s2.Cp = copy(Cp2)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:133
@@ -281,19 +281,19 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:135
 
     if iCp3 > logical_and((nEndPts), iCp3) < (n - nEndPts):
-        b0 = a3[1]
+        b0 = take(a3, 1)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:141
-        cib0 = dot(0.5, diff(a3int[1, arange()]))
+        cib0 = dot(0.5, diff(take(a3int, 1, arange())))
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:141
-        b1 = a3[2]
+        b1 = take(a3, 2)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:142
-        cib1 = dot(0.5, diff(a3int[2, arange()]))
+        cib1 = dot(0.5, diff(take(a3int, 2, arange())))
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:142
-        b2 = a3[3]
+        b2 = take(a3, 3)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:143
-        cic2 = dot(0.5, diff(a3int[3, arange()]))
+        cic2 = dot(0.5, diff(take(a3int, 3, arange())))
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:143
-        c2 = a3[2] + a3[3]
+        c2 = take(a3, 2) + take(a3, 3)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:144
         s3.Cp = copy(xCp3)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:146
@@ -330,7 +330,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
         hold("off")
         grid("on")
         box("on")
-        if a2[2] > 0:
+        if take(a2, 2) > 0:
             cMode = "D"
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:165
         else:
