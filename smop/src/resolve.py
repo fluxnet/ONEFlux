@@ -297,5 +297,7 @@ def fix_let_statement(u):
     if isinstance(u, node.let):
         if (isinstance(u.ret, node.ident) and
             isinstance(u.args, node.matrix)):
+            if any(b.__class__ is node.string for a in u.args.args for b in a):
+                return
             u.args = node.funcall(func_expr=node.ident("matlabarray"),
                                   args=node.expr_list([u.args]))

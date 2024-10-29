@@ -145,14 +145,17 @@ def cpdBootstrapUStarTh4Season20100901(
             Stats3[arange(), arange(), iBoot] = xStats3
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:120
 
-    if size(varargin) > 0:
-        Stats2 = jsonencode(Stats2)
+    for i in arange(1, length(varargin)).reshape(-1):
+        a = varargin[i]
         # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:127
-        Stats3 = jsonencode(Stats3)
-    # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:128
+        if iscell(a) and strcmp(a[1], "jsonencode"):
+            for j in arange(2, length(a)).reshape(-1):
+                if 2 == a[j]:
+                    Stats2 = jsonencode(Stats2)
+                # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:132
+                else:
+                    if 4 == a[j]:
+                        Stats3 = jsonencode(Stats3)
 
-    return Cp2, Stats2, Cp3, Stats3
 
-
-if __name__ == "__main__":
-    pass
+# oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:134
