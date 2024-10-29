@@ -18,36 +18,36 @@ def launch(input_folder=None, output_folder=None):
     warning("off")
     # check input path
     if 0 == exist("input_folder"):
-        input_folder = matlabarray(concat([pwd, "/"]))
+        input_folder = pwd + "/"
     # oneflux_steps/ustar_cp_refactor_wip/launch.m:15
     else:
         if length(input_folder) < 2:
             if input_folder[2] != ":":
-                input_folder = matlabarray(concat([pwd, "/", input_folder]))
+                input_folder = pwd + "/" + input_folder
     # oneflux_steps/ustar_cp_refactor_wip/launch.m:18
 
     if (
         input_folder[length(input_folder)] != "\\"
         and input_folder[length(input_folder)] != "/"
     ):
-        input_folder = matlabarray(concat([input_folder, "/"]))
+        input_folder = input_folder + "/"
     # oneflux_steps/ustar_cp_refactor_wip/launch.m:22
 
     # check output path
     if 0 == exist("output_folder"):
-        output_folder = matlabarray(concat([pwd, "/"]))
+        output_folder = pwd + "/"
     # oneflux_steps/ustar_cp_refactor_wip/launch.m:27
     else:
         if length(output_folder) < 2:
             if output_folder[2] != ":":
-                output_folder = matlabarray(concat([pwd, "/", output_folder]))
+                output_folder = pwd + "/" + output_folder
     # oneflux_steps/ustar_cp_refactor_wip/launch.m:30
 
     if (
         output_folder[length(output_folder)] != "\\"
         and output_folder[length(output_folder)] != "/"
     ):
-        output_folder = matlabarray(concat([output_folder, "/"]))
+        output_folder = output_folder + "/"
     # oneflux_steps/ustar_cp_refactor_wip/launch.m:34
 
     mkdir(output_folder)
@@ -70,7 +70,7 @@ def launch(input_folder=None, output_folder=None):
         input_folder,
         output_folder,
     )
-    d = dir(concat([input_folder, "*_qca_ustar_*.csv"]))
+    d = dir(input_folder + "*_qca_ustar_*.csv")
     # oneflux_steps/ustar_cp_refactor_wip/launch.m:48
     error_str = cellarray([])
     # oneflux_steps/ustar_cp_refactor_wip/launch.m:49
@@ -395,13 +395,13 @@ def launch(input_folder=None, output_folder=None):
             cSiteYr = strrep(cSiteYr, ".csv", "")
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:327
             dlmwrite(
-                concat([output_folder, char(site), "_uscp_", char(year), ".txt"]),
+                output_folder + char(site) + "_uscp_" + char(year) + ".txt",
                 Cp,
                 "precision",
                 8,
             )
             fid = fopen(
-                concat([output_folder, char(site), "_uscp_", char(year), ".txt"]), "a"
+                output_folder + char(site) + "_uscp_" + char(year) + ".txt", "a"
             )
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:330
             fprintf(fid, "\n;processed with ustar_mp 1.0 on %s\n", datestr(clock))

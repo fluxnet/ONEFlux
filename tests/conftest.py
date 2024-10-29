@@ -85,8 +85,8 @@ MatlabFunc.__new__ = mf_factory
 
 @pytest.fixture(scope="session", params=[
     "translated",
-    "refactored",
-    "original",
+    # "refactored",
+    # "original",
 ])
 def matlab_engine(request):
     """

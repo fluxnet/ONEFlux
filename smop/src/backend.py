@@ -313,14 +313,15 @@ def _backend(self,level=0):
         return "true"
 
 @extend(node.matrix)
-def _backend(self,level=0):
+def _backend(self, level=0):
     # TODO empty array has shape of 0 0 in matlab
     # size([])
     # 0 0
     if not self.args:
         return "[]"
-    elif any(a.__class__ is node.string for a in self.args):
-        return " + ".join(a._backend() for a in self.args)
+    elif any(b.__class__ is node.string for a in self.args for b in a):
+        s = " + ".join(b._backend() for a in self.args for b in a)
+        return s
     else:
         #import pdb; pdb.set_trace()
         return "concat([%s])" % self.args[0]._backend()
