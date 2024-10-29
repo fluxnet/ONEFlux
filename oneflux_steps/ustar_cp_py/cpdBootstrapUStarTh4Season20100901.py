@@ -124,10 +124,10 @@ def cpdBootstrapUStarTh4Season20100901(
             # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:108
             xCp2, xStats2, xCp3, xStats3 = cpdEvaluateUStarTh4Season20100901(
                 t[it],
-                NEE[it],
-                updated_uStar[it],
-                T[it],
-                fNight[it],
+                take(NEE, it),
+                take(updated_uStar, it),
+                take(T, it),
+                take(fNight, it),
                 fPlot,
                 cSiteYr,
                 nargout=4,
@@ -146,15 +146,15 @@ def cpdBootstrapUStarTh4Season20100901(
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:120
 
     for i in arange(1, length(varargin)).reshape(-1):
-        a = varargin[i]
+        a = take(varargin, i)
         # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:127
-        if iscell(a) and strcmp(a[1], "jsonencode"):
+        if iscell(a) and strcmp(take(a, 1), "jsonencode"):
             for j in arange(2, length(a)).reshape(-1):
-                if 2 == a[j]:
+                if 2 == take(a, j):
                     Stats2 = jsonencode(Stats2)
                 # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:132
                 else:
-                    if 4 == a[j]:
+                    if 4 == take(a, j):
                         Stats3 = jsonencode(Stats3)
 
 

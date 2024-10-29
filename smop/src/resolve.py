@@ -24,6 +24,9 @@ import networkx as nx
 from . import node
 from . node import extend
 
+
+A = set()  # variables that have array or matrix values
+
 def as_networkx(t):
     G = nx.DiGraph()
     for u in node.postorder(t):
@@ -86,7 +89,7 @@ def _lhs_resolve(self,symtab):
     self.func_expr._resolve(symtab) # A
     self.args._resolve(symtab)      # B
     self.func_expr._lhs_resolve(symtab)
-
+    A.add(self.func_expr.name)
 
 
 @extend(node.expr)
@@ -161,6 +164,9 @@ def _lhs_resolve(self,symtab):
 def _resolve(self,symtab):
     self.args._resolve(symtab)
     self.ret._lhs_resolve(symtab)
+    if isinstance(self.args, (node.matrix, node.cellarray)):
+        if isinstance(self.ret, node.ident):
+            A.add(self.ret.name)
 
 @extend(node.null_stmt)
 @extend(node.continue_stmt)
@@ -210,7 +216,7 @@ def _resolve(self,symtab):
 @extend(node.string)
 @extend(node.comment_stmt)
 def _resolve(self,symtab):
-        pass
+    pass
 
 # @extend(node.call_stmt)
 # def _resolve(self,symtab):
@@ -298,6 +304,8 @@ def fix_let_statement(u):
         if (isinstance(u.ret, node.ident) and
             isinstance(u.args, node.matrix)):
             if any(b.__class__ is node.string for a in u.args.args for b in a):
-                return
-            u.args = node.funcall(func_expr=node.ident("matlabarray"),
-                                  args=node.expr_list([u.args]))
+                u.args = node.expr("+", u.args.args[0])
+                A.discard(u.ret.name)
+            else:
+                u.args = node.funcall(func_expr=node.ident("matlabarray"),
+                                      args=node.expr_list([u.args]))

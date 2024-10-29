@@ -80,9 +80,10 @@ def _backend(self,level=0):
 
 @extend(node.arrayref)
 def _backend(self,level=0):
-    fmt = "%s[%s]"
-    return fmt % (self.func_expr._backend(),
-                       self.args._backend())
+    from . resolve import A
+    x = self.func_expr._backend()
+    fmt = "%s[%s]" if x in A else "take(%s,%s)"
+    return fmt % (x, self.args._backend())
 
 @extend(node.break_stmt)
 def _backend(self,level=0):
@@ -189,14 +190,10 @@ def _backend(self,level=0):
     if len(self.args) == 1:
         return "%s %s" % (optable.get(self.op,self.op),
                          self.args[0]._backend())
-    if len(self.args) == 2:
-        return "%s %s %s" % (self.args[0]._backend(),
-                           optable.get(self.op,self.op),
-                           self.args[1]._backend())
-    #import pdb;pdb.set_trace()
-    ret = "%s=" % self.ret._backend() if self.ret else ""
-    return ret+"%s(%s)" % (self.op,
-                           ",".join([t._backend() for t in self.args]))
+    if hasattr(self, "ret"):
+        ret = f"{self.ret._backend()}="
+        return ret+"%s(%s)" % (self.op, ",".join([t._backend() for t in self.args]))
+    return optable.get(self.op,self.op).join([t._backend() for t in self.args])
 
 
 @extend(node.expr_list)
@@ -320,8 +317,7 @@ def _backend(self, level=0):
     if not self.args:
         return "[]"
     elif any(b.__class__ is node.string for a in self.args for b in a):
-        s = " + ".join(b._backend() for a in self.args for b in a)
-        return s
+        return " + ".join(b._backend() for a in self.args for b in a)
     else:
         #import pdb; pdb.set_trace()
         return "concat([%s])" % self.args[0]._backend()
@@ -366,12 +362,7 @@ def _backend(self,level=0):
 
 @extend(node.string)
 def _backend(self,level=0):
-    # if '\\' in self.value:
-    #     print(self.value)
-    try:
-        return "'%s'" % str(self.value).encode("string_escape")
-    except:
-        return "'%s'" % str(self.value)
+    return f"'{self.value}'"
 
 @extend(node.sub)
 def _backend(self,level=0):

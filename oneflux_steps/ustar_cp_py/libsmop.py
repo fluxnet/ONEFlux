@@ -47,6 +47,18 @@ def clear(*args):
             del globals()[a]
 
 
+def take(a, i):
+    """Get an item with matlab indexing (1-based)."""
+    if isinstance(a, matlabarray):
+        return a[i]
+    else:
+        if isinstance(i, slice):
+            i = slice(i.start - 1, i.stop, i.step)
+        else:
+            i -= 1
+        return a[i]
+
+
 def abs(a):
     return np.abs(a)
 
@@ -76,6 +88,8 @@ def concat(args):
     >>> concat([[1,2,3,4,5] , [1,2,3,4,5]])
     [1, 2, 3, 4, 5, 1, 2, 3, 4, 5]
     """
+    if any(isinstance(a, str) for a in args):
+        return "".join(args)
     t = [matlabarray(a) for a in args]
     return np.concatenate(t)
 
@@ -279,7 +293,7 @@ def length(a):
     try:
         return max(np.asarray(a).shape)
     except ValueError:
-        return 1
+        return len(a)
 
 
 def load(a):

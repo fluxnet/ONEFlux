@@ -185,7 +185,7 @@ def cpdEvaluateUStarTh20100901(
     # append wrap-around data to start and end of record;
     # 18 Jan 2010 just need to wrap one end.
 
-    itAdd1 = arange(itAnnual[end() - nInc - 1], nt)
+    itAdd1 = arange(take(itAnnual, end() - nInc - 1), nt)
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:122
 
     t = matlabarray(concat([[t[itAdd1] - EndDOY], [t]]))
@@ -230,12 +230,14 @@ def cpdEvaluateUStarTh20100901(
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:150
             jt1 = ntAnnual - nPerWindow + 1
         # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:150
-        itWindow = itAnnual[arange(jt1, jt2)]
+        itWindow = take(itAnnual, arange(jt1, jt2))
         # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:151
         TTh = prctile(T[itWindow], arange(0, 100, (100 / nStrata)))
         # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:153
         for iStrata in arange(1, nStrata).reshape(-1):
-            itStrata = find(T >= logical_and(TTh[iStrata], T) <= TTh[iStrata + 1])
+            itStrata = find(
+                T >= logical_and(take(TTh, iStrata), T) <= take(TTh, iStrata + 1)
+            )
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:156
             itStrata = intersect(itStrata, itWindow)
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:157
@@ -253,13 +255,13 @@ def cpdEvaluateUStarTh20100901(
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:166
             xs2.mt = copy(mean(t[itStrata]))
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:168
-            xs2.ti = copy(t[itStrata[1]])
+            xs2.ti = copy(t[take(itStrata, 1)])
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:168
-            xs2.tf = copy(t[itStrata[end()]])
+            xs2.tf = copy(t[take(itStrata, end())])
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:168
-            xs2.ruStarVsT = copy(r[2, 1])
+            xs2.ruStarVsT = copy(take(r, 2, 1))
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:169
-            xs2.puStarVsT = copy(p[2, 1])
+            xs2.puStarVsT = copy(take(p, 2, 1))
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:169
             xs2.mT = copy(mean(T[itStrata]))
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:170

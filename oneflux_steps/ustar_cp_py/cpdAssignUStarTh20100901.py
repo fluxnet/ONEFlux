@@ -70,11 +70,11 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
     # =======================================================================
 
     for i in arange(1, length(varargin)).reshape(-1):
-        a = varargin[i]
+        a = take(varargin, i)
         # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:67
-        if iscell(a) and strcmp(a[1], "jsondecode"):
+        if iscell(a) and strcmp(take(a, 1), "jsondecode"):
             for j in arange(2, length(a)).reshape(-1):
-                if 1 == a[j]:
+                if 1 == take(a, j):
                     Stats = jsondecode(Stats)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:72
 
@@ -289,7 +289,7 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
     xNorm = dot(NaN, x)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:148
     for i in arange(1, nx).reshape(-1):
-        xNorm[arange(), i] = (x[arange(), 1] - mx[i]) / sx[i]
+        xNorm[arange(), i] = (x[arange(), 1] - mx[i]) / take(sx, i)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:148
 
     xNormX = max(abs(xNorm), [], 2)
@@ -379,7 +379,7 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:175
     mtSelect, i = sort(mt(iSelect), nargout=2)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:176
-    CpSelect = Cp(iSelect[i])
+    CpSelect = Cp(take(iSelect, i))
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:176
     xBins = prctile(mtSelect, arange(0, 100, (100 / nW)))
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:177
