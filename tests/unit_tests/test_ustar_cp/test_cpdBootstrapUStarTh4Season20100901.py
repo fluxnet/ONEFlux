@@ -9,7 +9,7 @@ import matlab.engine
 import numpy as np
 import json
 import os
-from tests.conftest import to_matlab_type, read_file, mat2list, parse_testcase
+from tests.conftest import to_matlab_type, read_file, mat2list, parse_testcase, compare_matlab_arrays
 
 @pytest.fixture(scope="module")
 def mock_data(nt=300, tspan=(0, 1), uStar_pars=(0.1, 3.5), T_pars=(-10, 30), fNight=None):
@@ -149,3 +149,181 @@ def test_cpdBootstrap_against_testcases(matlab_engine):
         assert Stats2 == outputs_list[1]
         assert Cp3 == outputs_list[2]
         assert Stats3 == outputs_list[3]
+
+# Parameterized test for the get_nPerDay function
+@pytest.mark.parametrize("input_data, expected_result", [
+    ([0, 1, 2, 3, 4], 1),                         # 1 unit per day (equal spacing)
+    ([0, 0.5, 1.0, 1.5, 2.0], 2),                 # 2 units per day
+    ([0, 2, 4, 6, 8], 1.0),                         # Large difference, should round to 0
+    ([0, 1, np.nan, 3, 4], 1),                    # Includes NaN, should ignore it
+    ([0, 1.1, 2.2, 3.3, 4.4], 1),                 # Non-integer difference
+])
+def test_get_nPerDay(matlab_engine, input_data, expected_result):
+    input_data = to_matlab_type(input_data)
+    result = matlab_engine.get_nPerDay(input_data)
+    assert result == expected_result, f"Expected {expected_result}, but got {result}"
+
+# Parameterized test for the get_nPerBin function
+@pytest.mark.parametrize("input_data, expected_result", [
+    ([0, 1/24, 2/24, 3/24, 4/24], 3),          # 24 points per day, expect 3 per bin
+    ([0, 1/48, 2/48, 3/48, 4/48], 5),          # 48 points per day, expect 5 per bin
+    ([0, 1/12, 2/12, 3/12, 4/12], 5),          # Other case, expect default 5 per bin
+    ([0, 1, 2, 3, np.nan, 5, 6], 5),           # Includes NaN, should default to 5 per bin
+    ([0, 0.5, 1.0, 1.5, 2.0], 5),              # 2 points per day, default case, expect 5 per bin
+])
+def test_get_nPerBin(matlab_engine, input_data, expected_result):
+    input_data = to_matlab_type(input_data)
+    result = matlab_engine.get_nPerBin(input_data)
+    assert result == expected_result, f"Expected {expected_result}, but got {result}"
+
+# Parameterized test for the get_iNight function
+@pytest.mark.parametrize("input_data, expected_result", [
+    ([0, 1, 0, 1, 0], matlab.double([2.0, 4.0])),                # Two true values at indices 2 and 4 (MATLAB uses 1-based indexing)
+    ([1, 1, 1, 1], matlab.double([1.0, 2.0, 3.0, 4.0])),             # All true values, expect all indices
+    ([0, 0, 0, 0], matlab.double([[]])),                       # No true values, expect empty array
+    #([0, 1, np.nan, 1, 0], matlab.double([2.0, 4.0])),           # NaN should be ignored, expect indices 2 and 4
+    ([1, 0, 0, 1, 1, 0], matlab.double([1.0, 4.0, 5.0]))           # True values at indices 1, 4, and 5
+])
+def test_get_iNight(matlab_engine, input_data, expected_result):
+    input_data = to_matlab_type(input_data)
+    result = matlab_engine.get_iNight(input_data)
+    assert result == expected_result, f"Expected {expected_result}, but got {result}"
+
+# Parameterized test for the update_ustar function
+@pytest.mark.parametrize("input_data, expected_result", [
+    ([1, 2, 3, 4], matlab.double([1.0, 2.0, 3.0, 4.0])),                     # No values out of bounds
+    ([-1, 2, 3, 5], matlab.double([np.nan, 2.0, 3.0, np.nan])),               # Values < 0 or > 4 should be NaN
+    ([0, 4, 4.1], matlab.double([0.0, 4.0, np.nan])),                         # Edge cases with 0, 4, and out-of-bound 4.1
+    ([np.nan, 2, 3], matlab.double([np.nan, 2.0, 3.0])),                      # Input with NaN should remain NaN
+    ([5, -2, 0, 3], matlab.double([np.nan, np.nan, 0.0, 3.0]))                # Multiple values out of bounds
+])
+def test_update_uStar(matlab_engine, input_data, expected_result):
+    input_data = to_matlab_type(input_data)
+    result = matlab_engine.update_uStar(input_data)
+    # Compare the MATLAB arrays, allowing for NaN equality
+    assert compare_matlab_arrays(result, expected_result), f"Expected {expected_result}, but got {result}"
+
+# Define the expected field names for StatsMT
+expected_fields = ['n', 'Cp', 'Fmax', 'p', 'b0', 'b1', 'b2', 'c2', 'cib0', 'cib1', 'cic2',
+    'mt', 'ti', 'tf', 'ruStarVsT', 'puStarVsT', 'mT', 'ciT'
+]
+
+# Test for the generate_statsMT function
+def test_generate_statsMT(matlab_engine):
+    # Generate the StatsMT struct
+    StatsMT = matlab_engine.generate_statsMT()
+
+    # Ensure all expected fields exist and are NaN
+    for field in expected_fields:
+        assert field in StatsMT, f"Missing field: {field}"  # Access fields like dict keys
+        assert np.isnan(StatsMT[field]), f"Field {field} is not NaN"
+
+# Parameterized test for the get_ntN function
+@pytest.mark.parametrize("t_input, nSeasons, expected_ntN", [
+    ([0, 1, 2, 3, 4], 2, 2000),    # 2 seasons
+    ([0, 0.5, 1.0, 1.5, 2.0], 1, 1000),  #1 season
+    ([0, 1, 2], 3, 3000),          # Small time array, 3 seasons
+    ([0, 1, 2, 3, 4], 1, 1000),     # 1 season
+    ([0, 1], 5, 5000)              # Larger nSeasons
+])
+def test_get_ntN(matlab_engine, t_input, nSeasons, expected_ntN):
+    t_input = to_matlab_type(t_input)
+
+    # Call get_ntN and check the result
+    result = matlab_engine.get_ntN(t_input, nSeasons)
+    assert result == expected_ntN, f"Expected {expected_ntN}, but got {result}"
+
+# Test for the get_itNee function
+@pytest.mark.parametrize(
+    "NEE, uStar, T, iNight, expected_itNee",
+    [
+        # Case 1: No NaNs and full intersection with iNight
+        ([1, 2, 3, 4], [1, 1, 1, 1], [1, 1, 1, 1], [1, 2, 3], matlab.double([1.0,2.0,3.0])),
+        
+        # Case 2: Some NaN values, partial intersection with iNight
+        ([1, np.nan, 3, 4], [1, 1, np.nan, 1], [1, 1, 1, np.nan], [1, 3], 1.0),
+        
+        # Case 3: No intersection with iNight
+        ([1, 2, 3, 4], [1, 1, 1, 1], [1, 1, 1, 1], [5, 6], [[]]),
+        
+        # Case 4: All elements are NaN, so no valid indices
+        ([np.nan, np.nan], [np.nan, np.nan], [np.nan, np.nan], [1, 2], matlab.double([[]])),
+        
+        # Case 5: All valid values, but no intersection with iNight
+        ([1, 2, 3, 4], [1, 1, 1, 1], [1, 1, 1, 1], [], []),
+        
+        # Case 6: All valid values and full intersection with iNight
+        ([1, 2, 3], [1, 1, 1], [1, 1, 1], [1, 2, 3], matlab.double([1.0, 2.0, 3.0]))
+    ]
+)
+def test_get_itNee(matlab_engine, NEE, uStar, T, iNight, expected_itNee):
+    # Convert input arrays to MATLAB-compatible types
+    NEE_matlab = to_matlab_type(NEE)
+    uStar_matlab = to_matlab_type(uStar)
+    T_matlab = to_matlab_type(T)
+    iNight_matlab = to_matlab_type(iNight)
+    
+    # Call the MATLAB function
+    itNee = matlab_engine.get_itNee(NEE_matlab, uStar_matlab, T_matlab, iNight_matlab)
+    
+    # Compare results
+    if type(itNee) != float:
+        assert compare_matlab_arrays(itNee, expected_itNee), f"Expected {expected_itNee}, but got {itNee}"
+    else:
+        assert itNee==expected_itNee
+
+# Test for the setup_Cp function
+@pytest.mark.parametrize(
+    "nSeasons, nStrataX, nBoot, expected_shape",
+    [
+        # Case 1: Basic 2x2x2 array
+        (2, 2, 2, (2, 2, 2)),
+
+        # Case 2: Single season, single strata, single boot
+        (1, 1, 1, ()),
+
+        # Case 3: 3 seasons, 4 strata, 5 bootstrap iterations
+        (3, 4, 5, (3, 4, 5)),
+
+        # Case 4: No bootstrap iterations (nBoot=0)
+        (2, 3, 0, (2, 3, 0)),
+
+        # Case 5: One season, multiple strata, multiple bootstraps
+        (1, 5, 4, (1, 5, 4)),
+    ]
+)
+def test_setup_Cp(matlab_engine, nSeasons, nStrataX, nBoot, expected_shape):
+    # Call the MATLAB function
+    Cp = matlab_engine.setup_Cp(nSeasons, nStrataX, nBoot)
+
+    # Convert the MATLAB output to numpy arrays for comparison
+    Cp_array = np.array(Cp)
+
+    # Check the shape of Cp2 and Cp3
+    assert Cp_array.shape == expected_shape, f"Expected shape {expected_shape} for Cp, but got {Cp_array.shape}"
+
+    # Ensure all elements are NaN
+    assert np.isnan(Cp_array).all(), "Not all elements in Cp2 are NaN"
+
+stats_entry = {'n': None, 'Cp': None, 'Fmax': None, 'p': None, 'b0': None, 'b1': None, 'b2': None, 'c2': None, 'cib0': None, 'cib1': None, 'cic2': None, 'mt': None, 'ti': None, 'tf': None, 'ruStarVsT': None, 'puStarVsT': None, 'mT': None, 'ciT': None}
+# Test for the setup_Stats function
+@pytest.mark.parametrize(
+    "nBoot, nSeasons, nStrataX, expected_shape",
+    [
+        # Case 1: Basic 2x2x2 array
+        (2, 2, 2, ([[[stats_entry, stats_entry],[stats_entry,stats_entry]],[[stats_entry,stats_entry],[stats_entry,stats_entry]]])),
+
+        # Case 2: Single season, single strata, single boot
+        (1, 1, 1, stats_entry),
+
+        # Case 3: No bootstrap iterations (nBoot=0)
+        (0, 2, 3, stats_entry),
+    ]
+)
+def test_setup_Stats(matlab_engine, nBoot, nSeasons, nStrataX, expected_shape):
+    # Call the MATLAB function
+    Stats= matlab_engine.setup_Stats(nBoot, nSeasons, nStrataX, 1)
+
+    Stats = json.loads(Stats)
+
+    assert Stats == expected_shape
