@@ -8,6 +8,7 @@ from numpy import sqrt, prod, exp, log, dot, multiply, inf, rint as fix
 from numpy.fft import fft2
 from numpy.linalg import inv
 from numpy.linalg import qr as _qr
+import pandas as pd
 
 try:
     from scipy.linalg import schur as _schur
@@ -15,10 +16,12 @@ except ImportError:
     pass
 
 import os
+import re
 import sys
 import time
 import json
 import glob
+from pathlib import Path
 from sys import stdin, stdout, stderr
 
 from scipy.io import loadmat
@@ -26,7 +29,6 @@ from scipy.special import gamma
 
 
 pwd = os.getcwd()
-dir = glob.glob
 eps = np.finfo(float).eps
 NaN = np.nan
 jsonencode = json.dumps
@@ -44,10 +46,18 @@ jsondecode = json.loads
 # """.split())
 
 
+def dir(s):
+    return cellarray([Path(s) for s in glob.glob(s)])
+
+
 def clear(*args):
     for a in args:
         if a in globals():
             del globals()[a]
+
+
+def fclose(fp):
+    fp.close()
 
 
 def take(a, i):
@@ -60,6 +70,13 @@ def take(a, i):
         else:
             i -= 1
         return a[i]
+
+
+def textscan(fp, fmt):
+    if fmt == "%[^\n]":
+        return [[ln.strip("\n") for ln in fp.readlines()]]
+    else:
+        raise NotImplementedError
 
 
 def abs(a):
@@ -426,6 +443,18 @@ def size_equal(a, b):
 
 def strcmp(a, b):
     return str(a) == str(b)
+
+
+def strncmp(a, b, n):
+    return str(a)[:n] == str(b)[:n]
+
+
+def strcmpi(a, b):
+    return str(a).lower() == str(b).lower()
+
+
+def strncmpi(a, b, n):
+    return str(a).lower()[:n] == str(b).lower()[:n]
 
 
 def strread(s, format="", nargout=1):

@@ -11,7 +11,7 @@ exitcode = 0;
 warning off;
 
 % check input path
-if 0 == exist('input_folder')
+if 0 == exist(input_folder)
     input_folder = [pwd '/'];
 elseif length(input_folder) < 2
     if input_folder(2) ~= ':'
@@ -23,7 +23,7 @@ if input_folder(length(input_folder)) ~= '\' && input_folder(length(input_folder
 end
 
 % check output path
-if 0 == exist('output_folder')
+if 0 == exist(output_folder)
     output_folder = [pwd '/'];
 elseif length(output_folder) < 2 
     if output_folder(2) ~= ':'
@@ -63,7 +63,8 @@ for n = 1:numel(d)
         continue;
     end
     
-    dataset = textscan(fid,'%[^\n]');dataset = dataset{1};
+    dataset = textscan(fid,'%[^\n]');
+    dataset = dataset{1};
     
     % get site
     r = strncmpi(dataset(1), 'site', 4);
