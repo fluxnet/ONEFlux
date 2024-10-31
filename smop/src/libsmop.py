@@ -8,6 +8,7 @@ from numpy import sqrt, prod, exp, log, dot, multiply, inf, rint as fix
 from numpy.fft import fft2
 from numpy.linalg import inv
 from numpy.linalg import qr as _qr
+import pandas as pd
 
 try:
     from scipy.linalg import schur as _schur
@@ -75,6 +76,12 @@ def textscan(fp, fmt):
         return [[ln.strip('\n') for ln in fp.readlines()]]
     else:
         raise NotImplementedError
+    
+
+def importdata(filename, delimiter=',', header=1):
+    import pandas as pd
+    df = pd.read_csv(filename, delimiter=delimiter, header=header-1)
+    return dataframe(df)
 
 
 def abs(a):
@@ -106,7 +113,7 @@ def concat(args):
     >>> concat([[1,2,3,4,5] , [1,2,3,4,5]])
     [1, 2, 3, 4, 5, 1, 2, 3, 4, 5]
     """
-    if any(isinstance(a, str) for a in args):
+    if all(isinstance(a, str) for a in args):
         return "".join(args)
     t = [matlabarray(a) for a in args]
     return np.concatenate(t)
@@ -1065,7 +1072,7 @@ class cellstr(matlabarray):
         """
         obj = (
             np.array(
-                ["".join(s) for s in a], dtype=object, copy=False, order="C", ndmin=2
+                ["".join(s) for s in a], dtype=object, order="C", ndmin=2
             )
             .view(cls)
             .copy(order="F")
@@ -1132,6 +1139,16 @@ class struct(object):
     def __init__(self, *args):
         for i in range(0, len(args), 2):
             setattr(self, str(args[i]), args[i + 1])
+
+
+class dataframe(pd.DataFrame):
+    @property
+    def textdata(self):
+        return cellstr(self.columns.values)
+    
+    @property
+    def data(self):
+        return matlabarray(self.values)
 
 
 if __name__ == "__main__":
