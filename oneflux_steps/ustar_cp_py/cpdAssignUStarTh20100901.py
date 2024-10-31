@@ -497,6 +497,18 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
         ylim(concat([0, 1]))
 
     # =======================================================================
+    # =======================================================================
 
-
-# =======================================================================
+    return (
+        CpA,
+        nA,
+        tW,
+        CpW,
+        cMode,
+        cFailure,
+        fSelect,
+        sSine,
+        FracSig,
+        FracModeD,
+        FracSelect,
+    )

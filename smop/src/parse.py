@@ -832,6 +832,8 @@ def p_error(p):
     raise_exception(SyntaxError,
                     ('Unexpected "%s" (parser)' % p.value),
                     new_lexer)
+
+
 parser = yacc.yacc(start="top")
 
 
@@ -844,6 +846,12 @@ def parse(buf):
     new_lexer = lexer.new()
     p = parser.parse(
         buf, tracking=1, debug=options.debug_parser, lexer=new_lexer)
+    
+    if new_lexer.stack and new_lexer.stack.pop() == "function":
+        f = next(n for n in p if isinstance(n, node.func_stmt))
+        p.append(node.return_stmt(ret=f.ret))
+
+    assert not new_lexer.stack, new_lexer.stack
 
     if "P" in options.debug:
         for i, pi in enumerate(p):

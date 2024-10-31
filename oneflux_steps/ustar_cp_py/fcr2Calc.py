@@ -16,7 +16,7 @@ def r2Calc(y=None, yHat=None):
     rmse = sum((yHat - y) ** 2)
     # oneflux_steps/ustar_cp_refactor_wip/fcr2Calc.m:7
     r2 = SSreg / SStotal
+    # oneflux_steps/ustar_cp_refactor_wip/fcr2Calc.m:8
+    # # #    sprintf('#7.4f #7.4f #7.4f ',[SSreg SStotal r2 rmse])
 
-
-# oneflux_steps/ustar_cp_refactor_wip/fcr2Calc.m:8
-# # #    sprintf('#7.4f #7.4f #7.4f ',[SSreg SStotal r2 rmse])
+    return r2

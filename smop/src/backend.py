@@ -352,8 +352,7 @@ def _backend(self,level=0):
 @extend(node.stmt_list)
 def _backend(self,level=0):
     for t in self:
-        if not isinstance(t,(node.null_stmt,
-                             node.comment_stmt)):
+        if not isinstance(t, (node.null_stmt, node.comment_stmt)):
             break
     else:
         self.append(node.pass_stmt())

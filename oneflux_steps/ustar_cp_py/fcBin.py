@@ -106,6 +106,6 @@ def cpdBin(x=None, y=None, dx=None, nPerBin=None):
                     mx[nBins, 1] = mean(x[ix])
                     # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:56
                     my[nBins, 1] = mean(y[ix])
+    # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:57
 
-
-# oneflux_steps/ustar_cp_refactor_wip/fcBin.m:57
+    return nBins, mx, my

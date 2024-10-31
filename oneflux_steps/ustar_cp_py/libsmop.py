@@ -17,6 +17,7 @@ except ImportError:
 import os
 import sys
 import time
+import json
 import glob
 from sys import stdin, stdout, stderr
 
@@ -28,6 +29,8 @@ pwd = os.getcwd()
 dir = glob.glob
 eps = np.finfo(float).eps
 NaN = np.nan
+jsonencode = json.dumps
+jsondecode = json.loads
 
 
 # def _load_matlab_builtins(*names):

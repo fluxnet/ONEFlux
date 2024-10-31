@@ -156,6 +156,6 @@ def cpdBootstrapUStarTh4Season20100901(
                 else:
                     if 4 == take(a, j):
                         Stats3 = jsonencode(Stats3)
+    # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:134
 
-
-# oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:134
+    return Cp2, Stats2, Cp3, Stats3

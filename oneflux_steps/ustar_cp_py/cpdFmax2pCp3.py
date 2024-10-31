@@ -89,6 +89,5 @@ def cpdFmax2pCp3(Fmax=None, n=None):
         return p
 
     p = interp1(FmaxCritical, 1 - pTable, Fmax, "pchip")
-
-
-# oneflux_steps/ustar_cp_refactor_wip/cpdFmax2pCp3.m:60
+    # oneflux_steps/ustar_cp_refactor_wip/cpdFmax2pCp3.m:60
+    return p

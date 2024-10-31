@@ -288,10 +288,9 @@ def cpdEvaluateUStarTh20100901(
             Cp3[iWindow, iStrata] = xCp3
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:179
             Stats3[iWindow, iStrata] = xs3
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:180
 
+    # ========================================================================
+    # ========================================================================
 
-# oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:180
-
-
-# ========================================================================
-# ========================================================================
+    return Cp2, Stats2, Cp3, Stats3

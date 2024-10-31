@@ -321,9 +321,9 @@ def cpdEvaluateUStarTh4Season20100901(
         Stats2 = jsonencode(Stats2)
         # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:183
         Stats3 = jsonencode(Stats3)
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:184
 
+    # ========================================================================
+    # ========================================================================
 
-# oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:184
-
-# ========================================================================
-# ========================================================================
+    return Cp2, Stats2, Cp3, Stats3

@@ -140,3 +140,4 @@ def myFigLoc(iFig=None, dx=None, dy=None, cLoc=None):
     clf
     set(iFig, "Position", FigLoc)
     set(iFig, "PaperPositionMode", "auto")
+    return
