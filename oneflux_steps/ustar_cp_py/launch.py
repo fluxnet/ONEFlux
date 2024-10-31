@@ -178,61 +178,43 @@ def launch(input_folder=None, output_folder=None):
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:146
         sc_negl = strrep(sc_negl, "Sc_negl,", "")
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:147
-        r = strncmpi(take(dataset, 9), "notes", 5)
+        notes = cellarray([])
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:150
-        if 0 == r:
-            fprintf("notes keyword not found.\n")
-            exitcode = 1
-            # oneflux_steps/ustar_cp_refactor_wip/launch.m:153
-            continue
-        notes = take(dataset, 9)
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:156
-        notes = strrep(notes, "notes,", "")
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:157
-        i = 10
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:160
+        i = 9
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:151
         while 1:
             r = strncmpi(take(dataset, i), "notes", 5)
-            # oneflux_steps/ustar_cp_refactor_wip/launch.m:162
+            # oneflux_steps/ustar_cp_refactor_wip/launch.m:153
             if 0 == r:
                 break
             temp = take(dataset, i)
-            # oneflux_steps/ustar_cp_refactor_wip/launch.m:166
+            # oneflux_steps/ustar_cp_refactor_wip/launch.m:157
             temp = strrep(temp, "notes,", "")
-            # oneflux_steps/ustar_cp_refactor_wip/launch.m:167
-            notes = matlabarray(concat([temp, notes]))
-            # oneflux_steps/ustar_cp_refactor_wip/launch.m:168
+            # oneflux_steps/ustar_cp_refactor_wip/launch.m:158
+            notes[end() + 1] = temp
+            # oneflux_steps/ustar_cp_refactor_wip/launch.m:159
             i = i + 1
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:169
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:160
 
         fclose(fid)
         clear("i", "temp", "r", "fid")
-        imported_data = importdata(
-            concat([input_folder, d[n].name]), ",", (9 + length(notes))
-        )
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:177
+        imported_data = importdata(concat([input_folder, d[n].name]), ",", i)
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:167
         header = getattr(imported_data, ("textdata"))
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:178
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:168
         data = getattr(imported_data, ("data"))
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:179
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:169
         columns_index = dot(ones(numel(input_columns_names), 1), -1)
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:180
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:170
         on_error = 0
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:183
-        for y in arange(1, length(take(header, 9 + length(notes), arange()))).reshape(
-            -1
-        ):
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:173
+        for y in arange(1, length(take(header, i, arange()))).reshape(-1):
             for i in arange(1, numel(input_columns_names)).reshape(-1):
                 if logical_or(
+                    (strcmpi(take(header, i, y), input_columns_names[i])),
                     (
                         strcmpi(
-                            take(header, (9 + length(notes)), y), input_columns_names[i]
-                        )
-                    ),
-                    (
-                        strcmpi(
-                            take(header, (9 + length(notes)), y),
-                            strcat("itp", input_columns_names[i]),
+                            take(header, i, y), strcat("itp", input_columns_names[i])
                         )
                     ),
                 ):
@@ -243,71 +225,71 @@ def launch(input_folder=None, output_folder=None):
                             i,
                         )
                         on_error = 1
-                        # oneflux_steps/ustar_cp_refactor_wip/launch.m:189
+                        # oneflux_steps/ustar_cp_refactor_wip/launch.m:179
                         break
                     else:
                         columns_index[i] = y
-            # oneflux_steps/ustar_cp_refactor_wip/launch.m:192
+            # oneflux_steps/ustar_cp_refactor_wip/launch.m:182
             if 1 == on_error:
                 break
         if 1 == on_error:
             exitcode = 1
-            # oneflux_steps/ustar_cp_refactor_wip/launch.m:202
+            # oneflux_steps/ustar_cp_refactor_wip/launch.m:192
             continue
         on_error = 0
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:206
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:196
         ppfd_from_rg = 0
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:207
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:197
         for i in arange(1, numel(columns_index)).reshape(-1):
             if -1 == columns_index[i]:
                 if i == PPFD_INDEX:
                     ppfd_from_rg = 1
-                # oneflux_steps/ustar_cp_refactor_wip/launch.m:211
+                # oneflux_steps/ustar_cp_refactor_wip/launch.m:201
                 else:
                     fprintf("column %s not found!\n", char(input_columns_names[i]))
                     on_error = 1
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:214
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:204
         if 1 == on_error:
             exitcode = 1
-            # oneflux_steps/ustar_cp_refactor_wip/launch.m:220
+            # oneflux_steps/ustar_cp_refactor_wip/launch.m:210
             continue
         uStar = take(data, arange(), columns_index[USTAR_INDEX])
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:224
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:214
         NEE = take(data, arange(), columns_index[NEE_INDEX])
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:225
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:215
         Ta = take(data, arange(), columns_index[TA_INDEX])
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:226
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:216
         Rg = take(data, arange(), columns_index[RG_INDEX])
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:227
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:217
         if 0 == ppfd_from_rg:
             PPFD = take(data, arange(), columns_index[PPFD_INDEX])
-            # oneflux_steps/ustar_cp_refactor_wip/launch.m:229
+            # oneflux_steps/ustar_cp_refactor_wip/launch.m:219
             q = find(PPFD < -9990)
-            # oneflux_steps/ustar_cp_refactor_wip/launch.m:231
+            # oneflux_steps/ustar_cp_refactor_wip/launch.m:221
             if numel(q) == numel(PPFD):
                 ppfd_from_rg = 1
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:233
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:223
         if 1 == ppfd_from_rg:
             fprintf("(PPFD_IN from SW_IN)...")
             PPFD = dot(Rg, 2.24)
-            # oneflux_steps/ustar_cp_refactor_wip/launch.m:239
+            # oneflux_steps/ustar_cp_refactor_wip/launch.m:229
             p = find(Rg < -9990)
-            # oneflux_steps/ustar_cp_refactor_wip/launch.m:240
+            # oneflux_steps/ustar_cp_refactor_wip/launch.m:230
             PPFD[p] = -9999
-            # oneflux_steps/ustar_cp_refactor_wip/launch.m:241
+            # oneflux_steps/ustar_cp_refactor_wip/launch.m:231
             clear("p")
         clear("data")
         #     load([cIn,d(n).name]);
         uStar[uStar == -9999] = NaN
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:250
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:240
         NEE[NEE == -9999] = NaN
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:251
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:241
         Ta[Ta == -9999] = NaN
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:252
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:242
         PPFD[PPFD == -9999] = NaN
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:253
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:243
         Rg[Rg == -9999] = NaN
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:254
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:244
         #         data_L3(data_L3==-9999)=NaN; data_L3(data_L3==-6999)=NaN;
         # by carlo, added by alessio on February 21, 2014
         if sum(isnan(NEE)) == numel(NEE):
@@ -332,23 +314,23 @@ def launch(input_folder=None, output_folder=None):
         # by alessio ( by carlo)
         # insert Dtime
         nrPerDay = mod(numel(uStar), 365)
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:285
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:275
         if nrPerDay == 0:
             nrPerDay = mod(numel(uStar), 364)
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:286
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:276
         t = 1 + (1 / nrPerDay)
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:287
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:277
         for n2 in arange(2, numel(uStar)).reshape(-1):
             t[n2, 1] = t[n2 - 1, 1] + (1 / nrPerDay)
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:288
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:278
         clear("n2")
         fNight = Rg < 5
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:291
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:281
         T = copy(Ta)
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:292
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:282
         # Look at inputs.
         fPlot = 0
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:296
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:286
         if fPlot:
             plot(t, uStar, ".")
             mydatetick(t, "Mo", 4, 1)
@@ -368,19 +350,19 @@ def launch(input_folder=None, output_folder=None):
         # Call uStarTh bootstrappng program (2 versions)
         # and assign annual Cp arrays.
         fPlot = 0
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:308
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:298
         cSiteYr = strrep(d[n].name, ".txt", "")
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:308
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:298
         cSiteYr = strrep(cSiteYr, "_ut", "_barr")
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:309
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:299
         nBoot = 100
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:310
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:300
         # by alessio
         # if exist([cOut,'4-season_analysis_',strrep(cSiteYr,'.txt',''),'.mat']) == 0
         Cp2, Stats2, Cp3, Stats3 = cpdBootstrapUStarTh4Season20100901(
             t, NEE, uStar, T, fNight, fPlot, cSiteYr, nBoot, nargout=4
         )
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:317
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:307
         (
             Cp,
             n,
@@ -394,12 +376,12 @@ def launch(input_folder=None, output_folder=None):
             FracModeD,
             FracSelect,
         ) = cpdAssignUStarTh20100901(Stats2, fPlot, cSiteYr, nargout=11)
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:324
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:314
         if isempty(cFailure):
             # save([cOut,'4-season_analysis_',strrep(cSiteYr,'.txt',''),'.mat'],'Cp2','Stats2','Cp3','Stats3',...
             #    'Cp','n','tW','CpW','cMode','cFailure','fSelect','sSine','FracSig','FracModeD','FracSelect');
             cSiteYr = strrep(cSiteYr, ".csv", "")
-            # oneflux_steps/ustar_cp_refactor_wip/launch.m:328
+            # oneflux_steps/ustar_cp_refactor_wip/launch.m:318
             dlmwrite(
                 output_folder + char(site) + "_uscp_" + char(year) + ".txt",
                 Cp,
@@ -409,7 +391,7 @@ def launch(input_folder=None, output_folder=None):
             fid = fopen(
                 output_folder + char(site) + "_uscp_" + char(year) + ".txt", "a"
             )
-            # oneflux_steps/ustar_cp_refactor_wip/launch.m:331
+            # oneflux_steps/ustar_cp_refactor_wip/launch.m:321
             fprintf(fid, "\n;processed with ustar_mp 1.0 on %s\n", datestr(clock))
             for i in arange(length(notes), 1, -1).reshape(-1):
                 fprintf(fid, ";%s\n", notes[i])
@@ -421,10 +403,10 @@ def launch(input_folder=None, output_folder=None):
             error_str = matlabarray(
                 concat([[error_str], [char(site), "_uscp_", char(year), " ", cFailure]])
             )
-            # oneflux_steps/ustar_cp_refactor_wip/launch.m:341
+            # oneflux_steps/ustar_cp_refactor_wip/launch.m:331
             fprintf("%s\n", cFailure)
             exitcode = 1
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:343
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:333
         # by alessio
         # end
         #     print -djpeg100 Plot2_4Season_CACa1-2001;

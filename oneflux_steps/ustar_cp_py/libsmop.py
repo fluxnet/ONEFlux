@@ -16,7 +16,6 @@ except ImportError:
     pass
 
 import os
-import re
 import sys
 import time
 import json
@@ -79,6 +78,13 @@ def textscan(fp, fmt):
         raise NotImplementedError
 
 
+def importdata(filename, delimiter=",", header=1):
+    import pandas as pd
+
+    df = pd.read_csv(filename, delimiter=delimiter, header=header - 1)
+    return dataframe(df)
+
+
 def abs(a):
     return np.abs(a)
 
@@ -108,7 +114,7 @@ def concat(args):
     >>> concat([[1,2,3,4,5] , [1,2,3,4,5]])
     [1, 2, 3, 4, 5, 1, 2, 3, 4, 5]
     """
-    if any(isinstance(a, str) for a in args):
+    if all(isinstance(a, str) for a in args):
         return "".join(args)
     t = [matlabarray(a) for a in args]
     return np.concatenate(t)
@@ -1066,9 +1072,7 @@ class cellstr(matlabarray):
         a line.
         """
         obj = (
-            np.array(
-                ["".join(s) for s in a], dtype=object, copy=False, order="C", ndmin=2
-            )
+            np.array(["".join(s) for s in a], dtype=object, order="C", ndmin=2)
             .view(cls)
             .copy(order="F")
         )
@@ -1134,6 +1138,16 @@ class struct(object):
     def __init__(self, *args):
         for i in range(0, len(args), 2):
             setattr(self, str(args[i]), args[i + 1])
+
+
+class dataframe(pd.DataFrame):
+    @property
+    def textdata(self):
+        return cellstr(self.columns.values)
+
+    @property
+    def data(self):
+        return matlabarray(self.values)
 
 
 if __name__ == "__main__":
