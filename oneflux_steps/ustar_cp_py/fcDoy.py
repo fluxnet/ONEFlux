@@ -23,6 +23,5 @@ def mydoy(t=None):
     tt = datenum(y, m, d)
     # oneflux_steps/ustar_cp_refactor_wip/fcDoy.m:17
     d = floor(tt - datenum(y - 1, 12, 31))
-
-
-# oneflux_steps/ustar_cp_refactor_wip/fcDoy.m:18
+    # oneflux_steps/ustar_cp_refactor_wip/fcDoy.m:18
+    return d

@@ -23,6 +23,6 @@ def setup_Stats(nBoot=None, nSeasons=None, nStrataX=None, *varargin):
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/setup_Stats.m:16
     if size(varargin) > 0:
         Stats = jsonencode(Stats)
+    # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/setup_Stats.m:18
 
-
-# oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/setup_Stats.m:18
+    return Stats

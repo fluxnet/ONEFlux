@@ -6,6 +6,5 @@ from libsmop import *
 @function
 def myrv(x=None):
     rv = reshape(x, 1, prod(size(x)))
-
-
-# oneflux_steps/ustar_cp_refactor_wip/fcx2rowvec.m:3
+    # oneflux_steps/ustar_cp_refactor_wip/fcx2rowvec.m:3
+    return rv

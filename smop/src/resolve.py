@@ -230,7 +230,6 @@ def _resolve(self,symtab):
 @extend(node.return_stmt)
 def _resolve(self,symtab):
     self.ret._resolve(symtab)
-        #symtab.clear()
 
 @extend(node.stmt_list)
 def _resolve(self,symtab):

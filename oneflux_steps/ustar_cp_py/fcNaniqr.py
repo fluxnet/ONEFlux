@@ -95,6 +95,6 @@ def fcnaniqr(X=None):
                             yX = prctile(y, 75)
                             # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:54
                             IQR[ic, iq] = yX - yN
+    # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:54
 
-
-# oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:54
+    return IQR

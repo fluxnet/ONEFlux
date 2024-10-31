@@ -218,10 +218,9 @@ def cpdBootstrapUStarTh20100901(
             Cp3[arange(1, nW), arange(), iBoot] = xCp3
             # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:128
             Stats3[arange(1, nW), arange(), iBoot] = xStats3
+    # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:128
 
+    # ========================================================================
+    # ========================================================================
 
-# oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:128
-
-
-# ========================================================================
-# ========================================================================
+    return Cp2, Stats2, Cp3, Stats3

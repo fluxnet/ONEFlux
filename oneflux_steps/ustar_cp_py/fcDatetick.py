@@ -293,3 +293,5 @@ def myDateTick(t=None, sFrequency=None, iDateStr=None, fLimits=None):
         xlim(concat([floor(min(xDates)), ceil(max(xDates))]))
         grid("on")
         box("on")
+
+    return

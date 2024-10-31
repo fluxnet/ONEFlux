@@ -50,6 +50,5 @@ def mydatevec(t=None):
     d[i2400] = d2400
     # oneflux_steps/ustar_cp_refactor_wip/mydatevec.m:18
     h[i2400] = 24
-
-
-# oneflux_steps/ustar_cp_refactor_wip/mydatevec.m:18
+    # oneflux_steps/ustar_cp_refactor_wip/mydatevec.m:18
+    return y, m, d, h, mn, s

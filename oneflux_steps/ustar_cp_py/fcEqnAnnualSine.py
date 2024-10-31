@@ -10,6 +10,5 @@ def fcEqnAnnualSine(b=None, t=None):
     Omega = dot(2, pi) / nDaysPerYr
     # oneflux_steps/ustar_cp_refactor_wip/fcEqnAnnualSine.m:4
     y = take(b, 1) + dot(take(b, 2), sin(dot(Omega, (t - take(b, 3)))))
-
-
-# oneflux_steps/ustar_cp_refactor_wip/fcEqnAnnualSine.m:5
+    # oneflux_steps/ustar_cp_refactor_wip/fcEqnAnnualSine.m:5
+    return y

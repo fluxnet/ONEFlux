@@ -28,6 +28,6 @@ def fcReadFields(s=None, FieldName=None):
                         # oneflux_steps/ustar_cp_refactor_wip/fcReadFields.m:17
                         if logical_not(isempty(tmp)):
                             x[i, j, k] = tmp
+    # oneflux_steps/ustar_cp_refactor_wip/fcReadFields.m:18
 
-
-# oneflux_steps/ustar_cp_refactor_wip/fcReadFields.m:18
+    return x

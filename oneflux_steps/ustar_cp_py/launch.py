@@ -481,6 +481,5 @@ def launch(input_folder=None, output_folder=None):
     # quit
 
     # by alessio
-
-
-# save('resumeBarr','cIn','cOut','d','error_str');
+    # save('resumeBarr','cIn','cOut','d','error_str');
+    return exitcode
