@@ -185,7 +185,7 @@ def cpdEvaluateUStarTh20100901(
     # append wrap-around data to start and end of record;
     # 18 Jan 2010 just need to wrap one end.
 
-    itAdd1 = arange(itAnnual[end() - nInc - 1], nt)
+    itAdd1 = arange((itAnnual := matlabarray(itAnnual))[end() - nInc - 1], nt)
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:122
 
     t = matlabarray(concat([[t[itAdd1] - EndDOY], [t]]))

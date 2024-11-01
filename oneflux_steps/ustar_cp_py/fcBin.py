@@ -46,7 +46,7 @@ def cpdBin(x=None, y=None, dx=None, nPerBin=None):
         # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:27
         dx = prctile(x[iYaN], iprctile)
         # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:28
-        xL = dx[1 : (end() - 1)]
+        xL = (dx := matlabarray(dx))[1 : (end() - 1)]
         # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:29
         xU = dx[2 : end()]
         # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:29

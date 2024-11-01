@@ -80,10 +80,17 @@ def _backend(self,level=0):
 
 @extend(node.arrayref)
 def _backend(self,level=0):
-    from . resolve import A
+    from . resolve import MAT
     x = self.func_expr._backend()
-    fmt = "%s[%s]" if x in A else "take(%s,%s)"
-    return fmt % (x, self.args._backend())
+    i = self.args._backend()
+    if x in MAT:
+        if MAT[x]:  # needs initialization
+            MAT[x] = False
+            return f"({x}:=matlabarray({x}))[{i}]"
+        else:
+            return f"{x}[{i}]"
+    else:
+        return f"take({x},{i})"
 
 @extend(node.break_stmt)
 def _backend(self,level=0):

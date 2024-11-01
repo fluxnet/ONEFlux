@@ -25,17 +25,17 @@ def mydatevec(t=None):
     # oneflux_steps/ustar_cp_refactor_wip/mydatevec.m:8
     yy, mm, dd, hh, mmn, ss = datevec(t[iYaN], nargout=6)
     # oneflux_steps/ustar_cp_refactor_wip/mydatevec.m:10
-    y[iYaN] = yy
+    (y := matlabarray(y))[iYaN] = yy
     # oneflux_steps/ustar_cp_refactor_wip/mydatevec.m:11
-    m[iYaN] = mm
+    (m := matlabarray(m))[iYaN] = mm
     # oneflux_steps/ustar_cp_refactor_wip/mydatevec.m:11
-    d[iYaN] = dd
+    (d := matlabarray(d))[iYaN] = dd
     # oneflux_steps/ustar_cp_refactor_wip/mydatevec.m:11
-    h[iYaN] = hh
+    (h := matlabarray(h))[iYaN] = hh
     # oneflux_steps/ustar_cp_refactor_wip/mydatevec.m:12
-    mn[iYaN] = mmn
+    (mn := matlabarray(mn))[iYaN] = mmn
     # oneflux_steps/ustar_cp_refactor_wip/mydatevec.m:12
-    s[iYaN] = ss
+    (s := matlabarray(s))[iYaN] = ss
     # oneflux_steps/ustar_cp_refactor_wip/mydatevec.m:12
     # set 0000 UTC to 2400 UTC, previous day.
 

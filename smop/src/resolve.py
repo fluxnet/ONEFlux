@@ -25,7 +25,7 @@ from . import node
 from . node import extend
 
 
-A = set()  # variables that have array or matrix values
+MAT = {}  # variables that have array values => whether need to initialize
 
 def as_networkx(t):
     G = nx.DiGraph()
@@ -89,7 +89,7 @@ def _lhs_resolve(self,symtab):
     self.func_expr._resolve(symtab) # A
     self.args._resolve(symtab)      # B
     self.func_expr._lhs_resolve(symtab)
-    A.add(self.func_expr.name)
+    MAT.setdefault(self.func_expr.name, True)
 
 
 @extend(node.expr)
@@ -166,7 +166,7 @@ def _resolve(self,symtab):
     self.ret._lhs_resolve(symtab)
     if isinstance(self.args, (node.matrix, node.cellarray)):
         if isinstance(self.ret, node.ident):
-            A.add(self.ret.name)
+            MAT[self.ret.name] = False  # no need to initialize
 
 @extend(node.null_stmt)
 @extend(node.continue_stmt)
@@ -285,7 +285,7 @@ def fix_colon_subscripts(u):
         for w in u.args:
             if isinstance(w, node.expr) and w.op == ":":
                 w.op = "::"
-                A.add(u.func_expr.name)
+                MAT.setdefault(u.func_expr.name, True)
 
 def fix_end_expressions(u):
     if isinstance(u, (node.arrayref, node.cellarrayref)):
@@ -305,7 +305,7 @@ def fix_let_statement(u):
             isinstance(u.args, node.matrix)):
             if any(b.__class__ is node.string for a in u.args.args for b in a):
                 u.args = node.expr("+", u.args.args[0])
-                A.discard(u.ret.name)
+                MAT.pop(u.ret.name, None)
             else:
                 u.args = node.funcall(func_expr=node.ident("matlabarray"),
                                       args=node.expr_list([u.args]))

@@ -10,7 +10,7 @@ def update_uStar(uStar=None):
 
     iOut = find(uStar < logical_or(0, uStar) > 4)
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/update_uStar.m:4
-    updated_ustar[iOut] = NaN
+    (updated_ustar := matlabarray(updated_ustar))[iOut] = NaN
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/update_uStar.m:5
 
     return updated_ustar

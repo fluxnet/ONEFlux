@@ -723,14 +723,15 @@ class matlabarray(np.ndarray):
     >>> matlabarray(["hello","world"])
     matlabarray("helloworld")
     """
-    def __new__(cls, a=[], dtype=None, ndmin=2):
+    def __new__(cls, a=[], dtype=None):
+        copy = not isinstance(a, np.ndarray)
         obj = (
-            np.array(a, dtype=dtype, order="F", ndmin=ndmin)
+            np.array(a, dtype=dtype, order="F", copy=copy, ndmin=2)
             .view(cls)
             .copy(order="F")
         )
         if obj.size == 0:
-            obj.shape = tuple(0 for _ in range(ndmin))
+            obj.shape = tuple(0 for _ in range(2))
         return obj
     def __copy__(self):
         return np.ndarray.copy(self, order="F")
@@ -865,7 +866,6 @@ class end(object):
         self.n -= n
         return self
 
-####
 class cellarray(matlabarray):
     """
     Cell array corresponds to matlab ``{}``
@@ -956,7 +956,7 @@ class char(matlabarray):
         if not isinstance(a, str):
             a = "".join([chr(c) for c in a])
         obj = (
-            np.array(list(a), dtype="|S1", copy=False, order="F", ndmin=2)
+            np.array(list(a), dtype="|U1", order="F", ndmin=2)
             .view(cls)
             .copy(order="F")
         )

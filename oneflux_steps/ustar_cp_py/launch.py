@@ -206,7 +206,7 @@ def launch(input_folder=None, output_folder=None):
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:169
         on_error = 0
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:172
-        columns = header[end(), :]
+        columns = (header := matlabarray(header))[end(), :]
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:173
         for y in arange(1, length(columns)).reshape(-1):
             for i in arange(1, numel(input_columns_names)).reshape(-1):
@@ -214,7 +214,7 @@ def launch(input_folder=None, output_folder=None):
                     (strcmpi(take(columns, y), input_columns_names[i])),
                     (strcmpi(take(columns, y), strcat("itp", input_columns_names[i]))),
                 ):
-                    if columns_index[i] != -1:
+                    if (columns_index := matlabarray(columns_index))[i] != -1:
                         fprintf(
                             "column %s already founded at index %d\n",
                             char(input_columns_names[i]),
@@ -249,7 +249,7 @@ def launch(input_folder=None, output_folder=None):
             exitcode = 1
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:210
             continue
-        uStar = data[:, columns_index[USTAR_INDEX]]
+        uStar = (data := matlabarray(data))[:, columns_index[USTAR_INDEX]]
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:214
         NEE = data[:, columns_index[NEE_INDEX]]
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:215
@@ -271,7 +271,7 @@ def launch(input_folder=None, output_folder=None):
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:229
             p = find(Rg < -9990)
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:230
-            PPFD[p] = -9999
+            (PPFD := matlabarray(PPFD))[p] = -9999
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:231
             clear("p")
         clear("data")
@@ -280,11 +280,11 @@ def launch(input_folder=None, output_folder=None):
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:240
         NEE[NEE == -9999] = NaN
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:241
-        Ta[Ta == -9999] = NaN
+        (Ta := matlabarray(Ta))[Ta == -9999] = NaN
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:242
         PPFD[PPFD == -9999] = NaN
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:243
-        Rg[Rg == -9999] = NaN
+        (Rg := matlabarray(Rg))[Rg == -9999] = NaN
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:244
         #         data_L3(data_L3==-9999)=NaN; data_L3(data_L3==-6999)=NaN;
         # by carlo, added by alessio on February 21, 2014
