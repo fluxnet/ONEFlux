@@ -136,13 +136,13 @@ def cpdBootstrapUStarTh4Season20100901(
             # by alessio
             # fprintf('Bootstrap uStarTh #s:  #g/#g   nObs #g  Cp2 #4.3f  Cp3 #4.3f   #3.1fs \n', ...
             # cSiteYr,iBoot,nBoot,ntNee,nanmedian(fcx2rowvec(xCp2)),nanmedian(fcx2rowvec(xCp3)),dt);
-            Cp2[arange(), arange(), iBoot] = xCp2
+            Cp2[:, :, iBoot] = xCp2
             # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:119
-            Stats2[arange(), arange(), iBoot] = xStats2
+            Stats2[:, :, iBoot] = xStats2
             # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:119
-            Cp3[arange(), arange(), iBoot] = xCp3
+            Cp3[:, :, iBoot] = xCp3
             # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:120
-            Stats3[arange(), arange(), iBoot] = xStats3
+            Stats3[:, :, iBoot] = xStats3
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:120
 
     for i in arange(1, length(varargin)).reshape(-1):

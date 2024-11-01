@@ -289,7 +289,7 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
     xNorm = dot(NaN, x)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:148
     for i in arange(1, nx).reshape(-1):
-        xNorm[arange(), i] = (x[arange(), 1] - mx[i]) / take(sx, i)
+        xNorm[:, i] = (x[:, 1] - mx[i]) / take(sx, i)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:148
 
     xNormX = max(abs(xNorm), [], 2)

@@ -47,7 +47,7 @@ def fcnaniqr(X=None):
         IQR = copy(NaN)
         # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:36
         if nYaN <= 3:
-            y = take(X, iYaN)
+            y = X[iYaN]
             # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:38
             yN = prctile(y, 25)
             # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:38
@@ -62,12 +62,12 @@ def fcnaniqr(X=None):
             IQR = dot(NaN, ones(1, nc))
             # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:41
             for ic in arange(1, nc).reshape(-1):
-                iYaN = find(logical_not(isnan(take(X, arange(), ic))))
+                iYaN = find(logical_not(isnan(X[:, ic])))
                 # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:43
                 nYaN = length(iYaN)
                 # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:43
                 if nYaN > 3:
-                    y = take(X, iYaN, ic)
+                    y = X[iYaN, ic]
                     # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:45
                     yN = prctile(y, 25)
                     # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:45
@@ -83,12 +83,12 @@ def fcnaniqr(X=None):
                 # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:49
                 for iq in arange(1, nq).reshape(-1):
                     for ic in arange(1, nc).reshape(-1):
-                        iYaN = find(logical_not(isnan(take(X, arange(), ic, iq))))
+                        iYaN = find(logical_not(isnan(X[:, ic, iq])))
                         # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:52
                         nYaN = length(iYaN)
                         # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:52
                         if nYaN > 3:
-                            y = take(X, iYaN, ic, iq)
+                            y = X[iYaN, ic, iq]
                             # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:54
                             yN = prctile(y, 25)
                             # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:54
