@@ -259,7 +259,7 @@ def rewrite(parsetree):
         if isinstance(u, node.node):
             rewrite(u)
             fix_arrayref(u)
-            # fix_colon_subscripts(u)
+            fix_colon_subscripts(u)
             fix_end_expressions(u)
             fix_let_statement(u)
 
@@ -284,7 +284,8 @@ def fix_colon_subscripts(u):
     if isinstance(u, (node.arrayref, node.cellarrayref)):
         for w in u.args:
             if isinstance(w, node.expr) and w.op == ":":
-                w._replace(op="::")
+                w.op = "::"
+                A.add(u.func_expr.name)
 
 def fix_end_expressions(u):
     if isinstance(u, (node.arrayref, node.cellarrayref)):

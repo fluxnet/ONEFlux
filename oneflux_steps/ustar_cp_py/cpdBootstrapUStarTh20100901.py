@@ -211,13 +211,13 @@ def cpdBootstrapUStarTh20100901(
                 nanmedian(fcx2rowvec(xCp3)),
                 dt,
             )
-            Cp2[arange(1, nW), arange(), iBoot] = xCp2
+            Cp2[1:nW, :, iBoot] = xCp2
             # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:127
-            Stats2[arange(1, nW), arange(), iBoot] = xStats2
+            Stats2[1:nW, :, iBoot] = xStats2
             # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:127
-            Cp3[arange(1, nW), arange(), iBoot] = xCp3
+            Cp3[1:nW, :, iBoot] = xCp3
             # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:128
-            Stats3[arange(1, nW), arange(), iBoot] = xStats3
+            Stats3[1:nW, :, iBoot] = xStats3
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:128
 
     # ========================================================================

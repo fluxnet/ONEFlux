@@ -208,15 +208,11 @@ def launch(input_folder=None, output_folder=None):
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:170
         on_error = 0
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:173
-        for y in arange(1, length(take(header, i, arange()))).reshape(-1):
+        for y in arange(1, length(header[i, :])).reshape(-1):
             for i in arange(1, numel(input_columns_names)).reshape(-1):
                 if logical_or(
-                    (strcmpi(take(header, i, y), input_columns_names[i])),
-                    (
-                        strcmpi(
-                            take(header, i, y), strcat("itp", input_columns_names[i])
-                        )
-                    ),
+                    (strcmpi(header[i, y], input_columns_names[i])),
+                    (strcmpi(header[i, y], strcat("itp", input_columns_names[i]))),
                 ):
                     if columns_index[i] != -1:
                         fprintf(
@@ -253,16 +249,16 @@ def launch(input_folder=None, output_folder=None):
             exitcode = 1
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:210
             continue
-        uStar = take(data, arange(), columns_index[USTAR_INDEX])
+        uStar = data[:, columns_index[USTAR_INDEX]]
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:214
-        NEE = take(data, arange(), columns_index[NEE_INDEX])
+        NEE = data[:, columns_index[NEE_INDEX]]
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:215
-        Ta = take(data, arange(), columns_index[TA_INDEX])
+        Ta = data[:, columns_index[TA_INDEX]]
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:216
-        Rg = take(data, arange(), columns_index[RG_INDEX])
+        Rg = data[:, columns_index[RG_INDEX]]
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:217
         if 0 == ppfd_from_rg:
-            PPFD = take(data, arange(), columns_index[PPFD_INDEX])
+            PPFD = data[:, columns_index[PPFD_INDEX]]
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:219
             q = find(PPFD < -9990)
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:221

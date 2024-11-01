@@ -65,7 +65,7 @@ def cpdFmax2pCp3(Fmax=None, n=None):
     FmaxCritical = matlabarray([])
     # oneflux_steps/ustar_cp_refactor_wip/cpdFmax2pCp3.m:49
     for ip in arange(1, 3).reshape(-1):
-        FmaxCritical[ip] = interp1(nTable, FmaxTable[arange(), ip], n, "pchip")
+        FmaxCritical[ip] = interp1(nTable, FmaxTable[:, ip], n, "pchip")
     # oneflux_steps/ustar_cp_refactor_wip/cpdFmax2pCp3.m:49
 
     if Fmax < FmaxCritical[1]:

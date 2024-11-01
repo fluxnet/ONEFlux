@@ -121,9 +121,9 @@ def myFigLoc(iFig=None, dx=None, dy=None, cLoc=None):
         # oneflux_steps/ustar_cp_refactor_wip/fcFigLoc.m:54
         iy = strfind(cLoc, "yShift=")
         # oneflux_steps/ustar_cp_refactor_wip/fcFigLoc.m:54
-        xFractionShift = str2num(take(cLoc, arange((ix + 7), (iy - 1))))
+        xFractionShift = str2num(cLoc[(ix + 7) : (iy - 1)])
         # oneflux_steps/ustar_cp_refactor_wip/fcFigLoc.m:55
-        yFractionShift = str2num(take(cLoc, arange((iy + 7), end())))
+        yFractionShift = str2num(cLoc[(iy + 7) : end()])
     # oneflux_steps/ustar_cp_refactor_wip/fcFigLoc.m:56
 
     xLocLeft = dot(dot(xFractionShift, (1 - dx)), nxPixelsFull)
