@@ -148,32 +148,32 @@ for n = 1:numel(d)
     
     % get notes
     notes = {};
-    i = 9;
+    m = 9;
     while 1
-        r = strncmpi(dataset(i), 'notes', 5);
-        if 0 == r
+        temp = dataset(m);
+        if 0 == strncmpi(temp, 'notes', 5)
             break;
         end       
-        temp = dataset(i);
         temp = strrep(temp, 'notes,', '');
         notes{end+1} = temp;
-        i = i + 1;
+        m = m + 1;
     end
     
     
     fclose(fid);
-    clear i temp r fid;
+    clear temp fid;
     
-    imported_data = importdata([input_folder,d(n).name], ',', i);  
+    imported_data = importdata([input_folder,d(n).name], ',', m);  
     header = imported_data.('textdata');
     data = imported_data.('data');
     columns_index = ones(numel(input_columns_names), 1) * -1;
     
     % parse header, by alessio
     on_error = 0;
-    for y = 1:length(header(i,:))
+    columns = header(end, :);
+    for y = 1:length(columns)
         for i = 1:numel(input_columns_names)
-            if (strcmpi(header(i, y), input_columns_names(i))) | (strcmpi(header(i, y), strcat('itp',input_columns_names(i))))
+            if (strcmpi(columns(y), input_columns_names(i))) | (strcmpi(columns(y), strcat('itp',input_columns_names(i))))
                 if columns_index(i) ~= -1
                     fprintf('column %s already founded at index %d\n', char(input_columns_names(i)), i);
                     on_error = 1;

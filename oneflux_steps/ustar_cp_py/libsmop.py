@@ -33,14 +33,12 @@ NaN = np.nan
 jsonencode = json.dumps
 jsondecode = json.loads
 
-
 # def _load_matlab_builtins(*names):
 #     import oct2py
 #     oc = oct2py.Oct2Py()
 #     globals().update(
 #         (k, getattr(oc, k)) for k in names
 #     )
-
 # _load_matlab_builtins("""
 # """.split())
 
@@ -183,7 +181,6 @@ def exist(a, b="file"):
 def mkdir(directory):
     """
     Create a directory if it does not exist.
-
     Parameters:
     directory : str
         The path of the directory to create.
@@ -208,7 +205,6 @@ def false(*args):
 def find(a, n=None, d=None, nargout=1):
     if d:
         raise NotImplementedError
-
     # there is no promise that nonzero or flatnonzero
     # use or will use indexing of the argument without
     # converting it to array first.  So we use asarray
@@ -338,7 +334,7 @@ def ndims(a):
 
 
 def numel(a):
-    return np.asarray(a).size
+    return matlabarray(np.asarray(a).size)
 
 
 # def primes2(upto):
@@ -347,7 +343,6 @@ def numel(a):
 #    for factor in primes[:int(math.sqrt(upto))]:
 #        if isprime[factor-2]: isprime[factor*2-2::factor]=0
 #    return primes[isprime]
-
 
 # def primes(*args):
 #    return _primes.primes(*args)
@@ -397,7 +392,7 @@ def assert_(a, b=None, c=None):
 
 
 def shared(a):
-    pass
+    raise NotImplementedError
 
 
 def ravel(a):
@@ -472,6 +467,10 @@ def strread(s, format="", nargout=1):
 
 def strrep(a, b, c):
     return str(a).replace(str(b), str(c))
+
+
+def strcat(*args):
+    return "".join(str(a) for a in args)
 
 
 def sum(a, dim=None):
@@ -683,7 +682,6 @@ def regress(y, x):
     """
     Perform linear regression.
     """
-
     x = np.column_stack((np.ones(x.shape[0]), x))  # Add intercept
     return inv(x.T @ x) @ x.T @ y
 
@@ -854,11 +852,13 @@ class matlabarray(np.ndarray):
     """
 
     def __new__(cls, a=[], dtype=None):
-        if not isinstance(a, (list, np.ndarray)):
-            return a
-        obj = np.array(a, dtype=dtype, order="F", ndmin=2).view(cls).copy(order="F")
+        if isinstance(a, (list, tuple, np.ndarray)):
+            ndmin = 2
+        else:
+            ndmin = 0
+        obj = np.array(a, dtype=dtype, order="F", ndmin=ndmin).view(cls).copy(order="F")
         if obj.size == 0:
-            obj.shape = (0, 0)
+            obj.shape = tuple(0 for _ in range(ndmin))
         return obj
 
     def __copy__(self):
@@ -998,12 +998,15 @@ class matlabarray(np.ndarray):
 
 
 class end(object):
+    def __init__(self):
+        self.n = 0
+
     def __add__(self, n):
-        self.n = n
+        self.n += n
         return self
 
     def __sub__(self, n):
-        self.n = -n
+        self.n -= n
         return self
 
 
@@ -1012,24 +1015,19 @@ class cellarray(matlabarray):
     """
     Cell array corresponds to matlab ``{}``
 
-
     """
 
     def __new__(cls, a=[]):
         """
         Create a cell array and initialize it with a.
         Without arguments, create an empty cell array.
-
         Parameters:
         a : list, ndarray, matlabarray, etc.
-
         >>> a=cellarray([123,"hello"])
         >>> print(a.shape)
         (1, 2)
-
         >>> print(a[1])
         123
-
         >>> print(a[2])
         hello
         """
@@ -1092,16 +1090,13 @@ class char(matlabarray):
     class char is a rectangular string matrix, which
     inherits from matlabarray all its features except
     dtype.
-
     >>> s=char()
     >>> s.shape
     (0, 0)
-
     >>> s=char('helloworld')
     >>> reshape(s, [2,5])
     hlool
     elwrd
-
     >>> s=char([104, 101, 108, 108, 111, 119, 111, 114, 108, 100])
     >>> s.shape = 2,5
     >>> print(s)

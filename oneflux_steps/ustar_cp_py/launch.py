@@ -180,39 +180,39 @@ def launch(input_folder=None, output_folder=None):
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:147
         notes = cellarray([])
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:150
-        i = 9
+        m = 9
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:151
         while 1:
-            r = strncmpi(take(dataset, i), "notes", 5)
+            temp = take(dataset, m)
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:153
-            if 0 == r:
+            if 0 == strncmpi(temp, "notes", 5):
                 break
-            temp = take(dataset, i)
-            # oneflux_steps/ustar_cp_refactor_wip/launch.m:157
             temp = strrep(temp, "notes,", "")
-            # oneflux_steps/ustar_cp_refactor_wip/launch.m:158
+            # oneflux_steps/ustar_cp_refactor_wip/launch.m:157
             notes[end() + 1] = temp
-            # oneflux_steps/ustar_cp_refactor_wip/launch.m:159
-            i = i + 1
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:160
+            # oneflux_steps/ustar_cp_refactor_wip/launch.m:158
+            m = m + 1
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:159
 
         fclose(fid)
-        clear("i", "temp", "r", "fid")
-        imported_data = importdata(concat([input_folder, d[n].name]), ",", i)
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:167
+        clear("temp", "fid")
+        imported_data = importdata(concat([input_folder, d[n].name]), ",", m)
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:166
         header = getattr(imported_data, ("textdata"))
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:168
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:167
         data = getattr(imported_data, ("data"))
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:169
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:168
         columns_index = dot(ones(numel(input_columns_names), 1), -1)
-        # oneflux_steps/ustar_cp_refactor_wip/launch.m:170
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:169
         on_error = 0
+        # oneflux_steps/ustar_cp_refactor_wip/launch.m:172
+        columns = header[end(), :]
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:173
-        for y in arange(1, length(header[i, :])).reshape(-1):
+        for y in arange(1, length(columns)).reshape(-1):
             for i in arange(1, numel(input_columns_names)).reshape(-1):
                 if logical_or(
-                    (strcmpi(header[i, y], input_columns_names[i])),
-                    (strcmpi(header[i, y], strcat("itp", input_columns_names[i]))),
+                    (strcmpi(take(columns, y), input_columns_names[i])),
+                    (strcmpi(take(columns, y), strcat("itp", input_columns_names[i]))),
                 ):
                     if columns_index[i] != -1:
                         fprintf(
