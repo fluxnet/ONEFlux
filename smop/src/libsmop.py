@@ -723,16 +723,14 @@ class matlabarray(np.ndarray):
     >>> matlabarray(["hello","world"])
     matlabarray("helloworld")
     """
-    def __new__(cls, a=[], dtype=None):
-        if not isinstance(a, (list, np.ndarray)):
-            return a
+    def __new__(cls, a=[], dtype=None, ndmin=2):
         obj = (
-            np.array(a, dtype=dtype, order="F", ndmin=2)
+            np.array(a, dtype=dtype, order="F", ndmin=ndmin)
             .view(cls)
             .copy(order="F")
         )
         if obj.size == 0:
-            obj.shape = (0, 0)
+            obj.shape = tuple(0 for _ in range(ndmin))
         return obj
     def __copy__(self):
         return np.ndarray.copy(self, order="F")
@@ -858,11 +856,13 @@ class matlabarray(np.ndarray):
         return matlabarray(np.asarray(self).__neg__())
 
 class end(object):
+    def __init__(self):
+        self.n = 0
     def __add__(self, n):
-        self.n = n
+        self.n += n
         return self
     def __sub__(self, n):
-        self.n = -n
+        self.n -= n
         return self
 
 ####
