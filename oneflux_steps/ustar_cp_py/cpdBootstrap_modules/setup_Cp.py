@@ -5,6 +5,8 @@ from libsmop import *
 
 @function
 def setup_Cp(nSeasons=None, nStrataX=None, nBoot=None):
+    globals().update(load_all_vars())
+
     Cp = dot(NaN, ones(nSeasons, nStrataX, nBoot))
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/setup_Cp.m:3
     return Cp

@@ -5,6 +5,8 @@ from libsmop import *
 
 @function
 def cpdFmax2pCp3(Fmax=None, n=None):
+    globals().update(load_all_vars())
+
     # p = cpdFmax2pCp3(Fmax,n)
 
     # assigns the probability p that the 3-parameter,
@@ -68,8 +70,8 @@ def cpdFmax2pCp3(Fmax=None, n=None):
         FmaxCritical[ip] = interp1(nTable, FmaxTable[:, ip], n, "pchip")
     # oneflux_steps/ustar_cp_refactor_wip/cpdFmax2pCp3.m:49
 
-    if Fmax < FmaxCritical[1]:
-        fAdj = dot(finv(0.95, 3, n), Fmax) / FmaxCritical[1]
+    if Fmax < take(FmaxCritical, 1):
+        fAdj = dot(finv(0.95, 3, n), Fmax) / take(FmaxCritical, 1)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFmax2pCp3.m:51
         p = dot(2, (1 - fcdf(fAdj, 3, n)))
         # oneflux_steps/ustar_cp_refactor_wip/cpdFmax2pCp3.m:52
@@ -78,8 +80,8 @@ def cpdFmax2pCp3(Fmax=None, n=None):
         # oneflux_steps/ustar_cp_refactor_wip/cpdFmax2pCp3.m:53
         return p
 
-    if Fmax > FmaxCritical[3]:
-        fAdj = dot(finv(0.995, 3, n), Fmax) / FmaxCritical[3]
+    if Fmax > take(FmaxCritical, 3):
+        fAdj = dot(finv(0.995, 3, n), Fmax) / take(FmaxCritical, 3)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFmax2pCp3.m:56
         p = dot(2, (1 - fcdf(fAdj, 3, n)))
         # oneflux_steps/ustar_cp_refactor_wip/cpdFmax2pCp3.m:57

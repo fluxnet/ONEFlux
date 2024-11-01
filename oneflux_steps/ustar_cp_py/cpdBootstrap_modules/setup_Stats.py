@@ -5,6 +5,8 @@ from libsmop import *
 
 @function
 def setup_Stats(nBoot=None, nSeasons=None, nStrataX=None, *varargin):
+    globals().update(load_all_vars())
+
     nargin = len(varargin)
 
     StatsMT = generate_statsMT()
@@ -19,7 +21,7 @@ def setup_Stats(nBoot=None, nSeasons=None, nStrataX=None, *varargin):
     # James Emberton 21/10/2024
 
     # Preallocate the Stats array by repeating the template
-    (Stats := matlabarray(Stats))[1:nSeasons, 1:nStrataX, 1:nBoot] = StatsMT
+    Stats[1:nSeasons, 1:nStrataX, 1:nBoot] = StatsMT
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/setup_Stats.m:16
     if size(varargin) > 0:
         Stats = jsonencode(Stats)

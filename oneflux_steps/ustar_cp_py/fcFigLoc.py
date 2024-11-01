@@ -5,6 +5,8 @@ from libsmop import *
 
 @function
 def myFigLoc(iFig=None, dx=None, dy=None, cLoc=None):
+    globals().update(load_all_vars())
+
     # fcFigLoc(iFig,dx,dy,cLoc)
 
     # creates a figure window of fractional size (dx by dy) at location cLoc.
@@ -121,7 +123,7 @@ def myFigLoc(iFig=None, dx=None, dy=None, cLoc=None):
         # oneflux_steps/ustar_cp_refactor_wip/fcFigLoc.m:54
         iy = strfind(cLoc, "yShift=")
         # oneflux_steps/ustar_cp_refactor_wip/fcFigLoc.m:54
-        xFractionShift = str2num((cLoc := matlabarray(cLoc))[(ix + 7) : (iy - 1)])
+        xFractionShift = str2num(cLoc[(ix + 7) : (iy - 1)])
         # oneflux_steps/ustar_cp_refactor_wip/fcFigLoc.m:55
         yFractionShift = str2num(cLoc[(iy + 7) : end()])
     # oneflux_steps/ustar_cp_refactor_wip/fcFigLoc.m:56

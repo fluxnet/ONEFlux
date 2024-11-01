@@ -5,6 +5,8 @@ from libsmop import *
 
 @function
 def generate_statsMT():
+    globals().update(load_all_vars())
+
     StatsMT = matlabarray([])
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/generate_statsMT.m:2
 

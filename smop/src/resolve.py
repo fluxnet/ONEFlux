@@ -25,8 +25,6 @@ from . import node
 from . node import extend
 
 
-MAT = {}  # variables that have array values => whether need to initialize
-
 def as_networkx(t):
     G = nx.DiGraph()
     for u in node.postorder(t):
@@ -44,7 +42,6 @@ def as_networkx(t):
                         else:
                             G.add_edge(uu, vv, color="black")
     return G
-
 
 
 def resolve(t, symtab=None, fp=None, func_name=None):
@@ -78,6 +75,17 @@ def copy_symtab(symtab):
         new_symtab[k] = copy.copy(v)
     return new_symtab
 
+def get_def_node(ident):
+    if ident.defs:
+        return ident.defs[0]
+    else:
+        return ident
+
+def ensure_matrix(ident):
+    d = get_def_node(ident)
+    if d.props != "M":  # matrix
+        d.props = "W"  # wrap as matrix
+
 
 @extend(node.arrayref)
 @extend(node.cellarrayref)
@@ -89,7 +97,7 @@ def _lhs_resolve(self,symtab):
     self.func_expr._resolve(symtab) # A
     self.args._resolve(symtab)      # B
     self.func_expr._lhs_resolve(symtab)
-    MAT.setdefault(self.func_expr.name, True)
+    ensure_matrix(self.func_expr)
 
 
 @extend(node.expr)
@@ -166,7 +174,7 @@ def _resolve(self,symtab):
     self.ret._lhs_resolve(symtab)
     if isinstance(self.args, (node.matrix, node.cellarray)):
         if isinstance(self.ret, node.ident):
-            MAT[self.ret.name] = False  # no need to initialize
+            self.ret.props = "M"  # matrix
 
 @extend(node.null_stmt)
 @extend(node.continue_stmt)
@@ -285,7 +293,7 @@ def fix_colon_subscripts(u):
         for w in u.args:
             if isinstance(w, node.expr) and w.op == ":":
                 w.op = "::"
-                MAT.setdefault(u.func_expr.name, True)
+                ensure_matrix(u.func_expr)
 
 def fix_end_expressions(u):
     if isinstance(u, (node.arrayref, node.cellarrayref)):
@@ -305,7 +313,7 @@ def fix_let_statement(u):
             isinstance(u.args, node.matrix)):
             if any(b.__class__ is node.string for a in u.args.args for b in a):
                 u.args = node.expr("+", u.args.args[0])
-                MAT.pop(u.ret.name, None)
+                u.ret.props = "D"  # def
             else:
                 u.args = node.funcall(func_expr=node.ident("matlabarray"),
                                       args=node.expr_list([u.args]))

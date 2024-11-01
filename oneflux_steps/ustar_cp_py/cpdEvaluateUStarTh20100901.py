@@ -7,6 +7,8 @@ from libsmop import *
 def cpdEvaluateUStarTh20100901(
     t=None, NEE=None, uStar=None, T=None, fNight=None, fPlot=None, cSiteYr=None
 ):
+    globals().update(load_all_vars())
+
     # cpdEvaluateUStarTh20100901
 
     # estimates uStarTh for one site-year of data using change-point
@@ -124,9 +126,9 @@ def cpdEvaluateUStarTh20100901(
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:94
     # Initialize outputs.
 
-    Cp2 = dot(NaN, ones(nWindowsN, nStrata))
+    Cp2 = matlabarray(dot(NaN, ones(nWindowsN, nStrata)))
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:98
-    Cp3 = dot(NaN, ones(nWindowsN, nStrata))
+    Cp3 = matlabarray(dot(NaN, ones(nWindowsN, nStrata)))
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:99
     StatsMT = matlabarray([])
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:101
@@ -185,20 +187,22 @@ def cpdEvaluateUStarTh20100901(
     # append wrap-around data to start and end of record;
     # 18 Jan 2010 just need to wrap one end.
 
-    itAdd1 = arange((itAnnual := matlabarray(itAnnual))[end() - nInc - 1], nt)
+    itAdd1 = arange(take(itAnnual, end() - nInc - 1), nt)
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:122
 
-    t = matlabarray(concat([[t[itAdd1] - EndDOY], [t]]))
+    t = matlabarray(concat([[take(t, itAdd1) - EndDOY], [t]]))
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:124
-    T = matlabarray(concat([[T[itAdd1]], [T]]))
+    T = matlabarray(concat([[take(T, itAdd1)], [T]]))
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:125
-    uStar = matlabarray(concat([[uStar[itAdd1]], [uStar]]))
+    uStar = matlabarray(concat([[take(uStar, itAdd1)], [uStar]]))
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:126
-    NEE = matlabarray(concat([[NEE[itAdd1]], [NEE]]))
+    NEE = matlabarray(concat([[take(NEE, itAdd1)], [NEE]]))
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:127
-    fNight = matlabarray(concat([[fNight[itAdd1]], [fNight]]))
+    fNight = matlabarray(concat([[take(fNight, itAdd1)], [fNight]]))
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:128
-    itAnnual = find(fNight == logical_and(1, logical_not(isnan(NEE + uStar + T))))
+    itAnnual = matlabarray(
+        find(fNight == logical_and(1, logical_not(isnan(NEE + uStar + T))))
+    )
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:130
     ntAnnual = length(itAnnual)
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:130

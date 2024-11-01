@@ -5,6 +5,8 @@ from libsmop import *
 
 @function
 def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
+    globals().update(load_all_vars())
+
     nargin = len(varargin)
 
     # cpdAssignUStarTh20100901
@@ -229,19 +231,19 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
 
     nSelect = length(iSelect)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:129
-    fSelect = zeros(size(fP))
+    fSelect = matlabarray(zeros(size(fP)))
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:130
     fSelect[iSelect] = 1
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:130
     fSelect = logical(fSelect)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:130
-    fModeD = dot(NaN, ones(size(fP)))
+    fModeD = matlabarray(dot(NaN, ones(size(fP))))
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:131
-    (fModeD := matlabarray(fModeD))[iModeD] = 1
+    fModeD[iModeD] = 1
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:131
-    fModeE = dot(NaN, ones(size(fP)))
+    fModeE = matlabarray(dot(NaN, ones(size(fP))))
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:132
-    (fModeE := matlabarray(fModeE))[iModeE] = 1
+    fModeE[iModeE] = 1
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:132
     FracSig = nSig / nTry
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:134
@@ -286,10 +288,10 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:147
     sx = fcNaniqr(x)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:147
-    xNorm = dot(NaN, x)
+    xNorm = matlabarray(dot(NaN, x))
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:148
     for i in arange(1, nx).reshape(-1):
-        (xNorm := matlabarray(xNorm))[:, i] = (x[:, 1] - mx[i]) / take(sx, i)
+        xNorm[:, i] = (x[:, 1] - take(mx, i)) / take(sx, i)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:148
 
     xNormX = max(abs(xNorm), [], 2)
@@ -347,9 +349,9 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
 
     # Aggregate the values to season and year.
 
-    xCpSelect = dot(NaN, xCp)
+    xCpSelect = matlabarray(dot(NaN, xCp))
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:163
-    (xCpSelect := matlabarray(xCpSelect))[iSelect] = xCp(iSelect)
+    xCpSelect[iSelect] = xCp(iSelect)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:163
     xCpGF = copy(xCpSelect)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:163

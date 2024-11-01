@@ -15,6 +15,8 @@ def cpdBootstrapUStarTh4Season20100901(
     nBoot=None,
     *varargin,
 ):
+    globals().update(load_all_vars())
+
     nargin = len(varargin)
 
     # cpdBootstrapUStarTh4Season20100901
@@ -102,13 +104,13 @@ def cpdBootstrapUStarTh4Season20100901(
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:82
     ntNee = length(itNee)
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:83
-    Cp2 = setup_Cp(nSeasons, nStrataX, nBoot)
+    Cp2 = matlabarray(setup_Cp(nSeasons, nStrataX, nBoot))
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:85
-    Cp3 = setup_Cp(nSeasons, nStrataX, nBoot)
+    Cp3 = matlabarray(setup_Cp(nSeasons, nStrataX, nBoot))
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:86
-    Stats2 = setup_Stats(nBoot, nSeasons, nStrataX)
+    Stats2 = matlabarray(setup_Stats(nBoot, nSeasons, nStrataX))
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:88
-    Stats3 = setup_Stats(nBoot, nSeasons, nStrataX)
+    Stats3 = matlabarray(setup_Stats(nBoot, nSeasons, nStrataX))
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:89
 
     # disp(' ');
@@ -123,7 +125,7 @@ def cpdBootstrapUStarTh4Season20100901(
                 fPlot = 0
             # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh4Season20100901.m:108
             xCp2, xStats2, xCp3, xStats3 = cpdEvaluateUStarTh4Season20100901(
-                t[it],
+                take(t, it),
                 take(NEE, it),
                 take(updated_uStar, it),
                 take(T, it),

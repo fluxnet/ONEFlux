@@ -5,6 +5,8 @@ from libsmop import *
 
 @function
 def get_ntN(t=None, nSeasons=None):
+    globals().update(load_all_vars())
+
     nStrataN = 4
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/get_ntN.m:3
 

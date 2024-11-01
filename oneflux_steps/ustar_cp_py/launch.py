@@ -13,6 +13,8 @@ from libsmop import *
 
 @function
 def launch(input_folder=None, output_folder=None):
+    globals().update(load_all_vars())
+
     exitcode = 0
     # oneflux_steps/ustar_cp_refactor_wip/launch.m:10
     warning("off")
@@ -78,8 +80,8 @@ def launch(input_folder=None, output_folder=None):
     fprintf("%d files founded.\n\n", numel(d))
     for n in arange(1, numel(d)).reshape(-1):
         # by alessio
-        fprintf("processing n.%02d, %s...", n, d[n].name)
-        fid = fopen(concat([input_folder, d[n].name]), "r")
+        fprintf("processing n.%02d, %s...", n, take(d, n).name)
+        fid = fopen(concat([input_folder, take(d, n).name]), "r")
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:59
         if -1 == fid:
             fprintf("unable to open file\n")
@@ -196,17 +198,17 @@ def launch(input_folder=None, output_folder=None):
 
         fclose(fid)
         clear("temp", "fid")
-        imported_data = importdata(concat([input_folder, d[n].name]), ",", m)
+        imported_data = importdata(concat([input_folder, take(d, n).name]), ",", m)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:166
-        header = getattr(imported_data, ("textdata"))
+        header = matlabarray(getattr(imported_data, ("textdata")))
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:167
-        data = getattr(imported_data, ("data"))
+        data = matlabarray(getattr(imported_data, ("data")))
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:168
-        columns_index = dot(ones(numel(input_columns_names), 1), -1)
+        columns_index = matlabarray(dot(ones(numel(input_columns_names), 1), -1))
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:169
         on_error = 0
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:172
-        columns = (header := matlabarray(header))[end(), :]
+        columns = header[end(), :]
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:173
         for y in arange(1, length(columns)).reshape(-1):
             for i in arange(1, numel(input_columns_names)).reshape(-1):
@@ -214,7 +216,7 @@ def launch(input_folder=None, output_folder=None):
                     (strcmpi(take(columns, y), input_columns_names[i])),
                     (strcmpi(take(columns, y), strcat("itp", input_columns_names[i]))),
                 ):
-                    if (columns_index := matlabarray(columns_index))[i] != -1:
+                    if columns_index[i] != -1:
                         fprintf(
                             "column %s already founded at index %d\n",
                             char(input_columns_names[i]),
@@ -249,13 +251,13 @@ def launch(input_folder=None, output_folder=None):
             exitcode = 1
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:210
             continue
-        uStar = (data := matlabarray(data))[:, columns_index[USTAR_INDEX]]
+        uStar = matlabarray(data[:, columns_index[USTAR_INDEX]])
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:214
-        NEE = data[:, columns_index[NEE_INDEX]]
+        NEE = matlabarray(data[:, columns_index[NEE_INDEX]])
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:215
-        Ta = data[:, columns_index[TA_INDEX]]
+        Ta = matlabarray(data[:, columns_index[TA_INDEX]])
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:216
-        Rg = data[:, columns_index[RG_INDEX]]
+        Rg = matlabarray(data[:, columns_index[RG_INDEX]])
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:217
         if 0 == ppfd_from_rg:
             PPFD = data[:, columns_index[PPFD_INDEX]]
@@ -267,11 +269,11 @@ def launch(input_folder=None, output_folder=None):
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:223
         if 1 == ppfd_from_rg:
             fprintf("(PPFD_IN from SW_IN)...")
-            PPFD = dot(Rg, 2.24)
+            PPFD = matlabarray(dot(Rg, 2.24))
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:229
             p = find(Rg < -9990)
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:230
-            (PPFD := matlabarray(PPFD))[p] = -9999
+            PPFD[p] = -9999
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:231
             clear("p")
         clear("data")
@@ -280,11 +282,11 @@ def launch(input_folder=None, output_folder=None):
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:240
         NEE[NEE == -9999] = NaN
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:241
-        (Ta := matlabarray(Ta))[Ta == -9999] = NaN
+        Ta[Ta == -9999] = NaN
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:242
         PPFD[PPFD == -9999] = NaN
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:243
-        (Rg := matlabarray(Rg))[Rg == -9999] = NaN
+        Rg[Rg == -9999] = NaN
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:244
         #         data_L3(data_L3==-9999)=NaN; data_L3(data_L3==-6999)=NaN;
         # by carlo, added by alessio on February 21, 2014
@@ -314,7 +316,7 @@ def launch(input_folder=None, output_folder=None):
         if nrPerDay == 0:
             nrPerDay = mod(numel(uStar), 364)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:276
-        t = 1 + (1 / nrPerDay)
+        t = matlabarray(1 + (1 / nrPerDay))
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:277
         for n2 in arange(2, numel(uStar)).reshape(-1):
             t[n2, 1] = t[n2 - 1, 1] + (1 / nrPerDay)
@@ -347,7 +349,7 @@ def launch(input_folder=None, output_folder=None):
         # and assign annual Cp arrays.
         fPlot = 0
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:298
-        cSiteYr = strrep(d[n].name, ".txt", "")
+        cSiteYr = strrep(take(d, n).name, ".txt", "")
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:298
         cSiteYr = strrep(cSiteYr, "_ut", "_barr")
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:299
@@ -390,7 +392,7 @@ def launch(input_folder=None, output_folder=None):
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:321
             fprintf(fid, "\n;processed with ustar_mp 1.0 on %s\n", datestr(clock))
             for i in arange(length(notes), 1, -1).reshape(-1):
-                fprintf(fid, ";%s\n", notes[i])
+                fprintf(fid, ";%s\n", take(notes, i))
             clear("i")
             fclose(fid)
             clear("fid")

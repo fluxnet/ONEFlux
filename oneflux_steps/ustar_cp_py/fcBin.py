@@ -5,6 +5,8 @@ from libsmop import *
 
 @function
 def cpdBin(x=None, y=None, dx=None, nPerBin=None):
+    globals().update(load_all_vars())
+
     # cpdBin
 
     # calculates binned mean values of vectors x and y
@@ -38,15 +40,15 @@ def cpdBin(x=None, y=None, dx=None, nPerBin=None):
         # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:24
         nBins = floor(nYaN / nPerBin)
         # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:25
-        mx = dot(NaN, ones(nBins, 1))
+        mx = matlabarray(dot(NaN, ones(nBins, 1)))
         # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:26
-        my = dot(NaN, ones(nBins, 1))
+        my = matlabarray(dot(NaN, ones(nBins, 1)))
         # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:26
         iprctile = arange(0, 100, (100 / nBins))
         # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:27
-        dx = prctile(x[iYaN], iprctile)
+        dx = matlabarray(prctile(take(x, iYaN), iprctile))
         # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:28
-        xL = (dx := matlabarray(dx))[1 : (end() - 1)]
+        xL = dx[1 : (end() - 1)]
         # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:29
         xU = dx[2 : end()]
         # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:29
@@ -62,9 +64,9 @@ def cpdBin(x=None, y=None, dx=None, nPerBin=None):
             if length(ix) >= nPerBin:
                 jx = jx + 1
                 # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:33
-                mx[jx] = mean(x[ix])
+                mx[jx] = mean(take(x, ix))
                 # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:34
-                my[jx] = mean(y[ix])
+                my[jx] = mean(take(y, ix))
     # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:35
     else:
         if 1 == length(dx):
@@ -84,9 +86,9 @@ def cpdBin(x=None, y=None, dx=None, nPerBin=None):
                 if length(ix) >= nPerBin:
                     nBins = nBins + 1
                     # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:45
-                    mx[nBins, 1] = mean(x[ix])
+                    mx[nBins, 1] = mean(take(x, ix))
                     # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:46
-                    my[nBins, 1] = mean(y[ix])
+                    my[nBins, 1] = mean(take(y, ix))
         # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:47
         else:
             xL = dx[1 : (end() - 1)]
@@ -103,9 +105,9 @@ def cpdBin(x=None, y=None, dx=None, nPerBin=None):
                 if length(ix) >= nPerBin:
                     nBins = nBins + 1
                     # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:55
-                    mx[nBins, 1] = mean(x[ix])
+                    mx[nBins, 1] = mean(take(x, ix))
                     # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:56
-                    my[nBins, 1] = mean(y[ix])
+                    my[nBins, 1] = mean(take(y, ix))
     # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:57
 
     return nBins, mx, my

@@ -14,6 +14,8 @@ def cpdBootstrapUStarTh20100901(
     cSiteYr=None,
     nBoot=None,
 ):
+    globals().update(load_all_vars())
+
     # cpdBootstrapUStarTh20100901
 
     # estimates uStarTh uncertainty for one site-year of data
@@ -98,7 +100,7 @@ def cpdBootstrapUStarTh20100901(
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:71
     iNight = find(fNight)
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:73
-    (uStar := matlabarray(uStar))[uStar < logical_or(0, uStar) > 4] = NaN
+    uStar[uStar < logical_or(0, uStar) > 4] = NaN
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:74
 
     itNee = find(logical_not(isnan(NEE + uStar + T)))
@@ -148,9 +150,9 @@ def cpdBootstrapUStarTh20100901(
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:86
     StatsMT.ciT = copy(NaN)
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:86
-    Cp2 = dot(NaN, ones(nWindows, nStrata, nBoot))
+    Cp2 = matlabarray(dot(NaN, ones(nWindows, nStrata, nBoot)))
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:88
-    Cp3 = dot(NaN, ones(nWindows, nStrata, nBoot))
+    Cp3 = matlabarray(dot(NaN, ones(nWindows, nStrata, nBoot)))
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:89
     Stats2 = copy(StatsMT)
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:91
@@ -159,9 +161,9 @@ def cpdBootstrapUStarTh20100901(
     for iBoot in arange(1, nBoot).reshape(-1):
         for iWindow in arange(1, nWindows).reshape(-1):
             for iStrata in arange(1, nStrata).reshape(-1):
-                (Stats2 := matlabarray(Stats2))[iWindow, iStrata, iBoot] = StatsMT
+                Stats2[iWindow, iStrata, iBoot] = StatsMT
                 # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:95
-                (Stats3 := matlabarray(Stats3))[iWindow, iStrata, iBoot] = StatsMT
+                Stats3[iWindow, iStrata, iBoot] = StatsMT
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:96
 
     disp(" ")
@@ -188,7 +190,7 @@ def cpdBootstrapUStarTh20100901(
             xCp2, xStats2, xCp3, xStats3 = cpdEvaluateUStarTh20100901(
                 take(t, it),
                 take(NEE, it),
-                uStar[it],
+                take(uStar, it),
                 take(T, it),
                 take(fNight, it),
                 fPlot,
@@ -211,11 +213,11 @@ def cpdBootstrapUStarTh20100901(
                 nanmedian(fcx2rowvec(xCp3)),
                 dt,
             )
-            (Cp2 := matlabarray(Cp2))[1:nW, :, iBoot] = xCp2
+            Cp2[1:nW, :, iBoot] = xCp2
             # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:127
             Stats2[1:nW, :, iBoot] = xStats2
             # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:127
-            (Cp3 := matlabarray(Cp3))[1:nW, :, iBoot] = xCp3
+            Cp3[1:nW, :, iBoot] = xCp3
             # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:128
             Stats3[1:nW, :, iBoot] = xStats3
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:128
