@@ -5,6 +5,8 @@ from libsmop import *
 
 @function
 def mydoy(t=None):
+    globals().update(load_all_vars())
+
     # d=doy(t);
 
     # doy is a day-of-year function

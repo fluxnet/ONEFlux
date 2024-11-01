@@ -5,6 +5,8 @@ from libsmop import *
 
 @function
 def fcEqnAnnualSine(b=None, t=None):
+    globals().update(load_all_vars())
+
     nDaysPerYr = datenum(2000 - 1, 12, 31) / 2000
     # oneflux_steps/ustar_cp_refactor_wip/fcEqnAnnualSine.m:3
     Omega = dot(2, pi) / nDaysPerYr

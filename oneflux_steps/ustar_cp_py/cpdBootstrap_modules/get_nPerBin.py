@@ -5,6 +5,8 @@ from libsmop import *
 
 @function
 def get_nPerBin(t=None):
+    globals().update(load_all_vars())
+
     nPerDay = get_nPerDay(t)
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/get_nPerBin.m:3
     if 24 == nPerDay:

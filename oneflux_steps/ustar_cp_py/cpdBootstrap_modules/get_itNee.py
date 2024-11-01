@@ -5,6 +5,8 @@ from libsmop import *
 
 @function
 def get_itNee(NEE=None, uStar=None, T=None, iNight=None):
+    globals().update(load_all_vars())
+
     itNee = find(logical_not(isnan(NEE + uStar + T)))
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/get_itNee.m:3
     itNee = intersect(itNee, iNight)

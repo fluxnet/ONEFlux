@@ -5,11 +5,13 @@ from libsmop import *
 
 @function
 def fcReadFields(s=None, FieldName=None):
+    globals().update(load_all_vars())
+
     nd = ndims(s)
     # oneflux_steps/ustar_cp_refactor_wip/fcReadFields.m:3
     ns = size(s)
     # oneflux_steps/ustar_cp_refactor_wip/fcReadFields.m:3
-    x = dot(NaN, ones(ns))
+    x = matlabarray(dot(NaN, ones(ns)))
     # oneflux_steps/ustar_cp_refactor_wip/fcReadFields.m:3
     if 2 == nd:
         for i in arange(1, take(ns, 1)).reshape(-1):
@@ -17,7 +19,7 @@ def fcReadFields(s=None, FieldName=None):
                 tmp = getfield(s, cellarray([i, j]), FieldName)
                 # oneflux_steps/ustar_cp_refactor_wip/fcReadFields.m:9
                 if logical_not(isempty(tmp)):
-                    (x := matlabarray(x))[i, j] = tmp
+                    x[i, j] = tmp
     # oneflux_steps/ustar_cp_refactor_wip/fcReadFields.m:10
     else:
         if 3 == nd:

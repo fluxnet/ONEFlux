@@ -5,6 +5,8 @@ from libsmop import *
 
 @function
 def generate_rand_int_array(n=None):
+    globals().update(load_all_vars())
+
     array_ = sort(randi(n, n, 1))
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/generate_rand_int_array.m:3
     return array_

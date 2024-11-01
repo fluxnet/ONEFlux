@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 
 from . import node
 from . import options
-from . node import extend,exceptions
+from . node import extend, exceptions
+from . resolve import get_def_node
 
 indent = " "*4
 
@@ -80,15 +81,10 @@ def _backend(self,level=0):
 
 @extend(node.arrayref)
 def _backend(self,level=0):
-    from . resolve import MAT
     x = self.func_expr._backend()
     i = self.args._backend()
-    if x in MAT:
-        if MAT[x]:  # needs initialization
-            MAT[x] = False
-            return f"({x}:=matlabarray({x}))[{i}]"
-        else:
-            return f"{x}[{i}]"
+    if get_def_node(self.func_expr).props in "MW":
+        return f"{x}[{i}]"
     else:
         return f"take({x},{i})"
 
@@ -230,6 +226,7 @@ def _backend(self,level=0):
 def %s(%s):%s
 """ % (self.ident._backend(),
        self.args._backend(),
+       '\n    globals().update(load_all_vars())\n' +
        ''.join(f"\n    {k} = {v}" for k, v in bindings))
     return s
 
@@ -304,6 +301,9 @@ def _backend(self,level=0):
         self.args.__class__ is node.ident):
         s += "%s=copy(%s)" % (self.ret._backend(),
                               self.args._backend())
+    elif isinstance(self.ret, node.ident) and self.ret.props == "W":
+        s += "%s = matlabarray(%s)" % (self.ret._backend(),
+                                       self.args._backend())
     else:
         s += "%s=%s" % (self.ret._backend(), 
                        self.args._backend())

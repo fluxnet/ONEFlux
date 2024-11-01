@@ -20,6 +20,7 @@ import sys
 import time
 import json
 import glob
+import importlib
 from pathlib import Path
 from sys import stdin, stdout, stderr
 
@@ -27,20 +28,42 @@ from scipy.io import loadmat
 from scipy.special import gamma
 
 
+def function(f):
+    from contextlib import redirect_stdout, redirect_stderr
+    from functools import wraps
+
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        with (
+            redirect_stdout(kwargs.pop("stdout", stdout)),
+            redirect_stderr(kwargs.pop("stderr", stderr)),
+        ):
+            nargout = kwargs.pop("nargout", 0)
+            out = f(*args, **kwargs)
+            if nargout:
+                return out[:nargout]
+            return out
+
+    return wrapper
+
+
+def load_all_vars():
+    root = Path(__file__).parent
+    sys.path.append(str(root))
+    for p in root.rglob("*.py"):
+        if p != root / "__init__.py":
+            p = str(p.relative_to(root))
+            module_name = p[:-3].replace("/", ".")  # Remove the .py extension
+            m = importlib.import_module(f"{module_name}", package=__name__)
+            globals().update(vars(m))
+    return globals()
+
+
 pwd = os.getcwd()
 eps = np.finfo(float).eps
 NaN = np.nan
 jsonencode = json.dumps
 jsondecode = json.loads
-
-# def _load_matlab_builtins(*names):
-#     import oct2py
-#     oc = oct2py.Oct2Py()
-#     globals().update(
-#         (k, getattr(oc, k)) for k in names
-#     )
-# _load_matlab_builtins("""
-# """.split())
 
 
 def dir(s):
@@ -516,25 +539,6 @@ def print_usage():
     raise Exception
 
 
-def function(f):
-    from contextlib import redirect_stdout, redirect_stderr
-    from functools import wraps
-
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        with (
-            redirect_stdout(kwargs.pop("stdout", stdout)),
-            redirect_stderr(kwargs.pop("stderr", stderr)),
-        ):
-            nargout = kwargs.pop("nargout", 0)
-            out = f(*args, **kwargs)
-            if nargout:
-                return out[:nargout]
-            return out
-
-    return wrapper
-
-
 def error(s):
     raise s
 
@@ -906,7 +910,7 @@ class matlabarray(np.ndarray):
         return self.__getitem__(slice(i, j))
 
     def __getitem__(self, index):
-        return matlabarray(self.get(index))
+        return self.get(index)
 
     def get(self, index):
         # import pdb; pdb.set_trace()

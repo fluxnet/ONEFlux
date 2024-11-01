@@ -5,6 +5,8 @@ from libsmop import *
 
 @function
 def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
+    globals().update(load_all_vars())
+
     # cpdFindChangePoint20100901
 
     # is an operational version of the Lund and Reeves (2002)
@@ -76,9 +78,9 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
 
     # Exclude missing data.
 
-    x = reshape(xx, length(xx), 1)
+    x = matlabarray(reshape(xx, length(xx), 1))
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:51
-    y = reshape(yy, length(yy), 1)
+    y = matlabarray(reshape(yy, length(yy), 1))
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:51
     iNaN = find(isnan(x + y))
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:52
@@ -162,7 +164,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:84
         x1 = copy(x)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:85
-        (x1 := matlabarray(x1))[iAbv] = x[i]
+        x1[iAbv] = take(x, i)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:85
         a2 = numpy.linalg.solve(concat([ones(n, 1), x1]), y)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:86
@@ -170,17 +172,17 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:87
         SSEFull2 = sum((y - yHat2) ** 2)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:88
-        (Fc2 := matlabarray(Fc2))[i] = (SSERed2 - SSEFull2) / (SSEFull2 / (n - nFull2))
+        Fc2[i] = (SSERed2 - SSEFull2) / (SSEFull2 / (n - nFull2))
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:89
         # 2 connected line segments with noslope constraints
         # parameters b0, b1, b2 and xCp
-        zAbv = zeros(n, 1)
+        zAbv = matlabarray(zeros(n, 1))
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:95
-        (zAbv := matlabarray(zAbv))[iAbv] = 1
+        zAbv[iAbv] = 1
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:95
         x1 = copy(x)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:96
-        x2 = multiply((x - x[i]), zAbv)
+        x2 = multiply((x - take(x, i)), zAbv)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:96
         a3 = numpy.linalg.solve(concat([ones(n, 1), x1, x2]), y)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:97
@@ -188,7 +190,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:98
         SSEFull3 = sum((y - yHat3) ** 2)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:99
-        (Fc3 := matlabarray(Fc3))[i] = (SSERed3 - SSEFull3) / (SSEFull3 / (n - nFull3))
+        Fc3[i] = (SSERed3 - SSEFull3) / (SSEFull3 / (n - nFull3))
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:100
 
     # Assign changepoints from Fc2 and Fc3 maxima.
@@ -198,7 +200,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:107
     Fmax2, iCp2 = max(Fc2, nargout=2)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:109
-    xCp2 = x[iCp2]
+    xCp2 = take(x, iCp2)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:109
     iAbv = arange((iCp2 + 1), n)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:110
@@ -220,11 +222,11 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
 
     Fmax3, iCp3 = max(Fc3, nargout=2)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:116
-    xCp3 = x[iCp3]
+    xCp3 = take(x, iCp3)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:116
     iAbv = arange((iCp3 + 1), n)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:117
-    zAbv = zeros(n, 1)
+    zAbv = matlabarray(zeros(n, 1))
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:117
     zAbv[iAbv] = 1
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:117
@@ -253,7 +255,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
     if iCp2 > logical_and((nEndPts), iCp2) < (n - nEndPts):
         b0 = take(a2, 1)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:130
-        cib0 = dot(0.5, diff((a2int := matlabarray(a2int))[1, :]))
+        cib0 = dot(0.5, diff(a2int[1, :]))
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:130
         b1 = take(a2, 2)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:131
@@ -283,7 +285,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
     if iCp3 > logical_and((nEndPts), iCp3) < (n - nEndPts):
         b0 = take(a3, 1)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:141
-        cib0 = dot(0.5, diff((a3int := matlabarray(a3int))[1, :]))
+        cib0 = dot(0.5, diff(a3int[1, :]))
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:141
         b1 = take(a3, 2)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:142
