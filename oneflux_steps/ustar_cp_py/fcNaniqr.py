@@ -47,7 +47,7 @@ def fcnaniqr(X=None):
         IQR = copy(NaN)
         # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:36
         if nYaN <= 3:
-            y = X[iYaN]
+            y = (X := matlabarray(X))[iYaN]
             # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:38
             yN = prctile(y, 25)
             # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:38
@@ -73,7 +73,7 @@ def fcnaniqr(X=None):
                     # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:45
                     yX = prctile(y, 75)
                     # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:45
-                    IQR[ic] = yX - yN
+                    (IQR := matlabarray(IQR))[ic] = yX - yN
         # oneflux_steps/ustar_cp_refactor_wip/fcNaniqr.m:45
         else:
             if 3 == nd:

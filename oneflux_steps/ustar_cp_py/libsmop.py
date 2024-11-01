@@ -334,7 +334,7 @@ def ndims(a):
 
 
 def numel(a):
-    return matlabarray(np.asarray(a).size)
+    return np.asarray(a).size
 
 
 # def primes2(upto):
@@ -852,13 +852,14 @@ class matlabarray(np.ndarray):
     """
 
     def __new__(cls, a=[], dtype=None):
-        if isinstance(a, (list, tuple, np.ndarray)):
-            ndmin = 2
-        else:
-            ndmin = 0
-        obj = np.array(a, dtype=dtype, order="F", ndmin=ndmin).view(cls).copy(order="F")
+        copy = not isinstance(a, np.ndarray)
+        obj = (
+            np.array(a, dtype=dtype, order="F", copy=copy, ndmin=2)
+            .view(cls)
+            .copy(order="F")
+        )
         if obj.size == 0:
-            obj.shape = tuple(0 for _ in range(ndmin))
+            obj.shape = tuple(0 for _ in range(2))
         return obj
 
     def __copy__(self):
@@ -1010,7 +1011,6 @@ class end(object):
         return self
 
 
-####
 class cellarray(matlabarray):
     """
     Cell array corresponds to matlab ``{}``
@@ -1108,9 +1108,7 @@ class char(matlabarray):
         if not isinstance(a, str):
             a = "".join([chr(c) for c in a])
         obj = (
-            np.array(list(a), dtype="|S1", copy=False, order="F", ndmin=2)
-            .view(cls)
-            .copy(order="F")
+            np.array(list(a), dtype="|U1", order="F", ndmin=2).view(cls).copy(order="F")
         )
         if obj.size == 0:
             obj.shape = (0, 0)

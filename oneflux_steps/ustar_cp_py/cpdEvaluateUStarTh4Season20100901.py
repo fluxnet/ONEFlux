@@ -186,7 +186,7 @@ def cpdEvaluateUStarTh4Season20100901(
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:110
     itReOrder = matlabarray(concat([arange(min(itD), nt), arange(1, (min(itD) - 1))]))
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:111
-    t[itD] = t[itD] - EndDOY
+    (t := matlabarray(t))[itD] = t[itD] - EndDOY
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:112
     t = t[itReOrder]
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:112
