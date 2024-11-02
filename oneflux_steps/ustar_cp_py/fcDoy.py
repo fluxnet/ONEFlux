@@ -4,7 +4,7 @@ from libsmop import *
 
 
 @function
-def mydoy(t=None):
+def fcDoy(t=None):
     globals().update(load_all_vars())
 
     # d=doy(t);
@@ -14,13 +14,13 @@ def mydoy(t=None):
     # See datenum for a definition of t.
 
     # doy differs from other formulations in that the last
-    # period of each day (denoted as 2400 by mydatevec)
+    # period of each day (denoted as 2400 by fcDatevec)
     # is attributed to the day ending 2400
     # rather than the day beginning 0000.
 
     # Written by Alan Barr 2002.
 
-    y, m, d, h, mi, s = mydatevec(t, nargout=6)
+    y, m, d, h, mi, s = fcDatevec(t, nargout=6)
     # oneflux_steps/ustar_cp_refactor_wip/fcDoy.m:16
     tt = datenum(y, m, d)
     # oneflux_steps/ustar_cp_refactor_wip/fcDoy.m:17

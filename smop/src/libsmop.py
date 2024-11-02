@@ -220,7 +220,7 @@ def find(a, n=None, d=None, nargout=1):
     raise NotImplementedError
 
 def floor(a):
-    return int(np.floor(a))
+    return a // 1
 
 def fopen(*args):
     try:
@@ -391,7 +391,7 @@ def size(a, b=0, nargout=1):
         if b:
             return s[b - 1]
         else:
-            return matlabarray(s) if nargout <= 1 else s
+            return np.squeeze(s)
     except IndexError:
         return 1
 
@@ -456,7 +456,10 @@ def ones(*args, **kwargs):
     if not args:
         return 1
     if len(args) == 1:
-        args += args
+        if isinstance(args[0], (tuple, list, np.ndarray)):
+            args = args[0]
+        else:
+            args += args
     return matlabarray(np.ones(args, order="F", **kwargs))
 
 def print_usage():
@@ -534,29 +537,34 @@ def prctile(a, q):
     """
     return np.percentile(np.asarray(a), q)
 
-def datenum(date):
-    """
-    Convert a date string to a MATLAB datenum.
-    """
-    return (np.datetime64(date) - np.datetime64("1970-01-01")).astype(
-        "timedelta64[D]"
-    ).astype(int) + 719529
+def datenum(a, *args):
+    if isinstance(a, str):
+        d = matlabarray(np.datetime64(a) - np.datetime64("1970-01-01"))
+        return d.astype("timedelta64[D]") + 719529
+    from datetime import datetime, timedelta
+    y, m, d = [np.squeeze(a).item() for a in (a, *args)]
+    t = datetime(int(y)+2000, int(m), 1) + timedelta(days=d+1)
+    return matlabarray(t - datetime(2000, 1, 1)).astype("timedelta64[D]")
 
-def datevec(datenum):
+def datevec(datenum, nargout=6):
     """
     Convert a MATLAB datenum to a date vector.
     """
-    dt = np.datetime64("1970-01-01") + np.timedelta64(datenum - 719529, "D")
-    return matlabarray(
-        [
-            dt.astype("datetime64[Y]").astype(int) + 1970,
-            dt.astype("datetime64[M]").astype(int) % 12 + 1,
-            dt.astype("datetime64[D]").astype(int) % 31 + 1,
-            dt.astype("datetime64[h]").astype(int) % 24,
-            dt.astype("datetime64[m]").astype(int) % 60,
-            dt.astype("datetime64[s]").astype(int) % 60,
-        ]
-    )
+    dt = np.datetime64("1970-01-01") + (datenum - 719529).astype("timedelta64[D]")
+    return (
+        dt.astype("datetime64[Y]").astype(int) + 1970,
+        dt.astype("datetime64[M]").astype(int) % 12 + 1,
+        dt.astype("datetime64[D]").astype(int) % 31 + 1,
+        dt.astype("datetime64[h]").astype(int) % 24,
+        dt.astype("datetime64[m]").astype(int) % 60,
+        dt.astype("datetime64[s]").astype(int) % 60,
+    )[:nargout]
+
+def median(a, axis=None):
+    """
+    Compute the median of an array.
+    """
+    return np.median(np.asarray(a), axis=axis)
 
 def nanmean(a, axis=None):
     """
