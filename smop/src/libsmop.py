@@ -145,9 +145,8 @@ def clc():
 def copy(a):
     return matlabarray(np.asanyarray(a).copy(order="F"))
 
-def deal(a, **kwargs):
-    # import pdb; pdb.set_trace()
-    return tuple([ai for ai in a.flat])
+def deal(a, nargout=1):
+    return tuple(np.repeat(a, nargout // np.size(a)).flat)
 
 def disp(*args):
     print(args)
@@ -165,8 +164,9 @@ def logical_and(a, b):
 def logical_or(a, b):
     return np.logical_or(a, b)
 
-def diff(a, n=1, axis=-1):
-    return np.diff(a, n=n, axis=axis)
+def diff(a, n=1, axis=0):
+    x = np.asarray(a).view(np.ndarray)
+    return np.diff(x, n=n, axis=axis).view(matlabarray)
 
 def exist(a, b='file'):
     if str(b) == "builtin":
@@ -237,8 +237,9 @@ def fullfile(*args):
     return os.path.join(*args)
 
 def intersect(a, b, nargout=1):
+    from builtins import set
     if nargout == 1:
-        c = sorted(set(a) & set(b))
+        c = sorted(set(a.flat) & set(b.flat))
         if isinstance(a, str):
             return "".join(c)
         elif isinstance(a, list):
@@ -246,7 +247,7 @@ def intersect(a, b, nargout=1):
         else:
             # FIXME: the result is a column vector if
             # both args are column vectors; otherwise row vector
-            return np.array(c)
+            return matlabarray(c).reshape((1, -1) if a.shape[1] > 1 else (-1, 1))
     raise NotImplementedError
 
 def iscell(a):
@@ -730,6 +731,8 @@ class matlabarray(np.ndarray):
     matlabarray("helloworld")
     """
     def __new__(cls, a=[], dtype=None):
+        if isinstance(a, matlabarray) and dtype is None:
+            return a
         copy = not isinstance(a, np.ndarray)
         obj = (
             np.array(a, dtype=dtype, order="F", copy=copy, ndmin=2)
@@ -738,7 +741,11 @@ class matlabarray(np.ndarray):
         )
         if obj.size == 0:
             obj.shape = tuple(0 for _ in range(2))
+        super().__setattr__(obj, "_fields", {})
         return obj
+    def __array_finalize__(self, obj):
+        if obj is not None:
+            super().__setattr__("_fields", getattr(obj, "_fields", {}))
     def __copy__(self):
         return np.ndarray.copy(self, order="F")
     def __iter__(self):
@@ -747,8 +754,8 @@ class matlabarray(np.ndarray):
     def compute_indices(self, index):
         if not isinstance(index, tuple):
             index = (index,)
-        if len(index) != 1 and len(index) != self.ndim:
-            raise IndexError
+        # if len(index) != 1 and len(index) != self.ndim:
+        #     raise IndexError
         indices = []
         for i, ix in enumerate(index):
             if ix.__class__ is end:
@@ -756,13 +763,15 @@ class matlabarray(np.ndarray):
             elif ix.__class__ is slice:
                 if self.size == 0 and ix.stop is None:
                     raise IndexError
-                if len(index) == 1:
+                if ix.stop:
+                    n = ix.stop
+                elif len(index) == 1:
                     n = self.size
                 else:
-                    n = self.shape[i]
+                    n = self.shape[i] if i < self.ndim else 1
                 indices.append(
                     np.arange(
-                        (ix.start or 1) - 1, ix.stop or n, ix.step or 1, dtype=int
+                        (ix.start or 1) - 1, n, ix.step or 1, dtype=int
                     )
                 )
             else:
@@ -799,7 +808,7 @@ class matlabarray(np.ndarray):
         elif isinstance(ix, slice):
             n = ix.stop
         elif isinstance(ix, (list, np.ndarray)):
-            n = max(ix) + 1
+            n = int(max(ix) + 1)
         else:
             assert 0, ix
         if not isinstance(n, int):
@@ -818,7 +827,7 @@ class matlabarray(np.ndarray):
             if not self.size:
                 new_shape = [self.sizeof(s) for s in indices]
                 self.resize(new_shape, refcheck=0)
-                np.asarray(self).__setitem__(indices, value)
+                self.fill(value)
             elif len(indices) == 1:
                 # One-dimensional resize is only implemented for
                 # two cases:
@@ -853,6 +862,10 @@ class matlabarray(np.ndarray):
                     new_shape[-1] = self.sizeof(indices[-1])
                 self.resize(new_shape, refcheck=0)
                 np.asarray(self).__setitem__(indices, value)
+    def __setattr__(self, name, value):
+        self._fields[name] = value
+    def __getattr__(self, name):
+        return self._fields[name]
     def __repr__(self):
         return self.__class__.__name__ + repr(np.asarray(self))[5:]
     def __str__(self):
