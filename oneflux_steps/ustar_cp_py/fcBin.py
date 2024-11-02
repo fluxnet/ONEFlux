@@ -56,9 +56,10 @@ def cpdBin(x=None, y=None, dx=None, nPerBin=None):
         # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:30
         for i in arange(1, length(xL)).reshape(-1):
             ix = find(
-                logical_and(logical_not(isnan(x + y)), x)
-                >= logical_and(take(xL, i), x)
-                <= take(xU, i)
+                logical_and(
+                    logical_and(logical_not(isnan(x + y)), x >= take(xL, i)),
+                    x <= take(xU, i),
+                )
             )
             # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:31
             if length(ix) >= nPerBin:
@@ -80,7 +81,7 @@ def cpdBin(x=None, y=None, dx=None, nPerBin=None):
             # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:41
             for jx in arange(nx, xx, dx).reshape(-1):
                 ix = find(
-                    logical_and(logical_not(isnan(x + y)), abs(x - jx)) < dot(0.5, dx)
+                    logical_and(logical_not(isnan(x + y)), abs(x - jx) < dot(0.5, dx))
                 )
                 # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:43
                 if length(ix) >= nPerBin:
@@ -97,9 +98,10 @@ def cpdBin(x=None, y=None, dx=None, nPerBin=None):
             # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:51
             for i in arange(1, length(xL)).reshape(-1):
                 ix = find(
-                    logical_and(logical_not(isnan(x + y)), x)
-                    >= logical_and(take(xL, i), x)
-                    <= take(xU, i)
+                    logical_and(
+                        logical_and(logical_not(isnan(x + y)), x >= take(xL, i)),
+                        x <= take(xU, i),
+                    )
                 )
                 # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:53
                 if length(ix) >= nPerBin:

@@ -22,10 +22,7 @@ indent = " "*4
 
 optable = {
     "!" : "not",
-    "~" : "not",
     "~=": "!=",
-    "|" : "or",
-    "&" : "and",
     "||": "or",
     "&&": "and",
     "^" : "**",
@@ -127,7 +124,7 @@ def _backend(self,level=0):
 
 @extend(node.expr)
 def _backend(self,level=0):
-    if self.op in ("!","~"): 
+    if self.op in "~": 
        return "logical_not(%s)" % self.args[0]._backend()
 
     if self.op == "&":
@@ -136,6 +133,7 @@ def _backend(self,level=0):
     if self.op == "&&":
         return "%s and %s" % (self.args[0]._backend(),
                               self.args[1]._backend())
+
     if self.op == "|":
         return "logical_or(%s)" % self.args._backend()
 
@@ -196,7 +194,8 @@ def _backend(self,level=0):
     if hasattr(self, "ret"):
         ret = f"{self.ret._backend()}="
         return ret+"%s(%s)" % (self.op, ",".join([t._backend() for t in self.args]))
-    return optable.get(self.op,self.op).join([t._backend() for t in self.args])
+    op = " %s " % optable.get(self.op,self.op)
+    return op.join([t._backend() for t in self.args])
 
 
 @extend(node.expr_list)

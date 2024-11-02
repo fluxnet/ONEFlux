@@ -115,12 +115,12 @@ def cpdEvaluateUStarTh20100901(
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:89
     nN = dot(nWindowsN, nPerWindow)
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:90
-    itOut = find(uStar < logical_or(0, uStar) > 3)
+    itOut = find(logical_or(uStar < 0, uStar > 3))
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:92
     uStar[itOut] = NaN
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:92
 
-    itAnnual = find(fNight == logical_and(1, logical_not(isnan(NEE + uStar + T))))
+    itAnnual = find(logical_and(fNight == 1, logical_not(isnan(NEE + uStar + T))))
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:94
     ntAnnual = length(itAnnual)
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:94
@@ -201,7 +201,7 @@ def cpdEvaluateUStarTh20100901(
     fNight = matlabarray(concat([[take(fNight, itAdd1)], [fNight]]))
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:128
     itAnnual = matlabarray(
-        find(fNight == logical_and(1, logical_not(isnan(NEE + uStar + T))))
+        find(logical_and(fNight == 1, logical_not(isnan(NEE + uStar + T))))
     )
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:130
     ntAnnual = length(itAnnual)
@@ -240,7 +240,7 @@ def cpdEvaluateUStarTh20100901(
         # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:153
         for iStrata in arange(1, nStrata).reshape(-1):
             itStrata = find(
-                T >= logical_and(take(TTh, iStrata), T) <= take(TTh, iStrata + 1)
+                logical_and(T >= take(TTh, iStrata), T <= take(TTh, iStrata + 1))
             )
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:156
             itStrata = intersect(itStrata, itWindow)

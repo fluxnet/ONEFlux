@@ -252,7 +252,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:126
     s3.n = copy(n)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:126
-    if iCp2 > logical_and((nEndPts), iCp2) < (n - nEndPts):
+    if logical_and(iCp2 > (nEndPts), iCp2 < (n - nEndPts)):
         b0 = take(a2, 1)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:130
         cib0 = dot(0.5, diff(a2int[1, :]))
@@ -282,7 +282,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
         s2.cic2 = copy(NaN)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:135
 
-    if iCp3 > logical_and((nEndPts), iCp3) < (n - nEndPts):
+    if logical_and(iCp3 > (nEndPts), iCp3 < (n - nEndPts)):
         b0 = take(a3, 1)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:141
         cib0 = dot(0.5, diff(a3int[1, :]))

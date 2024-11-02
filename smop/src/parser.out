@@ -10808,13 +10808,7 @@ state 164
     COLON           reduce using rule 53 (expr2 -> expr AND expr .)
     DOTDIVEQ        reduce using rule 53 (expr2 -> expr AND expr .)
     DOTMULEQ        reduce using rule 53 (expr2 -> expr AND expr .)
-    EQEQ            reduce using rule 53 (expr2 -> expr AND expr .)
     EXPEQ           reduce using rule 53 (expr2 -> expr AND expr .)
-    GE              reduce using rule 53 (expr2 -> expr AND expr .)
-    GT              reduce using rule 53 (expr2 -> expr AND expr .)
-    LE              reduce using rule 53 (expr2 -> expr AND expr .)
-    LT              reduce using rule 53 (expr2 -> expr AND expr .)
-    NE              reduce using rule 53 (expr2 -> expr AND expr .)
     OR              reduce using rule 53 (expr2 -> expr AND expr .)
     EQ              reduce using rule 53 (expr2 -> expr AND expr .)
     MULEQ           reduce using rule 53 (expr2 -> expr AND expr .)
@@ -10844,10 +10838,16 @@ state 164
     DOTDIV          shift and go to state 93
     DOTEXP          shift and go to state 95
     DOTMUL          shift and go to state 96
+    EQEQ            shift and go to state 98
     POW             shift and go to state 99
     EXP             shift and go to state 100
+    GE              shift and go to state 102
+    GT              shift and go to state 103
+    LE              shift and go to state 104
+    LT              shift and go to state 105
     MINUS           shift and go to state 106
     MUL             shift and go to state 107
+    NE              shift and go to state 108
     PLUS            shift and go to state 110
 
   ! LBRACE          [ reduce using rule 53 (expr2 -> expr AND expr .) ]
@@ -10862,23 +10862,23 @@ state 164
   ! DOTDIV          [ reduce using rule 53 (expr2 -> expr AND expr .) ]
   ! DOTEXP          [ reduce using rule 53 (expr2 -> expr AND expr .) ]
   ! DOTMUL          [ reduce using rule 53 (expr2 -> expr AND expr .) ]
+  ! EQEQ            [ reduce using rule 53 (expr2 -> expr AND expr .) ]
   ! POW             [ reduce using rule 53 (expr2 -> expr AND expr .) ]
   ! EXP             [ reduce using rule 53 (expr2 -> expr AND expr .) ]
+  ! GE              [ reduce using rule 53 (expr2 -> expr AND expr .) ]
+  ! GT              [ reduce using rule 53 (expr2 -> expr AND expr .) ]
+  ! LE              [ reduce using rule 53 (expr2 -> expr AND expr .) ]
+  ! LT              [ reduce using rule 53 (expr2 -> expr AND expr .) ]
   ! MINUS           [ reduce using rule 53 (expr2 -> expr AND expr .) ]
   ! MUL             [ reduce using rule 53 (expr2 -> expr AND expr .) ]
+  ! NE              [ reduce using rule 53 (expr2 -> expr AND expr .) ]
   ! PLUS            [ reduce using rule 53 (expr2 -> expr AND expr .) ]
   ! AND             [ shift and go to state 87 ]
   ! ANDAND          [ shift and go to state 88 ]
   ! COLON           [ shift and go to state 90 ]
   ! DOTDIVEQ        [ shift and go to state 94 ]
   ! DOTMULEQ        [ shift and go to state 97 ]
-  ! EQEQ            [ shift and go to state 98 ]
   ! EXPEQ           [ shift and go to state 101 ]
-  ! GE              [ shift and go to state 102 ]
-  ! GT              [ shift and go to state 103 ]
-  ! LE              [ shift and go to state 104 ]
-  ! LT              [ shift and go to state 105 ]
-  ! NE              [ shift and go to state 108 ]
   ! OR              [ shift and go to state 109 ]
   ! OROR            [ shift and go to state 201 ]
   ! EQ              [ shift and go to state 111 ]
@@ -12255,6 +12255,7 @@ state 175
     (84) expr2 -> expr . ANDEQ expr
 
     OROR            reduce using rule 64 (expr2 -> expr EQEQ expr .)
+    AND             reduce using rule 64 (expr2 -> expr EQEQ expr .)
     ANDAND          reduce using rule 64 (expr2 -> expr EQEQ expr .)
     COLON           reduce using rule 64 (expr2 -> expr EQEQ expr .)
     DOTDIVEQ        reduce using rule 64 (expr2 -> expr EQEQ expr .)
@@ -12266,6 +12267,7 @@ state 175
     LE              reduce using rule 64 (expr2 -> expr EQEQ expr .)
     LT              reduce using rule 64 (expr2 -> expr EQEQ expr .)
     NE              reduce using rule 64 (expr2 -> expr EQEQ expr .)
+    OR              reduce using rule 64 (expr2 -> expr EQEQ expr .)
     EQ              reduce using rule 64 (expr2 -> expr EQEQ expr .)
     MULEQ           reduce using rule 64 (expr2 -> expr EQEQ expr .)
     DIVEQ           reduce using rule 64 (expr2 -> expr EQEQ expr .)
@@ -12288,7 +12290,6 @@ state 175
     FIELD           shift and go to state 84
     LPAREN          shift and go to state 85
     TRANSPOSE       shift and go to state 86
-    AND             shift and go to state 87
     BACKSLASH       shift and go to state 89
     DIV             shift and go to state 91
     DOT             shift and go to state 92
@@ -12299,7 +12300,6 @@ state 175
     EXP             shift and go to state 100
     MINUS           shift and go to state 106
     MUL             shift and go to state 107
-    OR              shift and go to state 109
     PLUS            shift and go to state 110
 
   ! LBRACE          [ reduce using rule 64 (expr2 -> expr EQEQ expr .) ]
@@ -12308,7 +12308,6 @@ state 175
   ! FIELD           [ reduce using rule 64 (expr2 -> expr EQEQ expr .) ]
   ! LPAREN          [ reduce using rule 64 (expr2 -> expr EQEQ expr .) ]
   ! TRANSPOSE       [ reduce using rule 64 (expr2 -> expr EQEQ expr .) ]
-  ! AND             [ reduce using rule 64 (expr2 -> expr EQEQ expr .) ]
   ! BACKSLASH       [ reduce using rule 64 (expr2 -> expr EQEQ expr .) ]
   ! DIV             [ reduce using rule 64 (expr2 -> expr EQEQ expr .) ]
   ! DOT             [ reduce using rule 64 (expr2 -> expr EQEQ expr .) ]
@@ -12319,8 +12318,8 @@ state 175
   ! EXP             [ reduce using rule 64 (expr2 -> expr EQEQ expr .) ]
   ! MINUS           [ reduce using rule 64 (expr2 -> expr EQEQ expr .) ]
   ! MUL             [ reduce using rule 64 (expr2 -> expr EQEQ expr .) ]
-  ! OR              [ reduce using rule 64 (expr2 -> expr EQEQ expr .) ]
   ! PLUS            [ reduce using rule 64 (expr2 -> expr EQEQ expr .) ]
+  ! AND             [ shift and go to state 87 ]
   ! ANDAND          [ shift and go to state 88 ]
   ! COLON           [ shift and go to state 90 ]
   ! DOTDIVEQ        [ shift and go to state 94 ]
@@ -12332,6 +12331,7 @@ state 175
   ! LE              [ shift and go to state 104 ]
   ! LT              [ shift and go to state 105 ]
   ! NE              [ shift and go to state 108 ]
+  ! OR              [ shift and go to state 109 ]
   ! OROR            [ shift and go to state 201 ]
   ! EQ              [ shift and go to state 111 ]
   ! MULEQ           [ shift and go to state 112 ]
@@ -12783,6 +12783,7 @@ state 179
     (84) expr2 -> expr . ANDEQ expr
 
     OROR            reduce using rule 68 (expr2 -> expr GE expr .)
+    AND             reduce using rule 68 (expr2 -> expr GE expr .)
     ANDAND          reduce using rule 68 (expr2 -> expr GE expr .)
     COLON           reduce using rule 68 (expr2 -> expr GE expr .)
     DOTDIVEQ        reduce using rule 68 (expr2 -> expr GE expr .)
@@ -12794,6 +12795,7 @@ state 179
     LE              reduce using rule 68 (expr2 -> expr GE expr .)
     LT              reduce using rule 68 (expr2 -> expr GE expr .)
     NE              reduce using rule 68 (expr2 -> expr GE expr .)
+    OR              reduce using rule 68 (expr2 -> expr GE expr .)
     EQ              reduce using rule 68 (expr2 -> expr GE expr .)
     MULEQ           reduce using rule 68 (expr2 -> expr GE expr .)
     DIVEQ           reduce using rule 68 (expr2 -> expr GE expr .)
@@ -12816,7 +12818,6 @@ state 179
     FIELD           shift and go to state 84
     LPAREN          shift and go to state 85
     TRANSPOSE       shift and go to state 86
-    AND             shift and go to state 87
     BACKSLASH       shift and go to state 89
     DIV             shift and go to state 91
     DOT             shift and go to state 92
@@ -12827,7 +12828,6 @@ state 179
     EXP             shift and go to state 100
     MINUS           shift and go to state 106
     MUL             shift and go to state 107
-    OR              shift and go to state 109
     PLUS            shift and go to state 110
 
   ! LBRACE          [ reduce using rule 68 (expr2 -> expr GE expr .) ]
@@ -12836,7 +12836,6 @@ state 179
   ! FIELD           [ reduce using rule 68 (expr2 -> expr GE expr .) ]
   ! LPAREN          [ reduce using rule 68 (expr2 -> expr GE expr .) ]
   ! TRANSPOSE       [ reduce using rule 68 (expr2 -> expr GE expr .) ]
-  ! AND             [ reduce using rule 68 (expr2 -> expr GE expr .) ]
   ! BACKSLASH       [ reduce using rule 68 (expr2 -> expr GE expr .) ]
   ! DIV             [ reduce using rule 68 (expr2 -> expr GE expr .) ]
   ! DOT             [ reduce using rule 68 (expr2 -> expr GE expr .) ]
@@ -12847,8 +12846,8 @@ state 179
   ! EXP             [ reduce using rule 68 (expr2 -> expr GE expr .) ]
   ! MINUS           [ reduce using rule 68 (expr2 -> expr GE expr .) ]
   ! MUL             [ reduce using rule 68 (expr2 -> expr GE expr .) ]
-  ! OR              [ reduce using rule 68 (expr2 -> expr GE expr .) ]
   ! PLUS            [ reduce using rule 68 (expr2 -> expr GE expr .) ]
+  ! AND             [ shift and go to state 87 ]
   ! ANDAND          [ shift and go to state 88 ]
   ! COLON           [ shift and go to state 90 ]
   ! DOTDIVEQ        [ shift and go to state 94 ]
@@ -12860,6 +12859,7 @@ state 179
   ! LE              [ shift and go to state 104 ]
   ! LT              [ shift and go to state 105 ]
   ! NE              [ shift and go to state 108 ]
+  ! OR              [ shift and go to state 109 ]
   ! OROR            [ shift and go to state 201 ]
   ! EQ              [ shift and go to state 111 ]
   ! MULEQ           [ shift and go to state 112 ]
@@ -12915,6 +12915,7 @@ state 180
     (84) expr2 -> expr . ANDEQ expr
 
     OROR            reduce using rule 69 (expr2 -> expr GT expr .)
+    AND             reduce using rule 69 (expr2 -> expr GT expr .)
     ANDAND          reduce using rule 69 (expr2 -> expr GT expr .)
     COLON           reduce using rule 69 (expr2 -> expr GT expr .)
     DOTDIVEQ        reduce using rule 69 (expr2 -> expr GT expr .)
@@ -12926,6 +12927,7 @@ state 180
     LE              reduce using rule 69 (expr2 -> expr GT expr .)
     LT              reduce using rule 69 (expr2 -> expr GT expr .)
     NE              reduce using rule 69 (expr2 -> expr GT expr .)
+    OR              reduce using rule 69 (expr2 -> expr GT expr .)
     EQ              reduce using rule 69 (expr2 -> expr GT expr .)
     MULEQ           reduce using rule 69 (expr2 -> expr GT expr .)
     DIVEQ           reduce using rule 69 (expr2 -> expr GT expr .)
@@ -12948,7 +12950,6 @@ state 180
     FIELD           shift and go to state 84
     LPAREN          shift and go to state 85
     TRANSPOSE       shift and go to state 86
-    AND             shift and go to state 87
     BACKSLASH       shift and go to state 89
     DIV             shift and go to state 91
     DOT             shift and go to state 92
@@ -12959,7 +12960,6 @@ state 180
     EXP             shift and go to state 100
     MINUS           shift and go to state 106
     MUL             shift and go to state 107
-    OR              shift and go to state 109
     PLUS            shift and go to state 110
 
   ! LBRACE          [ reduce using rule 69 (expr2 -> expr GT expr .) ]
@@ -12968,7 +12968,6 @@ state 180
   ! FIELD           [ reduce using rule 69 (expr2 -> expr GT expr .) ]
   ! LPAREN          [ reduce using rule 69 (expr2 -> expr GT expr .) ]
   ! TRANSPOSE       [ reduce using rule 69 (expr2 -> expr GT expr .) ]
-  ! AND             [ reduce using rule 69 (expr2 -> expr GT expr .) ]
   ! BACKSLASH       [ reduce using rule 69 (expr2 -> expr GT expr .) ]
   ! DIV             [ reduce using rule 69 (expr2 -> expr GT expr .) ]
   ! DOT             [ reduce using rule 69 (expr2 -> expr GT expr .) ]
@@ -12979,8 +12978,8 @@ state 180
   ! EXP             [ reduce using rule 69 (expr2 -> expr GT expr .) ]
   ! MINUS           [ reduce using rule 69 (expr2 -> expr GT expr .) ]
   ! MUL             [ reduce using rule 69 (expr2 -> expr GT expr .) ]
-  ! OR              [ reduce using rule 69 (expr2 -> expr GT expr .) ]
   ! PLUS            [ reduce using rule 69 (expr2 -> expr GT expr .) ]
+  ! AND             [ shift and go to state 87 ]
   ! ANDAND          [ shift and go to state 88 ]
   ! COLON           [ shift and go to state 90 ]
   ! DOTDIVEQ        [ shift and go to state 94 ]
@@ -12992,6 +12991,7 @@ state 180
   ! LE              [ shift and go to state 104 ]
   ! LT              [ shift and go to state 105 ]
   ! NE              [ shift and go to state 108 ]
+  ! OR              [ shift and go to state 109 ]
   ! OROR            [ shift and go to state 201 ]
   ! EQ              [ shift and go to state 111 ]
   ! MULEQ           [ shift and go to state 112 ]
@@ -13047,6 +13047,7 @@ state 181
     (84) expr2 -> expr . ANDEQ expr
 
     OROR            reduce using rule 70 (expr2 -> expr LE expr .)
+    AND             reduce using rule 70 (expr2 -> expr LE expr .)
     ANDAND          reduce using rule 70 (expr2 -> expr LE expr .)
     COLON           reduce using rule 70 (expr2 -> expr LE expr .)
     DOTDIVEQ        reduce using rule 70 (expr2 -> expr LE expr .)
@@ -13058,6 +13059,7 @@ state 181
     LE              reduce using rule 70 (expr2 -> expr LE expr .)
     LT              reduce using rule 70 (expr2 -> expr LE expr .)
     NE              reduce using rule 70 (expr2 -> expr LE expr .)
+    OR              reduce using rule 70 (expr2 -> expr LE expr .)
     EQ              reduce using rule 70 (expr2 -> expr LE expr .)
     MULEQ           reduce using rule 70 (expr2 -> expr LE expr .)
     DIVEQ           reduce using rule 70 (expr2 -> expr LE expr .)
@@ -13080,7 +13082,6 @@ state 181
     FIELD           shift and go to state 84
     LPAREN          shift and go to state 85
     TRANSPOSE       shift and go to state 86
-    AND             shift and go to state 87
     BACKSLASH       shift and go to state 89
     DIV             shift and go to state 91
     DOT             shift and go to state 92
@@ -13091,7 +13092,6 @@ state 181
     EXP             shift and go to state 100
     MINUS           shift and go to state 106
     MUL             shift and go to state 107
-    OR              shift and go to state 109
     PLUS            shift and go to state 110
 
   ! LBRACE          [ reduce using rule 70 (expr2 -> expr LE expr .) ]
@@ -13100,7 +13100,6 @@ state 181
   ! FIELD           [ reduce using rule 70 (expr2 -> expr LE expr .) ]
   ! LPAREN          [ reduce using rule 70 (expr2 -> expr LE expr .) ]
   ! TRANSPOSE       [ reduce using rule 70 (expr2 -> expr LE expr .) ]
-  ! AND             [ reduce using rule 70 (expr2 -> expr LE expr .) ]
   ! BACKSLASH       [ reduce using rule 70 (expr2 -> expr LE expr .) ]
   ! DIV             [ reduce using rule 70 (expr2 -> expr LE expr .) ]
   ! DOT             [ reduce using rule 70 (expr2 -> expr LE expr .) ]
@@ -13111,8 +13110,8 @@ state 181
   ! EXP             [ reduce using rule 70 (expr2 -> expr LE expr .) ]
   ! MINUS           [ reduce using rule 70 (expr2 -> expr LE expr .) ]
   ! MUL             [ reduce using rule 70 (expr2 -> expr LE expr .) ]
-  ! OR              [ reduce using rule 70 (expr2 -> expr LE expr .) ]
   ! PLUS            [ reduce using rule 70 (expr2 -> expr LE expr .) ]
+  ! AND             [ shift and go to state 87 ]
   ! ANDAND          [ shift and go to state 88 ]
   ! COLON           [ shift and go to state 90 ]
   ! DOTDIVEQ        [ shift and go to state 94 ]
@@ -13124,6 +13123,7 @@ state 181
   ! LE              [ shift and go to state 104 ]
   ! LT              [ shift and go to state 105 ]
   ! NE              [ shift and go to state 108 ]
+  ! OR              [ shift and go to state 109 ]
   ! OROR            [ shift and go to state 201 ]
   ! EQ              [ shift and go to state 111 ]
   ! MULEQ           [ shift and go to state 112 ]
@@ -13179,6 +13179,7 @@ state 182
     (84) expr2 -> expr . ANDEQ expr
 
     OROR            reduce using rule 71 (expr2 -> expr LT expr .)
+    AND             reduce using rule 71 (expr2 -> expr LT expr .)
     ANDAND          reduce using rule 71 (expr2 -> expr LT expr .)
     COLON           reduce using rule 71 (expr2 -> expr LT expr .)
     DOTDIVEQ        reduce using rule 71 (expr2 -> expr LT expr .)
@@ -13190,6 +13191,7 @@ state 182
     LE              reduce using rule 71 (expr2 -> expr LT expr .)
     LT              reduce using rule 71 (expr2 -> expr LT expr .)
     NE              reduce using rule 71 (expr2 -> expr LT expr .)
+    OR              reduce using rule 71 (expr2 -> expr LT expr .)
     EQ              reduce using rule 71 (expr2 -> expr LT expr .)
     MULEQ           reduce using rule 71 (expr2 -> expr LT expr .)
     DIVEQ           reduce using rule 71 (expr2 -> expr LT expr .)
@@ -13212,7 +13214,6 @@ state 182
     FIELD           shift and go to state 84
     LPAREN          shift and go to state 85
     TRANSPOSE       shift and go to state 86
-    AND             shift and go to state 87
     BACKSLASH       shift and go to state 89
     DIV             shift and go to state 91
     DOT             shift and go to state 92
@@ -13223,7 +13224,6 @@ state 182
     EXP             shift and go to state 100
     MINUS           shift and go to state 106
     MUL             shift and go to state 107
-    OR              shift and go to state 109
     PLUS            shift and go to state 110
 
   ! LBRACE          [ reduce using rule 71 (expr2 -> expr LT expr .) ]
@@ -13232,7 +13232,6 @@ state 182
   ! FIELD           [ reduce using rule 71 (expr2 -> expr LT expr .) ]
   ! LPAREN          [ reduce using rule 71 (expr2 -> expr LT expr .) ]
   ! TRANSPOSE       [ reduce using rule 71 (expr2 -> expr LT expr .) ]
-  ! AND             [ reduce using rule 71 (expr2 -> expr LT expr .) ]
   ! BACKSLASH       [ reduce using rule 71 (expr2 -> expr LT expr .) ]
   ! DIV             [ reduce using rule 71 (expr2 -> expr LT expr .) ]
   ! DOT             [ reduce using rule 71 (expr2 -> expr LT expr .) ]
@@ -13243,8 +13242,8 @@ state 182
   ! EXP             [ reduce using rule 71 (expr2 -> expr LT expr .) ]
   ! MINUS           [ reduce using rule 71 (expr2 -> expr LT expr .) ]
   ! MUL             [ reduce using rule 71 (expr2 -> expr LT expr .) ]
-  ! OR              [ reduce using rule 71 (expr2 -> expr LT expr .) ]
   ! PLUS            [ reduce using rule 71 (expr2 -> expr LT expr .) ]
+  ! AND             [ shift and go to state 87 ]
   ! ANDAND          [ shift and go to state 88 ]
   ! COLON           [ shift and go to state 90 ]
   ! DOTDIVEQ        [ shift and go to state 94 ]
@@ -13256,6 +13255,7 @@ state 182
   ! LE              [ shift and go to state 104 ]
   ! LT              [ shift and go to state 105 ]
   ! NE              [ shift and go to state 108 ]
+  ! OR              [ shift and go to state 109 ]
   ! OROR            [ shift and go to state 201 ]
   ! EQ              [ shift and go to state 111 ]
   ! MULEQ           [ shift and go to state 112 ]
@@ -13575,6 +13575,7 @@ state 185
     (84) expr2 -> expr . ANDEQ expr
 
     OROR            reduce using rule 74 (expr2 -> expr NE expr .)
+    AND             reduce using rule 74 (expr2 -> expr NE expr .)
     ANDAND          reduce using rule 74 (expr2 -> expr NE expr .)
     COLON           reduce using rule 74 (expr2 -> expr NE expr .)
     DOTDIVEQ        reduce using rule 74 (expr2 -> expr NE expr .)
@@ -13586,6 +13587,7 @@ state 185
     LE              reduce using rule 74 (expr2 -> expr NE expr .)
     LT              reduce using rule 74 (expr2 -> expr NE expr .)
     NE              reduce using rule 74 (expr2 -> expr NE expr .)
+    OR              reduce using rule 74 (expr2 -> expr NE expr .)
     EQ              reduce using rule 74 (expr2 -> expr NE expr .)
     MULEQ           reduce using rule 74 (expr2 -> expr NE expr .)
     DIVEQ           reduce using rule 74 (expr2 -> expr NE expr .)
@@ -13608,7 +13610,6 @@ state 185
     FIELD           shift and go to state 84
     LPAREN          shift and go to state 85
     TRANSPOSE       shift and go to state 86
-    AND             shift and go to state 87
     BACKSLASH       shift and go to state 89
     DIV             shift and go to state 91
     DOT             shift and go to state 92
@@ -13619,7 +13620,6 @@ state 185
     EXP             shift and go to state 100
     MINUS           shift and go to state 106
     MUL             shift and go to state 107
-    OR              shift and go to state 109
     PLUS            shift and go to state 110
 
   ! LBRACE          [ reduce using rule 74 (expr2 -> expr NE expr .) ]
@@ -13628,7 +13628,6 @@ state 185
   ! FIELD           [ reduce using rule 74 (expr2 -> expr NE expr .) ]
   ! LPAREN          [ reduce using rule 74 (expr2 -> expr NE expr .) ]
   ! TRANSPOSE       [ reduce using rule 74 (expr2 -> expr NE expr .) ]
-  ! AND             [ reduce using rule 74 (expr2 -> expr NE expr .) ]
   ! BACKSLASH       [ reduce using rule 74 (expr2 -> expr NE expr .) ]
   ! DIV             [ reduce using rule 74 (expr2 -> expr NE expr .) ]
   ! DOT             [ reduce using rule 74 (expr2 -> expr NE expr .) ]
@@ -13639,8 +13638,8 @@ state 185
   ! EXP             [ reduce using rule 74 (expr2 -> expr NE expr .) ]
   ! MINUS           [ reduce using rule 74 (expr2 -> expr NE expr .) ]
   ! MUL             [ reduce using rule 74 (expr2 -> expr NE expr .) ]
-  ! OR              [ reduce using rule 74 (expr2 -> expr NE expr .) ]
   ! PLUS            [ reduce using rule 74 (expr2 -> expr NE expr .) ]
+  ! AND             [ shift and go to state 87 ]
   ! ANDAND          [ shift and go to state 88 ]
   ! COLON           [ shift and go to state 90 ]
   ! DOTDIVEQ        [ shift and go to state 94 ]
@@ -13652,6 +13651,7 @@ state 185
   ! LE              [ shift and go to state 104 ]
   ! LT              [ shift and go to state 105 ]
   ! NE              [ shift and go to state 108 ]
+  ! OR              [ shift and go to state 109 ]
   ! OROR            [ shift and go to state 201 ]
   ! EQ              [ shift and go to state 111 ]
   ! MULEQ           [ shift and go to state 112 ]
@@ -13712,13 +13712,7 @@ state 186
     COLON           reduce using rule 75 (expr2 -> expr OR expr .)
     DOTDIVEQ        reduce using rule 75 (expr2 -> expr OR expr .)
     DOTMULEQ        reduce using rule 75 (expr2 -> expr OR expr .)
-    EQEQ            reduce using rule 75 (expr2 -> expr OR expr .)
     EXPEQ           reduce using rule 75 (expr2 -> expr OR expr .)
-    GE              reduce using rule 75 (expr2 -> expr OR expr .)
-    GT              reduce using rule 75 (expr2 -> expr OR expr .)
-    LE              reduce using rule 75 (expr2 -> expr OR expr .)
-    LT              reduce using rule 75 (expr2 -> expr OR expr .)
-    NE              reduce using rule 75 (expr2 -> expr OR expr .)
     OR              reduce using rule 75 (expr2 -> expr OR expr .)
     EQ              reduce using rule 75 (expr2 -> expr OR expr .)
     MULEQ           reduce using rule 75 (expr2 -> expr OR expr .)
@@ -13748,10 +13742,16 @@ state 186
     DOTDIV          shift and go to state 93
     DOTEXP          shift and go to state 95
     DOTMUL          shift and go to state 96
+    EQEQ            shift and go to state 98
     POW             shift and go to state 99
     EXP             shift and go to state 100
+    GE              shift and go to state 102
+    GT              shift and go to state 103
+    LE              shift and go to state 104
+    LT              shift and go to state 105
     MINUS           shift and go to state 106
     MUL             shift and go to state 107
+    NE              shift and go to state 108
     PLUS            shift and go to state 110
 
   ! LBRACE          [ reduce using rule 75 (expr2 -> expr OR expr .) ]
@@ -13766,23 +13766,23 @@ state 186
   ! DOTDIV          [ reduce using rule 75 (expr2 -> expr OR expr .) ]
   ! DOTEXP          [ reduce using rule 75 (expr2 -> expr OR expr .) ]
   ! DOTMUL          [ reduce using rule 75 (expr2 -> expr OR expr .) ]
+  ! EQEQ            [ reduce using rule 75 (expr2 -> expr OR expr .) ]
   ! POW             [ reduce using rule 75 (expr2 -> expr OR expr .) ]
   ! EXP             [ reduce using rule 75 (expr2 -> expr OR expr .) ]
+  ! GE              [ reduce using rule 75 (expr2 -> expr OR expr .) ]
+  ! GT              [ reduce using rule 75 (expr2 -> expr OR expr .) ]
+  ! LE              [ reduce using rule 75 (expr2 -> expr OR expr .) ]
+  ! LT              [ reduce using rule 75 (expr2 -> expr OR expr .) ]
   ! MINUS           [ reduce using rule 75 (expr2 -> expr OR expr .) ]
   ! MUL             [ reduce using rule 75 (expr2 -> expr OR expr .) ]
+  ! NE              [ reduce using rule 75 (expr2 -> expr OR expr .) ]
   ! PLUS            [ reduce using rule 75 (expr2 -> expr OR expr .) ]
   ! AND             [ shift and go to state 87 ]
   ! ANDAND          [ shift and go to state 88 ]
   ! COLON           [ shift and go to state 90 ]
   ! DOTDIVEQ        [ shift and go to state 94 ]
   ! DOTMULEQ        [ shift and go to state 97 ]
-  ! EQEQ            [ shift and go to state 98 ]
   ! EXPEQ           [ shift and go to state 101 ]
-  ! GE              [ shift and go to state 102 ]
-  ! GT              [ shift and go to state 103 ]
-  ! LE              [ shift and go to state 104 ]
-  ! LT              [ shift and go to state 105 ]
-  ! NE              [ shift and go to state 108 ]
   ! OR              [ shift and go to state 109 ]
   ! OROR            [ shift and go to state 201 ]
   ! EQ              [ shift and go to state 111 ]
