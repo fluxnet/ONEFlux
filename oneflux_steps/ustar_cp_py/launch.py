@@ -260,7 +260,7 @@ def launch(input_folder=None, output_folder=None):
         Rg = matlabarray(data[:, columns_index[RG_INDEX]])
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:217
         if 0 == ppfd_from_rg:
-            PPFD = data[:, columns_index[PPFD_INDEX]]
+            PPFD = matlabarray(data[:, columns_index[PPFD_INDEX]])
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:219
             q = find(PPFD < -9990)
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:221
@@ -392,7 +392,7 @@ def launch(input_folder=None, output_folder=None):
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:321
             fprintf(fid, "\n;processed with ustar_mp 1.0 on %s\n", datestr(clock))
             for i in arange(length(notes), 1, -1).reshape(-1):
-                fprintf(fid, ";%s\n", take(notes, i))
+                fprintf(fid, ";%s\n", notes[i])
             clear("i")
             fclose(fid)
             clear("fid")
