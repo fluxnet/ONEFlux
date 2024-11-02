@@ -190,15 +190,15 @@ def cpdEvaluateUStarTh20100901(
     itAdd1 = arange(take(itAnnual, end() - nInc - 1), nt)
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:122
 
-    t = matlabarray(concat([[take(t, itAdd1) - EndDOY], [t]]))
+    t = concat([[take(t, itAdd1) - EndDOY], [t]])
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:124
-    T = matlabarray(concat([[take(T, itAdd1)], [T]]))
+    T = concat([[take(T, itAdd1)], [T]])
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:125
-    uStar = matlabarray(concat([[take(uStar, itAdd1)], [uStar]]))
+    uStar = concat([[take(uStar, itAdd1)], [uStar]])
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:126
-    NEE = matlabarray(concat([[take(NEE, itAdd1)], [NEE]]))
+    NEE = concat([[take(NEE, itAdd1)], [NEE]])
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:127
-    fNight = matlabarray(concat([[take(fNight, itAdd1)], [fNight]]))
+    fNight = concat([[take(fNight, itAdd1)], [fNight]])
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:128
     itAnnual = matlabarray(
         find(logical_and(fNight == 1, logical_not(isnan(NEE + uStar + T))))
@@ -246,14 +246,16 @@ def cpdEvaluateUStarTh20100901(
             itStrata = intersect(itStrata, itWindow)
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:157
             n, muStar, mNEE = fcBin(
-                uStar[itStrata], NEE[itStrata], [], nPerBin, nargout=3
+                uStar[itStrata], NEE[itStrata], matlabarray([]), nPerBin, nargout=3
             )
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:159
             xCp2, xs2, xCp3, xs3 = cpdFindChangePoint20100901(
                 muStar, mNEE, fPlot, cSiteYr, nargout=4
             )
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:161
-            n, muStar, mT = fcBin(uStar[itStrata], T[itStrata], [], nPerBin, nargout=3)
+            n, muStar, mT = fcBin(
+                uStar[itStrata], T[itStrata], matlabarray([]), nPerBin, nargout=3
+            )
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:165
             r, p = corrcoef(muStar, mT, nargout=2)
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:166

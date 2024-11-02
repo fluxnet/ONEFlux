@@ -273,13 +273,13 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
     # Exclude outliers from Select mode based on Cp and regression stats
 
     if 2 == nPar:
-        x = matlabarray(concat([Cp, b1, cib1]))
+        x = concat([Cp, b1, cib1])
         # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:143
         nx = 3
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:143
     else:
         if 3 == nPar:
-            x = matlabarray(concat([Cp, b1, c2, cib1, cic2]))
+            x = concat([Cp, b1, c2, cib1, cic2])
             # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:144
             nx = 5
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:144
@@ -294,7 +294,7 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
         xNorm[:, i] = (x[:, 1] - take(mx, i)) / take(sx, i)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:148
 
-    xNormX = max(abs(xNorm), [], 2)
+    xNormX = max(abs(xNorm), matlabarray([]), 2)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:149
     ns = 5
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:150
@@ -389,7 +389,7 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:178
     # Fit annual sine curve
 
-    bSine = matlabarray(concat([1, 1, 1]))
+    bSine = concat([1, 1, 1])
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:182
     bSine = nlinfit(mt(iSelect), Cp(iSelect), "fcEqnAnnualSine", bSine)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:183
@@ -409,7 +409,7 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
 
     bSine[3] = mod(bSine[3], 365.25)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:188
-    sSine = matlabarray(concat([fcx2rowvec(bSine), r2]))
+    sSine = concat([fcx2rowvec(bSine), r2])
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:189
     # =======================================================================
     # =======================================================================
@@ -430,14 +430,22 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
         # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:203
         if nModeD >= dot(nBins, 30):
             n, mx, my = fcBin(
-                mt(iModeD), Cp(iModeD), [], round(nModeD / nBins), nargout=3
+                mt(iModeD),
+                Cp(iModeD),
+                matlabarray([]),
+                round(nModeD / nBins),
+                nargout=3,
             )
             # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:205
             hold("on")
             plot(mx, my, "ko-", "MarkerFaceColor", "y", "MarkerSize", 8, "LineWidth", 2)
         if nModeE >= dot(nBins, 30):
             n, mx, my = fcBin(
-                mt(iModeE), Cp(iModeE), [], round(nModeE / nBins), nargout=3
+                mt(iModeE),
+                Cp(iModeE),
+                matlabarray([]),
+                round(nModeE / nBins),
+                nargout=3,
             )
             # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:209
             hold("on")

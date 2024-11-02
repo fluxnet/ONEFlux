@@ -4,7 +4,7 @@ from libsmop import *
 
 
 @function
-def cpdBin(x=None, y=None, dx=None, nPerBin=None):
+def fcBin(x=None, y=None, dx=None, nPerBin=None):
     globals().update(load_all_vars())
 
     # cpdBin
@@ -28,7 +28,7 @@ def cpdBin(x=None, y=None, dx=None, nPerBin=None):
     # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:18
     my = matlabarray([])
     # oneflux_steps/ustar_cp_refactor_wip/fcBin.m:18
-    if dx <= 0:
+    if any(dx <= 0):
         disp("Function cpdBin aborted. dx cannot be <=0. ")
         return nBins, mx, my
 
