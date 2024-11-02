@@ -182,7 +182,7 @@ def cpdEvaluateUStarTh4Season20100901(
 
     itD = find(m == 12)
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:109
-    itReOrder = matlabarray(concat([arange(min(itD), nt), arange(1, (min(itD) - 1))]))
+    itReOrder = concat([arange(min(itD), nt), arange(1, (min(itD) - 1))])
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:110
     t[itD] = t[itD] - EndDOY
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:111
@@ -263,7 +263,11 @@ def cpdEvaluateUStarTh4Season20100901(
             itStrata = intersect(itStrata, itSeason)
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:152
             n, muStar, mNEE = fcBin(
-                take(uStar, itStrata), take(NEE, itStrata), [], nPerBin, nargout=3
+                take(uStar, itStrata),
+                take(NEE, itStrata),
+                matlabarray([]),
+                nPerBin,
+                nargout=3,
             )
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:154
             xCp2, xs2, xCp3, xs3 = cpdFindChangePoint20100901(
@@ -271,7 +275,11 @@ def cpdEvaluateUStarTh4Season20100901(
             )
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:156
             n, muStar, mT = fcBin(
-                take(uStar, itStrata), take(T, itStrata), [], nPerBin, nargout=3
+                take(uStar, itStrata),
+                take(T, itStrata),
+                matlabarray([]),
+                nPerBin,
+                nargout=3,
             )
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:160
             r, p = corrcoef(muStar, mT, nargout=2)

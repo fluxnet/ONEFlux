@@ -326,7 +326,7 @@ def _backend(self, level=0):
     # size([])
     # 0 0
     if not self.args:
-        return "[]"
+        return "matlabarray([])"
     elif any(b.__class__ is node.string for a in self.args for b in a):
         return " + ".join(b._backend() for a in self.args for b in a)
     else:

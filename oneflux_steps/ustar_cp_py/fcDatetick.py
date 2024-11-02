@@ -36,8 +36,8 @@ def myDateTick(t=None, sFrequency=None, iDateStr=None, fLimits=None):
                 iYr1 = iYr1 - 1
             # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:14
             for iDy in arange(1, 29, 2).reshape(-1):
-                xDates = matlabarray(
-                    concat([xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)])
+                xDates = concat(
+                    [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
                 )
         # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:15
         else:
@@ -52,10 +52,8 @@ def myDateTick(t=None, sFrequency=None, iDateStr=None, fLimits=None):
                     iYr1 = iYr1 - 1
                 # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:17
                 for iDy in arange(1, 28, 3).reshape(-1):
-                    xDates = matlabarray(
-                        concat(
-                            [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
-                        )
+                    xDates = concat(
+                        [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
                     )
             # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:18
             else:
@@ -70,13 +68,8 @@ def myDateTick(t=None, sFrequency=None, iDateStr=None, fLimits=None):
                         iYr1 = iYr1 - 1
                     # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:20
                     for iDy in arange(1, 26, 5).reshape(-1):
-                        xDates = matlabarray(
-                            concat(
-                                [
-                                    xDates,
-                                    datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy),
-                                ]
-                            )
+                        xDates = concat(
+                            [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
                         )
                 # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:21
                 else:
@@ -91,15 +84,11 @@ def myDateTick(t=None, sFrequency=None, iDateStr=None, fLimits=None):
                             iYr1 = iYr1 - 1
                         # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:23
                         for iDy in arange(1, 22, 7).reshape(-1):
-                            xDates = matlabarray(
-                                concat(
-                                    [
-                                        xDates,
-                                        datenum(
-                                            iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy
-                                        ),
-                                    ]
-                                )
+                            xDates = concat(
+                                [
+                                    xDates,
+                                    datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy),
+                                ]
                             )
                     # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:24
                     else:
@@ -114,17 +103,13 @@ def myDateTick(t=None, sFrequency=None, iDateStr=None, fLimits=None):
                                 iYr1 = iYr1 - 1
                             # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:26
                             for iDy in arange(1, 21, 10).reshape(-1):
-                                xDates = matlabarray(
-                                    concat(
-                                        [
-                                            xDates,
-                                            datenum(
-                                                iYr1,
-                                                arange(iMo1, (iMo1 + nSerMos)),
-                                                iDy,
-                                            ),
-                                        ]
-                                    )
+                                xDates = concat(
+                                    [
+                                        xDates,
+                                        datenum(
+                                            iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy
+                                        ),
+                                    ]
                                 )
                         # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:27
                         else:
@@ -139,17 +124,15 @@ def myDateTick(t=None, sFrequency=None, iDateStr=None, fLimits=None):
                                     iYr1 = iYr1 - 1
                                 # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:29
                                 for iDy in arange(1, 15, 14).reshape(-1):
-                                    xDates = matlabarray(
-                                        concat(
-                                            [
-                                                xDates,
-                                                datenum(
-                                                    iYr1,
-                                                    arange(iMo1, (iMo1 + nSerMos)),
-                                                    iDy,
-                                                ),
-                                            ]
-                                        )
+                                    xDates = concat(
+                                        [
+                                            xDates,
+                                            datenum(
+                                                iYr1,
+                                                arange(iMo1, (iMo1 + nSerMos)),
+                                                iDy,
+                                            ),
+                                        ]
                                     )
                             # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:30
                             else:
@@ -164,17 +147,15 @@ def myDateTick(t=None, sFrequency=None, iDateStr=None, fLimits=None):
                                         iYr1 = iYr1 - 1
                                     # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:32
                                     for iDy in arange(1, 16, 15).reshape(-1):
-                                        xDates = matlabarray(
-                                            concat(
-                                                [
-                                                    xDates,
-                                                    datenum(
-                                                        iYr1,
-                                                        arange(iMo1, (iMo1 + nSerMos)),
-                                                        iDy,
-                                                    ),
-                                                ]
-                                            )
+                                        xDates = concat(
+                                            [
+                                                xDates,
+                                                datenum(
+                                                    iYr1,
+                                                    arange(iMo1, (iMo1 + nSerMos)),
+                                                    iDy,
+                                                ),
+                                            ]
                                         )
                                 # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:33
                                 else:
@@ -285,7 +266,7 @@ def myDateTick(t=None, sFrequency=None, iDateStr=None, fLimits=None):
     xDates = unique(xDates)
     # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:56
     set(gca, "xTick", xDates)
-    set(gca, "xTickLabel", [])
+    set(gca, "xTickLabel", matlabarray([]))
     if iDateStr > 0:
         cDates = datestr(xDates, iDateStr)
         # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:59

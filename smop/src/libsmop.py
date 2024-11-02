@@ -4,7 +4,7 @@
 # MIT license
 
 import numpy as np
-from numpy import sqrt, prod, exp, log, dot, multiply, inf, rint as fix
+from numpy import sqrt, prod, exp, log, multiply, inf, rint as fix
 from numpy.fft import fft2
 from numpy.linalg import inv
 from numpy.linalg import qr as _qr
@@ -129,7 +129,7 @@ def concat(args, axis=1):
     return np.concatenate(t, axis=axis)
 
 def reshape(a, *shape):
-    return np.reshape(a, *shape)
+    return np.reshape(a, shape)
 
 def ceil(a):
     return np.ceil(a)
@@ -220,7 +220,7 @@ def find(a, n=None, d=None, nargout=1):
     raise NotImplementedError
 
 def floor(a):
-    return a // 1
+    return np.asanyarray(a // 1).astype(int)
 
 def fopen(*args):
     try:
@@ -292,10 +292,12 @@ def isscalar(a):
         return np.isscalar(a)
 
 def length(a):
-    try:
-        return max(np.asarray(a).shape)
-    except ValueError:
+    if not isinstance(a, np.ndarray) and hasattr(a, "__len__"):
         return len(a)
+    elif np.ndim(a) < 2 or min(np.shape(a)) == 0:
+        return np.size(a)
+    else:
+        return max(np.asarray(a).shape)
 
 def load(a):
     return loadmat(a)  # FIXME
@@ -505,12 +507,16 @@ def max(a, axis=None):
     """
     Return the maximum of an array or maximum along an axis.
     """
+    if np.size(a) == 0:
+        return a
     return np.amax(np.asarray(a), axis=axis)
 
 def min(a, axis=None):
     """
     Return the minimum of an array or minimum along an axis.
     """
+    if np.size(a) == 0:
+        return a
     return np.amin(np.asarray(a), axis=axis)
 
 def isnan(a):
@@ -535,7 +541,18 @@ def prctile(a, q):
     """
     Compute the q-th percentile of the data along the specified axis.
     """
+    if np.size(a) == 0:
+        return np.full_like(q, np.nan)
     return np.percentile(np.asarray(a), q)
+
+def dot(a, b):
+    """
+    Compute the dot product of two arrays.
+    """
+    try:
+        return np.dot(a, b)
+    except ValueError:
+        return sum([x * y for x, y in zip(a, b)])
 
 def datenum(a, *args):
     if isinstance(a, str):
@@ -748,7 +765,7 @@ class matlabarray(np.ndarray):
             .copy(order="F")
         )
         if obj.size == 0:
-            obj.shape = tuple(0 for _ in range(2))
+            obj.shape = (0, 0)
         super().__setattr__(obj, "_fields", {})
         return obj
     def __array_finalize__(self, obj):
@@ -762,26 +779,26 @@ class matlabarray(np.ndarray):
     def compute_indices(self, index):
         if not isinstance(index, tuple):
             index = (index,)
-        # if len(index) != 1 and len(index) != self.ndim:
-        #     raise IndexError
+        assert len(index) > 0
+        if self.size:
+            sh = self.shape + tuple(1 for _ in range(self.ndim, len(index)))
+            sh = (*sh[:len(index)-1], -1)
+        else:
+            sh = (0, 0)
+        self = self.reshape(*sh, order="F")
         indices = []
         for i, ix in enumerate(index):
             if ix.__class__ is end:
-                indices.append(self.shape[i] - 1 + ix.n)
+                indices.append(ix.index(self, i) - 1)
             elif ix.__class__ is slice:
-                if self.size == 0 and ix.stop is None:
-                    raise IndexError
-                if ix.stop:
-                    n = ix.stop
-                elif len(index) == 1:
-                    n = self.size
-                else:
-                    n = self.shape[i] if i < self.ndim else 1
-                indices.append(
-                    np.arange(
-                        (ix.start or 1) - 1, n, ix.step or 1, dtype=int
-                    )
-                )
+                start, stop = ix.start, ix.stop
+                if isinstance(start, end):
+                    start = start.index(self, i)
+                if isinstance(stop, end):
+                    stop = stop.index(self, i)
+                if start is not None:
+                    start -= 1
+                indices.append(slice(start, stop, ix.step))
             else:
                 try:
                     indices.append(int(ix) - 1)
@@ -790,7 +807,7 @@ class matlabarray(np.ndarray):
         if len(indices) == 2 and isvector(indices[0]) and isvector(indices[1]):
             indices[0].shape = (-1, 1)
             indices[1].shape = (-1,)
-        return tuple(indices)
+        return self, tuple(indices)
     def __getslice__(self, i, j):
         if i == 0 and j == sys.maxsize:
             return self.reshape(-1, 1, order="F")
@@ -798,17 +815,10 @@ class matlabarray(np.ndarray):
     def __getitem__(self, index):
         return self.get(index)
     def get(self, index):
-        # import pdb; pdb.set_trace()
-        indices = self.compute_indices(index)
-        if len(indices) == 1:
-            return np.ndarray.__getitem__(self.reshape(-1, order="F"), indices)
-        else:
-            return np.ndarray.__getitem__(self, indices)
+        self, indices = self.compute_indices(index)
+        return np.ndarray.__getitem__(self, indices)
     def __setslice__(self, i, j, value):
-        if i == 0 and j == sys.maxsize:
-            index = slice(None, None)
-        else:
-            index = slice(i, j)
+        index = slice(i, None if j == sys.maxsize else j)
         self.__setitem__(index, value)
     def sizeof(self, ix):
         if isinstance(ix, int):
@@ -823,17 +833,16 @@ class matlabarray(np.ndarray):
             raise IndexError
         return n
     def __setitem__(self, index, value):
-        # import pdb; pdb.set_trace()
-        indices = self.compute_indices(index)
-        if not self.size:
+        view, indices = self.compute_indices(index)
+        if any(np.size(i) == 0 for i in indices):
+            return
+        if self.size == 0:
             new_shape = [self.sizeof(s) for s in indices]
             self.resize(new_shape, refcheck=0)
-            return self.fill(value)
+            self.fill(value)
+            return
         try:
-            if len(indices) == 1:
-                np.asarray(self).reshape(-1, order="F").__setitem__(indices, value)
-            else:
-                np.asarray(self).__setitem__(indices, value)
+            np.ndarray.__setitem__(view, indices, value)
         except (ValueError, IndexError):
             # import pdb; pdb.set_trace()
             if len(indices) == 1:
@@ -892,6 +901,9 @@ class end(object):
     def __sub__(self, n):
         self.n -= n
         return self
+    def index(self, m, axis=0):
+        return np.shape(m)[axis] + self.n
+        
 
 class cellarray(matlabarray):
     """

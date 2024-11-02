@@ -398,8 +398,8 @@ def launch(input_folder=None, output_folder=None):
             clear("fid")
             fprintf("ok\n")
         else:
-            error_str = matlabarray(
-                concat([[error_str], [char(site), "_uscp_", char(year), " ", cFailure]])
+            error_str = concat(
+                [[error_str], [char(site), "_uscp_", char(year), " ", cFailure]]
             )
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:331
             fprintf("%s\n", cFailure)

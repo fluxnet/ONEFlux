@@ -309,6 +309,6 @@ def fix_let_statement(u):
             if any(b.__class__ is node.string for a in u.args.args for b in a):
                 u.args = node.expr("+", u.args.args[0])
                 u.ret.props = "D"  # def
-            else:
-                u.args = node.funcall(func_expr=node.ident("matlabarray"),
-                                      args=node.expr_list([u.args]))
+            # else:
+            #     u.args = node.funcall(func_expr=node.ident("matlabarray"),
+            #                           args=node.expr_list([u.args]))
