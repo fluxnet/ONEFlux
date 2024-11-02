@@ -130,15 +130,15 @@ def arange(start, stop, step=1, **kwargs):
     )
 
 
-def concat(args):
+def concat(args, axis=1):
     """
     >>> concat([[1,2,3,4,5] , [1,2,3,4,5]])
     [1, 2, 3, 4, 5, 1, 2, 3, 4, 5]
     """
-    if all(isinstance(a, str) for a in args):
+    if all([isinstance(a, str) for a in args]):
         return "".join(args)
     t = [matlabarray(a) for a in args]
-    return np.concatenate(t)
+    return np.concatenate(t, axis=axis)
 
 
 def reshape(a, *shape):
@@ -962,6 +962,10 @@ class matlabarray(np.ndarray):
     def __setitem__(self, index, value):
         # import pdb; pdb.set_trace()
         indices = self.compute_indices(index)
+        if not self.size:
+            new_shape = [self.sizeof(s) for s in indices]
+            self.resize(new_shape, refcheck=0)
+            return self.fill(value)
         try:
             if len(indices) == 1:
                 np.asarray(self).reshape(-1, order="F").__setitem__(indices, value)
@@ -969,11 +973,7 @@ class matlabarray(np.ndarray):
                 np.asarray(self).__setitem__(indices, value)
         except (ValueError, IndexError):
             # import pdb; pdb.set_trace()
-            if not self.size:
-                new_shape = [self.sizeof(s) for s in indices]
-                self.resize(new_shape, refcheck=0)
-                self.fill(value)
-            elif len(indices) == 1:
+            if len(indices) == 1:
                 # One-dimensional resize is only implemented for
                 # two cases:
                 #

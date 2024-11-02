@@ -96,8 +96,8 @@ def _lhs_resolve(self,symtab):
     # Does the order of A and B matter?
     self.func_expr._resolve(symtab) # A
     self.args._resolve(symtab)      # B
-    self.func_expr._lhs_resolve(symtab)
     ensure_matrix(self.func_expr)
+    self.func_expr._lhs_resolve(symtab)
 
 
 @extend(node.expr)
@@ -151,7 +151,8 @@ def _resolve(self,symtab):
 
 @extend(node.ident)
 def _lhs_resolve(self,symtab):
-    symtab[self.name] = [self]
+    if str(self.props) not in "MW":
+        symtab[self.name] = [self]
 
 @extend(node.if_stmt)
 def _resolve(self,symtab):
@@ -195,13 +196,7 @@ def _resolve(self,symtab):
 
 @extend(node.ident)
 def _resolve(self,symtab):
-    if self.defs is None:
-        self.defs = []
-    try:
-        self.defs += symtab[self.name]
-    except KeyError:
-        # defs == set() means name used, but not defined
-        pass
+    self.defs = symtab.get(self.name, [])
 
 @extend(node.arrayref)
 @extend(node.cellarrayref)

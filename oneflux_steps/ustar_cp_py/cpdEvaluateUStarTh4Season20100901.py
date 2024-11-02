@@ -166,53 +166,49 @@ def cpdEvaluateUStarTh4Season20100901(
     StatsMT.ciT = copy(NaN)
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:94
 
-    Stats2 = copy(StatsMT)
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:96
-    Stats3 = copy(StatsMT)
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:96
     for iSeason in arange(1, nSeasons).reshape(-1):
         for iStrata in arange(1, nStrataX).reshape(-1):
-            Stats2[iSeason, iStrata] = StatsMT
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:99
-            Stats3[iSeason, iStrata] = StatsMT
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:100
+            (Stats2 := cellarray())[iSeason, iStrata] = StatsMT
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:98
+            (Stats3 := cellarray())[iSeason, iStrata] = StatsMT
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:99
 
     if ntAnnual < nN:
         return Cp2, Stats2, Cp3, Stats3
 
     nPerSeason = round(ntAnnual / nSeasons)
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:106
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:105
     # Move Dec to beginning of year and date as previous year.
 
     itD = find(m == 12)
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:110
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:109
     itReOrder = matlabarray(concat([arange(min(itD), nt), arange(1, (min(itD) - 1))]))
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:111
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:110
     t[itD] = t[itD] - EndDOY
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:112
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:111
     t = take(t, itReOrder)
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:112
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:111
     T = take(T, itReOrder)
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:113
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:112
     uStar = take(uStar, itReOrder)
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:113
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:112
     NEE = take(NEE, itReOrder)
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:114
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:113
     fNight = take(fNight, itReOrder)
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:114
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:113
     itAnnual = find(logical_and(fNight == 1, logical_not(isnan(NEE + uStar + T))))
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:116
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:115
     ntAnnual = length(itAnnual)
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:116
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:115
     # Reset nPerSeason and nInc based on actual number of good data.
     # nSeasons is a temporary variable.
 
     nSeasons = round(ntAnnual / nPerSeason)
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:121
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:120
     nPerSeason = ntAnnual / nSeasons
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:121
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:120
     nPerSeason = round(nPerSeason)
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:122
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:121
     # Stratify in two dimensions:
     # 1. by time using moving windows
     # 2. by temperature class
@@ -221,109 +217,109 @@ def cpdEvaluateUStarTh4Season20100901(
     if fPlot == 1:
         fcFigLoc(1, 0.9, 0.9, "MC")
         iPlot = 0
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:129
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:128
 
     for iSeason in arange(1, nSeasons).reshape(-1):
         if 1 == iSeason:
             jtSeason = arange(1, nPerSeason)
-        # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:134
+        # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:133
         else:
             if nSeasons == iSeason:
                 jtSeason = arange((dot((nSeasons - 1), nPerSeason) + 1), ntAnnual)
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:135
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:134
             else:
                 jtSeason = arange(
                     (dot((iSeason - 1), nPerSeason) + 1), (dot(iSeason, nPerSeason))
                 )
-        # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:136
+        # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:135
         itSeason = take(itAnnual, jtSeason)
-        # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:138
+        # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:137
         ntSeason = length(itSeason)
-        # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:138
+        # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:137
         nStrata = floor(ntSeason / (dot(nBins, nPerBin)))
-        # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:139
+        # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:138
         if nStrata < nStrataN:
             nStrata = copy(nStrataN)
-        # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:140
+        # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:139
         if nStrata > nStrataX:
             nStrata = copy(nStrataX)
-        # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:141
+        # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:140
         TTh = prctile(take(T, itSeason), arange(0, 100, (100 / nStrata)))
-        # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:143
+        # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:142
         for iStrata in arange(1, nStrata).reshape(-1):
             cPlot = ""
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:146
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:145
             if fPlot == 1:
                 iPlot = iPlot + 1
-                # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:148
+                # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:147
                 subplot(nSeasons, nStrata, iPlot)
                 if logical_and(iSeason == 1, iStrata == 1):
                     cPlot = copy(cSiteYr)
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:149
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:148
             itStrata = find(
                 logical_and(T >= take(TTh, iStrata), T <= take(TTh, iStrata + 1))
             )
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:152
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:151
             itStrata = intersect(itStrata, itSeason)
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:153
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:152
             n, muStar, mNEE = fcBin(
                 take(uStar, itStrata), take(NEE, itStrata), [], nPerBin, nargout=3
             )
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:155
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:154
             xCp2, xs2, xCp3, xs3 = cpdFindChangePoint20100901(
                 muStar, mNEE, fPlot, cPlot, nargout=4
             )
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:157
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:156
             n, muStar, mT = fcBin(
                 take(uStar, itStrata), take(T, itStrata), [], nPerBin, nargout=3
             )
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:161
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:160
             r, p = corrcoef(muStar, mT, nargout=2)
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:162
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:161
             xs2.mt = copy(mean(take(t, itStrata)))
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:164
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:163
             xs2.ti = copy(take(t, take(itStrata, 1)))
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:164
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:163
             xs2.tf = copy(take(t, take(itStrata, end())))
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:164
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:163
             xs2.ruStarVsT = copy(take(r, 2, 1))
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:165
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:164
             xs2.puStarVsT = copy(take(p, 2, 1))
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:165
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:164
             xs2.mT = copy(mean(take(T, itStrata)))
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:166
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:165
             xs2.ciT = copy(
                 dot(0.5, diff(prctile(take(T, itStrata), concat([2.5, 97.5]))))
             )
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:166
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:165
             xs3.mt = copy(xs2.mt)
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:168
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:167
             xs3.ti = copy(xs2.ti)
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:168
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:167
             xs3.tf = copy(xs2.tf)
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:168
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:167
             xs3.ruStarVsT = copy(xs2.ruStarVsT)
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:169
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:168
             xs3.puStarVsT = copy(xs2.puStarVsT)
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:169
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:168
             xs3.mT = copy(xs2.mT)
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:170
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:169
             xs3.ciT = copy(xs2.ciT)
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:170
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:169
             Cp2[iSeason, iStrata] = xCp2
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:171
+            (Stats2 := cellarray())[iSeason, iStrata] = xs2
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:172
-            Stats2[iSeason, iStrata] = xs2
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:173
             Cp3[iSeason, iStrata] = xCp3
-            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:175
-            Stats3[iSeason, iStrata] = xs3
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:176
+            # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:174
+            (Stats3 := cellarray())[iSeason, iStrata] = xs3
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:175
 
     if size(varargin) > 0:
         Stats2 = jsonencode(Stats2)
-        # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:183
+        # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:182
         Stats3 = jsonencode(Stats3)
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:184
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:183
 
     # ========================================================================
     # ========================================================================

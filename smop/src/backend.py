@@ -307,6 +307,8 @@ def _backend(self,level=0):
         lhs = f"({self.ret.func_expr._backend()} := cellarray())[{self.ret.args._backend()}]"
         s += "%s = %s" % (lhs, self.args._backend())
     else:
+        # if isinstance(self.ret, node.arrayref) and self.ret.func_expr.name == "Stats2":
+        #     breakpoint()
         s += "%s=%s" % (self.ret._backend(), 
                        self.args._backend())
     return s+t
