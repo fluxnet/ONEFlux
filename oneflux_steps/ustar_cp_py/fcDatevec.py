@@ -41,7 +41,7 @@ def mydatevec(t=None):
     # oneflux_steps/ustar_cp_refactor_wip/fcDatevec.m:12
     # set 0000 UTC to 2400 UTC, previous day.
 
-    i2400 = find(h == logical_and(0, mn) == logical_and(0, s) == 0)
+    i2400 = find(logical_and(logical_and(h == 0, mn == 0), s == 0))
     # oneflux_steps/ustar_cp_refactor_wip/fcDatevec.m:16
     y2400, m2400, d2400, q, q, q = datevec(take(t, i2400) - 1, nargout=6)
     # oneflux_steps/ustar_cp_refactor_wip/fcDatevec.m:17

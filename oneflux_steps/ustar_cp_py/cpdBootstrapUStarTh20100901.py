@@ -100,7 +100,7 @@ def cpdBootstrapUStarTh20100901(
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:71
     iNight = find(fNight)
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:73
-    uStar[uStar < logical_or(0, uStar) > 4] = NaN
+    uStar[logical_or(uStar < 0, uStar > 4)] = NaN
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:74
 
     itNee = find(logical_not(isnan(NEE + uStar + T)))

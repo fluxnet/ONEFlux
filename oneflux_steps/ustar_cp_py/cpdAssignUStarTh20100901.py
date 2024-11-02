@@ -200,19 +200,19 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:121
     nCp = length(iCp)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:121
-    iNS = find(fP == logical_and(0, logical_not(isnan(b1 + c2 + Cp))))
+    iNS = find(logical_and(fP == 0, logical_not(isnan(b1 + c2 + Cp))))
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:122
     nNS = length(iNS)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:122
-    iSig = find(fP == logical_and(1, logical_not(isnan(b1 + c2 + Cp))))
+    iSig = find(logical_and(fP == 1, logical_not(isnan(b1 + c2 + Cp))))
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:123
     nSig = length(iSig)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:123
-    iModeE = find(fP == logical_and(1, b1) < c2)
+    iModeE = find(logical_and(fP == 1, b1 < c2))
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:124
     nModeE = length(iModeE)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:124
-    iModeD = find(fP == logical_and(1, b1) >= c2)
+    iModeD = find(logical_and(fP == 1, b1 >= c2))
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:125
     nModeD = length(iModeD)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:125

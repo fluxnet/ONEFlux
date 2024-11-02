@@ -111,12 +111,12 @@ def cpdEvaluateUStarTh4Season20100901(
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:76
     nN = dot(nSeasons, nPerSeasonN)
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:77
-    itOut = find(uStar < logical_or(0, uStar) > 3)
+    itOut = find(logical_or(uStar < 0, uStar > 3))
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:79
     uStar[itOut] = NaN
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:79
 
-    itAnnual = find(fNight == logical_and(1, logical_not(isnan(NEE + uStar + T))))
+    itAnnual = find(logical_and(fNight == 1, logical_not(isnan(NEE + uStar + T))))
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:81
     ntAnnual = length(itAnnual)
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:81
@@ -200,7 +200,7 @@ def cpdEvaluateUStarTh4Season20100901(
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:114
     fNight = take(fNight, itReOrder)
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:114
-    itAnnual = find(fNight == logical_and(1, logical_not(isnan(NEE + uStar + T))))
+    itAnnual = find(logical_and(fNight == 1, logical_not(isnan(NEE + uStar + T))))
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:116
     ntAnnual = length(itAnnual)
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:116
@@ -257,11 +257,11 @@ def cpdEvaluateUStarTh4Season20100901(
                 iPlot = iPlot + 1
                 # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:148
                 subplot(nSeasons, nStrata, iPlot)
-                if iSeason == logical_and(1, iStrata) == 1:
+                if logical_and(iSeason == 1, iStrata == 1):
                     cPlot = copy(cSiteYr)
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:149
             itStrata = find(
-                T >= logical_and(take(TTh, iStrata), T) <= take(TTh, iStrata + 1)
+                logical_and(T >= take(TTh, iStrata), T <= take(TTh, iStrata + 1))
             )
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:152
             itStrata = intersect(itStrata, itSeason)

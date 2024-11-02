@@ -27,7 +27,7 @@ def cpdFmax2pCp2(Fmax=None, n=None):
 
     p = copy(NaN)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFmax2pCp2.m:21
-    if logical_or(logical_or(isnan(Fmax), isnan(n)), n) < 10:
+    if logical_or(logical_or(isnan(Fmax), isnan(n)), n < 10):
         return p
 
     pTable = concat([0.8, 0.9, 0.95, 0.99]).T
