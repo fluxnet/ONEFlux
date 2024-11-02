@@ -303,6 +303,9 @@ def _backend(self,level=0):
     elif isinstance(self.ret, node.ident) and self.ret.props == "W":
         s += "%s = matlabarray(%s)" % (self.ret._backend(),
                                        self.args._backend())
+    elif isinstance(self.ret, node.arrayref) and not self.ret.func_expr.defs:
+        lhs = f"({self.ret.func_expr._backend()} := cellarray())[{self.ret.args._backend()}]"
+        s += "%s = %s" % (lhs, self.args._backend())
     else:
         s += "%s=%s" % (self.ret._backend(), 
                        self.args._backend())
