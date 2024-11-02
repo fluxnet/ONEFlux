@@ -1,4 +1,4 @@
-	function [y,m,d,h,mn,s]=mydatevec(t); 
+	function [y,m,d,h,mn,s]=fcDatevec(t); 
 %	
 %	function [y,m,d,h,mn,s]=mydatevec(t) 
 %	was written by Alan Barr to return 2400 UTC rather than 0000 UTC.

@@ -4,7 +4,7 @@ from libsmop import *
 
 
 @function
-def mydatevec(t=None):
+def fcDatevec(t=None):
     globals().update(load_all_vars())
 
     #
