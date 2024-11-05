@@ -27,7 +27,7 @@ import glob
 import json
 import numpy as np
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def matlab_engine(refactored=True):
     """
     Pytest fixture to start a MATLAB engine session, add a specified directory 
@@ -58,6 +58,17 @@ def matlab_engine(refactored=True):
     # Add the directory containing your MATLAB functions to the MATLAB path
     matlab_function_path = os.path.join(current_dir, code_path)
     eng.addpath(matlab_function_path, nargout=0)
+
+    def _add_all_subdirs_to_matlab_path(path, matlab_engine):
+        # Recursively find all subdirectories
+        for root, dirs, files in os.walk(path):
+            # Add each directory to the MATLAB path
+            matlab_engine.addpath(root, nargout=0)  # nargout=0 suppresses output
+
+        return
+    
+    # Add the base directory and all its subdirectories to MATLAB path
+    _add_all_subdirs_to_matlab_path(matlab_function_path, eng)
 
     yield eng
 
@@ -271,6 +282,34 @@ def to_matlab_type(data):
         return matlab.double([data])  # Convert single numbers
     else:
         return data  # If the data type is already MATLAB-compatible
+    
+# Helper function to compare MATLAB double arrays element-wise, handling NaN comparisons
+def compare_matlab_arrays(result, expected):
+    # Convert MATLAB double to list for comparison
+    result_list = result if isinstance(result, list) else list(result)
+    expected_list = expected if isinstance(expected, list) else list(expected)
+
+    # Check if lengths are the same
+    if len(result_list) != len(expected_list):
+        return False
+    
+    # Compare each element
+    for r, e in zip(result_list, expected_list):
+
+        # Recursively compare arrays or lists
+        if isinstance(r, (list, np.ndarray, matlab.double)) and isinstance(e, (list, np.ndarray, matlab.double)):
+            if not compare_matlab_arrays(r, e):
+                return False
+        else:
+            # Handle NaN comparisons
+            if np.isnan(r) and np.isnan(e):
+                continue  # NaNs are considered equal
+            elif np.isnan(r) ^ np.isnan(e):
+                return False  # One is NaN and the other is not
+            elif not np.allclose(r, e):  # Check if values are approximately equal
+                return False
+    
+    return True
     
 def read_csv_with_csv_module(file_path):
     """
