@@ -2,3 +2,4 @@ ply
 scipy
 networkx
 ruff
+statsmodels

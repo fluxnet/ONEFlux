@@ -71,15 +71,15 @@ def _backend(self,level=0):
     if (self.args[0].__class__ is node.number and
         self.args[1].__class__ is node.number):
         return node.number(self.args[0].value +
-                           self.args[1].value)._backend()
+                           self.args[1].value)._backend(level)
     else:
-        return "(%s+%s)" % (self.args[0]._backend(),
-                            self.args[1]._backend())
+        return "(%s+%s)" % (self.args[0]._backend(level),
+                            self.args[1]._backend(level))
 
 @extend(node.arrayref)
 def _backend(self,level=0):
-    x = self.func_expr._backend()
-    i = self.args._backend()
+    x = self.func_expr._backend(level)
+    i = self.args._backend(level)
     if get_def_node(self.func_expr).props in "MW":
         return f"{x}[{i}]"
     else:
@@ -93,16 +93,16 @@ def _backend(self,level=0):
 def _backend(self,level=0):
     #if not self.ret:
         return "%s(%s)" % (self.__class__.__name__,
-                           self.args._backend())
+                           self.args._backend(level))
 
 @extend(node.cellarray)
 def _backend(self,level=0):
-    return "cellarray([%s])" % self.args._backend()
+    return "cellarray([%s])" % self.args._backend(level)
 
 @extend(node.cellarrayref)
 def _backend(self,level=0):
-    return "%s[%s]" % (self.func_expr._backend(),
-                       self.args._backend())
+    return "%s[%s]" % (self.func_expr._backend(level),
+                       self.args._backend(level))
 
 @extend(node.comment_stmt)
 def _backend(self,level=0):
@@ -116,7 +116,7 @@ def _backend(self,level=0):
 @extend(node.concat_list)
 def _backend(self,level=0):
     #import pdb; pdb.set_trace()
-    return ",".join(["[%s]"%t._backend() for t in self])
+    return ",".join(["[%s]"%t._backend(level) for t in self])
 
 @extend(node.continue_stmt)
 def _backend(self,level=0):
@@ -125,45 +125,45 @@ def _backend(self,level=0):
 @extend(node.expr)
 def _backend(self,level=0):
     if self.op in "~": 
-       return "logical_not(%s)" % self.args[0]._backend()
+       return "logical_not(%s)" % self.args[0]._backend(level)
 
     if self.op == "&":
-       return "logical_and(%s)" % self.args._backend()
+       return "logical_and(%s)" % self.args._backend(level)
 
     if self.op == "&&":
-        return "%s and %s" % (self.args[0]._backend(),
-                              self.args[1]._backend())
+        return "%s and %s" % (self.args[0]._backend(level),
+                              self.args[1]._backend(level))
 
     if self.op == "|":
-        return "logical_or(%s)" % self.args._backend()
+        return "logical_or(%s)" % self.args._backend(level)
 
     if self.op == "||":
-        return "%s or %s" % (self.args[0]._backend(),
-                             self.args[1]._backend())
+        return "%s or %s" % (self.args[0]._backend(level),
+                             self.args[1]._backend(level))
 
-    if self.op == '@': # FIXMEj
-        return self.args[0]._backend()
+    if self.op == '@': # FIXME
+        return self.args[0]._backend(level)
 
     if self.op == "\\":
-        return "numpy.linalg.solve(%s,%s)" % (self.args[0]._backend(),
-                                              self.args[1]._backend())
+        return "linsolve(%s,%s)" % (self.args[0]._backend(level),
+                                              self.args[1]._backend(level))
     if self.op == "::":
         if not self.args:
             return ":"
         elif len(self.args) == 2:
-            return "%s:%s" % (self.args[0]._backend(),
-                              self.args[1]._backend())
+            return "%s:%s" % (self.args[0]._backend(level),
+                              self.args[1]._backend(level))
         elif len(self.args) == 3:
-            return "%s:%s:%s" % (self.args[0]._backend(),
-                                 self.args[2]._backend(),
-                                 self.args[1]._backend())
+            return "%s:%s:%s" % (self.args[0]._backend(level),
+                                 self.args[2]._backend(level),
+                                 self.args[1]._backend(level))
     if self.op == ":":
-        return "arange(%s)" % self.args._backend()
+        return "arange(%s)" % self.args._backend(level)
     
     if self.op == "end":
 #        if self.args:
-#            return "%s.shape[%s]" % (self.args[0]._backend(),
-#                                     self.args[1]._backend())
+#            return "%s.shape[%s]" % (self.args[0]._backend(level),
+#                                     self.args[1]._backend(level))
 #        else:
             return "end()"
 
@@ -174,43 +174,43 @@ def _backend(self,level=0):
         except:
             is_parens = False
         if not is_parens:
-            return "%s%s" % (self.args[0]._backend(),
-                             self.args[1]._backend())
+            return "%s%s" % (self.args[0]._backend(level),
+                             self.args[1]._backend(level))
         else:
-            return "getattr(%s,%s)" % (self.args[0]._backend(),
-                                       self.args[1]._backend())
+            return "getattr(%s,%s)" % (self.args[0]._backend(level),
+                                       self.args[1]._backend(level))
 
 #     if self.op == "matrix":
-#         return "[%s]" % ",".join([t._backend() for t in self.args])
+#         return "[%s]" % ",".join([t._backend(level) for t in self.args])
     if self.op == "parens":
-        return "(%s)" % self.args[0]._backend()
+        return "(%s)" % self.args[0]._backend(level)
 #    if self.op == "[]":
-#        return "[%s]" % self.args._backend()
+#        return "[%s]" % self.args._backend(level)
     if not self.args:
         return self.op
     if len(self.args) == 1:
         return "%s %s" % (optable.get(self.op,self.op),
-                         self.args[0]._backend())
+                         self.args[0]._backend(level))
     if hasattr(self, "ret"):
-        ret = f"{self.ret._backend()}="
-        return ret+"%s(%s)" % (self.op, ",".join([t._backend() for t in self.args]))
+        ret = f"{self.ret._backend(level)}="
+        return ret+"%s(%s)" % (self.op, ",".join([t._backend(level) for t in self.args]))
     op = " %s " % optable.get(self.op,self.op)
-    return op.join([t._backend() for t in self.args])
+    return op.join([t._backend(level) for t in self.args])
 
 
 @extend(node.expr_list)
 def _backend(self,level=0):
-    return ",".join([t._backend() for t in self])
+    return ",".join([t._backend(level) for t in self])
 
 @extend(node.expr_stmt)
 def _backend(self,level=0):
-    return self.expr._backend()
+    return self.expr._backend(level)
 
 @extend(node.for_stmt)
 def _backend(self,level=0):
     fmt = "for %s in %s.reshape(-1):%s"
-    return fmt % (self.ident._backend(),
-                  self.expr._backend(),
+    return fmt % (self.ident._backend(level),
+                  self.expr._backend(level),
                   self.stmt_list._backend(level+1))
 
 
@@ -223,8 +223,8 @@ def _backend(self,level=0):
     s = """
 @function
 def %s(%s):%s
-""" % (self.ident._backend(),
-       self.args._backend(),
+""" % (self.ident._backend(level),
+       self.args._backend(level),
        '\n    globals().update(load_all_vars())\n' +
        ''.join(f"\n    {k} = {v}" for k, v in bindings))
     return s
@@ -233,20 +233,20 @@ def %s(%s):%s
 def _backend(self,level=0):
     #import pdb; pdb.set_trace()
     if not self.nargout or self.nargout == 1:
-        return "%s(%s)" % (self.func_expr._backend(),
-                           self.args._backend())
+        return "%s(%s)" % (self.func_expr._backend(level),
+                           self.args._backend(level))
     elif not self.args:
-        return "%s(nargout=%s)" % (self.func_expr._backend(),
+        return "%s(nargout=%s)" % (self.func_expr._backend(level),
                                    self.nargout)
     else:
-        return "%s(%s,nargout=%s)" % (self.func_expr._backend(),
-                                      self.args._backend(),
+        return "%s(%s,nargout=%s)" % (self.func_expr._backend(level),
+                                      self.args._backend(level),
                                       self.nargout)
 
 
 @extend(node.global_list)
 def _backend(self,level=0):
-    return ",".join([t._backend() for t in self])
+    return ",".join([t._backend(level) for t in self])
 
 @extend(node.ident)
 def _backend(self,level=0):
@@ -254,12 +254,12 @@ def _backend(self,level=0):
         self.name += "_"
     if self.init:
         return "%s=%s" % (self.name,
-                          self.init._backend())
+                          self.init._backend(level))
     return self.name
 
 @extend(node.if_stmt)
 def _backend(self,level=0):
-    s = "if %s:%s" % (self.cond_expr._backend(),
+    s = "if %s:%s" % (self.cond_expr._backend(level),
                       self.then_stmt._backend(level+1))
     if self.else_stmt:
         # Eech. This should have been handled in the parser.
@@ -271,8 +271,8 @@ def _backend(self,level=0):
 
 @extend(node.lambda_expr)
 def _backend(self,level=0):
-    return 'lambda %s: %s' % (self.args._backend(),
-                              self.ret._backend())
+    return 'lambda %s: %s' % (self.args._backend(level),
+                              self.ret._backend(level))
 
 @extend(node.let)
 def _backend(self,level=0):
@@ -289,28 +289,32 @@ def _backend(self,level=0):
     if self.ret.__class__ is node.expr and self.ret.op == "." :
         try:
             if self.ret.args[1].op == 'parens':
-                s += "setattr(%s,%s,%s)" % (self.ret.args[0]._backend(),
-                                           self.ret.args[1].args[0]._backend(),
-                                           self.args._backend())
+                s += "setattr(%s,%s,%s)" % (self.ret.args[0]._backend(level),
+                                           self.ret.args[1].args[0]._backend(level),
+                                           self.args._backend(level))
         except:
-            s += "%s%s = copy(%s)" % (self.ret.args[0]._backend(),
-                                       self.ret.args[1]._backend(),
-                                       self.args._backend())
+            s += "%s%s = copy(%s)" % (self.ret.args[0]._backend(level),
+                                       self.ret.args[1]._backend(level),
+                                       self.args._backend(level))
     elif (self.ret.__class__ is node.ident and
         self.args.__class__ is node.ident):
-        s += "%s=copy(%s)" % (self.ret._backend(),
-                              self.args._backend())
+        s += "%s=copy(%s)" % (self.ret._backend(level),
+                              self.args._backend(level))
     elif isinstance(self.ret, node.ident) and self.ret.props == "W":
-        s += "%s = matlabarray(%s)" % (self.ret._backend(),
-                                       self.args._backend())
+        s += "%s = matlabarray(%s)" % (self.ret._backend(level),
+                                       self.args._backend(level))
     elif isinstance(self.ret, node.arrayref) and not self.ret.func_expr.defs:
-        lhs = f"({self.ret.func_expr._backend()} := cellarray())[{self.ret.args._backend()}]"
-        s += "%s = %s" % (lhs, self.args._backend())
+        name = self.ret.func_expr._backend(level)
+        key = self.ret.args._backend(level)
+        lhs = f"if '{name}' not in globals() and '{name}' not in locals():\n"
+        lhs += " " * (4*level+4) + f"{name} = cellarray()\n"
+        lhs += " " * (4*level) + f"{name}[{key}]"
+        s += "%s = %s" % (lhs, self.args._backend(level))
     else:
         # if isinstance(self.ret, node.arrayref) and self.ret.func_expr.name == "Stats2":
         #     breakpoint()
-        s += "%s=%s" % (self.ret._backend(), 
-                       self.args._backend())
+        s += "%s=%s" % (self.ret._backend(level), 
+                       self.args._backend(level))
     return s+t
 
 @extend(node.logical)
@@ -328,10 +332,10 @@ def _backend(self, level=0):
     if not self.args:
         return "matlabarray([])"
     elif any(b.__class__ is node.string for a in self.args for b in a):
-        return " + ".join(b._backend() for a in self.args for b in a)
+        return " + ".join(b._backend(level) for a in self.args for b in a)
     else:
         #import pdb; pdb.set_trace()
-        return "concat([%s])" % self.args[0]._backend()
+        return "concat([%s])" % self.args[0]._backend(level)
 
 @extend(node.null_stmt)
 def _backend(self,level=0):
@@ -350,14 +354,14 @@ def _backend(self,level=0):
 @extend(node.persistent_stmt) #FIXME
 @extend(node.global_stmt)
 def _backend(self,level=0):
-    return "global %s" % self.global_list._backend()
+    return "global %s" % self.global_list._backend(level)
 
 @extend(node.return_stmt)
 def _backend(self,level=0):
     if not self.ret:
         return "return" 
     else:
-        return "return %s" % self.ret._backend()
+        return "return %s" % self.ret._backend(level)
 
 
 @extend(node.stmt_list)
@@ -376,12 +380,12 @@ def _backend(self,level=0):
 
 @extend(node.sub)
 def _backend(self,level=0):
-    return "(%s-%s)" %  (self.args[0]._backend(),
-                         self.args[1]._backend())
+    return "(%s-%s)" %  (self.args[0]._backend(level),
+                         self.args[1]._backend(level))
 
 @extend(node.transpose)
 def _backend(self,level=0):
-    return "%s.T" % self.args[0]._backend()
+    return "%s.T" % self.args[0]._backend(level)
 
 @extend(node.try_catch)
 def _backend(self,level=0):
@@ -394,6 +398,6 @@ def _backend(self,level=0):
 @extend(node.while_stmt)
 def _backend(self,level=0):
     fmt = "while %s:\n%s\n"
-    return fmt % (self.cond_expr._backend(),
+    return fmt % (self.cond_expr._backend(level),
                   self.stmt_list._backend(level+1))
 

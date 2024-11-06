@@ -95,7 +95,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
 
     # Exclude extreme lin reg outliers.
 
-    a = numpy.linalg.solve(concat([ones(n, 1), x]), y)
+    a = linsolve(concat([ones(n, 1), x]), y)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:57
     yHat = take(a, 1) + dot(take(a, 2), x)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:57
@@ -125,7 +125,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:66
     SSERed2 = sum((y - yHat2) ** 2)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:66
-    a = numpy.linalg.solve(concat([ones(n, 1), x]), y)
+    a = linsolve(concat([ones(n, 1), x]), y)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:67
     yHat3 = take(a, 1) + dot(take(a, 2), x)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:67
@@ -166,7 +166,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:85
         x1[iAbv] = take(x, i)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:85
-        a2 = numpy.linalg.solve(concat([ones(n, 1), x1]), y)
+        a2 = linsolve(concat([ones(n, 1), x1]), y)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:86
         yHat2 = take(a2, 1) + dot(take(a2, 2), x1)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:87
@@ -184,7 +184,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:96
         x2 = multiply((x - take(x, i)), zAbv)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:96
-        a3 = numpy.linalg.solve(concat([ones(n, 1), x1, x2]), y)
+        a3 = linsolve(concat([ones(n, 1), x1, x2]), y)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:97
         yHat3 = take(a3, 1) + dot(take(a3, 2), x1) + dot(take(a3, 3), x2)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:98
