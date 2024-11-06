@@ -2,7 +2,8 @@ import parse
 import sys
 import os
 import networkx as nx
-from . import node,resolve,options
+from . import node, resolve, options
+
 
 def callgraph(G, stmt_list):
     """
@@ -17,15 +18,14 @@ def callgraph(G, stmt_list):
         except:
             pass
     for func in func_list:
-        assert isinstance(func,node.function)
+        assert isinstance(func, node.function)
         func_name = func.head.ident.name
-        #resolve.resolve(func)
+        # resolve.resolve(func)
         for s in node.postorder(func):
-            if (s.__class__ is node.funcall and
-                s.func_expr.__class__ is  node.ident):
-                #if s.func_expr.name in G.nodes():
-                    G.add_edge(func_name,s.func_expr.name)
-    #nx.write_dot(G,"G.dot")
-    #for u in G.nodes():
+            if s.__class__ is node.funcall and s.func_expr.__class__ is node.ident:
+                # if s.func_expr.name in G.nodes():
+                G.add_edge(func_name, s.func_expr.name)
+    # nx.write_dot(G,"G.dot")
+    # for u in G.nodes():
     #    if G.out_degree(u) == 0:
     #        print(u)

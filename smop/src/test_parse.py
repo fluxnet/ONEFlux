@@ -2,12 +2,14 @@ import unittest
 from . import parse
 from . import node
 
+
 class TestParse(unittest.TestCase):
     def test_p03(self):
         """Expected failure"""
         s = """[1 ; 1; 1 ; ];"""
         t = parse.parse(s)
         self.assertTrue(t)
+
 
 # FIXME
 #   def test_p04(self):
@@ -30,7 +32,7 @@ class TestParse(unittest.TestCase):
 #        """Cell arrays"""
 #        s = """
 #        {1 ...
-#	'foo' ...
+# 'foo' ...
 #        'bar' ...
 #        'bzz'};
 #        """

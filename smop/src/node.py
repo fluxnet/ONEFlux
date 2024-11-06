@@ -1,13 +1,13 @@
 # SMOP compiler -- Simple Matlab/Octave to Python compiler
 # Copyright 2011-2013 Victor Leikehman
- 
+
 
 from collections import namedtuple
 import copy
 import sys
 import inspect
 
-from . recipes import recordtype
+from .recipes import recordtype
 from . import options
 
 # def preorder(u):
@@ -16,6 +16,7 @@ from . import options
 #         for n in u:
 #             for t in preorder(n):
 #                 yield t
+
 
 def decode(self):
     r = ""
@@ -29,55 +30,68 @@ def decode(self):
             s = s[1:]
     return r
 
+
 def encode(s):
-    return "".join(c+"_" if c.isupper() or c=="_" else c.upper() for c in s)
+    return "".join(c + "_" if c.isupper() or c == "_" else c.upper() for c in s)
+
 
 def postorder(u):
-    if isinstance(u,node):
+    if isinstance(u, node):
         for v in u:
             for t in postorder(v):
                 yield t
-        yield u # returns only traversible objects
+        yield u  # returns only traversible objects
+
 
 def extend(cls):
-    return lambda f: (setattr(cls,f.__name__,f) or f)
+    return lambda f: (setattr(cls, f.__name__, f) or f)
+
 
 def exceptions(f):
     return f
-    def wrapper(self,*args,**kwargs):
+
+    def wrapper(self, *args, **kwargs):
         try:
-            return f(self,*args,**kwargs)
+            return f(self, *args, **kwargs)
         except:
             print("%s.%s()" % (self.__class__.__name__, f.__name__))
             raise
+
     wrapper.__name__ = f.__name__
     wrapper.__doc__ = f.__doc__
     return wrapper
 
+
 class node(object):
-    def become(self,other):
+    def become(self, other):
         class Wrapper(self.__class__):
             def __copy__(self):
-                other = object.__getattribute__(self,"other")
+                other = object.__getattribute__(self, "other")
                 return copy.copy(other)
-            def __getattribute__(self,name):
-                other = object.__getattribute__(self,"other")
-                return getattr(other,name)
-            def __setattr__(self,name,value):
-                other = object.__getattribute__(self,"other")
-                return setattr(other,name,value)
+
+            def __getattribute__(self, name):
+                other = object.__getattribute__(self, "other")
+                return getattr(other, name)
+
+            def __setattr__(self, name, value):
+                other = object.__getattribute__(self, "other")
+                return setattr(other, name, value)
+
             def __iter__(self):
-                other = object.__getattribute__(self,"other")
+                other = object.__getattribute__(self, "other")
                 return iter(other)
-            #def __hash__(self):
+
+            # def __hash__(self):
             #    other = object.__getattribute__(self,"other")
             #    return id(other)
             def __repr__(self):
-                other = object.__getattribute__(self,"other")
+                other = object.__getattribute__(self, "other")
                 return repr(other)
+
             def __len__(self):
-                other = object.__getattribute__(self,"other")
+                other = object.__getattribute__(self, "other")
                 return len(other)
+
         assert self != other
         self.other = other
         self.__class__ = Wrapper
@@ -88,162 +102,207 @@ class node(object):
 
 ######### LISTS
 
-class concat_list(node,list):
+
+class concat_list(node, list):
     pass
 
-class global_list(node,list):
+
+class global_list(node, list):
     """space-separated list of variables used in GLOBAL statement"""
+
     pass
 
-class expr_list(node,list):
+
+class expr_list(node, list):
     def __str__(self):
         return ",".join([str(t) for t in self])
+
     def __repr__(self):
         return "expr_list(%s)" % list.__repr__(self)
 
-class stmt_list(node,list):
+
+class stmt_list(node, list):
     def __str__(self):
         return "\n".join([str(t) for t in self])
+
     def __repr__(self):
         return "stmt_list(%s)" % list.__repr__(self)
-    def append(self,s):
-        assert isinstance(s,node), s.__class__
-        list.append(self,s)
+
+    def append(self, s):
+        assert isinstance(s, node), s.__class__
+        list.append(self, s)
+
 
 #####################
 #
 #  ATOMS
 
+
 class atom(node):
     pass
 
-class string(atom,recordtype("string", "value lineno lexpos", default=None)):
+
+class string(atom, recordtype("string", "value lineno lexpos", default=None)):
     def __str__(self):
         return "'%s'" % self.value
 
-class logical(atom,recordtype("logical", "value lineno lexpos", default=None)):
+
+class logical(atom, recordtype("logical", "value lineno lexpos", default=None)):
     pass
 
-class number(atom,recordtype("number","value lineno lexpos",default=None)):
+
+class number(atom, recordtype("number", "value lineno lexpos", default=None)):
     def __str__(self):
         return str(self.value)
 
-class ident(atom,recordtype("ident","name lineno column lexpos defs props init",
-        default=None)):
+
+class ident(
+    atom, recordtype("ident", "name lineno column lexpos defs props init", default=None)
+):
     def __str__(self):
         return self.name
 
+
 class param(ident):
     pass
+
 
 ###########################
 #
 #  STATEMENTS
 #
 
+
 class stmt(node):
     pass
 
-class let(stmt,recordtype("let",
-                          "ret args lineno lexpos nargout",
-                          default=None)):
+
+class let(stmt, recordtype("let", "ret args lineno lexpos nargout", default=None)):
     """Assignment statement, except [x,y]=foo(x,y,z),
     which is handled by call_stmt."""
+
     def __str__(self):
         return "%s=%s" % (str(self.ret), str(self.args))
-    
-class func_stmt(stmt,recordtype("func_stmt",
-                                """
+
+
+class func_stmt(
+    stmt,
+    recordtype(
+        "func_stmt",
+        """
                                 ident
                                 ret
                                 args
                                 stmt_list
                                 use_nargin
                                 """,
-                                default=None)):
+        default=None,
+    ),
+):
     pass
+
 
 class lambda_expr(func_stmt):
     pass
 
-class function(stmt,recordtype("function","head body")):
+
+class function(stmt, recordtype("function", "head body")):
     pass
 
-class for_stmt(stmt,recordtype("for_stmt","ident expr stmt_list")):
+
+class for_stmt(stmt, recordtype("for_stmt", "ident expr stmt_list")):
     pass
 
-class DO_STMT(stmt,recordtype("DO_STMT","ident start stop stmt_list")):
+
+class DO_STMT(stmt, recordtype("DO_STMT", "ident start stop stmt_list")):
     pass
+
 
 # We generate where_stmt to implement A(B==C) = D
-class where_stmt(stmt,recordtype("where_stmt","cond_expr stmt_list")):
+class where_stmt(stmt, recordtype("where_stmt", "cond_expr stmt_list")):
     pass
 
-class if_stmt(stmt,recordtype("if_stmt","cond_expr then_stmt else_stmt")):
+
+class if_stmt(stmt, recordtype("if_stmt", "cond_expr then_stmt else_stmt")):
     pass
 
-class global_stmt(stmt,recordtype("global_stmt","global_list")):
+
+class global_stmt(stmt, recordtype("global_stmt", "global_list")):
     def __str__(self):
         return "global %s" % str(self.global_list)
 
-class persistent_stmt(stmt,recordtype("persistent_stmt","global_list")):
+
+class persistent_stmt(stmt, recordtype("persistent_stmt", "global_list")):
     def __str__(self):
         return "global %s" % str(self.global_list)
 
-class return_stmt(stmt,namedtuple("return_stmt","ret")):
+
+class return_stmt(stmt, namedtuple("return_stmt", "ret")):
     def __str__(self):
         return "return"
 
-class comment_stmt(stmt,namedtuple("comment_stmt","value")):
+
+class comment_stmt(stmt, namedtuple("comment_stmt", "value")):
     def __str__(self):
         return self.value
 
-class end_stmt(stmt,namedtuple("end_stmt","dummy")):
+
+class end_stmt(stmt, namedtuple("end_stmt", "dummy")):
     def __str__(self):
         return "end"
 
-class continue_stmt(stmt,namedtuple("continue_stmt","dummy")):
+
+class continue_stmt(stmt, namedtuple("continue_stmt", "dummy")):
     def __str__(self):
         return "continue"
 
-class break_stmt(stmt,namedtuple("break_stmt","dummy")):
+
+class break_stmt(stmt, namedtuple("break_stmt", "dummy")):
     def __str__(self):
         return "break"
 
-class pass_stmt(stmt,namedtuple("pass_stmt","")):
+
+class pass_stmt(stmt, namedtuple("pass_stmt", "")):
     def __str__(self):
         return "pass"
 
-class null_stmt(stmt,namedtuple("null_stmt","")):
+
+class null_stmt(stmt, namedtuple("null_stmt", "")):
     def __str__(self):
         return ";"
 
-class expr_stmt(stmt,node,recordtype("expr_stmt","expr")):
+
+class expr_stmt(stmt, node, recordtype("expr_stmt", "expr")):
     def __str__(self):
         return str(self.expr)
 
-class while_stmt(stmt,node,recordtype("while_stmt","cond_expr stmt_list")):
+
+class while_stmt(stmt, node, recordtype("while_stmt", "cond_expr stmt_list")):
     pass
 
-class try_catch(stmt,recordtype("try_catch","try_stmt catch_stmt finally_stmt")):
+
+class try_catch(stmt, recordtype("try_catch", "try_stmt catch_stmt finally_stmt")):
     pass
 
-class allocate_stmt(stmt,recordtype("allocate_stmt",
-                                    "ident args")):
+
+class allocate_stmt(stmt, recordtype("allocate_stmt", "ident args")):
     pass
+
 
 #######################################333
 #
 # FUNCALL
 
-class funcall(node,recordtype("funcall","func_expr args nargout",default=None)):
-    """Funcall instances represent 
+
+class funcall(node, recordtype("funcall", "func_expr args nargout", default=None)):
+    """Funcall instances represent
     (a) Array references, both lhs and rhs
     (b) Function call expressions
     """
+
     def __str__(self):
-        return "%s(%s)" % (str(self.func_expr),
-                           str(self.args))
+        return "%s(%s)" % (str(self.func_expr), str(self.args))
+
 
 class builtins(funcall):
     """
@@ -255,26 +314,23 @@ class builtins(funcall):
     as foo(x).
     """
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         """
         If a built-in function _foo takes three arguments
         a, b, and c, we can just say _foo(a,b,c) and let
         the constructor take care of proper structuring of
         the node (like expr_list around the arguments, etc.
         """
-        funcall.__init__(self,
-             func_expr=None,
-             args=expr_list(args),
-             **kwargs)
-        #import pdb; pdb.set_trace()
-        #self.func_expr.defs = set(self.func_expr)
+        funcall.__init__(self, func_expr=None, args=expr_list(args), **kwargs)
+        # import pdb; pdb.set_trace()
+        # self.func_expr.defs = set(self.func_expr)
 
     def __repr__(self):
-        return "np.%s%s" % (self.__class__,repr(self.args))
+        return "np.%s%s" % (self.__class__, repr(self.args))
 
     def __str__(self):
-        return "np.%s(%s)" % (self.__class__.__name__,
-                              str(self.args))
+        return "np.%s(%s)" % (self.__class__.__name__, str(self.args))
+
 
 class arrayref(funcall):
     def __repr__(self):
@@ -283,102 +339,108 @@ class arrayref(funcall):
 
 ########################## EXPR
 
-class expr(node,recordtype("expr","op args")):
+
+class expr(node, recordtype("expr", "op args")):
     def __str__(self):
         if self.op == ".":
-            return "%s%s" % (str(self.args[0]),self.args[1])
+            return "%s%s" % (str(self.args[0]), self.args[1])
         if self.op == "parens":
             return "(%s)" % str(self.args[0])
         if not self.args:
             return str(self.op)
         if len(self.args) == 1:
-            return "%s%s" % (self.op,self.args[0])
+            return "%s%s" % (self.op, self.args[0])
         if len(self.args) == 2:
-            return "%s%s%s" % (self.args[0]._backend(),
-                               self.op,
-                               self.args[1]._backend())
-        ret = "%s=" % str(self.ret) if getattr(self, 'ret', None) else ""
-        return ret+"%s(%s)" % (self.op,
-                               ",".join([str(t) for t in self.args]))
+            return "%s%s%s" % (
+                self.args[0]._backend(),
+                self.op,
+                self.args[1]._backend(),
+            )
+        ret = "%s=" % str(self.ret) if getattr(self, "ret", None) else ""
+        return ret + "%s(%s)" % (self.op, ",".join([str(t) for t in self.args]))
+
 
 # names in caps correspond to fortran funcs
 builtins_list = [
-#    "ABS",
-#    "ALL",
-#    "ANY",
-#    "CEILING",
-#    "FIND",
-#    "ISNAN",
-#    "MAXVAL",
-#    "MINVAL",
-#    "MODULO",
-#    "RAND",
-#    "RESHAPE",
-#    "SHAPE",
-#    "SIGN",
-#    "SIZE",
-#    "SUM",
-
-    #"abs",
-    "add", # synthetic opcode
-    #"all",
-    #"any",
+    #    "ABS",
+    #    "ALL",
+    #    "ANY",
+    #    "CEILING",
+    #    "FIND",
+    #    "ISNAN",
+    #    "MAXVAL",
+    #    "MINVAL",
+    #    "MODULO",
+    #    "RAND",
+    #    "RESHAPE",
+    #    "SHAPE",
+    #    "SIGN",
+    #    "SIZE",
+    #    "SUM",
+    # "abs",
+    "add",  # synthetic opcode
+    # "all",
+    # "any",
     "cellfun",
-    #"ceil",
+    # "ceil",
     "clazz",
-    #"cumprod",
-    #"cumsum",
-    #"diff",
-    #"dot",      # Exists in numpy. Implements matlab .*
-    #"exist",
+    # "cumprod",
+    # "cumsum",
+    # "diff",
+    # "dot",      # Exists in numpy. Implements matlab .*
+    # "exist",
     "false",
-    #"fclose",
-    #"find",
-    #"findone",  # same as find, but returns ONE result
-    #"floor",
-    #"fopen",
+    # "fclose",
+    # "find",
+    # "findone",  # same as find, but returns ONE result
+    # "floor",
+    # "fopen",
     "getfield",
-    "inf", "inf0",
-    #"isempty",
-    #"isequal",
+    "inf",
+    "inf0",
+    # "isempty",
+    # "isequal",
     "isinf",
     "isnan",
-    #"length",
-    #"load",
-    #"lower",
-    #"max",
-    #"min",
-    #"mod",
-    #"nnz",
-    #"numel",
-    #"ones",
-    #"rand",
-    #"range_",   # synthetic opcode
-    "ravel",   # synthetic opcode
-    #"rem",
-    #"save",
+    # "length",
+    # "load",
+    # "lower",
+    # "max",
+    # "min",
+    # "mod",
+    # "nnz",
+    # "numel",
+    # "ones",
+    # "rand",
+    # "range_",   # synthetic opcode
+    "ravel",  # synthetic opcode
+    # "rem",
+    # "save",
     "setfield",
-    #"sign",
-    #"size",
-    #"sort",
-    #"strcmp",
-    #"strcmpi",
-    "sub", # synthetic opcode for subtract
-    #"sum",
+    # "sign",
+    # "size",
+    # "sort",
+    # "strcmp",
+    # "strcmpi",
+    "sub",  # synthetic opcode for subtract
+    # "sum",
     "transpose",
-    #"true",
-    #"zeros",
+    # "true",
+    # "zeros",
 ]
 
 for name in builtins_list:
     globals()[name] = type(name, (builtins,), {})
 
-#class cellarrayref(node,recordtype("cellarrayref","ident args")):
+
+# class cellarrayref(node,recordtype("cellarrayref","ident args")):
 class cellarrayref(funcall):
     pass
 
+
 class cellarray(expr):
     pass
+
 
 class matrix(builtins):
     """
@@ -388,6 +450,8 @@ class matrix(builtins):
     >>> matrix()
     []
     """
+
+
 #    def __init__(self,args=expr_list()):
 #        expr.__init__(self,op="[]",args=args)
 #    def __str__(self):
