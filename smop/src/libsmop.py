@@ -654,7 +654,10 @@ def corrcoef(x, y, nargout=1):
     """
     x = numpy.asarray(x).flatten()
     y = numpy.asarray(y).flatten()
-    r, p = corr(x, y)
+    if numpy.isnan(x).any() or numpy.isnan(y).any():
+        r, p = NaN, NaN
+    else:
+        r, p = corr(x, y)
     r = matlabarray([[1.0 if i == j else r for i in range(2)] for j in range(2)])
     p = matlabarray([[1.0 if i == j else p for i in range(2)] for j in range(2)])
     return r, p
@@ -871,6 +874,10 @@ class matlabarray(numpy.ndarray):
         if not isinstance(n, int):
             raise IndexError
         return n
+    def delete(self, ix, axis=0):
+        if not numpy.size(ix): return self
+        _, indices = self.compute_indices((ix,))
+        return matlabarray(numpy.delete(numpy.asarray(self), indices[0], axis=axis))
     def __setitem__(self, index, value):
         view, indices = self.compute_indices(index)
         if self.size == 0:
@@ -910,11 +917,7 @@ class matlabarray(numpy.ndarray):
                 self.resize(new_shape, refcheck=0)
                 numpy.asarray(self).reshape(-1, order="F").__setitem__(indices, value)
             else:
-                new_shape = list(self.shape)
-                if self.flags["C_CONTIGUOUS"]:
-                    new_shape[0] = self.sizeof(indices[0], 0)
-                elif self.flags["F_CONTIGUOUS"]:
-                    new_shape[-1] = self.sizeof(indices[-1], -1)
+                new_shape = [self.sizeof(i) for i in indices]
                 self.resize(new_shape, refcheck=0)
                 numpy.asarray(self).__setitem__(indices, value)
     def __setattr__(self, name, value):
@@ -1050,6 +1053,10 @@ class char(matlabarray):
         if self.ndim == 2:
             return "\n".join("".join(s) for s in self)
         raise NotImplementedError
+    def __add__(self, other):
+        return str(self) + other
+    def __radd__(self, other):
+        return other + str(self)
 
 class struct(object):
     def __init__(self, *args):

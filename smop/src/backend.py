@@ -310,6 +310,11 @@ def _backend(self,level=0):
         lhs += " " * (4*level+4) + f"{name} = cellarray()\n"
         lhs += " " * (4*level) + f"{name}[{key}]"
         s += "%s = %s" % (lhs, self.args._backend(level))
+    elif isinstance(self.ret, node.arrayref) and \
+        self.args.__class__ is node.matrix and not self.args.args:
+        name = self.ret.func_expr._backend(level)
+        key = self.ret.args._backend(level)
+        s += f"{name} = {name}.delete({key})"
     else:
         # if isinstance(self.ret, node.arrayref) and self.ret.func_expr.name == "Stats2":
         #     breakpoint()

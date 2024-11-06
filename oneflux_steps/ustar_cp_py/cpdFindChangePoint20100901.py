@@ -84,9 +84,9 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:51
     iNaN = find(isnan(x + y))
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:52
-    x[iNaN] = matlabarray([])
+    x = x.delete(iNaN)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:52
-    y[iNaN] = matlabarray([])
+    y = y.delete(iNaN)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:52
     n = length(x + y)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:53
@@ -109,9 +109,9 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:59
     iOut = find(abs(dy - mdy) > dot(ns, sdy))
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:59
-    x[iOut] = matlabarray([])
+    x = x.delete(iOut)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:59
-    y[iOut] = matlabarray([])
+    y = y.delete(iOut)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:59
     n = length(x + y)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:61
