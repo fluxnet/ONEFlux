@@ -14,6 +14,17 @@ function [Stats] = setup_Stats(nBoot, nSeasons, nStrataX, varargin)
 
 	% Preallocate the Stats array by repeating the template
 	Stats(1:nSeasons, 1:nStrataX, 1:nBoot) = StatsMT;
-	if size(varargin)>0;
-		Stats = jsonencode(Stats);
+
+	
+	for i = 1:length(varargin)
+		a = varargin{i};
+		if iscell(a) && strcmp(a{1}, 'jsonencode')
+			for j = 2:length(a)
+				switch a{j}
+					case 1
+						Stats = jsonencode(Stats);
+				end
+			end
+		end
+	end
 end
