@@ -22,15 +22,29 @@ import pandas as pd
 import datetime
 import logging
 import argparse
+import multiprocessing
 
 from multiprocessing import Pool
-from gapfilling import *
-from getAllFile import *
+from oneflux.downscaling.gapfilling import *
 from oneflux import ONEFluxError, log_config
 
 log = logging.getLogger(__name__)
 
 DEFAULT_LOGGING_FILENAME = 'oneflux_downscaling.log'
+
+
+def get_all_files(path='.', recursive=False):
+    files = []
+    sizes = []
+    for root, dirs, filenames in os.walk(path):
+        for fn in filenames:
+            ffn = os.path.join(root, fn)
+            files.append(ffn)
+            sizes.append(os.path.getsize(ffn)/1000)
+            if not recursive:
+                break
+    return (files, sizes)
+
 
 def create_config(dir_files, file_config_name, pixel, dir_meteo_era, FIRST_YEAR_ERA5, LAST_YEAR_ERA5):
     '''
@@ -47,7 +61,7 @@ def create_config(dir_files, file_config_name, pixel, dir_meteo_era, FIRST_YEAR_
                 continue
             if ff.endswith('.zip'):
                 continue
-            print('create configuration from file: %s' % os.path.join(root1,ff))
+            log.debug('Create configuration from file: %s' % os.path.join(root1,ff))
             with open(os.path.join(root1,ff)) as fm:
                 for line in fm.readlines():
                     line = line.replace('\n','').replace('\r','')
@@ -73,7 +87,8 @@ def create_config(dir_files, file_config_name, pixel, dir_meteo_era, FIRST_YEAR_
             '# directory dove trovo i file da ERA']
         str_config.append('name_path_reanalysis = %s' % dir_meteo_era)
         str_config.append('# directory di output')
-        str_config.append('name_path_out = %s' % os.path.join(dir_files,'06_meteo_era_new_monthly_%s' % pixel))
+        # str_config.append('name_path_out = %s' % os.path.join(dir_files,'06_meteo_era_new_monthly_%s' % pixel))
+        str_config.append('name_path_out = %s' % os.path.join(dir_files,'06_meteo_era'))
         str_config.append('gapmax = 6')
         str_config.append('# Info del sito')
         str_config.append('Site = %s' % site_code)
@@ -132,25 +147,24 @@ def run(dir_era5_co, dir_input, dir_output):
 
     # creo il file di configurazione e lancio il downscaling    
     lista_dir_ok = set()
-    list_all_file, list_all_file_size = getAllFile(dir_input,recursive=True)
-    for fname in list_all_file: 
+    list_all_file, list_all_file_size = get_all_files(dir_input, recursive=True)
+    for fname in list_all_file:
         if '_qca_meteo_' in fname:
-            if os.path.basename(os.path.dirname(os.path.dirname(fname))) in argv: 
+            if os.path.basename(os.path.dirname(os.path.dirname(fname))) in dir_input: 
                 lista_dir_ok.add(os.path.dirname(os.path.dirname(fname)))
     
     lista_dir_ok = list(lista_dir_ok)
-    print(lista_dir_ok)
+    log.debug('Directories with results: {s}'.format(s=lista_dir_ok))
     
     item_gap_filling = []
     item_gap_filling_nook = []
 
     df_stat_t = pd.DataFrame()
-    n_available_cores = int(os.cpu_count()/3)
+    n_available_cores = int(multiprocessing.cpu_count()/3)
 
     for ff in lista_dir_ok:
         sitecode = os.path.basename(ff).split('_')[0]
-        print(sitecode)
-        print(ff)
+        log.debug('Found site code ({s}) in path ({p})'.format(s=sitecode, p=ff))
         for pixel in combi_pixel:                
             # controllo il numero di file ERA5
             nr_y = 1
@@ -166,10 +180,10 @@ def run(dir_era5_co, dir_input, dir_output):
                 nr_y = nr_y * ((os.path.exists(fn)or(os.path.exists(fnT))))
                 
                 if nr_y == 0:
-                    print('missing: %s' % fn)
-                    item_gap_filling_nook.append('missing: %s' % fn)
-                    raise Exception('missing: %s' % fn)
-                    break
+                    msg = 'Missing path: %s' % fn
+                    log.critical(msg)
+                    item_gap_filling_nook.append(msg)
+                    raise ONEFluxError(msg)
             if nr_y == 0:
                 continue
             file_config_name = os.path.join(ff,'config_%s%s.txt' % (
@@ -184,7 +198,7 @@ def run(dir_era5_co, dir_input, dir_output):
             #raise Exception('EXIT')
             item_gap_filling.append([file_config_name])
             
-            # print(os.path.join(dict_config['name_path_out'],'stat_%s.txt' % dict_config['Site']))
+            # log.debug(os.path.join(dict_config['name_path_out'],'stat_%s.txt' % dict_config['Site']))
             # df_stat = pd.read_csv(os.path.join(dict_config['name_path_out'],'stat_%s.txt' % dict_config['Site']))
             # df_stat['Site'] = dict_config['Site']
             # df_stat['pixel'] = dict_config['pixel']
@@ -193,23 +207,29 @@ def run(dir_era5_co, dir_input, dir_output):
             # df_stat_t = pd.concat([df_stat_t,df_stat],ignore_index=True)
             # #f:\xONEflux\AT-Inn_ex202308301031_test_downscaling_2023_eraFR_ok\06_meteo_era_new_monthly_lon-1__lat-1\stat_AT-Inn.txt
 
-    if len(item_gap_filling) > 0:
-        with Pool(processes=n_available_cores) as pool:
-            for var_nr_end in pool.starmap(gapfilling, item_gap_filling):
-                var_nr_end    
+    if len(item_gap_filling) == 1:
+        log.debug('Configs for gapfilling: {d}'.format(d=item_gap_filling))
+        gapfilling(file_config= item_gap_filling[0][0])
+    elif len(item_gap_filling) > 1:
+        msg = 'Multiple sites/files ({n}) to gapfill in single-site execution mode:'.format(n=len(item_gap_filling))
+        log.critical(msg)
+        raise ONEFluxError(msg)
+    else: 
+        msg = 'Incorrect number of items ({n}) to gapfill:'.format(n=len(item_gap_filling))
+        log.critical(msg)
+        raise ONEFluxError(msg)
                 
     # df_stat_t.to_csv(os.path.join(dir_main,'stat_summary.csv'),index=False)
-    # print('\nwrite file: %s' % os.path.join(dir_main,'stat_summary.csv'))
+    # log.debugnew_monthly('\nwrite file: %s' % os.path.join(dir_main,'stat_summary.csv'))
 
-    print('%d files downscaled' % len(item_gap_filling))
-    print('%d files NOT downscaled' % len(item_gap_filling_nook))
+    log.debug('Number of files downscaled: {d}, and NOT downscaled: {n}'.format(d=len(item_gap_filling), n=len(item_gap_filling_nook)))
 
     # raccolgo le statistiche in un unico file
     stat06 = []
     data02_max_min = []
     for root1,dir1,file1 in os.walk(dir_input): # r'f:\test_downscaling\input_file_qcauto'
         for dd in dir1:
-            print(dd)
+            log.debug('Directory to be searched for files: {s}'.format(s=dd))
             for root2,dir2,file2 in os.walk(os.path.join(dir_input,dd)):
                 for dd2 in dir2:
                     # esporto le statisriche
@@ -220,7 +240,7 @@ def run(dir_era5_co, dir_input, dir_output):
                                     os.path.join(dir_input,dd,dd2),
                                     os.path.join(dir_input,dd,dd2.replace('_new_monthly_lon+0__lat+0',''))
                                 )
-                                print('copy %s as %s' % (
+                                log.debug('copy {s1} as {s2}'.format(
                                     os.path.join(dir_input,dd,dd2),
                                     os.path.join(dir_input,dd,dd2.replace('_new_monthly_lon+0__lat+0',''))
                                 ))
@@ -250,7 +270,7 @@ def run(dir_era5_co, dir_input, dir_output):
                             for ff in file3:
                                 if not '_qca_synth_allvars_' in ff:
                                     continue
-                                print('get min/max file: %s' % os.path.join(dir_input,dd,dd2,ff))
+                                log.debug('Get min/max file: %s' % os.path.join(dir_input,dd,dd2,ff))
                                 df_ff = pd.read_csv(os.path.join(dir_input,dd,dd2,ff))
                                 df_dict = {'path_completa': [], 'var_name': [],'min_v': [],'max_v': []}
                                 for col in df_ff.columns:
@@ -267,29 +287,23 @@ def run(dir_era5_co, dir_input, dir_output):
                 break
         break
 
-    stat06 = pd.concat(stat06,ignore_index=True)
-    stat06.to_csv(stat_summary_file, index = False)
+    if stat06:
+        stat06 = pd.concat(stat06,ignore_index=True)
+        stat06.to_csv(stat_summary_file, index = False)
 
-    data02_max_min = pd.concat(data02_max_min,ignore_index=True)
-    data02_max_min.to_csv(data02_max_min_file, index=False)
+    if data02_max_min:
+        data02_max_min = pd.concat(data02_max_min,ignore_index=True)
+        data02_max_min.to_csv(data02_max_min_file, index=False)
 
     end_run = datetime.datetime.now()
     elapsed_time = end_run - start_run
 
-    print('')
-    print('')
-    print('%d files downscaled' % len(item_gap_filling))
-    print('%d files NOT downscaled' % len(item_gap_filling_nook))
-    print('')
-    print('')
-    print('write file: %s' % stat_summary_file)
-    print('write file: %s' % data02_max_min_file)
-    print('')
-    print('start_time: %s' % start_run)
-    print('end_time: %s' % end_run)
-    print('elapsed_time: %s' % elapsed_time)
-    print('')
-    print('')
+    log.debug('%d files downscaled' % len(item_gap_filling))
+    log.debug('%d files NOT downscaled' % len(item_gap_filling_nook))
+    log.debug('Wrote file: %s' % stat_summary_file)
+    log.debug('Wrote file: %s' % data02_max_min_file)
+    log.debug('Run time: Start: %s, finish: %s, total runtime: %s' % (start_run, end_run, elapsed_time))
+
 
 if __name__ == "__main__":
 
@@ -310,8 +324,8 @@ if __name__ == "__main__":
 
     dir_input = os.path.join(args.datadir, args.sitedir, args.qcautodir)
     dir_output = os.path.join(args.datadir, args.sitedir, args.meteoeradir)
-    # run(dir_era5_co=args.eradir, dir_input=dir_output, dir_output=dir_output)
+    run(dir_era5_co=args.eradir, dir_input=dir_input, dir_output=dir_output)
 
     end_process = datetime.datetime.now()
     elap_process = end_process - start_process
-    log.debug('Start: %s, finish: %s, total runtime: %s' % (start_process, end_process, elap_process))
+    log.debug('Process time: Start: %s, finish: %s, total runtime: %s' % (start_process, end_process, elap_process))
