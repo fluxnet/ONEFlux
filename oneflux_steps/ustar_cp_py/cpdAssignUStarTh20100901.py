@@ -159,7 +159,7 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
     for i in arange(1, nVars).reshape(-1):
         cv = char(cVars[i])
         # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:99
-        eval(cv + "=fcReadFields(Stats," " + cv + " ");")
+        exec(cv + "=fcReadFields(Stats,'" + cv + "');")
         if "mt" == cv:
             xmt = copy(mt)
         # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:101
@@ -167,7 +167,7 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
             if "Cp" == cv:
                 xCp = copy(Cp)
         # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:102
-        eval(cv + "=fcx2colvec(" + cv + ");")
+        exec(cv + "=fcx2colvec(" + cv + ");")
 
     pSig = 0.05
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:107

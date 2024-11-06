@@ -40,6 +40,8 @@ def function(f):
             redirect_stderr(kwargs.pop("stderr", stderr)),
         ):
             nargout = kwargs.pop("nargout", 0)
+            kwargs.pop("jsonencode", None)
+            kwargs.pop("jsondecode", None)
             out = f(*args, **kwargs)
             if nargout:
                 return out[:nargout]
@@ -63,8 +65,24 @@ def load_all_vars():
 pwd = os.getcwd()
 eps = numpy.finfo(float).eps
 NaN = numpy.nan
-jsonencode = json.dumps
-jsondecode = json.loads
+
+
+def jsonencode(a):
+    return json.dumps(a)
+
+
+def jsondecode(a):
+    return json.loads(a)
+
+
+def getfield(a, *fields):
+    for f in fields:
+        if isinstance(f, numpy.ndarray):
+            f = tuple(f.astype(int).flatten())
+            a = a[f]
+        else:
+            a = getattr(a, f)
+    return a
 
 
 def dir(s):
@@ -1222,6 +1240,11 @@ class char(matlabarray):
 
     def __radd__(self, other):
         return other + str(self)
+
+    def __eq__(self, other):
+        if isinstance(other, str):
+            return str(self) == other
+        return super().__eq__(other)
 
 
 class struct(object):

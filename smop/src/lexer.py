@@ -10,84 +10,132 @@ import importlib
 
 
 tokens = [
-    "AND", "ANDAND", "ANDEQ", "BACKSLASH", "COLON", "COMMA", "DIV", "DIVEQ",
-    "DOT", "DOTDIV", "DOTDIVEQ", "DOTEXP", "DOTMUL", "DOTMULEQ", "END_EXPR",
-    "END_STMT", "EQ", "EQEQ", "EXP", "EXPEQ", "FIELD", "GE", "GT", "HANDLE",
-    "IDENT", "LBRACE", "LBRACKET", "LE", "LPAREN", "LT", "MINUS", "MINUSMINUS",
-    "MINUSEQ", "MUL", "MULEQ", "NE", "NEG", "NUMBER", "OR", "OREQ", "OROR",
-    "PLUS", "PLUSEQ", "PLUSPLUS", "RBRACE", "RBRACKET", "RPAREN", "SEMI",
-    "STRING", "TRANSPOSE", "ERROR_STMT", "COMMENT", "END_FUNCTION",
-    "END_UNEXPECTED", "POW", "CLASSDEF"
+    "AND",
+    "ANDAND",
+    "ANDEQ",
+    "BACKSLASH",
+    "COLON",
+    "COMMA",
+    "DIV",
+    "DIVEQ",
+    "DOT",
+    "DOTDIV",
+    "DOTDIVEQ",
+    "DOTEXP",
+    "DOTMUL",
+    "DOTMULEQ",
+    "END_EXPR",
+    "END_STMT",
+    "EQ",
+    "EQEQ",
+    "EXP",
+    "EXPEQ",
+    "FIELD",
+    "GE",
+    "GT",
+    "HANDLE",
+    "IDENT",
+    "LBRACE",
+    "LBRACKET",
+    "LE",
+    "LPAREN",
+    "LT",
+    "MINUS",
+    "MINUSMINUS",
+    "MINUSEQ",
+    "MUL",
+    "MULEQ",
+    "NE",
+    "NEG",
+    "NUMBER",
+    "OR",
+    "OREQ",
+    "OROR",
+    "PLUS",
+    "PLUSEQ",
+    "PLUSPLUS",
+    "RBRACE",
+    "RBRACKET",
+    "RPAREN",
+    "SEMI",
+    "STRING",
+    "TRANSPOSE",
+    "ERROR_STMT",
+    "COMMENT",
+    "END_FUNCTION",
+    "END_UNEXPECTED",
+    "POW",
+    "CLASSDEF",
 ]
 
 reserved = {
-    "break"                  : "BREAK",
-    "case"                   : "CASE",
-    "catch"                  : "CATCH",
-    "continue"               : "CONTINUE",
-    "else"                   : "ELSE",
-    "elseif"                 : "ELSEIF",
-    "end_unwind_protect"     : "END_UNWIND_PROTECT",
-    "for"                    : "FOR",
-    "function"               : "FUNCTION",
-    "global"                 : "GLOBAL",
-    "if"                     : "IF",
-    "otherwise"              : "OTHERWISE",
-    "persistent"             : "PERSISTENT",
-    "return"                 : "RETURN",
-    "switch"                 : "SWITCH",
-    "try"                    : "TRY",
-    "unwind_protect"         : "UNWIND_PROTECT",
-    "unwind_protect_cleanup" : "UNWIND_PROTECT_CLEANUP",
-    "while"                  : "WHILE",
-    }
+    "break": "BREAK",
+    "case": "CASE",
+    "catch": "CATCH",
+    "continue": "CONTINUE",
+    "else": "ELSE",
+    "elseif": "ELSEIF",
+    "end_unwind_protect": "END_UNWIND_PROTECT",
+    "for": "FOR",
+    "function": "FUNCTION",
+    "global": "GLOBAL",
+    "if": "IF",
+    "otherwise": "OTHERWISE",
+    "persistent": "PERSISTENT",
+    "return": "RETURN",
+    "switch": "SWITCH",
+    "try": "TRY",
+    "unwind_protect": "UNWIND_PROTECT",
+    "unwind_protect_cleanup": "UNWIND_PROTECT_CLEANUP",
+    "while": "WHILE",
+}
 tokens += list(reserved.values())
 
+
 def new():
-    t_AND         = r"\&"
-    t_ANDAND      = r"\&\&"
-    t_ANDEQ       = r"\&="
-    t_BACKSLASH   = r"\\"
-    t_COLON       = r":"
-    t_DIV         = r"\/"
-    t_DIVEQ       = r"\/="
-    t_DOT         = r"\."
-    t_DOTDIV      = r"\./"
-    t_DOTDIVEQ    = r"\./="
-    t_DOTEXP      = r"\.\^"
-    t_DOTMUL      = r"\.\*"
-    t_DOTMULEQ    = r"\.\*="
-    t_EQ          = r"="
-    t_EQEQ        = r"=="
-    t_EXP         = r"\^"
-    t_EXPEQ       = r"\^="
-    t_GE          = r">="
-    t_GT          = r"\>"
-    t_HANDLE      = r"\@"
-    t_LE          = r"<="
-    t_LT          = r"\<"
-    t_MINUS       = r"\-"
-    t_MINUSEQ     = r"\-="
-    t_MINUSMINUS  = r"\--"
-    t_MUL         = r"\*"
-    t_POW         = r"\*\*"
-    t_MULEQ       = r"\*="
-    t_NE          = r"(~=)|(!=)"
-    t_NEG         = r"\~|\!"
-    t_OR          = r"\|"
-    t_OREQ        = r"\|="
-    t_OROR        = r"\|\|"
-    t_PLUS        = r"\+"
-    t_PLUSEQ      = r"\+="
-    t_PLUSPLUS    = r"\+\+"
-    
-    states = (("matrix","inclusive"),
-              ("afterkeyword","exclusive"))
+    t_AND = r"\&"
+    t_ANDAND = r"\&\&"
+    t_ANDEQ = r"\&="
+    t_BACKSLASH = r"\\"
+    t_COLON = r":"
+    t_DIV = r"\/"
+    t_DIVEQ = r"\/="
+    t_DOT = r"\."
+    t_DOTDIV = r"\./"
+    t_DOTDIVEQ = r"\./="
+    t_DOTEXP = r"\.\^"
+    t_DOTMUL = r"\.\*"
+    t_DOTMULEQ = r"\.\*="
+    t_EQ = r"="
+    t_EQEQ = r"=="
+    t_EXP = r"\^"
+    t_EXPEQ = r"\^="
+    t_GE = r">="
+    t_GT = r"\>"
+    t_HANDLE = r"\@"
+    t_LE = r"<="
+    t_LT = r"\<"
+    t_MINUS = r"\-"
+    t_MINUSEQ = r"\-="
+    t_MINUSMINUS = r"\--"
+    t_MUL = r"\*"
+    t_POW = r"\*\*"
+    t_MULEQ = r"\*="
+    t_NE = r"(~=)|(!=)"
+    t_NEG = r"\~|\!"
+    t_OR = r"\|"
+    t_OREQ = r"\|="
+    t_OROR = r"\|\|"
+    t_PLUS = r"\+"
+    t_PLUSEQ = r"\+="
+    t_PLUSPLUS = r"\+\+"
+
+    states = (("matrix", "inclusive"), ("afterkeyword", "exclusive"))
 
     states = (("matrix", "inclusive"), ("afterkeyword", "exclusive"))
 
     ws = r"(\s|\.\.\..*\n|\\\n)"
-    #ws  = r"(\s|(\#|(%[^!])).*\n|\.\.\..*\n|\\\n)"
+    # ws  = r"(\s|(\#|(%[^!])).*\n|\.\.\..*\n|\\\n)"
     ws1 = ws + "+"
     ws0 = ws + "*"
     ms = r"'([^']|(''))*'"
@@ -97,11 +145,11 @@ def new():
 
     def unescape(s):
         if s[0] == "'":
-            s = s[1:-1].replace("''", "'")
+            s = s[1:-1].replace("''", "\\'")
         else:
             s = s[1:-1]
-        if s.endswith('\\') and not s.endswith(r'\\'):
-            s += '\\'
+        if s.endswith("\\") and not s.endswith(r"\\"):
+            s += "\\"
         return s
 
     @TOKEN(mos)
@@ -112,7 +160,7 @@ def new():
 
     def t_afterkeyword_error(t):
         t_error(t)
-    
+
     # A quote, immediately following any of: (1) an alphanumeric
     # charater, (2) right bracket, parenthesis or brace,
     # or (3) another TRANSPOSE, is a TRANSPOSE.  Otherwise, it starts a
@@ -138,9 +186,7 @@ def new():
         if t.value == "parfor":
             t.value = "for"
         if t.value == "classdef":
-            raise_exception(SyntaxError,
-                            "Not implemented: %s" % t.value,
-                            t.lexer)
+            raise_exception(SyntaxError, "Not implemented: %s" % t.value, t.lexer)
         t.lexer.lineno += t.value.count("\n")
         if t.value[0] == ".":
             # Reserved words are not reserved
@@ -148,14 +194,22 @@ def new():
             # is illegal, but foo.return=1 is fine.
             t.type = "FIELD"
             return t
-        if (t.value == "end" and (t.lexer.parens > 0 or t.lexer.brackets > 0 or
-                                  t.lexer.braces > 0)):
+        if t.value == "end" and (
+            t.lexer.parens > 0 or t.lexer.brackets > 0 or t.lexer.braces > 0
+        ):
             t.type = "END_EXPR"
             return t
-        if t.value in ("end", "endif", "endfunction", "endwhile", "endfor",
-                       "endswitch", "end_try_catch"):
+        if t.value in (
+            "end",
+            "endif",
+            "endfunction",
+            "endwhile",
+            "endfor",
+            "endswitch",
+            "end_try_catch",
+        ):
             keyword = t.lexer.stack.pop()  # if,while,etc.
-            #assert keyword == t.value or keyword == "try"
+            # assert keyword == t.value or keyword == "try"
             if keyword == "function":
                 t.type = "END_FUNCTION"
             else:
@@ -168,7 +222,7 @@ def new():
                 # six words, ever, because there is
                 # one place to push -- here
                 t.lexer.stack.append(t.value)
-            if (t.type != "IDENT" and t.lexer.lexdata[t.lexer.lexpos] == "'"):
+            if t.type != "IDENT" and t.lexer.lexdata[t.lexer.lexpos] == "'":
                 t.lexer.begin("afterkeyword")
         return t
 
@@ -218,8 +272,7 @@ def new():
     @TOKEN(r"," + ws0)
     def t_COMMA(t):  # eating spaces is important inside brackets
         t.lexer.lineno += t.value.count("\n")
-        if (t.lexer.brackets == 0 and t.lexer.parens == 0 and
-                t.lexer.braces == 0):
+        if t.lexer.brackets == 0 and t.lexer.parens == 0 and t.lexer.braces == 0:
             t.type = "SEMI"
             return t
         return t
@@ -235,13 +288,13 @@ def new():
         r"(0x[0-9A-Fa-f]+)|((\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?[ij]?)"
         #  <-------------> <------------------><------------->
         #   int,oct,hex        float               exp
-        if t.value[-1] == 'i':
-            t.value = t.value[:-1] + 'j'
+        if t.value[-1] == "i":
+            t.value = t.value[:-1] + "j"
         t.value = eval(t.value)
         return t
 
     def t_NEWLINE(t):
-        r'\n+'
+        r"\n+"
         t.lexer.lineno += len(t.value)
         if not t.lexer.parens and not t.lexer.braces:
             t.value = ";"
@@ -281,7 +334,7 @@ def new():
         # In matrix state, consume whitespace separating two
         # terms and return a fake COMMA token.  This allows
         # parsing [1 2 3] as if it was [1,2,3].  Handle
-        # with care: [x + y] vs [x +y] 
+        # with care: [x + y] vs [x +y]
         #
         # A term T is
         # (a) a name or a number
@@ -292,12 +345,12 @@ def new():
         # (1) an alphanumeric charater \w
         # (2) single quote (in octave also double-quote)
         # (3) right parenthesis, bracket, or brace
-        # (4) a dot (after a number, such as 3. 
+        # (4) a dot (after a number, such as 3.
         #
         # The pattern for whitespace accounts for ellipsis as a
         # whitespace, and for the trailing junk.
         #
-        # Terms start with 
+        # Terms start with
         # (1) an alphanumeric character
         # (2) a single or double quote,
         # (3) left paren, bracket, or brace and finally
@@ -330,13 +383,19 @@ def new():
     lexer.stack = []
     return lexer
 
+
 def raise_exception(error_type, message, my_lexer):
     startpos = 1 + my_lexer.lexdata.rfind("\n", 0, my_lexer.lexpos)
     endpos = my_lexer.lexdata.find("\n", startpos)
-    raise error_type(message, (options.filename,
-                               my_lexer.lineno,
-                               1 + my_lexer.lexpos - startpos,
-                               my_lexer.lexdata[startpos:endpos]))
+    raise error_type(
+        message,
+        (
+            options.filename,
+            my_lexer.lineno,
+            1 + my_lexer.lexpos - startpos,
+            my_lexer.lexdata[startpos:endpos],
+        ),
+    )
 
 
 if __name__ == "__main__":

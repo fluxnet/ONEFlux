@@ -3,9 +3,9 @@
 
 from ply import yacc
 from . import lexer
-from . lexer import tokens, raise_exception
+from .lexer import tokens, raise_exception
 from . import node
-from . node import exceptions
+from .node import exceptions
 from . import options
 
 # ident properties (set in parse.py)
@@ -25,8 +25,19 @@ from . import options
 
 precedence = (
     ("right", "COMMA"),
-    ("right", "DOTDIVEQ", "DOTMULEQ", "EQ", "EXPEQ", "MULEQ", "MINUSEQ",
-     "DIVEQ", "PLUSEQ", "OREQ", "ANDEQ"),
+    (
+        "right",
+        "DOTDIVEQ",
+        "DOTMULEQ",
+        "EQ",
+        "EXPEQ",
+        "MULEQ",
+        "MINUSEQ",
+        "DIVEQ",
+        "PLUSEQ",
+        "OREQ",
+        "ANDEQ",
+    ),
     ("nonassoc", "HANDLE"),
     ("left", "COLON"),
     ("left", "ANDAND", "OROR"),
@@ -38,14 +49,15 @@ precedence = (
     ("right", "TRANSPOSE"),
     ("right", "EXP", "DOTEXP", "POW"),
     ("nonassoc", "LPAREN", "RPAREN", "RBRACE", "LBRACE"),
-    ("left", "FIELD", "DOT", "PLUSPLUS", "MINUSMINUS"), )
+    ("left", "FIELD", "DOT", "PLUSPLUS", "MINUSMINUS"),
+)
 
 
 def p_top(p):
     """
     top :
         | top stmt
-      """
+    """
     if len(p) == 1:
         p[0] = node.stmt_list()
     else:
@@ -131,12 +143,11 @@ def p_case_list(p):
         p[0] = p[2]
     elif len(p) == 6:
         p[0] = node.if_stmt(
-            cond_expr=node.expr(
-                op="==", args=node.expr_list([p[2]])),
+            cond_expr=node.expr(op="==", args=node.expr_list([p[2]])),
             then_stmt=p[4],
-            else_stmt=p[5])
-        p[0].cond_expr.args.append(
-            None)  # None will be replaced using backpatch()
+            else_stmt=p[5],
+        )
+        p[0].cond_expr.args.append(None)  # None will be replaced using backpatch()
     else:
         assert 0
 
@@ -158,7 +169,7 @@ def p_cellarray(p):
 @exceptions
 def p_cellarrayref(p):
     """expr : expr LBRACE expr_list RBRACE
-            | expr LBRACE RBRACE
+    | expr LBRACE RBRACE
     """
     args = node.expr_list() if len(p) == 4 else p[3]
     assert isinstance(args, node.expr_list)
@@ -242,18 +253,18 @@ def p_error_stmt(p):
 @exceptions
 def p_expr(p):
     """expr : ident
-            | end
-            | number
-            | string
-            | colon
-            | NEG
-            | matrix
-            | cellarray
-            | expr2
-            | expr1
-            | lambda_expr
-            | expr PLUSPLUS
-            | expr MINUSMINUS
+    | end
+    | number
+    | string
+    | colon
+    | NEG
+    | matrix
+    | cellarray
+    | expr2
+    | expr1
+    | lambda_expr
+    | expr PLUSPLUS
+    | expr MINUSMINUS
     """
     #        | PLUSPLUS ident
     #        | MINUSMINUS ident
@@ -266,11 +277,11 @@ def p_expr(p):
 @exceptions
 def p_expr1(p):
     """expr1 : MINUS expr %prec UMINUS
-             | PLUS expr %prec UMINUS
-             | NEG expr
-             | HANDLE ident
-             | PLUSPLUS ident
-             | MINUSMINUS ident
+    | PLUS expr %prec UMINUS
+    | NEG expr
+    | HANDLE ident
+    | PLUSPLUS ident
+    | MINUSMINUS ident
     """
     p[0] = node.expr(op=p[1], args=node.expr_list([p[2]]))
 
@@ -278,43 +289,43 @@ def p_expr1(p):
 @exceptions
 def p_expr2(p):
     """expr2 : expr AND expr
-             | expr ANDAND expr
-             | expr BACKSLASH expr
-             | expr COLON expr
-             | expr DIV expr
-             | expr DOT expr
-             | expr DOTDIV expr
-             | expr DOTDIVEQ expr
-             | expr DOTEXP expr
-             | expr DOTMUL expr
-             | expr DOTMULEQ expr
-             | expr EQEQ expr
-             | expr POW expr
-             | expr EXP expr
-             | expr EXPEQ expr
-             | expr GE expr
-             | expr GT expr
-             | expr LE expr
-             | expr LT expr
-             | expr MINUS expr
-             | expr MUL expr
-             | expr NE expr
-             | expr OR expr
-             | expr OROR expr
-             | expr PLUS expr
-             | expr EQ expr
-             | expr MULEQ expr
-             | expr DIVEQ expr
-             | expr MINUSEQ expr
-             | expr PLUSEQ expr
-             | expr OREQ expr
-             | expr ANDEQ expr
+    | expr ANDAND expr
+    | expr BACKSLASH expr
+    | expr COLON expr
+    | expr DIV expr
+    | expr DOT expr
+    | expr DOTDIV expr
+    | expr DOTDIVEQ expr
+    | expr DOTEXP expr
+    | expr DOTMUL expr
+    | expr DOTMULEQ expr
+    | expr EQEQ expr
+    | expr POW expr
+    | expr EXP expr
+    | expr EXPEQ expr
+    | expr GE expr
+    | expr GT expr
+    | expr LE expr
+    | expr LT expr
+    | expr MINUS expr
+    | expr MUL expr
+    | expr NE expr
+    | expr OR expr
+    | expr OROR expr
+    | expr PLUS expr
+    | expr EQ expr
+    | expr MULEQ expr
+    | expr DIVEQ expr
+    | expr MINUSEQ expr
+    | expr PLUSEQ expr
+    | expr OREQ expr
+    | expr ANDEQ expr
     """
     if p[2] == "=":
         if p[1].__class__ is node.let:
-            raise_exception(SyntaxError,
-                            "Not implemented assignment as expression",
-                            new_lexer)
+            raise_exception(
+                SyntaxError, "Not implemented assignment as expression", new_lexer
+            )
         # The algorithm, which decides if an
         # expression F(X)
         # is arrayref or funcall, is implemented in
@@ -346,18 +357,12 @@ def p_expr2(p):
         else:
             # assert len(p[1].args) > 0
             ret = p[1].args if isinstance(p[1], node.matrix) else p[1]
-            p[0] = node.let(ret=ret,
-                            args=p[3],
-                            lineno=p.lineno(2),
-                            lexpos=p.lexpos(2))
+            p[0] = node.let(ret=ret, args=p[3], lineno=p.lineno(2), lexpos=p.lexpos(2))
 
             if isinstance(p[1], node.matrix):
                 # TBD: mark idents as "P" - persistent
-                if p[3].__class__ not in (node.ident, node.funcall
-                                          ):  #, p[3].__class__
-                    raise_exception(SyntaxError,
-                                    "multi-assignment",
-                                    new_lexer)
+                if p[3].__class__ not in (node.ident, node.funcall):  # , p[3].__class__
+                    raise_exception(SyntaxError, "multi-assignment", new_lexer)
                 if p[3].__class__ is node.ident:
                     # [A1(B1) A2(B2) ...] = F     implied F()
                     # import pdb; pdb.set_trace()
@@ -366,15 +371,16 @@ def p_expr2(p):
                 p[3].nargout = len(p[1].args[0])
     elif p[2] == "*":
         p[0] = node.funcall(
-            func_expr=node.ident("dot"), args=node.expr_list([p[1], p[3]]))
+            func_expr=node.ident("dot"), args=node.expr_list([p[1], p[3]])
+        )
     elif p[2] == ".*":
         p[0] = node.funcall(
-            func_expr=node.ident("multiply"),
-            args=node.expr_list([p[1], p[3]]))
+            func_expr=node.ident("multiply"), args=node.expr_list([p[1], p[3]])
+        )
 
-#    elif p[2] == "." and isinstance(p[3],node.expr) and p[3].op=="parens":
-#        p[0] = node.getfield(p[1],p[3].args[0])
-#        raise SyntaxError(p[3],p.lineno(3),p.lexpos(3))
+    #    elif p[2] == "." and isinstance(p[3],node.expr) and p[3].op=="parens":
+    #        p[0] = node.getfield(p[1],p[3].args[0])
+    #        raise SyntaxError(p[3],p.lineno(3),p.lexpos(3))
     elif p[2] == ":" and isinstance(p[1], node.expr) and p[1].op == ":":
         # Colon expression means different things depending on the
         # context.  As an array subscript, it is a slice; otherwise,
@@ -396,8 +402,7 @@ def p_expr_colon(p):
 @exceptions
 def p_expr_end(p):
     "end : END_EXPR"
-    p[0] = node.expr(
-        op="end", args=node.expr_list([node.number(0), node.number(0)]))
+    p[0] = node.expr(op="end", args=node.expr_list([node.number(0), node.number(0)]))
 
 
 @exceptions
@@ -410,8 +415,8 @@ def p_expr_ident(p):
         lexpos=p.lexpos(1),
         defs=None,
         props=None,
-        init=None)
-
+        init=None,
+    )
 
 
 @exceptions
@@ -421,7 +426,7 @@ def p_ident_init_opt(p):
                    | ident
                    | ident EQ expr
     """
-    if p[1] == '~':
+    if p[1] == "~":
         p[0] = node.ident("__")
     else:
         p[0] = p[1]
@@ -473,7 +478,7 @@ def p_exprs(p):
         p[0] = p[1]
         p[0].append(p[3])
     else:
-        assert (0)
+        assert 0
     assert isinstance(p[0], node.expr_list)
 
 
@@ -484,10 +489,10 @@ def p_field_expr(p):
     """
     p[0] = node.expr(
         op=".",
-        args=node.expr_list([
-            p[1], node.ident(
-                name=p[2], lineno=p.lineno(2), lexpos=p.lexpos(2))
-        ]))
+        args=node.expr_list(
+            [p[1], node.ident(name=p[2], lineno=p.lineno(2), lexpos=p.lexpos(2))]
+        ),
+    )
 
 
 @exceptions
@@ -498,8 +503,7 @@ def p_foo_stmt(p):
     ident = expr1.ret
     args1 = expr1.args
     args2 = expr2.args
-    p[0] = node.let(ret=ident,
-                    args=node.expr("or", node.expr_list([args1, args2])))
+    p[0] = node.let(ret=ident, args=node.expr("or", node.expr_list([args1, args2])))
 
 
 @exceptions
@@ -515,10 +519,11 @@ def p_for_stmt(p):
         p[2].props = "I"  # I= for-loop iteration variable
         p[0] = node.for_stmt(ident=p[2], expr=p[4], stmt_list=p[6])
 
+
 @exceptions
 def p_func_stmt(p):
     """func_stmt : FUNCTION ident lambda_args SEMI
-                 | FUNCTION ret EQ ident lambda_args SEMI
+    | FUNCTION ret EQ ident lambda_args SEMI
     """
     # stmt_list of func_stmt is set below
     # marked with XYZZY
@@ -528,33 +533,36 @@ def p_func_stmt(p):
     if len(p) == 5:
         assert isinstance(p[3], node.expr_list)
         p[0] = node.func_stmt(
-            ident=p[2],
-            ret=node.expr_list(),
-            args=p[3],
-            stmt_list=node.stmt_list())
+            ident=p[2], ret=node.expr_list(), args=p[3], stmt_list=node.stmt_list()
+        )
         ret_expr = node.expr_list()
     elif len(p) == 7:
         assert isinstance(p[2], node.expr_list)
         assert isinstance(p[5], node.expr_list)
         p[0] = node.func_stmt(
-            ident=p[4], ret=p[2], args=p[5], stmt_list=node.stmt_list())
+            ident=p[4], ret=p[2], args=p[5], stmt_list=node.stmt_list()
+        )
         ret_expr = p[2]
     else:
         assert 0
 
-    p[0].ident.props = 'F'
+    p[0].ident.props = "F"
 
 
 @exceptions
 def p_funcall_expr(p):
     """expr : expr LPAREN expr_list RPAREN
-            | expr LPAREN RPAREN
+    | expr LPAREN RPAREN
     """
-    if (len(p) == 5 and len(p[3]) == 1 and p[3][0].__class__ is node.expr and
-            p[3][0].op == ":" and not p[3][0].args):
+    if (
+        len(p) == 5
+        and len(p[3]) == 1
+        and p[3][0].__class__ is node.expr
+        and p[3][0].op == ":"
+        and not p[3][0].args
+    ):
         # foo(:) => ravel(foo)
-        p[0] = node.funcall(
-            func_expr=node.ident("ravel"), args=node.expr_list([p[1]]))
+        p[0] = node.funcall(func_expr=node.ident("ravel"), args=node.expr_list([p[1]]))
     else:
         args = node.expr_list() if len(p) == 4 else p[3]
         assert isinstance(args, node.expr_list)
@@ -564,7 +572,7 @@ def p_funcall_expr(p):
 @exceptions
 def p_global_list(p):
     """global_list : ident
-                   | global_list ident
+    | global_list ident
     """
     if len(p) == 2:
         p[0] = node.global_list([p[1]])
@@ -601,25 +609,24 @@ def p_if_stmt(p):
 @exceptions
 def p_lambda_args(p):
     """lambda_args : LPAREN RPAREN
-                   | LPAREN arg_list RPAREN
+    | LPAREN arg_list RPAREN
     """
     p[0] = p[2] if len(p) == 4 else node.expr_list()
 
 
 @exceptions
 def p_lambda_expr(p):
-    """lambda_expr : HANDLE lambda_args expr
-    """
+    """lambda_expr : HANDLE lambda_args expr"""
     p[0] = node.lambda_expr(args=p[2], ret=p[3])
 
 
 @exceptions
 def p_matrix(p):
     """matrix : LBRACKET RBRACKET
-              | LBRACKET concat_list RBRACKET
-              | LBRACKET concat_list SEMI RBRACKET
-              | LBRACKET expr_list RBRACKET
-              | LBRACKET expr_list SEMI RBRACKET
+    | LBRACKET concat_list RBRACKET
+    | LBRACKET concat_list SEMI RBRACKET
+    | LBRACKET expr_list RBRACKET
+    | LBRACKET expr_list SEMI RBRACKET
     """
     if len(p) == 3:
         p[0] = node.matrix()
@@ -797,10 +804,7 @@ def p_try_catch(p):
     ## | TRY stmt_list END_STMT
     assert isinstance(p[2], node.stmt_list)
     # assert isinstance(p[4],node.stmt_list)
-    p[0] = node.try_catch(
-        try_stmt=p[2],
-        catch_stmt=p[4],
-        finally_stmt=node.stmt_list())
+    p[0] = node.try_catch(try_stmt=p[2], catch_stmt=p[4], finally_stmt=node.stmt_list())
 
 
 @exceptions
@@ -808,8 +812,7 @@ def p_unwind(p):
     """
     unwind : UNWIND_PROTECT stmt_list UNWIND_PROTECT_CLEANUP stmt_list END_UNWIND_PROTECT
     """
-    p[0] = node.try_catch(
-        try_stmt=p[2], catch_stmt=node.expr_list(), finally_stmt=p[4])
+    p[0] = node.try_catch(try_stmt=p[2], catch_stmt=node.expr_list(), finally_stmt=p[4])
 
 
 @exceptions
@@ -829,9 +832,7 @@ def p_error(p):
         # print("Discarded comment", p.value)
         parser.errok()
         return
-    raise_exception(SyntaxError,
-                    ('Unexpected "%s" (parser)' % p.value),
-                    new_lexer)
+    raise_exception(SyntaxError, ('Unexpected "%s" (parser)' % p.value), new_lexer)
 
 
 parser = yacc.yacc(start="top")
@@ -841,12 +842,12 @@ parser = yacc.yacc(start="top")
 def parse(buf):
     if "P" in options.debug:
         import pdb
+
         pdb.set_trace()
     global new_lexer  # used in main.main()
     new_lexer = lexer.new()
-    p = parser.parse(
-        buf, tracking=1, debug=options.debug_parser, lexer=new_lexer)
-    
+    p = parser.parse(buf, tracking=1, debug=options.debug_parser, lexer=new_lexer)
+
     if new_lexer.stack and new_lexer.stack.pop() == "function":
         f = next(n for n in p if isinstance(n, node.func_stmt))
         p.append(node.return_stmt(ret=f.ret))
@@ -857,13 +858,15 @@ def parse(buf):
         for i, pi in enumerate(p):
             print(i, pi.__class__.__name__, pi._backend())
 
-#    for i in range(len(p)):
-#        if isinstance(p[i], node.func_stmt):
-#            break
-#    else:
-#        return None  # p[i] is a func decl
+    #    for i in range(len(p)):
+    #        if isinstance(p[i], node.func_stmt):
+    #            break
+    #    else:
+    #        return None  # p[i] is a func decl
 
     return p
+
+
 #    for j in range(i+1,len(p)):
 #        if i < j and isinstance(p[j], node.func_stmt):
 #            p.insert(j,node.return_stmt(ret=p[i].ret))
@@ -874,4 +877,3 @@ def parse(buf):
 #    if "2" in options.debug:
 #        for i,pi in enumerate(p):
 #            print(i,pi.__class__.__name__,str(pi)[:50])
-
