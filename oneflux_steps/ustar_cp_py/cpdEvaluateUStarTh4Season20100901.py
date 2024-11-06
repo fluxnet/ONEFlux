@@ -331,13 +331,17 @@ def cpdEvaluateUStarTh4Season20100901(
             Stats3[iSeason, iStrata] = xs3
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:175
 
-    if size(varargin) > 0:
-        Stats2 = jsonencode(Stats2)
+    for i in arange(1, length(varargin)).reshape(-1):
+        a = take(varargin, i)
         # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:182
-        Stats3 = jsonencode(Stats3)
-    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:183
-
-    # ========================================================================
-    # ========================================================================
+        if iscell(a) and strcmp(take(a, 1), "jsonencode"):
+            for j in arange(2, length(a)).reshape(-1):
+                if 2 == take(a, j):
+                    Stats2 = jsonencode(Stats2)
+                # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:187
+                else:
+                    if 4 == take(a, j):
+                        Stats3 = jsonencode(Stats3)
+    # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:189
 
     return Cp2, Stats2, Cp3, Stats3

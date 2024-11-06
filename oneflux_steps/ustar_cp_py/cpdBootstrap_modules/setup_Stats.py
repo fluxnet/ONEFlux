@@ -25,8 +25,17 @@ def setup_Stats(nBoot=None, nSeasons=None, nStrataX=None, *varargin):
         Stats = cellarray()
     Stats[1:nSeasons, 1:nStrataX, 1:nBoot] = StatsMT
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/setup_Stats.m:16
-    if size(varargin) > 0:
-        Stats = jsonencode(Stats)
-    # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/setup_Stats.m:18
+    for i in arange(1, length(varargin)).reshape(-1):
+        a = take(varargin, i)
+        # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/setup_Stats.m:20
+        if iscell(a) and strcmp(take(a, 1), "jsonencode"):
+            for j in arange(2, length(a)).reshape(-1):
+                if 1 == take(a, j):
+                    Stats = jsonencode(Stats)
+    # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/setup_Stats.m:25
 
     return Stats
+
+
+if __name__ == "__main__":
+    pass
