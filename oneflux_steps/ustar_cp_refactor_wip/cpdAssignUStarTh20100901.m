@@ -96,7 +96,8 @@
 
 	cVars={'mt','Cp','b1','c2','cib1','cic2','p'}; nVars=length(cVars); 
 	for i=1:nVars; 
-		cv=char(cVars(i)); eval([cv '=fcReadFields(Stats,''' cv ''');']); 
+		cv=char(cVars(i));
+		eval([cv '=fcReadFields(Stats,''' cv ''')']); 
 		switch cv; 
 			case 'mt'; xmt=mt; 
 			case 'Cp'; xCp=Cp; 
