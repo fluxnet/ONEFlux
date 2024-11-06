@@ -316,8 +316,6 @@ stats_entry = {'n': None, 'Cp': None, 'Fmax': None, 'p': None, 'b0': None, 'b1':
 )
 def test_setup_Stats(matlab_engine, nBoot, nSeasons, nStrataX, expected_shape):
     # Call the MATLAB function
-    Stats= matlab_engine.setup_Stats(nBoot, nSeasons, nStrataX, 1)
-
-    Stats = json.loads(Stats)
+    Stats= matlab_engine.setup_Stats(nBoot, nSeasons, nStrataX, jsonencode=[0])
 
     assert Stats == expected_shape
