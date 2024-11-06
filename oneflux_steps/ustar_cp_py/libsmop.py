@@ -68,11 +68,11 @@ NaN = numpy.nan
 
 
 def jsonencode(a):
-    return json.dumps(a)
+    return a if isinstance(a, cellarray) else json.dumps(a)
 
 
 def jsondecode(a):
-    return json.loads(a)
+    return a if isinstance(a, cellarray) else json.loads(a)
 
 
 def getfield(a, *fields):
