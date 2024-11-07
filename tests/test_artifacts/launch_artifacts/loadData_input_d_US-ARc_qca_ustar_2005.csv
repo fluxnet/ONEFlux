@@ -1,0 +1,3 @@
+name,folder,date,bytes,isdir,datenum
+US-ARc_qca_ustar_2005.csv,/tmp/pytest-of-ia/pytest-54/test_ustar_cp_US_Vcm_expected_0/input,18-Oct-2024 11:26:47,950283,0,739543.47693287
+US-ARc_qca_ustar_2006.csv,/tmp/pytest-of-ia/pytest-54/test_ustar_cp_US_Vcm_expected_0/input,18-Oct-2024 11:26:47,949655,0,739543.47693287
