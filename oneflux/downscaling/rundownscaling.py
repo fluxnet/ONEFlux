@@ -22,9 +22,7 @@ import pandas as pd
 import datetime
 import logging
 import argparse
-import multiprocessing
 
-from multiprocessing import Pool
 from oneflux.downscaling.gapfilling_prep import *
 from oneflux import ONEFluxError, log_config
 
@@ -160,7 +158,6 @@ def run(dir_era5_co, dir_input, dir_output):
     item_gap_filling_nook = []
 
     df_stat_t = pd.DataFrame()
-    n_available_cores = int(multiprocessing.cpu_count()/3)
 
     for ff in lista_dir_ok:
         sitecode = os.path.basename(ff).split('_')[0]

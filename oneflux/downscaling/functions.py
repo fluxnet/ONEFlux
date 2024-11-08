@@ -755,7 +755,7 @@ def write_stat_30min(weather,weather_gapfill,timeshift,weather_period,path,name)
               fic.write("%4.2f," % val2)
               fic.write("%4.2f\n" % val4)
           else:
-              fic.write("-,-,-,-\n")
+              fic.write("-,-,-\n")
       else:
           fic.write("-,-,-,-\n")
     fic.close()
