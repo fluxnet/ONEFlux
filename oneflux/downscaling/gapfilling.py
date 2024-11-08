@@ -4,7 +4,7 @@ import logging
 from scipy.optimize import leastsq
 from scipy import stats
 from oneflux.downscaling.functions import solarang, time_zone, residuals, rms
-from oneflux.downscaling.constantes import * 
+from oneflux.downscaling.constants import * 
 
 log = logging.getLogger(__name__)
 

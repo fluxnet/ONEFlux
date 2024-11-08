@@ -10,7 +10,7 @@ import pandas as pd
 
 from scipy import stats
 from scipy.optimize import leastsq
-from oneflux.downscaling.constantes import *
+from oneflux.downscaling.constants import *
 
 log = logging.getLogger(__name__)
 
