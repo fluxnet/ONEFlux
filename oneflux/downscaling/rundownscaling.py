@@ -8,8 +8,8 @@ Main running code for downscaling. Applies downscaling starting from
 folder 02__qc_auto. Also creates the two files with the statistics
 and min/max for the inputs
 
-@author: Carlo Trotta, Gilberto Pastorello
-@contact: trottacarlo@unitus.it, gzpastorello@lbl.gov
+@author: Nicolas Vuichard, Carlo Trotta, Gilberto Pastorello
+@contact: nicolas.vuichard@lsce.ipsl.fr, trottacarlo@unitus.it, gzpastorello@lbl.gov
 @date: 2024-11-05
 '''
 import os
