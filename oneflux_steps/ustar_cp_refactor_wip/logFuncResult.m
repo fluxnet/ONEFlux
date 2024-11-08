@@ -127,10 +127,31 @@ function saveVariableAsCSV(var, filePath)
     elseif isstruct(var)
         % Convert struct to table
         try
+            % disp(var);
             T = struct2table(var);
             writetable(T, filePath);
-        catch
-            error('Error writing struct to CSV.');
+        catch csvError
+            warning('Failed to write to CSV. Trying JSON format instead.');
+
+            try
+                jsonFilePath = strrep(filePath, '.csv', '.json');
+                jsonData = jsonencode(var);
+                fid = fopen(jsonFilePath, 'w');
+                
+                if fid == -1
+                    error('Could not open file for writing JSON.');
+                end
+                
+                fwrite(fid, jsonData, 'char');
+                fclose(fid);
+                disp('Successfully written struct to JSON.');
+                
+            catch jsonError
+                % If both CSV and JSON writing fail, throw an error
+                error('Error writing struct to CSV and JSON.\nCSV Error: %s\nJSON Error: %s', ...
+                      csvError.message, jsonError.message);
+            end
+
         end
     elseif ischar(var) || isstring(var)
         % Convert to cell and write
