@@ -855,6 +855,7 @@ class PipelineMeteoERA(object):
     '''
     METEO_ERA_EXECUTE = False # TODO: change default when method implemented
     METEO_ERA_DIR = "06_meteo_era"
+    METEO_ERA_DIR_INPUT = "reanalysis_input"
     _OUTPUT_FILE_PATTERNS = [
         "{s}_????.csv",
         "stat_{s}.txt",
@@ -862,7 +863,7 @@ class PipelineMeteoERA(object):
         "stat30_{s}.txt",
     ]
     _OUTPUT_FILE_PATTERNS_EXTRA = [
-        "{s}_????-????.nc",
+        "{s}_????-????.nc", # missing for some sites
         "{s}_LWin_????-????.pdf", # missing for some sites
         "{s}_LWin_calc_????-????.pdf", # missing for some sites
         "{s}_nocorr_????.csv",
@@ -885,6 +886,8 @@ class PipelineMeteoERA(object):
         self.execute = self.pipeline.configs.get('meteo_era_execute', self.METEO_ERA_EXECUTE)
         self.execute = self.METEO_ERA_EXECUTE # TODO: remove when method implemented
         self.meteo_era_dir = self.pipeline.configs.get('meteo_era_dir', os.path.join(self.pipeline.data_dir, self.METEO_ERA_DIR))
+        self.meteo_era_dir_input = self.pipeline.configs.get('meteo_era_dir_input', os.path.join(self.meteo_era_dir, self.METEO_ERA_DIR_INPUT))
+        self.meteo_era_dir_source = self.pipeline.configs.get('meteo_era_dir_source', None)
         self.output_file_patterns = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS]
         self.output_file_patterns_extra = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_EXTRA]
 
@@ -893,6 +896,8 @@ class PipelineMeteoERA(object):
         Validate pre-execution requirements
         '''
         pass
+        # TODO: - check source folder exists;
+        #       - check reanalysis files for the site exist
 
     def post_validate(self):
         '''
@@ -1006,6 +1011,8 @@ class PipelineMeteoERA(object):
         create_replace_dir(tdir=self.meteo_era_dir, label='meteo_era.run', suffix=self.pipeline.run_id, simulation=self.pipeline.simulation)
 
         # TODO: implement run
+        #       - copy reanalysis files for the site from source to input folder
+        #       - run downscaling code from new downscaling code (era input folder, qc_auto input folder, output folder)
 
         self.post_validate()
         log.info("Pipeline meteo_era execution finished")
@@ -1738,16 +1745,16 @@ class PipelinePrepareUREPW(object):
 #       #  TODO: finish implementation
         for root, _, filenames in os.walk(self.pipeline.nee_partition_nt.nee_partition_nt_dir):
             for f in filenames:
-                print os.path.join(root, f)
+                print(os.path.join(root, f))
 
         for root, _, filenames in os.walk(self.pipeline.nee_partition_dt.nee_partition_dt_dir):
             for f in filenames:
-                print os.path.join(root, f)
+                print(os.path.join(root, f))
 
         if os.path.isdir(self.pipeline.nee_partition_sr.nee_partition_sr_dir):
             for root, _, filenames in os.walk(self.pipeline.nee_partition_dt.nee_partition_sr_dir):
                 for f in filenames:
-                    print os.path.join(root, f)
+                    print(os.path.join(root, f))
 
         # execute prepare_ure step
         if not self.execute and not self.pipeline.simulation:
