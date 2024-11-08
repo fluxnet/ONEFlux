@@ -25,7 +25,7 @@ import argparse
 import multiprocessing
 
 from multiprocessing import Pool
-from oneflux.downscaling.gapfilling import *
+from oneflux.downscaling.gapfilling_prep import *
 from oneflux import ONEFluxError, log_config
 
 log = logging.getLogger(__name__)
@@ -329,3 +329,4 @@ if __name__ == "__main__":
     end_process = datetime.datetime.now()
     elap_process = end_process - start_process
     log.debug('Process time: Start: %s, finish: %s, total runtime: %s' % (start_process, end_process, elap_process))
+    
