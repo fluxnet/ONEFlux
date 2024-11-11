@@ -73,7 +73,6 @@ class MFWrapper:
                 ret = ret[0]
         return ret
 
-
 def mf_factory(cls, *args, **kwargs):
     f = object.__new__(MatlabFunc)
     f.__init__(*args, **kwargs)
