@@ -53,7 +53,8 @@ ERA_LAST_TIMESTAMP_START = ERA_LAST_TIMESTAMP_START_TEMPLATE.format(y=str(ERA_LA
 HOME_DIRECTORY = os.path.expanduser('~')
 TOOL_DIRECTORY = os.path.join(HOME_DIRECTORY, 'bin', 'oneflux')
 MCR_DIRECTORY = os.path.join(HOME_DIRECTORY, 'bin', 'MATLAB_Compiler_Runtime', 'v717')
-WORKING_DIRECTORY = os.path.join(HOME_DIRECTORY, 'data', 'fluxnet', 'FLUXNET2015')
+ERA_SOURCE_DIRECTORY = os.path.join(HOME_DIRECTORY, 'data', 'ERA')
+WORKING_DIRECTORY = os.path.join(HOME_DIRECTORY, 'data', 'fluxnet', 'FLUXNET')
 WORKING_DIRECTORY_SITE = os.path.join(WORKING_DIRECTORY, '{sd}')
 QCDIR = os.path.join(WORKING_DIRECTORY_SITE, "01_qc_visual", "qcv_files") # NEW FOR APRIL2016
 MPDIR = os.path.join(WORKING_DIRECTORY_SITE, "04_ustar_mp")

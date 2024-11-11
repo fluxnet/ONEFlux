@@ -33,7 +33,7 @@ from oneflux.pipeline.common import CSVMANIFEST_HEADER, ZIPMANIFEST_HEADER, ONEF
                                      NEE_PERC_USTAR_CUT_PATTERN, UNC_INFO_F, UNC_INFO_ALT_F, NEE_PERC_NEE_F, \
                                      METEO_INFO_F, NEE_INFO_F, \
                                      HOSTNAME, NOW_TS, ERA_FIRST_TIMESTAMP_START, ERA_LAST_TIMESTAMP_START,\
-                                     MODE_ISSUER, MODE_PRODUCT
+                                     MODE_ISSUER, MODE_PRODUCT, ERA_SOURCE_DIRECTORY
 from oneflux.partition.library import PARTITIONING_DT_ERROR_FILE, EXTRA_FILENAME
 from oneflux.partition.auxiliary import nan, nan_ext, NAN, NAN_TEST
 from oneflux.partition.daytime import ONEFluxPartitionBrokenOptError
@@ -128,6 +128,10 @@ class Pipeline(object):
         # main data directory (all sites)
         self.data_dir = self.configs.get('data_dir', os.path.join(DATA_DIR, self.siteid)) # TODO: default should be self.site_dir?
         log.debug("ONEFlux Pipeline: using data dir '{v}'".format(v=self.data_dir))
+
+        # ERA pre-extracted, unit adjusted, data files for pixel(s) corresponding to site location
+        self.era_source_dir = self.configs.get('era_source_dir', os.path.join(ERA_SOURCE_DIRECTORY, self.siteid))
+        log.debug("ONEFlux Pipeline: using ERA dir '{v}'".format(v=self.era_dir))
 
         self.prodfile_template = os.path.join(self.data_dir, FLUXNET_PRODUCT_CLASS.FLUXNET2015_DIR, PRODFILE_TEMPLATE_F)
         self.prodfile_aux_template = os.path.join(self.data_dir, FLUXNET_PRODUCT_CLASS.FLUXNET2015_DIR, PRODFILE_AUX_TEMPLATE_F)
@@ -856,6 +860,9 @@ class PipelineMeteoERA(object):
     METEO_ERA_EXECUTE = False # TODO: change default when method implemented
     METEO_ERA_DIR = "06_meteo_era"
     METEO_ERA_DIR_INPUT = "reanalysis_input"
+    _INPUT_FILE_PATTERNS = [
+        "{s}__ERA5__reanalysis-era5-single-levels__????__*.csv",
+    ]
     _OUTPUT_FILE_PATTERNS = [
         "{s}_????.csv",
         "stat_{s}.txt",
@@ -886,8 +893,9 @@ class PipelineMeteoERA(object):
         self.execute = self.pipeline.configs.get('meteo_era_execute', self.METEO_ERA_EXECUTE)
         self.execute = self.METEO_ERA_EXECUTE # TODO: remove when method implemented
         self.meteo_era_dir = self.pipeline.configs.get('meteo_era_dir', os.path.join(self.pipeline.data_dir, self.METEO_ERA_DIR))
-        self.meteo_era_dir_input = self.pipeline.configs.get('meteo_era_dir_input', os.path.join(self.meteo_era_dir, self.METEO_ERA_DIR_INPUT))
-        self.meteo_era_dir_source = self.pipeline.configs.get('meteo_era_dir_source', None)
+        self.meteo_era_input_dir = self.pipeline.configs.get('meteo_era_input_dir', os.path.join(self.meteo_era_dir, self.METEO_ERA_DIR_INPUT))
+        self.meteo_era_source_dir = self.pipeline.configs.get('meteo_era_source_dir', None)
+        self.input_file_patterns = [i.format(s=self.pipeline.siteid) for i in self._INPUT_FILE_PATTERNS]
         self.output_file_patterns = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS]
         self.output_file_patterns_extra = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_EXTRA]
 
@@ -895,9 +903,14 @@ class PipelineMeteoERA(object):
         '''
         Validate pre-execution requirements
         '''
-        pass
-        # TODO: - check source folder exists;
-        #       - check reanalysis files for the site exist
+        # check ERA source directory
+        test_dir(tdir=self.meteo_era_source_dir)
+
+        # check ERA input source files
+        test_file_list(file_list=self.input_source_file_patterns, tdir=self.meteo_era_source_dir, label='meteo_era.pre_validate', log_only=False)
+
+        # check dependency steps
+        self.pipeline.qc_auto.post_validate()
 
     def post_validate(self):
         '''
@@ -907,7 +920,7 @@ class PipelineMeteoERA(object):
         test_dir(tdir=self.meteo_era_dir, label='meteo_era.post_validate')
 
         # check output files and result report (log)
-        test_file_list(file_list=self.output_file_patterns, tdir=self.meteo_era_dir, label='meteo_era.post_validate', log_only=True)
+        test_file_list(file_list=self.output_file_patterns, tdir=self.meteo_era_dir, label='meteo_era.post_validate', log_only=False)
         test_file_list(file_list=self.output_file_patterns_extra, tdir=self.meteo_era_dir, label='meteo_era.post_validate', log_only=True)
 
         # test "stat_{s}.txt" file for 100.0 % missing data on variables
