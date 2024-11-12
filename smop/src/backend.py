@@ -258,7 +258,7 @@ def _backend(self, level=0):
     # import pdb; pdb.set_trace()
     f = self.func_expr._backend()
     if f == "eval":
-        f = "exec"
+        return "exec_(%s, globals(), locals())" % self.args._backend(level)
     if not self.nargout or self.nargout == 1:
         return "%s(%s)" % (f, self.args._backend(level))
     elif not self.args:

@@ -159,16 +159,19 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
     for i in arange(1, nVars).reshape(-1):
         cv = char(cVars[i])
         # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:99
-        exec(cv + "=fcReadFields(Stats,'" + cv + "')")
-        # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:101
+        exec_(cv + "=fcReadFields(Stats,'" + cv + "')", globals(), locals())
         if "mt" == cv:
             xmt = copy(mt)
-        # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:103
+        # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:102
         else:
             if "Cp" == cv:
                 xCp = copy(Cp)
+            # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:103
+            else:
+                if "c2" == cv:
+                    xc2 = copy(c2)
         # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:104
-        exec(cv + "=fcx2colvec(" + cv + ");")
+        exec_(cv + "=fcx2colvec(" + cv + ");", globals(), locals())
 
     pSig = 0.05
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:109
@@ -180,12 +183,12 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
 
     nPar = 3
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:115
-    if sum(logical_not(isnan(c2))) == 0:
+    if sum(logical_not(isnan(xc2))) == 0:
         nPar = 2
         # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:115
-        c2 = dot(0, b1)
+        xc2 = dot(0, b1)
         # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:115
-        cic2 = copy(c2)
+        cic2 = copy(xc2)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:115
 
     # Classify Cp regressions by slopes of b1 and c2 regression coeff:
@@ -197,23 +200,23 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:122
     nTry = length(iTry)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:122
-    iCp = find(logical_not(isnan(b1 + c2 + Cp)))
+    iCp = find(logical_not(isnan(b1 + xc2 + Cp)))
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:123
     nCp = length(iCp)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:123
-    iNS = find(logical_and(fP == 0, logical_not(isnan(b1 + c2 + Cp))))
+    iNS = find(logical_and(fP == 0, logical_not(isnan(b1 + xc2 + Cp))))
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:124
     nNS = length(iNS)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:124
-    iSig = find(logical_and(fP == 1, logical_not(isnan(b1 + c2 + Cp))))
+    iSig = find(logical_and(fP == 1, logical_not(isnan(b1 + xc2 + Cp))))
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:125
     nSig = length(iSig)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:125
-    iModeE = find(logical_and(fP == 1, b1 < c2))
+    iModeE = find(logical_and(fP == 1, b1 < xc2))
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:126
     nModeE = length(iModeE)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:126
-    iModeD = find(logical_and(fP == 1, b1 >= c2))
+    iModeD = find(logical_and(fP == 1, b1 >= xc2))
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:127
     nModeD = length(iModeD)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:127
@@ -280,7 +283,7 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:145
     else:
         if 3 == nPar:
-            x = concat([Cp, b1, c2, cib1, cic2])
+            x = concat([Cp, b1, xc2, cib1, cic2])
             # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:146
             nx = 5
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:146
