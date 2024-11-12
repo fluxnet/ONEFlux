@@ -101,6 +101,7 @@
 		switch cv; 
 			case 'mt'; xmt=mt; 
 			case 'Cp'; xCp=Cp; 
+			case 'c2'; xc2=c2;
 			otherwise; 
 		end; 
 		eval([cv '=fcx2colvec(' cv ');']); 
@@ -111,7 +112,7 @@
 %	or diagnostic 3-parameter change-point model
 %	and set c2 and cic2 to zero if 2-parameter 
 
-	nPar=3; if sum(~isnan(c2))==0; nPar=2; c2=0*b1; cic2=c2; end; 
+	nPar=3; if sum(~isnan(xc2))==0; nPar=2; xc2=0*b1; cic2=xc2; end; 
 
 %	Classify Cp regressions by slopes of b1 and c2 regression coeff: 
 %	- NS: not sig, mfP=NaN, p>0.05
@@ -119,11 +120,11 @@
 %	- ModeD: typical significant Cp (b1>=c2) 
 
 	iTry=find(~isnan(mt)); nTry=length(iTry); 
-	iCp=find(~isnan(b1+c2+Cp)); nCp=length(iCp); 
-	iNS=find(fP==0 & ~isnan(b1+c2+Cp)); nNS=length(iNS); 
-	iSig=find(fP==1 & ~isnan(b1+c2+Cp)); nSig=length(iSig); 
-	iModeE=find(fP==1 & b1<c2); nModeE=length(iModeE); 
-	iModeD=find(fP==1 & b1>=c2); nModeD=length(iModeD); 
+	iCp=find(~isnan(b1+xc2+Cp)); nCp=length(iCp); 
+	iNS=find(fP==0 & ~isnan(b1+xc2+Cp)); nNS=length(iNS); 
+	iSig=find(fP==1 & ~isnan(b1+xc2+Cp)); nSig=length(iSig); 
+	iModeE=find(fP==1 & b1<xc2); nModeE=length(iModeE); 
+	iModeD=find(fP==1 & b1>=xc2); nModeD=length(iModeD); 
 	
 %	Evaluate and accept primary mode of significant Cps
 				
@@ -142,7 +143,7 @@
 
 	switch nPar; 
 		case 2; x=[Cp b1 cib1]; nx=3; 
-		case 3; x=[Cp b1 c2 cib1 cic2]; nx=5; 
+		case 3; x=[Cp b1 xc2 cib1 cic2]; nx=5; 
 	end; 
 	
 	mx=nanmedian(x); sx=fcNaniqr(x); 

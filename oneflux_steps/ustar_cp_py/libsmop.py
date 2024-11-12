@@ -16,6 +16,7 @@ try:
 except ImportError:
     pass
 
+import re
 import os
 import sys
 import time
@@ -65,6 +66,15 @@ def load_all_vars():
 pwd = os.getcwd()
 eps = numpy.finfo(float).eps
 NaN = numpy.nan
+
+
+def logical(a):
+    return matlabarray(a, bool)
+
+
+def exec_(s, globals=None, locals=None):
+    s = re.sub(r"(?=^|;)\s*(\w+)\s*=", r"global \1; \1 =", s)
+    exec(s, globals, locals)
 
 
 def jsonencode(a):
@@ -555,7 +565,9 @@ def version():
 def zeros(*args, **kwargs):
     if not args:
         return 0.0
-    if len(args) == 1:
+    if hasattr(args[0], "__len__"):
+        args = args[0]
+    if numpy.size(args) == 1:
         args += args
     return matlabarray(numpy.zeros(args, **kwargs))
 
@@ -948,7 +960,7 @@ class matlabarray(numpy.ndarray):
     def __new__(cls, a=[], dtype=None):
         if isinstance(a, matlabarray) and dtype is None:
             return a
-        copy = not isinstance(a, numpy.ndarray)
+        copy = not isinstance(a, numpy.ndarray) or dtype and a.dtype != dtype
         obj = (
             numpy.array(a, dtype=dtype, order="F", copy=copy, ndmin=2)
             .view(cls)
