@@ -27,14 +27,15 @@ from oneflux.pipeline.variables_codes import QC_FULL_DIRECT_D
 from oneflux.pipeline.common import CSVMANIFEST_HEADER, ZIPMANIFEST_HEADER, ONEFluxPipelineError, \
                                      run_command, test_dir, test_file, test_file_list, test_file_list_or, \
                                      test_create_dir, create_replace_dir, create_and_empty_dir, test_pattern, \
-                                     check_headers_fluxnet2015, get_empty_array_year, \
+                                     check_headers_fluxnet2015, get_empty_array_year, copy_files_pattern,\
                                      PRODFILE_TEMPLATE_F, PRODFILE_AUX_TEMPLATE_F, PRODFILE_YEARS_TEMPLATE_F, \
                                      PRODFILE_FIGURE_TEMPLATE_F, ZIPFILE_TEMPLATE_F, NEE_PERC_USTAR_VUT_PATTERN, \
                                      NEE_PERC_USTAR_CUT_PATTERN, UNC_INFO_F, UNC_INFO_ALT_F, NEE_PERC_NEE_F, \
                                      METEO_INFO_F, NEE_INFO_F, \
                                      HOSTNAME, NOW_TS, ERA_FIRST_TIMESTAMP_START, ERA_LAST_TIMESTAMP_START,\
-                                     MODE_ISSUER, MODE_PRODUCT
+                                     MODE_ISSUER, MODE_PRODUCT, ERA_SOURCE_DIRECTORY
 from oneflux.partition.library import PARTITIONING_DT_ERROR_FILE, EXTRA_FILENAME
+from oneflux.downscaling.rundownscaling import run as run_downscaling
 from oneflux.partition.auxiliary import nan, nan_ext, NAN, NAN_TEST
 from oneflux.partition.daytime import ONEFluxPartitionBrokenOptError
 from oneflux.pipeline.site_plots import gen_site_plots
@@ -128,6 +129,10 @@ class Pipeline(object):
         # main data directory (all sites)
         self.data_dir = self.configs.get('data_dir', os.path.join(DATA_DIR, self.siteid)) # TODO: default should be self.site_dir?
         log.debug("ONEFlux Pipeline: using data dir '{v}'".format(v=self.data_dir))
+
+        # ERA pre-extracted, unit adjusted, data files for pixel(s) corresponding to site location
+        self.era_source_dir = self.configs.get('era_source_dir', os.path.join(ERA_SOURCE_DIRECTORY, self.siteid))
+        log.debug("ONEFlux Pipeline: using ERA dir '{v}'".format(v=self.era_source_dir))
 
         self.prodfile_template = os.path.join(self.data_dir, FLUXNET_PRODUCT_CLASS.FLUXNET2015_DIR, PRODFILE_TEMPLATE_F)
         self.prodfile_aux_template = os.path.join(self.data_dir, FLUXNET_PRODUCT_CLASS.FLUXNET2015_DIR, PRODFILE_AUX_TEMPLATE_F)
@@ -853,8 +858,10 @@ class PipelineMeteoERA(object):
     
     N.B.: Step dependent on external Python code to be integrated in future releases.
     '''
-    METEO_ERA_EXECUTE = False # TODO: change default when method implemented
+    METEO_ERA_EXECUTE = True
     METEO_ERA_DIR = "06_meteo_era"
+    METEO_ERA_DIR_INPUT = "reanalysis_input"
+    _INPUT_SOURCE_FILE_PATTERN = "{s}__ERA5__reanalysis-era5-single-levels__????__*.csv"
     _OUTPUT_FILE_PATTERNS = [
         "{s}_????.csv",
         "stat_{s}.txt",
@@ -862,7 +869,7 @@ class PipelineMeteoERA(object):
         "stat30_{s}.txt",
     ]
     _OUTPUT_FILE_PATTERNS_EXTRA = [
-        "{s}_????-????.nc",
+        "{s}_????-????.nc", # missing for some sites
         "{s}_LWin_????-????.pdf", # missing for some sites
         "{s}_LWin_calc_????-????.pdf", # missing for some sites
         "{s}_nocorr_????.csv",
@@ -883,8 +890,10 @@ class PipelineMeteoERA(object):
         '''
         self.pipeline = pipeline
         self.execute = self.pipeline.configs.get('meteo_era_execute', self.METEO_ERA_EXECUTE)
-        self.execute = self.METEO_ERA_EXECUTE # TODO: remove when method implemented
         self.meteo_era_dir = self.pipeline.configs.get('meteo_era_dir', os.path.join(self.pipeline.data_dir, self.METEO_ERA_DIR))
+        self.meteo_era_input_dir = self.pipeline.configs.get('era_input_dir', os.path.join(self.meteo_era_dir, self.METEO_ERA_DIR_INPUT))
+        self.meteo_era_source_dir = self.pipeline.configs.get('era_source_dir', self.pipeline.era_source_dir)
+        self.input_source_file_pattern = self._INPUT_SOURCE_FILE_PATTERN.format(s=self.pipeline.siteid)
         self.output_file_patterns = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS]
         self.output_file_patterns_extra = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_EXTRA]
 
@@ -892,7 +901,14 @@ class PipelineMeteoERA(object):
         '''
         Validate pre-execution requirements
         '''
-        pass
+        # check ERA source directory
+        test_dir(tdir=self.meteo_era_source_dir, label='meteo_era.pre_validate')
+
+        # check ERA input source files
+        test_file_list(file_list=[self.input_source_file_pattern,], tdir=self.meteo_era_source_dir, label='meteo_era.pre_validate', log_only=False)
+
+        # check dependency steps
+        self.pipeline.qc_auto.post_validate()
 
     def post_validate(self):
         '''
@@ -902,7 +918,7 @@ class PipelineMeteoERA(object):
         test_dir(tdir=self.meteo_era_dir, label='meteo_era.post_validate')
 
         # check output files and result report (log)
-        test_file_list(file_list=self.output_file_patterns, tdir=self.meteo_era_dir, label='meteo_era.post_validate', log_only=True)
+        test_file_list(file_list=self.output_file_patterns, tdir=self.meteo_era_dir, label='meteo_era.post_validate', log_only=False)
         test_file_list(file_list=self.output_file_patterns_extra, tdir=self.meteo_era_dir, label='meteo_era.post_validate', log_only=True)
 
         # test "stat_{s}.txt" file for 100.0 % missing data on variables
@@ -1004,8 +1020,19 @@ class PipelineMeteoERA(object):
         self.pre_validate()
 
         create_replace_dir(tdir=self.meteo_era_dir, label='meteo_era.run', suffix=self.pipeline.run_id, simulation=self.pipeline.simulation)
+        
+        # copy ERA source files into meteo_era folder for running downscaling
+        create_replace_dir(tdir=self.meteo_era_input_dir, label='meteo_era.run', suffix=self.pipeline.run_id, simulation=self.pipeline.simulation)
+        copy_files_pattern(src_dir=self.meteo_era_source_dir,
+                           tgt_dir=self.meteo_era_input_dir,
+                           file_pattern=self.input_source_file_pattern,
+                           label='meteo_era.run',
+                           simulation=self.pipeline.simulation)
 
-        # TODO: implement run
+        # run downscaling
+        run_downscaling(dir_era5_co=self.meteo_era_input_dir,
+                        dir_input=self.pipeline.qc_auto.qc_auto_dir,
+                        dir_output=self.meteo_era_dir)
 
         self.post_validate()
         log.info("Pipeline meteo_era execution finished")
@@ -1738,16 +1765,16 @@ class PipelinePrepareUREPW(object):
 #       #  TODO: finish implementation
         for root, _, filenames in os.walk(self.pipeline.nee_partition_nt.nee_partition_nt_dir):
             for f in filenames:
-                print os.path.join(root, f)
+                print(os.path.join(root, f))
 
         for root, _, filenames in os.walk(self.pipeline.nee_partition_dt.nee_partition_dt_dir):
             for f in filenames:
-                print os.path.join(root, f)
+                print(os.path.join(root, f))
 
         if os.path.isdir(self.pipeline.nee_partition_sr.nee_partition_sr_dir):
             for root, _, filenames in os.walk(self.pipeline.nee_partition_dt.nee_partition_sr_dir):
                 for f in filenames:
-                    print os.path.join(root, f)
+                    print(os.path.join(root, f))
 
         # execute prepare_ure step
         if not self.execute and not self.pipeline.simulation:
