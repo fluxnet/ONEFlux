@@ -47,7 +47,7 @@ notes,Sample note
 
     return str(input_folder), str(output_folder)
 
-def test_launch_missing_file(setup_test_environment, matlab_engine, setup_folders):
+def test_launch_missing_file(setup_test_environment, ustar_cp, setup_folders):
     """
     Test the MATLAB `launch` function's behavior when the input folder is missing.
 
@@ -71,7 +71,7 @@ def test_launch_missing_file(setup_test_environment, matlab_engine, setup_folder
 
     # Run the MATLAB function
     output = io.StringIO()
-    exitcode = matlab_engine.launch(empty_output, empty_output, stdout=output)
+    exitcode = ustar_cp.launch(empty_output, empty_output, stdout=output)
 
     # Retrieve the captured output
     output.seek(0)
@@ -85,7 +85,7 @@ def test_launch_missing_file(setup_test_environment, matlab_engine, setup_folder
     expected_string = "0 files founded."
     assert compare_text_blocks(expected_string, output_string), f"Expected string '{expected_string}' not found in output."
 
-def test_launch_invalid_data(setup_test_environment, matlab_engine):
+def test_launch_invalid_data(setup_test_environment, ustar_cp):
     """
     Test the MATLAB `launch` function's behavior with invalid data in the input file.
 
@@ -103,7 +103,7 @@ def test_launch_invalid_data(setup_test_environment, matlab_engine):
         that it identified and handled the invalid data correctly.
     """
     input_folder, output_folder = setup_test_environment
-    eng = matlab_engine
+    eng = ustar_cp
 
     # Overwrite the input file with invalid data
     invalid_data = """invalid content"""
@@ -116,7 +116,7 @@ def test_launch_invalid_data(setup_test_environment, matlab_engine):
     # Check that the exitcode indicates an error
     assert exitcode == 1, "Expected non-zero exitcode for invalid data."
 
-def test_launch_empty_folder(setup_test_environment, matlab_engine):
+def test_launch_empty_folder(setup_test_environment, ustar_cp):
     """
     Test the MATLAB `launch` function's behavior when the input folder is empty.
 
@@ -134,7 +134,7 @@ def test_launch_empty_folder(setup_test_environment, matlab_engine):
         that it correctly identified the empty input folder.
     """
     input_folder, output_folder = setup_test_environment
-    eng = matlab_engine
+    eng = ustar_cp
 
     # Remove all files from the input folder to simulate an empty folder
     for file in Path(input_folder).glob("*"):
@@ -146,7 +146,7 @@ def test_launch_empty_folder(setup_test_environment, matlab_engine):
     # Check that the exitcode indicates an error
     assert exitcode == 0, "Expected zero exitcode for empty input folder."
 
-def test_missing_keywords(setup_test_environment, matlab_engine):
+def test_missing_keywords(setup_test_environment, ustar_cp):
     """
     Test the MATLAB `launch` function's behavior when a keyword is missing from the data
     in the initial lines.
@@ -161,7 +161,7 @@ def test_missing_keywords(setup_test_environment, matlab_engine):
         error message
     """
     input_folder, output_folder = setup_test_environment
-    eng = matlab_engine
+    eng = ustar_cp
 
     # List of sample data fields and values
     sample_data_fields = [("site","US-Arc"),

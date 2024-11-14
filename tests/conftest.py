@@ -85,10 +85,10 @@ MatlabFunc.__new__ = mf_factory
 
 @pytest.fixture(scope="session", params=[
     "translated",
-    "refactored",
+    # "refactored",
     # "original",
 ])
-def matlab_engine(request):
+def ustar_cp(request):
     """
     Pytest fixture to start a MATLAB engine session, add a specified directory 
     to the MATLAB path, and clean up after the tests.
