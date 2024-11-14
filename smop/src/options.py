@@ -203,13 +203,6 @@ format: "tar".  Accepted compression: "gzip", "bz2".
 )
 
 
-args = parser.parse_args(namespace=sys.modules[__name__])
-
-xfiles = args.exclude.split(",") if args.exclude else []
-debug = args.debug.split(":") if args.debug else []
-filename = ""
-
-
 def foo():
     """
     >>> args = parser.parse_args("a b c".split())
@@ -223,3 +216,10 @@ if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
+
+
+if __name__ == "src.options":
+    args = parser.parse_args(namespace=sys.modules[__name__])
+    xfiles = args.exclude.split(",") if args.exclude else []
+    debug = args.debug.split(":") if args.debug else []
+    filename = ""

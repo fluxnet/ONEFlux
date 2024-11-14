@@ -168,11 +168,15 @@ def cpdEvaluateUStarTh4Season20100901(
 
     for iSeason in arange(1, nSeasons).reshape(-1):
         for iStrata in arange(1, nStrataX).reshape(-1):
-            if "Stats2" not in globals() and "Stats2" not in locals():
+            try:
+                Stats2
+            except:
                 Stats2 = cellarray()
             Stats2[iSeason, iStrata] = StatsMT
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:98
-            if "Stats3" not in globals() and "Stats3" not in locals():
+            try:
+                Stats3
+            except:
                 Stats3 = cellarray()
             Stats3[iSeason, iStrata] = StatsMT
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:99
@@ -320,13 +324,17 @@ def cpdEvaluateUStarTh4Season20100901(
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:169
             Cp2[iSeason, iStrata] = xCp2
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:171
-            if "Stats2" not in globals() and "Stats2" not in locals():
+            try:
+                Stats2
+            except:
                 Stats2 = cellarray()
             Stats2[iSeason, iStrata] = xs2
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:172
             Cp3[iSeason, iStrata] = xCp3
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:174
-            if "Stats3" not in globals() and "Stats3" not in locals():
+            try:
+                Stats3
+            except:
                 Stats3 = cellarray()
             Stats3[iSeason, iStrata] = xs3
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:175

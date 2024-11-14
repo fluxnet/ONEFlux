@@ -21,7 +21,9 @@ def setup_Stats(nBoot=None, nSeasons=None, nStrataX=None, *varargin):
     # James Emberton 21/10/2024
 
     # Preallocate the Stats array by repeating the template
-    if "Stats" not in globals() and "Stats" not in locals():
+    try:
+        Stats
+    except:
         Stats = cellarray()
     Stats[1:nSeasons, 1:nStrataX, 1:nBoot] = StatsMT
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/setup_Stats.m:16
