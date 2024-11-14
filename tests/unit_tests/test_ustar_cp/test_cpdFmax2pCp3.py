@@ -12,15 +12,15 @@ testcases = [
         (3.14159265358979323, 9, np.nan),
         # Below f-critical(1)
         (5.45204127574611, 52, 0.384643400326067),
-        # Test case 3: Above f-critical(3)
+        # Above f-critical(3)
         (12, 53, 0.0363346810492975),
-        # Test case 4: Between f-critical(1) and f-critical(3)
+        # Between f-critical(1) and f-critical(3)
         (10, 52, 0.0761404222166437),
-        # Test case 5: fmax = 0
+        # fmax = 0
         (0, 55, 1),
-        # Test case 6: fmax = fcritical(1)
+        # fmax = fcritical(1)
         (1.6301, 52, 1),
-        # Test case 7: Nominal
+        # Nominal
         (2.37324492970613, 55, 1),
         (10.3567400792636, 54, 0.0657053181314848)
 ]
