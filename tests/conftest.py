@@ -26,17 +26,61 @@ import glob
 import json
 import io
 import atexit
+import io
+import atexit
 import numpy as np
 from matlab.engine.matlabengine import MatlabFunc
-# from oneflux_steps.ustar_cp_py.libsmop import matlabarray, struct
-from abc import ABC, abstractmethod
-import warnings
 
-# Python version imported here
-from oneflux_steps.ustar_cp_python import *
 
-def pytest_addoption(parser):
-    parser.addoption("--language", action="store", default="matlab")
+class MFWrapper:
+    def __init__(self, func):
+        self.func = func
+        self.out = io.StringIO()
+        self.err = io.StringIO()
+        name = func._name
+        # make matlab stdout and stderr printed at the end of pytest
+        atexit.register(lambda: (s := self.out.getvalue()) and print(f"{name} stdout:\n{s}"))
+        atexit.register(lambda: (s := self.err.getvalue()) and print(f"{name} stderr:\n{s}"))
+        
+    def __call__(self, *args, jsonencode=(), jsondecode=(), **kwargs):
+        """
+        Call the wrapped function with optional JSON encoding/decoding to handle the issue that non-scalar structs (arrays of structs) cannot be returned from MATLAB functions to Python.
+        Args:
+            *args: Positional arguments to pass to the wrapped function.
+            jsonencode (tuple, optional): Indices of output arguments to JSON encode (into string) before the matlab function returns.
+            jsondecode (tuple, optional): Indices of input arguments to JSON decode (from string) at the beginning of the matlab function.
+            **kwargs: Keyword arguments to pass to the wrapped function.
+        Returns:
+            The result of the wrapped function, with specified outputs JSON decoded if necessary.
+        """
+        args = list(args)
+        if jsonencode:
+            args.append(['jsonencode'] + [i+1 for i in jsonencode])
+        if jsondecode:
+            for i in jsondecode:
+                args[i] = json.dumps(args[i])
+            args.append(['jsondecode'] + [i+1 for i in jsondecode])
+        out = kwargs.pop('stdout', self.out)
+        err = kwargs.pop('stderr', self.err)
+        ret = self.func(*args, **kwargs, stdout=out, stderr=err)
+        if jsonencode:
+            nargout = kwargs.get('nargout', 1)
+            if nargout <= 1:
+                ret = [ret]
+            else:
+                ret = list(ret)
+            for j in jsonencode:
+                ret[j] = json.loads(ret[j], object_hook=none2nan)
+            if nargout <= 1:
+                ret = ret[0]
+        return ret
+
+def mf_factory(cls, *args, **kwargs):
+    f = object.__new__(MatlabFunc)
+    f.__init__(*args, **kwargs)
+    return MFWrapper(f)
+MatlabFunc.__new__ = mf_factory
+
 
 @pytest.fixture(scope="session")
 def language(pytestconfig):
@@ -498,32 +542,20 @@ def flatten(container):
 
 # Helper function to compare MATLAB double arrays element-wise, handling NaN comparisons
 def compare_matlab_arrays(result, expected):
-    if not hasattr(result, '__len__') or not hasattr(expected, '__len__'):
-        return np.allclose(result, expected, equal_nan=True)
-
     if isinstance(result, dict):
         if not isinstance(expected, dict):
             return False
         if set(result.keys()) != set(expected.keys()):
             return False
         return all(compare_matlab_arrays(result[k], expected[k]) for k in result.keys())
-
+    if not hasattr(result, '__len__') or not hasattr(expected, '__len__'):
+        if np.isnan(result) and np.isnan(expected):
+            return True  # NaNs are considered equal
+        return np.allclose(result, expected)
     if len(result) != len(expected):
-        # Potentially we are in the situation where the MATLAB is wrapped in an extra layer of array
-        if isinstance(result, matlab.double) and len(result) == 1:
-            result = result[0]
-            return all(compare_matlab_arrays(r, e) for r, e in zip(result, expected))
-        else:
-            return False
-
-    if isinstance(result, matlab.double):
-        return np.allclose(result, expected, equal_nan=True)
-
-    # Recursive case
+        return False
     return all(compare_matlab_arrays(r, e) for r, e in zip(result, expected))
-    # ALT:
-    #return all(objects_are_equal(r, e) for r, e in zip(result, expected))
-
+    
 def read_csv_with_csv_module(file_path):
     """
     Reads a CSV file and returns its contents as a NumPy array.
@@ -556,9 +588,10 @@ def read_file(file_path):
     elif file_path.endswith('.json'):
         with open(file_path, 'r') as f:
             return none2nan(json.load(f))  # Load JSON file
+            return none2nan(json.load(f))  # Load JSON file
     else:
         raise ValueError(f"Unsupported file type: {file_path}")
-
+    
 def none2nan(obj):
     if isinstance(obj, dict):
         return {k: none2nan(v) for k, v in obj.items()}
