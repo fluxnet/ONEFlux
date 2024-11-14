@@ -26,6 +26,8 @@ import glob
 import json
 import io
 import atexit
+import io
+import atexit
 import numpy as np
 from matlab.engine.matlabengine import MatlabFunc
 from smop.src.libsmop import matlabarray
