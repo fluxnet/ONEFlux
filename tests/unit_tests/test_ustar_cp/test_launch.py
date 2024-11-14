@@ -113,7 +113,7 @@ def test_launch_invalid_data(setup_test_environment, matlab_engine):
         that it identified and handled the invalid data correctly.
     """
     input_folder, output_folder = setup_test_environment
-    eng = matlab_engine
+    eng = ustar_cp
 
     # Overwrite the input file with invalid data
     invalid_data = """invalid content"""
@@ -144,14 +144,13 @@ def test_launch_empty_folder(setup_test_environment, matlab_engine):
         that it correctly identified the empty input folder.
     """
     input_folder, output_folder = setup_test_environment
-    eng = matlab_engine
 
     # Remove all files from the input folder to simulate an empty folder
     for file in Path(input_folder).glob("*"):
         os.remove(file)
 
     # Run the MATLAB function
-    exitcode = eng.launch(input_folder, output_folder)
+    exitcode = matlab_engine.launch(input_folder, output_folder)
 
     # Check that the exitcode indicates an error
     assert exitcode == 0, "Expected zero exitcode for empty input folder."

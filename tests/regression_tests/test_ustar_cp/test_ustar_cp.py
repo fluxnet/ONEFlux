@@ -41,7 +41,7 @@ test_cases = [
 ]
 
 @pytest.mark.parametrize("testcase, expected_values", test_cases)
-def test_ustar_cp(testcase, expected_values, setup_folders, matlab_engine, find_text_file, extract_section_between_keywords):
+def test_ustar_cp(testcase, expected_values, setup_folders, ustar_cp, find_text_file, extract_section_between_keywords):
     """
     Validate MATLAB's uStar CP processing function output against expected results.
 
@@ -80,7 +80,7 @@ def test_ustar_cp(testcase, expected_values, setup_folders, matlab_engine, find_
     # Step 2: Capture stdout and stderr from the MATLAB engine during the function execution
     out = io.StringIO()
     err = io.StringIO()
-    exitcode = matlab_engine.launch(inputs, test_outputs, stdout=out, stderr=err)
+    exitcode = ustar_cp.launch(inputs, test_outputs, stdout=out, stderr=err)
 
     # Step 3: Retrieve the expected output from the reference text file and extract the relevant section
     ref_text = find_text_file(ref_outputs)
