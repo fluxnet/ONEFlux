@@ -1,4 +1,4 @@
-	function [IQR]=fcnaniqr(X)
+	function [IQR]=fcNaniqr(X)
 	
 %fcnaniqr computes the interquartile range, ignoring NaNs. 
 %
