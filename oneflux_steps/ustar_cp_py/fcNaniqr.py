@@ -4,7 +4,7 @@ from libsmop import *
 
 
 @function
-def fcnaniqr(X=None):
+def fcNaniqr(X=None):
     globals().update(load_all_vars())
 
     # fcnaniqr computes the interquartile range, ignoring NaNs.

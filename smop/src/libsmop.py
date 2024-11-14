@@ -114,13 +114,7 @@ def take(a, *i):
     if isinstance(a, matlabarray):
         return a[i]
     else:
-        i = tuple(
-            slice(i.start - 1, i.stop, i.step) if isinstance(i, slice) else i - 1
-            for i in i
-        )
-        if len(i) == 1:
-            i = i[0]
-        return a[i]
+       return matlabarray(a)[i]
 
 
 def textscan(fp, fmt):
@@ -170,7 +164,7 @@ def concat(args, axis=1):
     if all([isinstance(a, str) for a in args]):
         return "".join(args)
     t = [matlabarray(a) for a in args]
-    return numpy.concatenate(t, axis=axis)
+    return numpy.concatenate(t, axis=axis).view(matlabarray)
 
 
 def reshape(a, *shape):
@@ -325,6 +319,20 @@ def intersect(a, b, nargout=1):
     raise NotImplementedError
 
 
+def union(a, b, nargout=1):
+    from builtins import set
+
+    if nargout == 1:
+        c = sorted(set(a.flat) | set(b.flat))
+        if isinstance(a, str):
+            return "".join(c)
+        elif isinstance(a, list):
+            return c
+        else:
+            return matlabarray(c)
+    raise NotImplementedError
+
+
 def iscell(a):
     return isinstance(a, cellarray)
 
@@ -379,9 +387,24 @@ def length(a):
     if not isinstance(a, numpy.ndarray) and hasattr(a, "__len__"):
         return len(a)
     elif numpy.ndim(a) < 2 or min(numpy.shape(a)) == 0:
-        return numpy.size(a)
+        return numpy.array(numpy.size(a))
     else:
-        return max(numpy.asarray(a).shape)
+        return numpy.array(max(numpy.asarray(a).shape))
+    
+    
+def setdiff(a, b, nargout=1):
+    from builtins import set
+    a = numpy.asarray(a)
+    b = numpy.asarray(b)
+    if nargout == 1:
+        c = sorted(set(a.flat) - set(b.flat))
+        if isinstance(a, str):
+            return "".join(c)
+        elif isinstance(a, list):
+            return c
+        else:
+            return matlabarray(c)
+    raise NotImplementedError
 
 
 def load(a):
@@ -609,35 +632,41 @@ def logspace(start, stop, num=50, base=10.0):
     return matlabarray(numpy.logspace(start, stop, num, base=base))
 
 
-def mean(a, axis=None):
+def mean(a, axis=0):
     """
     Compute the mean of the elements along the specified axis.
     """
     return numpy.mean(numpy.asarray(a), axis=axis)
 
 
-def std(a, axis=None):
+def std(a, axis=0):
     """
     Compute the standard deviation of the elements along the specified axis.
     """
     return numpy.std(numpy.asarray(a), axis=axis)
 
 
-def var(a, axis=None):
+def var(a, axis=0):
     """
     Compute the variance of the elements along the specified axis.
     """
     return numpy.var(numpy.asarray(a), axis=axis)
 
 
-def max(a, axis=None, nargout=1):
+def max(a, b=[], axis=0, nargout=1):
     """
     Return the maximum of an array or maximum along an axis.
     """
+    if numpy.size(b) > 0:
+        return numpy.maximum(numpy.asarray(a), numpy.asarray(b))
     if numpy.size(a) == 0:
         if nargout == 1:
             return a
         return a, a
+    if axis == 'all':
+        axis = None
+    if axis:
+        axis -= 1
     m = numpy.max(numpy.asarray(a), axis=axis)
     if nargout == 1:
         return m
@@ -645,7 +674,7 @@ def max(a, axis=None, nargout=1):
     return m, i
 
 
-def min(a, axis=None, nargout=1):
+def min(a, axis=0, nargout=1):
     """
     Return the minimum of an array or minimum along an axis.
     """
@@ -728,21 +757,21 @@ def datevec(datenum, nargout=6):
     )[:nargout]
 
 
-def median(a, axis=None):
+def median(a, axis=0):
     """
     Compute the median of an array.
     """
     return numpy.median(numpy.asarray(a), axis=axis)
 
 
-def nanmean(a, axis=None):
+def nanmean(a, axis=0):
     """
     Compute the mean of an array while ignoring NaNs.
     """
     return numpy.nanmean(numpy.asarray(a), axis=axis)
 
 
-def nanmedian(a, axis=None):
+def nanmedian(a, axis=0):
     """
     Compute the median of an array while ignoring NaNs.
     """
