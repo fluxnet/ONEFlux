@@ -4,7 +4,7 @@ handle MATLAB engine interactions, and process text files for comparison in unit
 
 Contents:
     Fixtures:
-        matlab_engine
+        ustar_cp
         setup_folders
         find_text_file
         extract_section_between_keywords
@@ -140,11 +140,11 @@ def ustar_cp(request):
     matlab_function_path = os.path.join(current_dir, code_path)
     eng.addpath(matlab_function_path, nargout=0)
 
-    def _add_all_subdirs_to_matlab_path(path, matlab_engine):
+    def _add_all_subdirs_to_matlab_path(path, ustar_cp):
         # Recursively find all subdirectories
         for root, dirs, files in os.walk(path):
             # Add each directory to the MATLAB path
-            matlab_engine.addpath(root, nargout=0)  # nargout=0 suppresses output
+            ustar_cp.addpath(root, nargout=0)  # nargout=0 suppresses output
 
         return
 

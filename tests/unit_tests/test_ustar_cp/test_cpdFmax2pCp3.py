@@ -10,7 +10,7 @@ import matlab.engine
         (10, 5, np.nan),          # Test case with n < 10
         ],
 )
-def test_cpdFmax2pCp3_return_nan(matlab_engine, Fmax, n, expected):
+def test_cpdFmax2pCp3_return_nan(ustar_cp, Fmax, n, expected):
     """
     Test the cpdFmax2pCp3 MATLAB function for cases where `nan` is returned.
     """
@@ -19,7 +19,7 @@ def test_cpdFmax2pCp3_return_nan(matlab_engine, Fmax, n, expected):
     n_matlab = matlab.double([n]) if not np.isnan(n) else matlab.double([float('nan')])
 
     # Call the MATLAB function
-    result = matlab_engine.cpdFmax2pCp3(Fmax_matlab, n_matlab)
+    result = ustar_cp.cpdFmax2pCp3(Fmax_matlab, n_matlab)
 
     assert type(result) == type(expected), f"Result should be a {type(expected)}, got {type(result)}"
 
@@ -33,7 +33,7 @@ def test_cpdFmax2pCp3_return_nan(matlab_engine, Fmax, n, expected):
     ],
 )
 
-def test_cpdFmax2pCp3_return_numeric(matlab_engine, Fmax, n, expected):
+def test_cpdFmax2pCp3_return_numeric(ustar_cp, Fmax, n, expected):
     """
     Test the cpdFmax2pCp3 MATLAB function for cases where numeric values are returned.
     """
@@ -42,7 +42,7 @@ def test_cpdFmax2pCp3_return_numeric(matlab_engine, Fmax, n, expected):
     n_matlab = matlab.double([n]) if not np.isnan(n) else matlab.double([float('nan')])
 
     # Call the MATLAB function
-    result = matlab_engine.cpdFmax2pCp3(Fmax_matlab, n_matlab)
+    result = ustar_cp.cpdFmax2pCp3(Fmax_matlab, n_matlab)
 
     assert type(result) == type(expected), f"Result should be a {type(expected)}, got {type(result)}"
     assert np.allclose(np.array(result), np.array(expected))
@@ -57,7 +57,7 @@ def test_cpdFmax2pCp3_return_numeric(matlab_engine, Fmax, n, expected):
 ],
 )
 
-def test_calculate_p_high_return_numeric(matlab_engine, Fmax, FmaxCritical_high, n, expected_p):
+def test_calculate_p_high_return_numeric(ustar_cp, Fmax, FmaxCritical_high, n, expected_p):
     """
     Test the cpdFmax2pCp3 MATLAB function for cases where numeric values are returned.
     """
@@ -67,7 +67,7 @@ def test_calculate_p_high_return_numeric(matlab_engine, Fmax, FmaxCritical_high,
     n_matlab = matlab.double([n]) if not np.isnan(n) else matlab.double([float('nan')])
 
     # Call the MATLAB function
-    result = matlab_engine.calculate_p_high(Fmax_matlab, FmaxCritical_high_matlab, n_matlab)
+    result = ustar_cp.calculate_p_high(Fmax_matlab, FmaxCritical_high_matlab, n_matlab)
 
     assert result == expected_p, f"Result should be {expected_p}. Instead {result} was returned."
     assert np.allclose(np.array(result), np.array(expected_p))
@@ -85,7 +85,7 @@ def test_calculate_p_high_return_numeric(matlab_engine, Fmax, FmaxCritical_high,
     ],
 )
 
-def test_calculate_p_high_return_nan(matlab_engine, Fmax, FmaxCritical_high, n, expected_p):
+def test_calculate_p_high_return_nan(ustar_cp, Fmax, FmaxCritical_high, n, expected_p):
     """
     Test the cpdFmax2pCp3 MATLAB function for cases where nan values are returned.
     """
@@ -95,7 +95,7 @@ def test_calculate_p_high_return_nan(matlab_engine, Fmax, FmaxCritical_high, n, 
     n_matlab = matlab.double([n]) if not np.isnan(n) else matlab.double([float('nan')])
 
     # Call the MATLAB function
-    result = matlab_engine.calculate_p_high(Fmax_matlab, FmaxCritical_high_matlab, n_matlab)
+    result = ustar_cp.calculate_p_high(Fmax_matlab, FmaxCritical_high_matlab, n_matlab)
 
     assert type(result) == type(expected_p), f"Result should be a {type(expected_p)}, got {type(result)}"
 
@@ -143,7 +143,7 @@ def test_calculate_p_high_return_nan(matlab_engine, Fmax, FmaxCritical_high, n, 
         (10, [10, 5, 15], [0.1, 0.05, 0.01], np.nan, "Non-monotonic FmaxCritical, expect error or NaN"),
     ]
 )
-def test_calculate_p_interpolate(matlab_engine, Fmax, FmaxCritical, pTable, expected_p, description):
+def test_calculate_p_interpolate(ustar_cp, Fmax, FmaxCritical, pTable, expected_p, description):
     
     """
     Test calculate_p_interpolate with various inputs.
@@ -162,7 +162,7 @@ def test_calculate_p_interpolate(matlab_engine, Fmax, FmaxCritical, pTable, expe
 
     try:
         # Call the MATLAB function
-        result = matlab_engine.calculate_p_interpolate(Fmax_matlab, FmaxCritical_matlab, pTable_matlab)
+        result = ustar_cp.calculate_p_interpolate(Fmax_matlab, FmaxCritical_matlab, pTable_matlab)
         p = result  # MATLAB returns a scalar
 
         if np.isnan(expected_p):
