@@ -123,8 +123,16 @@ function [Cp2, Stats2, Cp3, Stats3] = cpdBootstrapUStarTh4Season20100901(t, NEE,
 		
 	end; % if ntNee>=ntN;
 
-	if size(varargin)>0
-		Stats2 = jsonencode(Stats2);
-		Stats3 = jsonencode(Stats3);
+	for i = 1:length(varargin)
+		a = varargin{i};
+		if iscell(a) && strcmp(a{1}, 'jsonencode')
+			for j = 2:length(a)
+				switch a{j}
+					case 2
+						Stats2 = jsonencode(Stats2);
+					case 4
+						Stats3 = jsonencode(Stats3);
+				end
+			end
+		end
 	end
-end
