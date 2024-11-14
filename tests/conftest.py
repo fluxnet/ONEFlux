@@ -28,6 +28,7 @@ import io
 import atexit
 import numpy as np
 from matlab.engine.matlabengine import MatlabFunc
+from smop.src.libsmop import matlabarray
 
 
 class MFWrapper:
@@ -77,6 +78,10 @@ class MFWrapper:
                 ret = list(ret)
             for j in jsonencode:
                 ret[j] = json.loads(ret[j], object_hook=none2nan)
+                # Alternate technique 
+                # ret[j] = json.loads(ret[j], object_hook=lambda d: 
+                #     {k: np.nan if v is None else v for k, v in d.items()})
+                # ret[j] = matlabarray(ret[j])
             if nargout <= 1:
                 ret = ret[0]
         return ret

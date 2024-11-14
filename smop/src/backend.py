@@ -336,8 +336,8 @@ def _backend(self, level=0):
     elif isinstance(self.ret, node.arrayref) and not self.ret.func_expr.defs:
         name = self.ret.func_expr._backend(level)
         key = self.ret.args._backend(level)
-        lhs = f"if '{name}' not in globals() and '{name}' not in locals():\n"
-        lhs += " " * (4 * level + 4) + f"{name} = cellarray()\n"
+        lhs = f"try: {name}\n"
+        lhs += " " * (4 * level) + f"except: {name} = cellarray()\n"
         lhs += " " * (4 * level) + f"{name}[{key}]"
         s += "%s = %s" % (lhs, self.args._backend(level))
     elif (

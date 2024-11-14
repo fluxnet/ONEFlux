@@ -71,20 +71,17 @@ def test_cpdAssignUStarTh20100901_basic(ustar_cp, mock_data):
 
 
 def test_cpdAssignUStarTh20100901_edge_cases(ustar_cp, mock_data):
-    def set_attr(struct_array, key, val):
-        np.vectorize(lambda x: x.update({key: val}))(struct_array)
-    
     mock_stats, fPlot, cSiteYr = mock_data
     edge_stats = mock_stats.copy()
     
     # Case 1: All significant change points
-    set_attr(edge_stats, "p", 0)
+    edge_stats.p = 0
     assert edge_stats[0][0][0]['p'] == 0
 
     results_all_sig = ustar_cp.cpdAssignUStarTh20100901(edge_stats, 0, "AllSig_2024", jsondecode=[0], nargout=11)
     
     # Case 2: No significant change points
-    set_attr(edge_stats, "p", 1)
+    edge_stats.p = 1
     assert edge_stats[0][0][0]['p'] == 1
 
     results_no_sig = ustar_cp.cpdAssignUStarTh20100901(edge_stats, 0, "NoSig_2024", jsondecode=[0], nargout=11)
