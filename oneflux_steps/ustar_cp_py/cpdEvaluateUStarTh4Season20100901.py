@@ -128,6 +128,7 @@ def cpdEvaluateUStarTh4Season20100901(
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:86
     StatsMT = matlabarray([])
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:88
+    StatsMT = check_struct(StatsMT)
     StatsMT.n = copy(NaN)
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:89
     StatsMT.Cp = copy(NaN)
@@ -171,13 +172,13 @@ def cpdEvaluateUStarTh4Season20100901(
             try:
                 Stats2
             except:
-                Stats2 = cellarray()
+                Stats2 = matlabarray()
             Stats2[iSeason, iStrata] = StatsMT
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:98
             try:
                 Stats3
             except:
-                Stats3 = cellarray()
+                Stats3 = matlabarray()
             Stats3[iSeason, iStrata] = StatsMT
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:99
 
@@ -292,6 +293,7 @@ def cpdEvaluateUStarTh4Season20100901(
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:160
             r, p = corrcoef(muStar, mT, nargout=2)
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:161
+            xs2 = check_struct(xs2)
             xs2.mt = copy(mean(take(t, itStrata)))
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:163
             xs2.ti = copy(take(t, take(itStrata, 1)))
@@ -308,6 +310,7 @@ def cpdEvaluateUStarTh4Season20100901(
                 dot(0.5, diff(prctile(take(T, itStrata), concat([2.5, 97.5]))))
             )
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:165
+            xs3 = check_struct(xs3)
             xs3.mt = copy(xs2.mt)
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:167
             xs3.ti = copy(xs2.ti)
@@ -327,7 +330,7 @@ def cpdEvaluateUStarTh4Season20100901(
             try:
                 Stats2
             except:
-                Stats2 = cellarray()
+                Stats2 = matlabarray()
             Stats2[iSeason, iStrata] = xs2
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:172
             Cp3[iSeason, iStrata] = xCp3
@@ -335,7 +338,7 @@ def cpdEvaluateUStarTh4Season20100901(
             try:
                 Stats3
             except:
-                Stats3 = cellarray()
+                Stats3 = matlabarray()
             Stats3[iSeason, iStrata] = xs3
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:175
 

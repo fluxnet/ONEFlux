@@ -132,6 +132,7 @@ def cpdEvaluateUStarTh20100901(
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:99
     StatsMT = matlabarray([])
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:101
+    StatsMT = check_struct(StatsMT)
     StatsMT.n = copy(NaN)
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:102
     StatsMT.Cp = copy(NaN)
@@ -259,6 +260,7 @@ def cpdEvaluateUStarTh20100901(
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:165
             r, p = corrcoef(muStar, mT, nargout=2)
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:166
+            xs2 = check_struct(xs2)
             xs2.mt = copy(mean(t[itStrata]))
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:168
             xs2.ti = copy(t[take(itStrata, 1)])
@@ -273,6 +275,7 @@ def cpdEvaluateUStarTh20100901(
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:170
             xs2.ciT = copy(dot(0.5, diff(prctile(T[itStrata], concat([2.5, 97.5])))))
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:170
+            xs3 = check_struct(xs3)
             xs3.mt = copy(xs2.mt)
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:172
             xs3.ti = copy(xs2.ti)

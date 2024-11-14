@@ -10,6 +10,7 @@ def generate_statsMT():
     StatsMT = matlabarray([])
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrap_modules/generate_statsMT.m:2
 
+    StatsMT = check_struct(StatsMT)
     (
         StatsMT.n,
         StatsMT.Cp,

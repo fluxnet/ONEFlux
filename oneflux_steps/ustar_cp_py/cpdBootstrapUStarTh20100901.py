@@ -114,6 +114,7 @@ def cpdBootstrapUStarTh20100901(
 
     StatsMT = matlabarray([])
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:80
+    StatsMT = check_struct(StatsMT)
     StatsMT.n = copy(NaN)
     # oneflux_steps/ustar_cp_refactor_wip/cpdBootstrapUStarTh20100901.m:81
     StatsMT.Cp = copy(NaN)
