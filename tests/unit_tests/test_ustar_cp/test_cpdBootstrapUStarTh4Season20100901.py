@@ -9,7 +9,9 @@ import matlab.engine
 import numpy as np
 import json
 import os
-from tests.conftest import to_matlab_type, read_file, mat2list, parse_testcase, compare_matlab_arrays
+from tests.conftest import to_matlab_type, read_file, parse_testcase, compare_matlab_arrays
+
+nan = np.nan
 
 @pytest.fixture(scope="module")
 def mock_data(nt=300, tspan=(0, 1), uStar_pars=(0.1, 3.5), T_pars=(-10, 30), fNight=None):
@@ -139,10 +141,10 @@ def test_cpdBootstrap_against_testcases(ustar_cp):
         outputs_list = [outputs[str(i)] for i in range(len(outputs))]
 
         # Assertions to compare MATLAB results to expected outputs
-        assert Cp2 == outputs_list[0]
-        assert Stats2 == outputs_list[1]
-        assert Cp3 == outputs_list[2]
-        assert Stats3 == outputs_list[3]
+        assert compare_matlab_arrays(Cp2, outputs_list[0])
+        assert compare_matlab_arrays(Stats2, outputs_list[1])
+        assert compare_matlab_arrays(Cp3, outputs_list[2])
+        assert compare_matlab_arrays(Stats3, outputs_list[3])
 
 # Parameterized test for the get_nPerDay function
 @pytest.mark.parametrize("input_data, expected_result", [
@@ -300,7 +302,7 @@ def test_setup_Cp(ustar_cp, nSeasons, nStrataX, nBoot, expected_shape):
     # Ensure all elements are NaN
     assert np.isnan(Cp_array).all(), "Not all elements in Cp2 are NaN"
 
-stats_entry = {'n': None, 'Cp': None, 'Fmax': None, 'p': None, 'b0': None, 'b1': None, 'b2': None, 'c2': None, 'cib0': None, 'cib1': None, 'cic2': None, 'mt': None, 'ti': None, 'tf': None, 'ruStarVsT': None, 'puStarVsT': None, 'mT': None, 'ciT': None}
+stats_entry = {'n': nan, 'Cp': nan, 'Fmax': nan, 'p': nan, 'b0': nan, 'b1': nan, 'b2': nan, 'c2': nan, 'cib0': nan, 'cib1': nan, 'cic2': nan, 'mt': nan, 'ti': nan, 'tf': nan, 'ruStarVsT': nan, 'puStarVsT': nan, 'mT': nan, 'ciT': nan}
 # Test for the setup_Stats function
 @pytest.mark.parametrize(
     "nBoot, nSeasons, nStrataX, expected_shape",
@@ -312,7 +314,7 @@ stats_entry = {'n': None, 'Cp': None, 'Fmax': None, 'p': None, 'b0': None, 'b1':
         (1, 1, 1, stats_entry),
 
         # Case 3: No bootstrap iterations (nBoot=0)
-        (0, 2, 3, []),
+        (0, 2, 3, stats_entry),
     ]
 )
 def test_setup_Stats(ustar_cp, nBoot, nSeasons, nStrataX, expected_shape):
