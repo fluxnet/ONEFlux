@@ -3,10 +3,14 @@ import numpy as np
 import pytest
 
 
-testcases = [ 
-        # Test case 1: Input values are NaN
-        (np.nan, 52, np.nan),       
-        # Test case 2: Below f-critical(1)
+testcases = [
+        # Input values are NaN
+        (np.nan, 52, np.nan),
+        # Different input value is NaN
+        (42, np.nan, np.nan),
+        # n < 10
+        (3.14159265358979323, 9, np.nan),
+        # Below f-critical(1)
         (5.45204127574611, 52, 0.384643400326067),
         # Test case 3: Above f-critical(3)
         (12, 53, 0.0363346810492975),
