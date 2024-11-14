@@ -56,7 +56,7 @@ def test_ustar_cp(testcase, expected_values, setup_folders, ustar_cp, find_text_
       exit code returned by the MATLAB function.
     - setup_folders: A fixture that sets up the input, reference output, and test output folders 
       required for the test.
-    - matlab_engine: A fixture that initializes the MATLAB engine session and adds the necessary 
+    - ustar_cp: A fixture that initializes the MATLAB engine session and adds the necessary 
       directory to the MATLAB path.
     - find_text_file: A fixture that retrieves the content of the first `.txt` file found in a 
       specified folder.

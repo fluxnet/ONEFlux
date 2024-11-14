@@ -58,7 +58,7 @@ def test_launch_missing_file(setup_test_environment, ustar_cp, setup_folders):
     Args:
         setup_test_environment (fixture): A fixture that sets up input and output folders 
                                           with dummy data for the test.
-        matlab_engine (fixture): A fixture that initializes and manages the MATLAB engine session.
+        ustar_cp (fixture): A fixture that initializes and manages the MATLAB engine session.
         setup_folders (fixture): A fixture that sets up folders for input, reference output, 
                                  and test output.
 
@@ -96,7 +96,7 @@ def test_launch_invalid_data(setup_test_environment, ustar_cp):
     Args:
         setup_test_environment (fixture): A fixture that sets up input and output folders 
                                           with dummy data for the test.
-        matlab_engine (fixture): A fixture that initializes and manages the MATLAB engine session.
+        ustar_cp (fixture): A fixture that initializes and manages the MATLAB engine session.
 
     Asserts:
         The test asserts that the MATLAB function returns a non-zero exit code, indicating 
@@ -127,7 +127,7 @@ def test_launch_empty_folder(setup_test_environment, ustar_cp):
     Args:
         setup_test_environment (fixture): A fixture that sets up input and output folders 
                                           with dummy data for the test.
-        matlab_engine (fixture): A fixture that initializes and manages the MATLAB engine session.
+        ustar_cp (fixture): A fixture that initializes and manages the MATLAB engine session.
 
     Asserts:
         The test asserts that the MATLAB function returns an exit code of 0, indicating 
@@ -154,7 +154,7 @@ def test_missing_keywords(setup_test_environment, ustar_cp):
     Args:
         setup_test_environment (fixture): A fixture that sets up input and output folders
                                           with dummy data for the test.
-        matlab_engine (fixture): A fixture that initializes and manages the MATLAB engine session.
+        ustar_cp (fixture): A fixture that initializes and manages the MATLAB engine session.
 
     Asserts:
         The test asserts that the MATLAB function returns an exit code of 1 with the appropriate
