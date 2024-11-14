@@ -62,6 +62,18 @@
 
 %	=======================================================================
 %	=======================================================================
+	
+	for i = 1:length(varargin)
+		a = varargin{i};
+		if iscell(a) && strcmp(a{1}, 'jsondecode')
+			for j = 2:length(a)
+				switch a{j}
+					case 1
+						Stats = jsondecode(Stats);
+				end
+			end
+		end
+	end
 
 	for i = 1:length(varargin)
 		a = varargin{i};
