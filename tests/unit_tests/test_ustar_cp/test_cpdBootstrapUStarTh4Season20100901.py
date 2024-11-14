@@ -12,6 +12,9 @@ import os
 from tests.conftest import to_matlab_type, read_file, parse_testcase, compare_matlab_arrays
 
 nan = np.nan
+from tests.conftest import to_matlab_type, read_file, parse_testcase, compare_matlab_arrays
+
+nan = np.nan
 
 @pytest.fixture(scope="module")
 def mock_data(nt=300, tspan=(0, 1), uStar_pars=(0.1, 3.5), T_pars=(-10, 30), fNight=None):
