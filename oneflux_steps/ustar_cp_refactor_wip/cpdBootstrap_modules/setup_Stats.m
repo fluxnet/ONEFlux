@@ -12,9 +12,9 @@ function [Stats] = setup_Stats(nBoot, nSeasons, nStrataX, varargin)
 	% We should follow up with Gilberto to understand his preferred implementation.
 	% James Emberton 21/10/2024
 
-	% Discussed with Gilberton on 25/10/2024. Agreed to preserve current implementation. 
+	% Preallocate the Stats array by repeating the template
+  % Discussed with Gilberton on 25/10/2024. Agreed to preserve current implementation. 
 	% Will review when we are converting to python
-
 	for iBoot=1:nBoot;
 		for iSeason=1:nSeasons;
 			for iStrata=1:nStrataX;
@@ -22,6 +22,15 @@ function [Stats] = setup_Stats(nBoot, nSeasons, nStrataX, varargin)
 			end; 
 		end; 
 	end;
-	if size(varargin)>0;
-		Stats = jsonencode(Stats);
-end
+	
+	for i = 1:length(varargin)
+		a = varargin{i};
+		if iscell(a) && strcmp(a{1}, 'jsonencode')
+			for j = 2:length(a)
+				switch a{j}
+					case 1
+						Stats = jsonencode(Stats);
+				end
+			end
+		end
+	end

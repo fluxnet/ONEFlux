@@ -1,5 +1,5 @@
 	function [CpA,nA,tW,CpW,cMode,cFailure,fSelect,sSine,FracSig,FracModeD,FracSelect] ... 
-		= cpdAssignUStarTh20100901(Stats,fPlot,cSiteYr) 
+		= cpdAssignUStarTh20100901(Stats,fPlot,cSiteYr,varargin) 
 
 %cpdAssignUStarTh20100901
 %	aggregates and assigns uStarTh from the Stats* structured records 
@@ -62,6 +62,18 @@
 
 %	=======================================================================
 %	=======================================================================
+	
+	for i = 1:length(varargin)
+		a = varargin{i};
+		if iscell(a) && strcmp(a{1}, 'jsondecode')
+			for j = 2:length(a)
+				switch a{j}
+					case 1
+						Stats = jsondecode(Stats);
+				end
+			end
+		end
+	end
 
 	CpA=[]; nA=[]; tW=[]; CpW=[]; fSelect=[]; cMode=''; cFailure=''; sSine=[]; 
 	FracSig=[]; FracModeD=[]; FracSelect=[]; 
