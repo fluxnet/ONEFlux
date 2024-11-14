@@ -8,6 +8,7 @@ from numpy import sqrt, prod, exp, log, multiply, inf, rint as fix
 from numpy.fft import fft2
 from numpy.linalg import inv
 from numpy.linalg import qr as _qr
+import scipy
 from scipy.stats import pearsonr as corr
 import pandas as pd
 
@@ -29,10 +30,26 @@ from sys import stdin, stdout, stderr
 from scipy.io import loadmat
 from scipy.special import gamma
 
+import matlab
+
 
 pwd = os.getcwd()
 eps = np.finfo(float).eps
 NaN = np.nan
+
+
+ALL_MATLAB_TYPES = (
+    matlab.double,
+    matlab.logical,
+    matlab.int8,
+    matlab.int16,
+    matlab.int32,
+    matlab.int64,
+    matlab.uint8,
+    matlab.uint16,
+    matlab.uint32,
+    matlab.uint64,
+)
 
 
 def function(f):
@@ -48,10 +65,26 @@ def function(f):
             nargout = kwargs.pop("nargout", 0)
             kwargs.pop("jsonencode", None)
             kwargs.pop("jsondecode", None)
+            args = list(args)
+            for i, a in enumerate(args):
+                if isinstance(a, ALL_MATLAB_TYPES):
+                    args[i] = matlabarray(a)
             out = f(*args, **kwargs)
             if nargout:
-                return out[:nargout]
-            return out
+                out = out[:nargout]
+            flag = False
+            if isinstance(out, tuple):
+                out = list(out)
+            else:
+                flag = True
+                out = [out]
+            for i, a in enumerate(out):
+                if isinstance(a, np.ndarray):
+                    if a.size == 1:
+                        out[i] = a.item()
+                    else:
+                        out[i] = matlabarray(a)
+            return out[0] if flag else tuple(out)
 
     return wrapper
 
@@ -643,6 +676,7 @@ def logspace(start, stop, num=50, base=10.0):
     return matlabarray(np.logspace(start, stop, num, base=base))
 
 
+@function
 def mean(a, axis=0):
     """
     Compute the mean of the elements along the specified axis.
@@ -650,6 +684,7 @@ def mean(a, axis=0):
     return np.mean(np.asarray(a), axis=axis)
 
 
+@function
 def std(a, axis=0):
     """
     Compute the standard deviation of the elements along the specified axis.
@@ -657,6 +692,7 @@ def std(a, axis=0):
     return np.std(np.asarray(a), axis=axis)
 
 
+@function
 def var(a, axis=0):
     """
     Compute the variance of the elements along the specified axis.
@@ -664,6 +700,7 @@ def var(a, axis=0):
     return np.var(np.asarray(a), axis=axis)
 
 
+@function
 def max(a, b=[], axis=0, nargout=1):
     """
     Return the maximum of an array or maximum along an axis.
@@ -685,6 +722,7 @@ def max(a, b=[], axis=0, nargout=1):
     return m, i
 
 
+@function
 def min(a, axis=0, nargout=1):
     """
     Return the minimum of an array or minimum along an axis.
@@ -700,6 +738,7 @@ def min(a, axis=0, nargout=1):
     return m, i
 
 
+@function
 def isnan(a):
     """
     Return a boolean array indicating whether each element is NaN.
@@ -714,11 +753,22 @@ def unique(a):
     return matlabarray(np.unique(np.asarray(a)))
 
 
-def interp1(x, y, xi):
+def interp1(x, v, xq, method):
     """
     One-dimensional linear interpolation.
     """
-    return matlabarray(np.interp(xi, x, y))
+    x = np.asarray(x).flatten()
+    v = np.asarray(v).flatten()
+    xq = np.asarray(xq).flatten()
+
+    if method in ["linear", "nearest", "next", "previous", "cubic"]:
+        f = scipy.interp1d(x, v, kind=method, fill_value="extrapolate")
+    elif method == "pchip":
+        f = scipy.interpolate.PchipInterpolator(x, v, extrapolate=True)
+    else:
+        raise ValueError(f"Unknown interpolation method: {method}")
+
+    return matlabarray(f(xq))
 
 
 def prctile(a, q):
@@ -768,6 +818,7 @@ def datevec(datenum, nargout=6):
     )[:nargout]
 
 
+@function
 def median(a, axis=0):
     """
     Compute the median of an array.
@@ -775,6 +826,7 @@ def median(a, axis=0):
     return np.median(np.asarray(a), axis=axis)
 
 
+@function
 def nanmean(a, axis=0):
     """
     Compute the mean of an array while ignoring NaNs.
@@ -782,6 +834,7 @@ def nanmean(a, axis=0):
     return np.nanmean(np.asarray(a), axis=axis)
 
 
+@function
 def nanmedian(a, axis=0):
     """
     Compute the median of an array while ignoring NaNs.
