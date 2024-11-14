@@ -3,7 +3,7 @@
 
 # MIT license
 
-import numpy
+import numpy as np
 from numpy import sqrt, prod, exp, log, multiply, inf, rint as fix
 from numpy.fft import fft2
 from numpy.linalg import inv
@@ -28,6 +28,11 @@ from sys import stdin, stdout, stderr
 
 from scipy.io import loadmat
 from scipy.special import gamma
+
+
+pwd = os.getcwd()
+eps = np.finfo(float).eps
+NaN = np.nan
 
 
 def function(f):
@@ -63,9 +68,12 @@ def load_all_vars():
     return globals()
 
 
-pwd = os.getcwd()
-eps = numpy.finfo(float).eps
-NaN = numpy.nan
+def check_struct(a):
+    if isinstance(a, struct):
+        return a
+    if isinstance(a, matlabarray) and a.size == 0:
+        return struct()
+    raise TypeError("Unable to perform assignment because dot indexing is not supported for variables of this type.")
 
 
 def logical(a):
@@ -87,7 +95,7 @@ def jsondecode(a):
 
 def getfield(a, *fields):
     for f in fields:
-        if isinstance(f, numpy.ndarray):
+        if isinstance(f, np.ndarray):
             f = tuple(f.astype(int).flatten())
             a = a[f]
         else:
@@ -132,15 +140,15 @@ def importdata(filename, delimiter=",", header=1):
 
 
 def abs(a):
-    return numpy.abs(a)
+    return np.abs(a)
 
 
 def all(a):
-    return numpy.all(a)
+    return np.all(a)
 
 
 def any(a):
-    return numpy.any(a)
+    return np.any(a)
 
 
 def arange(start, stop, step=1, **kwargs):
@@ -151,7 +159,7 @@ def arange(start, stop, step=1, **kwargs):
     """
     expand_value = 1 if step > 0 else -1
     return matlabarray(
-        numpy.arange(start, stop + expand_value, step, **kwargs).reshape(1, -1),
+        np.arange(start, stop + expand_value, step, **kwargs).reshape(1, -1),
         **kwargs,
     )
 
@@ -164,21 +172,21 @@ def concat(args, axis=1):
     if all([isinstance(a, str) for a in args]):
         return "".join(args)
     t = [matlabarray(a) for a in args]
-    return numpy.concatenate(t, axis=axis).view(matlabarray)
+    return np.concatenate(t, axis=axis).view(matlabarray)
 
 
 def reshape(a, *shape):
-    return numpy.reshape(a, shape)
+    return np.reshape(a, shape)
 
 
 def ceil(a):
-    return numpy.ceil(a)
+    return np.ceil(a)
 
 
 def cell(*args):
     if len(args) == 1:
         args += args
-    return cellarray(numpy.zeros(args, dtype=object, order="F"))
+    return cellarray(np.zeros(args, dtype=object, order="F"))
 
 
 def clc():
@@ -186,11 +194,11 @@ def clc():
 
 
 def copy(a):
-    return matlabarray(numpy.asanyarray(a).copy(order="F"))
+    return matlabarray(np.asanyarray(a).copy(order="F"))
 
 
 def deal(a, nargout=1):
-    return tuple(numpy.repeat(a, nargout // numpy.size(a)).flat)
+    return tuple(np.repeat(a, nargout // np.size(a)).flat)
 
 
 def disp(*args):
@@ -198,32 +206,32 @@ def disp(*args):
 
 
 def eig(a):
-    u, v = numpy.linalg.eig(a)
+    u, v = np.linalg.eig(a)
     return u.T
 
 
 def linsolve(a, b):
     if a.shape[0] == a.shape[1]:
-        return numpy.linalg.solve(a, b)
+        return np.linalg.solve(a, b)
     else:
-        return numpy.linalg.pinv(a) @ b
+        return np.linalg.pinv(a) @ b
 
 
 def logical_not(a):
-    return numpy.logical_not(a)
+    return np.logical_not(a)
 
 
 def logical_and(a, b):
-    return numpy.logical_and(a, b)
+    return np.logical_and(a, b)
 
 
 def logical_or(a, b):
-    return numpy.logical_or(a, b)
+    return np.logical_or(a, b)
 
 
 def diff(a, n=1, axis=0):
-    x = numpy.asarray(a).view(numpy.ndarray)
-    return numpy.diff(x, n=n, axis=axis).view(matlabarray)
+    x = np.asarray(a).view(np.ndarray)
+    return np.diff(x, n=n, axis=axis).view(matlabarray)
 
 
 def exist(a, b="file"):
@@ -247,7 +255,7 @@ def mkdir(directory):
 def true(*args):
     if len(args) == 1:
         args += args
-    return matlabarray(numpy.ones(args, dtype=bool, order="F"))
+    return matlabarray(np.ones(args, dtype=bool, order="F"))
 
 
 def false(*args):
@@ -255,7 +263,7 @@ def false(*args):
         return False  # or matlabarray(False) ???
     if len(args) == 1:
         args += args
-    return numpy.zeros(args, dtype=bool, order="F")
+    return np.zeros(args, dtype=bool, order="F")
 
 
 def find(a, n=None, d=None, nargout=1):
@@ -266,12 +274,12 @@ def find(a, n=None, d=None, nargout=1):
     # converting it to array first.  So we use asarray
     # instead of asanyarray
     if nargout == 1:
-        i = numpy.flatnonzero(numpy.asarray(a)).reshape(1, -1) + 1
+        i = np.flatnonzero(np.asarray(a)).reshape(1, -1) + 1
         if n is not None:
             i = i.take(n)
         return matlabarray(i)
     if nargout == 2:
-        i, j = numpy.nonzero(numpy.asarray(a))
+        i, j = np.nonzero(np.asarray(a))
         if n is not None:
             i = i.take(n)
             j = j.take(n)
@@ -283,7 +291,7 @@ def find(a, n=None, d=None, nargout=1):
 
 
 def floor(a):
-    return numpy.asanyarray(a // 1).astype(int)
+    return np.asanyarray(a // 1).astype(int)
 
 
 def fopen(*args):
@@ -352,13 +360,13 @@ def ischar(a):
 # ----------------------------------------------------
 def isempty(a):
     try:
-        return 0 in numpy.asarray(a).shape
+        return 0 in np.asarray(a).shape
     except AttributeError:
         return False
 
 
 def isequal(a, b):
-    return numpy.array_equal(numpy.asanyarray(a), numpy.asanyarray(b))
+    return np.array_equal(np.asanyarray(a), np.asanyarray(b))
 
 
 def isfield(a, b):
@@ -370,32 +378,32 @@ def ismatrix(a):
 
 
 def isnumeric(a):
-    return numpy.asarray(a).dtype in (int, float)
+    return np.asarray(a).dtype in (int, float)
 
 
 def isscalar(a):
-    """numpy.isscalar returns True if a.__class__ is a scalar
+    """np.isscalar returns True if a.__class__ is a scalar
     type (i.e., int, and also immutable containers str and
     tuple, but not list.) Our requirements are different"""
     try:
         return a.size == 1
     except AttributeError:
-        return numpy.isscalar(a)
+        return np.isscalar(a)
 
 
 def length(a):
-    if not isinstance(a, numpy.ndarray) and hasattr(a, "__len__"):
+    if not isinstance(a, np.ndarray) and hasattr(a, "__len__"):
         return len(a)
-    elif numpy.ndim(a) < 2 or min(numpy.shape(a)) == 0:
-        return numpy.array(numpy.size(a))
+    elif np.ndim(a) < 2 or min(np.shape(a)) == 0:
+        return np.array(np.size(a))
     else:
-        return numpy.array(max(numpy.asarray(a).shape))
+        return np.array(max(np.asarray(a).shape))
     
     
 def setdiff(a, b, nargout=1):
     from builtins import set
-    a = numpy.asarray(a)
-    b = numpy.asarray(b)
+    a = np.asarray(a)
+    b = np.asarray(b)
     if nargout == 1:
         c = sorted(set(a.flat) - set(b.flat))
         if isinstance(a, str):
@@ -419,16 +427,16 @@ def mod(a, b):
 
 
 def ndims(a):
-    return numpy.asarray(a).ndim
+    return np.asarray(a).ndim
 
 
 def numel(a):
-    return numpy.asarray(a).size
+    return np.asarray(a).size
 
 
 # def primes2(upto):
-#    primes=numpy.arange(2,upto+1)
-#    isprime=numpy.ones(upto-1,dtype=bool)
+#    primes=np.arange(2,upto+1)
+#    isprime=np.ones(upto-1,dtype=bool)
 #    for factor in primes[:int(math.sqrt(upto))]:
 #        if isprime[factor-2]: isprime[factor*2-2::factor]=0
 #    return primes[isprime]
@@ -438,32 +446,32 @@ def numel(a):
 
 
 def qr(a):
-    return matlabarray(_qr(numpy.asarray(a)))
+    return matlabarray(_qr(np.asarray(a)))
 
 
 def rand(*args, **kwargs):
     if not args:
-        return numpy.random.rand()  # No arguments, return a single random float
+        return np.random.rand()  # No arguments, return a single random float
     if len(args) == 1:
         args += args
     try:
-        return numpy.random.rand(numpy.prod(args)).reshape(args, order="F")
+        return np.random.rand(np.prod(args)).reshape(args, order="F")
     except:
         pass
 
 
 def randn(*args, **kwargs):
     if not args:
-        return numpy.random.randn()
+        return np.random.randn()
     if len(args) == 1:
         args += args
-    return numpy.random.randn(numpy.prod(args)).reshape(args, order="F")
+    return np.random.randn(np.prod(args)).reshape(args, order="F")
 
 
 def randi(hi, *args, **kwargs):
     if len(args) == 1:
         args += args
-    return numpy.random.randint(1, hi + 1, args).reshape(args, order="F")
+    return np.random.randint(1, hi + 1, args).reshape(args, order="F")
 
 
 def assert_(a, b=None, c=None):
@@ -485,23 +493,23 @@ def shared(a):
 
 
 def ravel(a):
-    return numpy.asanyarray(a).reshape(-1, 1)
+    return np.asanyarray(a).reshape(-1, 1)
 
 
 def roots(a):
-    return matlabarray(numpy.roots(numpy.asarray(a).ravel()))
+    return matlabarray(np.roots(np.asarray(a).ravel()))
 
 
 def round(a):
-    return numpy.round(numpy.asanyarray(a))
+    return np.round(np.asanyarray(a))
 
 
 def rows(a):
-    return numpy.asarray(a).shape[0]
+    return np.asarray(a).shape[0]
 
 
 def schur(a):
-    return matlabarray(_schur(numpy.asarray(a)))
+    return matlabarray(_schur(np.asarray(a)))
 
 
 def size(a, b=0, nargout=1):
@@ -509,7 +517,7 @@ def size(a, b=0, nargout=1):
     >>> size(zeros(3,3)) + 1
     matlabarray([[4, 4]])
     """
-    s = numpy.asarray(a).shape
+    s = np.asarray(a).shape
     if s == ():
         return 1 if b else (1,) * nargout
     # a is not a scalar
@@ -517,7 +525,7 @@ def size(a, b=0, nargout=1):
         if b:
             return s[b - 1]
         else:
-            return numpy.squeeze(s)
+            return np.squeeze(s)
     except IndexError:
         return 1
 
@@ -550,7 +558,7 @@ def strncmpi(a, b, n):
 def strread(s, format="", nargout=1):
     if format == "":
         a = [float(x) for x in s.split()]
-        return tuple(a) if nargout > 1 else numpy.asanyarray([a])
+        return tuple(a) if nargout > 1 else np.asanyarray([a])
     raise NotImplementedError
 
 
@@ -564,9 +572,9 @@ def strcat(*args):
 
 def sum(a, dim=None):
     if dim is None:
-        return numpy.asanyarray(a).sum()
+        return np.asanyarray(a).sum()
     else:
-        return numpy.asanyarray(a).sum(dim - 1)
+        return np.asanyarray(a).sum(dim - 1)
 
 
 def toupper(a):
@@ -590,20 +598,20 @@ def zeros(*args, **kwargs):
         return 0.0
     if hasattr(args[0], '__len__'):
         args = args[0]
-    if numpy.size(args) == 1:
+    if np.size(args) == 1:
         args += args
-    return matlabarray(numpy.zeros(args, **kwargs))
+    return matlabarray(np.zeros(args, **kwargs))
 
 
 def ones(*args, **kwargs):
     if not args:
         return 1
     if len(args) == 1:
-        if isinstance(args[0], (tuple, list, numpy.ndarray)):
+        if isinstance(args[0], (tuple, list, np.ndarray)):
             args = args[0]
         else:
             args += args
-    return matlabarray(numpy.ones(args, order="F", **kwargs))
+    return matlabarray(np.ones(args, order="F", **kwargs))
 
 
 def print_usage():
@@ -622,44 +630,44 @@ def linspace(start, stop, num=50):
     """
     Return evenly spaced numbers over a specified interval.
     """
-    return matlabarray(numpy.linspace(start, stop, num))
+    return matlabarray(np.linspace(start, stop, num))
 
 
 def logspace(start, stop, num=50, base=10.0):
     """
     Return numbers spaced evenly on a log scale.
     """
-    return matlabarray(numpy.logspace(start, stop, num, base=base))
+    return matlabarray(np.logspace(start, stop, num, base=base))
 
 
 def mean(a, axis=0):
     """
     Compute the mean of the elements along the specified axis.
     """
-    return numpy.mean(numpy.asarray(a), axis=axis)
+    return np.mean(np.asarray(a), axis=axis)
 
 
 def std(a, axis=0):
     """
     Compute the standard deviation of the elements along the specified axis.
     """
-    return numpy.std(numpy.asarray(a), axis=axis)
+    return np.std(np.asarray(a), axis=axis)
 
 
 def var(a, axis=0):
     """
     Compute the variance of the elements along the specified axis.
     """
-    return numpy.var(numpy.asarray(a), axis=axis)
+    return np.var(np.asarray(a), axis=axis)
 
 
 def max(a, b=[], axis=0, nargout=1):
     """
     Return the maximum of an array or maximum along an axis.
     """
-    if numpy.size(b) > 0:
-        return numpy.maximum(numpy.asarray(a), numpy.asarray(b))
-    if numpy.size(a) == 0:
+    if np.size(b) > 0:
+        return np.maximum(np.asarray(a), np.asarray(b))
+    if np.size(a) == 0:
         if nargout == 1:
             return a
         return a, a
@@ -667,10 +675,10 @@ def max(a, b=[], axis=0, nargout=1):
         axis = None
     if axis:
         axis -= 1
-    m = numpy.max(numpy.asarray(a), axis=axis)
+    m = np.max(np.asarray(a), axis=axis)
     if nargout == 1:
         return m
-    i = numpy.argmax(numpy.asarray(a), axis=axis)
+    i = np.argmax(np.asarray(a), axis=axis)
     return m, i
 
 
@@ -678,14 +686,14 @@ def min(a, axis=0, nargout=1):
     """
     Return the minimum of an array or minimum along an axis.
     """
-    if numpy.size(a) == 0:
+    if np.size(a) == 0:
         if nargout == 1:
             return a
         return a, a
-    m = numpy.min(numpy.asarray(a), axis=axis)
+    m = np.min(np.asarray(a), axis=axis)
     if nargout == 1:
         return m
-    i = numpy.argmin(numpy.asarray(a), axis=axis)
+    i = np.argmin(np.asarray(a), axis=axis)
     return m, i
 
 
@@ -693,31 +701,31 @@ def isnan(a):
     """
     Return a boolean array indicating whether each element is NaN.
     """
-    return numpy.isnan(numpy.asarray(a))
+    return np.isnan(np.asarray(a))
 
 
 def unique(a):
     """
     Return the unique elements of an array.
     """
-    return matlabarray(numpy.unique(numpy.asarray(a)))
+    return matlabarray(np.unique(np.asarray(a)))
 
 
 def interp1(x, y, xi):
     """
     One-dimensional linear interpolation.
     """
-    return matlabarray(numpy.interp(xi, x, y))
+    return matlabarray(np.interp(xi, x, y))
 
 
 def prctile(a, q):
     """
     Compute the q-th percentile of the data along the specified axis.
     """
-    q = numpy.asarray(q)
-    if numpy.size(a) == 0:
-        return numpy.full_like(q, numpy.nan)
-    a = numpy.percentile(numpy.asarray(a), q)
+    q = np.asarray(q)
+    if np.size(a) == 0:
+        return np.full_like(q, np.nan)
+    a = np.percentile(np.asarray(a), q)
     return matlabarray(a)
 
 
@@ -726,18 +734,18 @@ def dot(a, b):
     Compute the dot product of two arrays.
     """
     try:
-        return numpy.dot(a, b)
+        return np.dot(a, b)
     except ValueError:
         return sum([x * y for x, y in zip(a, b)])
 
 
 def datenum(a, *args):
     if isinstance(a, str):
-        d = matlabarray(numpy.datetime64(a) - numpy.datetime64("1970-01-01"))
+        d = matlabarray(np.datetime64(a) - np.datetime64("1970-01-01"))
         return d.astype("timedelta64[D]") + 719529
     from datetime import datetime, timedelta
 
-    y, m, d = [numpy.squeeze(a).item() for a in (a, *args)]
+    y, m, d = [np.squeeze(a).item() for a in (a, *args)]
     t = datetime(int(y) + 2000, int(m), 1) + timedelta(days=d + 1)
     return matlabarray(t - datetime(2000, 1, 1)).astype("timedelta64[D]")
 
@@ -746,7 +754,7 @@ def datevec(datenum, nargout=6):
     """
     Convert a MATLAB datenum to a date vector.
     """
-    dt = numpy.datetime64("1970-01-01") + (datenum - 719529).astype("timedelta64[D]")
+    dt = np.datetime64("1970-01-01") + (datenum - 719529).astype("timedelta64[D]")
     return (
         dt.astype("datetime64[Y]").astype(int) + 1970,
         dt.astype("datetime64[M]").astype(int) % 12 + 1,
@@ -761,21 +769,21 @@ def median(a, axis=0):
     """
     Compute the median of an array.
     """
-    return numpy.median(numpy.asarray(a), axis=axis)
+    return np.median(np.asarray(a), axis=axis)
 
 
 def nanmean(a, axis=0):
     """
     Compute the mean of an array while ignoring NaNs.
     """
-    return numpy.nanmean(numpy.asarray(a), axis=axis)
+    return np.nanmean(np.asarray(a), axis=axis)
 
 
 def nanmedian(a, axis=0):
     """
     Compute the median of an array while ignoring NaNs.
     """
-    return numpy.nanmedian(numpy.asarray(a), axis=axis)
+    return np.nanmedian(np.asarray(a), axis=axis)
 
 
 def fcdf(x, dfn, dfd):
@@ -817,9 +825,9 @@ def corrcoef(x, y, nargout=1):
     """
     Return the correlation coefficients.
     """
-    x = numpy.asarray(x).flatten()
-    y = numpy.asarray(y).flatten()
-    if numpy.isnan(x).any() or numpy.isnan(y).any():
+    x = np.asarray(x).flatten()
+    y = np.asarray(y).flatten()
+    if np.isnan(x).any() or np.isnan(y).any():
         r, p = NaN, NaN
     else:
         r, p = corr(x, y)
@@ -832,7 +840,7 @@ def sort(a, axis=-1, kind="quicksort", order=None):
     """
     Return a sorted copy of an array.
     """
-    return matlabarray(numpy.sort(numpy.asarray(a), axis=axis, kind=kind))
+    return matlabarray(np.sort(np.asarray(a), axis=axis, kind=kind))
 
 
 def fprintf(format_string, *args):
@@ -976,7 +984,7 @@ def isvector(a):
         return False
 
 
-class matlabarray(numpy.ndarray):
+class matlabarray(np.ndarray):
     """
     >>> matlabarray()
     matlabarray([], shape=(0, 0), dtype=float64)
@@ -986,30 +994,30 @@ class matlabarray(numpy.ndarray):
     matlabarray("helloworld")
     """
 
-    def __new__(cls, a=[], dtype=None):
+    def __new__(cls, a=(), dtype=None):
         if isinstance(a, matlabarray) and dtype is None:
             return a
-        copy = not isinstance(a, numpy.ndarray) or dtype and a.dtype != dtype
+        if np.size(a) == 0 and dtype is None:
+            dtype = object
+        copy = not isinstance(a, np.ndarray) or dtype and a.dtype != dtype
         obj = (
-            numpy.array(a, dtype=dtype, order="F", copy=copy, ndmin=2)
+            np.array(a, dtype=dtype, order="F", copy=copy, ndmin=2)
             .view(cls)
             .copy(order="F")
         )
         if obj.size == 0:
             obj.shape = (0, 0)
-        super().__setattr__(obj, "_fields", {})
         return obj
 
     def __array_finalize__(self, obj):
-        if obj is not None:
-            super().__setattr__("_fields", getattr(obj, "_fields", {}))
+        pass
 
     def __copy__(self):
-        return numpy.ndarray.copy(self, order="F")
+        return np.ndarray.copy(self, order="F")
 
     def __iter__(self):
         """must define iter or char won't work"""
-        return numpy.asarray(self).__iter__()
+        return np.asarray(self).__iter__()
 
     def compute_indices(self, index):
         if not isinstance(index, tuple):
@@ -1038,7 +1046,7 @@ class matlabarray(numpy.ndarray):
                 try:
                     indices.append(int(ix) - 1)
                 except TypeError:
-                    indices.append(numpy.asarray(ix).astype("int32") - 1)
+                    indices.append(np.asarray(ix).astype("int32") - 1)
         if len(indices) == 2 and isvector(indices[0]) and isvector(indices[1]):
             indices[0].shape = (-1, 1)
             indices[1].shape = (-1,)
@@ -1049,16 +1057,16 @@ class matlabarray(numpy.ndarray):
             return self.reshape(-1, 1, order="F")
         return self.__getitem__(slice(i, j))
 
+    def __setslice__(self, i, j, value):
+        index = slice(i, None if j == sys.maxsize else j)
+        self.__setitem__(index, value)
+
     def __getitem__(self, index):
         return self.get(index)
 
     def get(self, index):
         self, indices = self.compute_indices(index)
-        return numpy.ndarray.__getitem__(self, indices)
-
-    def __setslice__(self, i, j, value):
-        index = slice(i, None if j == sys.maxsize else j)
-        self.__setitem__(index, value)
+        return np.ndarray.__getitem__(self, indices)
 
     def sizeof(self, ix, axis=None):
         if isinstance(ix, int):
@@ -1067,7 +1075,7 @@ class matlabarray(numpy.ndarray):
             n = ix.stop
             if n is None:
                 n = self.shape[axis]
-        elif isinstance(ix, (list, numpy.ndarray)):
+        elif isinstance(ix, (list, np.ndarray)):
             n = int(max(ix) + 1)
         else:
             raise ValueError("Invalid index: %s" % ix)
@@ -1076,21 +1084,21 @@ class matlabarray(numpy.ndarray):
         return n
 
     def delete(self, ix, axis=0):
-        if not numpy.size(ix):
+        if not np.size(ix):
             return self
         _, indices = self.compute_indices((ix,))
-        return matlabarray(numpy.delete(numpy.asarray(self), indices[0], axis=axis))
+        return matlabarray(np.delete(np.asarray(self), indices[0], axis=axis))
 
     def __setitem__(self, index, value):
         view, indices = self.compute_indices(index)
         if self.size == 0:
-            if all([numpy.size(i) > 0 for i in indices]):
+            if all([np.size(i) > 0 for i in indices]):
                 new_shape = [self.sizeof(i) for i in indices]
                 self.resize(new_shape, refcheck=0)
                 self.fill(value)
             return
         try:
-            numpy.ndarray.__setitem__(view, indices, value)
+            np.ndarray.__setitem__(view, indices, value)
         except (ValueError, IndexError):
             # import pdb; pdb.set_trace()
             if len(indices) == 1:
@@ -1118,29 +1126,27 @@ class matlabarray(numpy.ndarray):
                 else:
                     new_shape = [(1 if s == 1 else n) for s in self.shape]
                 self.resize(new_shape, refcheck=0)
-                numpy.asarray(self).reshape(-1, order="F").__setitem__(indices, value)
+                np.asarray(self).reshape(-1, order="F").__setitem__(indices, value)
             else:
                 new_shape = [self.sizeof(i) for i in indices]
                 self.resize(new_shape, refcheck=0)
-                numpy.asarray(self).__setitem__(indices, value)
+                np.asarray(self).__setitem__(indices, value)
 
     def __setattr__(self, name, value):
-        self._fields[name] = value
-
-    def __getattr__(self, name):
-        return self._fields[name]
+        if self.size > 0:
+            raise ValueError("Unable to perform assignment because dot indexing is not supported for variables of this type.")
 
     def __repr__(self):
-        return self.__class__.__name__ + repr(numpy.asarray(self))[5:]
+        return self.__class__.__name__ + repr(np.asarray(self))[5:]
 
     def __str__(self):
-        return str(numpy.asarray(self))
+        return str(np.asarray(self))
 
     def __add__(self, other):
-        return matlabarray(numpy.asarray(self) + numpy.asarray(other))
+        return matlabarray(np.asarray(self) + np.asarray(other))
 
     def __neg__(self):
-        return matlabarray(numpy.asarray(self).__neg__())
+        return matlabarray(np.asarray(self).__neg__())
 
 
 class end(object):
@@ -1156,7 +1162,7 @@ class end(object):
         return self
 
     def index(self, m, axis=0):
-        return numpy.shape(m)[axis] + self.n
+        return np.shape(m)[axis] + self.n
 
 
 class cellarray(matlabarray):
@@ -1179,23 +1185,7 @@ class cellarray(matlabarray):
         >>> print(a[2])
         hello
         """
-        obj = numpy.array(a, dtype=object, order="F", ndmin=2).view(cls).copy(order="F")
-        if obj.size == 0:
-            obj.shape = (0, 0)
-        return obj
-
-    def __getitem__(self, index):
-        return self.get(index)
-
-
-#    def __str__(self):
-#        if self.ndim == 0:
-#            return ""
-#        if self.ndim == 1:
-#            return "".join(s for s in self)
-#        if self.ndim == 2:
-#            return "\n".join("".join(s) for s in self)
-#        raise NotImplementedError
+        return super().__new__(cls, a, dtype=object)
 
 
 class cellstr(matlabarray):
@@ -1218,7 +1208,7 @@ class cellstr(matlabarray):
         a line.
         """
         obj = (
-            numpy.array(["".join(s) for s in a], dtype=object, order="C", ndmin=2)
+            np.array(["".join(s) for s in a], dtype=object, order="C", ndmin=2)
             .view(cls)
             .copy(order="F")
         )
@@ -1256,7 +1246,7 @@ class char(matlabarray):
         if not isinstance(a, str):
             a = "".join([chr(c) for c in a])
         obj = (
-            numpy.array(list(a), dtype="|U1", order="F", ndmin=2)
+            np.array(list(a), dtype="|U1", order="F", ndmin=2)
             .view(cls)
             .copy(order="F")
         )
@@ -1288,7 +1278,7 @@ class char(matlabarray):
         return super().__eq__(other)
 
 
-class struct(object):
+class struct(matlabarray):
     def __init__(self, *args):
         for i in range(0, len(args), 2):
             setattr(self, str(args[i]), args[i + 1])

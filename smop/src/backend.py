@@ -64,6 +64,8 @@ reserved = set(
     """.split()
 )
 
+STRUCTS = set()
+
 # acos  asin atan  cos e
 # exp   fabs floor log log10
 # pi    sin  sqrt  tan
@@ -192,7 +194,7 @@ def _backend(self, level=0):
         else:
             return "getattr(%s,%s)" % (
                 self.args[0]._backend(level),
-                self.args[1]._backend(level),
+                self.args[1].args[0]._backend(level),
             )
 
     #     if self.op == "matrix":
@@ -238,6 +240,7 @@ def _backend(self, level=0):
 @extend(node.func_stmt)
 def _backend(self, level=0):
     bindings = []
+    STRUCTS.clear()
     if self.args and str((self.args[-1])) == "varargin":
         self.args[-1] = node.ident("*varargin")
         bindings.append(("nargin", "len(varargin)"))
@@ -305,13 +308,21 @@ def _backend(self, level=0):
 def _backend(self, level=0):
     if not options.no_numbers:
         t = "\n# %s:%s" % (options.filename, self.lineno)
-    # level*indent)
     else:
         t = ""
 
+    structs = set()
+    def add_structs(n):
+        if isinstance(n, node.expr) and n.op == ".":
+            s = n.args[0]._backend()
+            if s not in STRUCTS:
+                STRUCTS.add(s)
+                structs.add(s)
+        elif isinstance(n, node.expr_list):
+            for i in n:
+                add_structs(i)
+
     s = ""
-    # if self.args.__class__ is node.funcall:
-    #    self.args.nargout = self.nargout
     if self.ret.__class__ is node.expr and self.ret.op == ".":
         try:
             if self.ret.args[1].op == "parens":
@@ -326,6 +337,7 @@ def _backend(self, level=0):
                 self.ret.args[1]._backend(level),
                 self.args._backend(level),
             )
+        add_structs(self.ret)
     elif self.ret.__class__ is node.ident and self.args.__class__ is node.ident:
         s += "%s=copy(%s)" % (self.ret._backend(level), self.args._backend(level))
     elif isinstance(self.ret, node.ident) and self.ret.props == "W":
@@ -337,7 +349,7 @@ def _backend(self, level=0):
         name = self.ret.func_expr._backend(level)
         key = self.ret.args._backend(level)
         lhs = f"try: {name}\n"
-        lhs += " " * (4 * level) + f"except: {name} = cellarray()\n"
+        lhs += " " * (4 * level) + f"except: {name} = matlabarray()\n"
         lhs += " " * (4 * level) + f"{name}[{key}]"
         s += "%s = %s" % (lhs, self.args._backend(level))
     elif (
@@ -349,9 +361,10 @@ def _backend(self, level=0):
         key = self.ret.args._backend(level)
         s += f"{name} = {name}.delete({key})"
     else:
-        # if isinstance(self.ret, node.arrayref) and self.ret.func_expr.name == "Stats2":
-        #     breakpoint()
         s += "%s=%s" % (self.ret._backend(level), self.args._backend(level))
+        add_structs(self.ret)
+    for var in structs:
+        s = f"{var} = check_struct({var})\n{' ' * 4 * level}" + s
     return s + t
 
 

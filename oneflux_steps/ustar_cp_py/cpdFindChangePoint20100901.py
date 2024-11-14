@@ -49,6 +49,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:39
     s2 = matlabarray([])
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:41
+    s2 = check_struct(s2)
     s2.n = copy(NaN)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:41
     s2.Cp = copy(NaN)
@@ -250,6 +251,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
 
     s2.n = copy(n)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:126
+    s3 = check_struct(s3)
     s3.n = copy(n)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:126
     if logical_and(iCp2 > (nEndPts), iCp2 < (n - nEndPts)):

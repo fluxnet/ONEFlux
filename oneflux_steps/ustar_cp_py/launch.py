@@ -200,9 +200,9 @@ def launch(input_folder=None, output_folder=None):
         clear("temp", "fid")
         imported_data = importdata(concat([input_folder, take(d, n).name]), ",", m)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:166
-        header = matlabarray(getattr(imported_data, ("textdata")))
+        header = matlabarray(getattr(imported_data, "textdata"))
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:167
-        data = matlabarray(getattr(imported_data, ("data")))
+        data = matlabarray(getattr(imported_data, "data"))
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:168
         columns_index = matlabarray(dot(ones(numel(input_columns_names), 1), -1))
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:169
