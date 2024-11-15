@@ -9,10 +9,7 @@ function varargout = logFuncResult(filename, f, metadata, varargin)
     %       - varargin: Cell array of input arguments for the function f.
     %
     %   Outputs:
-    %       - varargout: The outputs returned by the function f.
-
-    % Set default metadata if not provided
- 
+    %       - varargout: The outputs returned by the function f. 
 
 
     metadata.description = func2str(f);
@@ -46,8 +43,6 @@ function varargout = logFuncResult(filename, f, metadata, varargin)
     end
     filePath = fullfile(dirPath, filename);
 
-    % Generate a unique identifier
-    id = char(java.util.UUID.randomUUID);
 
     % Get function name
     function_name = func2str(f);
@@ -56,7 +51,6 @@ function varargout = logFuncResult(filename, f, metadata, varargin)
     inputPaths = struct();
     numArgs = length(varargin);
     for i = 1:numArgs
-        % disp(metadata.inputNames);
         if length(metadata.inputNames) >= i
             fieldName = metadata.inputNames{i};
             
@@ -114,7 +108,8 @@ function saveVariableAsCSV(var, filePath)
     % Supports numeric arrays, tables, cell arrays, structs, strings.
 
     if isnumeric(var) || islogical(var)
-        writematrix(var, filePath);
+        writematrix(var, filePath)
+        % writematrix(var, filePath, 'WriteMode','append');
     elseif istable(var)
         writetable(var, filePath);
     elseif iscell(var)
@@ -144,7 +139,7 @@ function saveVariableAsCSV(var, filePath)
                 
                 fwrite(fid, jsonData, 'char');
                 fclose(fid);
-                disp('Successfully written struct to JSON.');
+                % disp('Successfully written struct to JSON.');
                 
             catch jsonError
                 % If both CSV and JSON writing fail, throw an error
