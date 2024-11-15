@@ -1,8 +1,7 @@
 function [PPFD, ppfd_from_rg] = areAllPpfdValuesInvalid(ppfd_from_rg, columns_index, PPFD_INDEX, data, varargin)
-    % disp(0 == ppfd_from_rg);
+    
     if length(varargin) > 0
         data = importdata(varargin{1}, ',');
-        % disp(data);
     end
 
     if 0 == ppfd_from_rg
@@ -14,6 +13,4 @@ function [PPFD, ppfd_from_rg] = areAllPpfdValuesInvalid(ppfd_from_rg, columns_in
         end        
     end
 
-    % disp(class(PPFD));
-    % disp(class(ppfd_from_rg));
 end
