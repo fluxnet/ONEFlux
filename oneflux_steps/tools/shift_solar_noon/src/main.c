@@ -1,7 +1,10 @@
 /*
 	main.c
 
-	this file is part of shift_solar_noon
+	This file is part of shift_solar_noon tool.
+	It calculates a composit maximum incoming radiation
+	that is compared with the potential radiation in order
+	to identify possible shifts in the timeseries.
 
 	author: Alessio Ribeca <a.ribeca@unitus.it>
 	owner: DIBAF - University of Tuscia, Viterbo, Italy
@@ -23,7 +26,7 @@
 #include "../../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION			"v1.0"
+#define PROGRAM_VERSION			"v1.01"
 const int days_per_month[MONTHS] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
 /* enum */
@@ -1100,9 +1103,9 @@ static int save_db_file(DATASET *const dataset) {
 	/* write... */
 	for ( i = 0; i < dataset->rows_count; i++ ) {
 		/* ...timestamp_start.... */
-		fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		/* ...timestamp_end.... */
-		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		/* ...values... */
 		for ( y = 0; y < SIZEOF_ARRAY(vars_index); y++ ) {
 			var = get_var_index(dataset, var_names[vars_index[y]]);
@@ -1806,9 +1809,9 @@ static int save_nee_file(DATASET *const dataset) {
 	/* write... */
 	for ( i = 0; i < dataset->rows_count; i++ ) {
 		/* ...timestamp_start.... */
-		fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		/* ...timestamp_end.... */
-		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		/* ...values... */
 		for ( y = 0; y < SIZEOF_ARRAY(vars_index); y++ ) {
 			var = get_var_index(dataset, var_names[vars_index[y]]);
@@ -1897,9 +1900,9 @@ static int save_energy_file(DATASET *const dataset) {
 	/* write... */
 	for ( i = 0; i < dataset->rows_count; i++ ) {
 		/* ...timestamp_start.... */
-		fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		/* ...timestamp_end.... */
-		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		/* ...values... */
 		for ( y = 0; y < SIZEOF_ARRAY(vars_index); y++ ) {
 			var = get_var_index(dataset, var_names[vars_index[y]]);
@@ -1970,9 +1973,9 @@ static int save_ustar_file(DATASET *const dataset) {
 	/* write... */
 	for ( i = 0; i < dataset->rows_count; i++ ) {
 		/* ...timestamp_start.... */
-		fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s,", timestamp_start_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		/* ...timestamp_end.... */
-		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, (HOURLY_TIMERES == dataset->details->timeres)));
+		fprintf(f, "%s", timestamp_end_by_row_s(i, dataset->details->year, dataset->details->timeres));
 		/* ...values... */
 		for ( y = 0; y < SIZEOF_ARRAY(vars_index); y++ ) {
 			var = get_var_index(dataset, var_names[vars_index[y]]);
@@ -2439,7 +2442,7 @@ static int set_sc_negl(DATASET *const dataset) {
 	}
 
 	for ( i = 0; i < dataset->details->sc_negles_count; i++ ) {
-		z = get_row_by_timestamp(&dataset->details->sc_negles[i].timestamp, (HOURLY_TIMERES == dataset->details->timeres));
+		z = get_row_by_timestamp(&dataset->details->sc_negles[i].timestamp, dataset->details->timeres);
 		for ( y = z; y < dataset->rows_count; y++ ) {
 			dataset->rows[y].value[SC_NEGL] = dataset->details->sc_negles[i].flag;
 		}

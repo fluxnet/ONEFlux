@@ -1,7 +1,11 @@
 /*
 	main.c
 
-	this file is part of nee_proc
+	This file is part of the nee_proc step of processing.
+	It is responsible for the ustar filtering and gapfilling
+	of the nee using an ensamble of ustar thresholds. It also
+	performs the temporal aggregation at different time
+	resolutions.
 
 	author: Alessio Ribeca <a.ribeca@unitus.it>
 	owner: DIBAF - University of Tuscia, Viterbo, Italy
@@ -20,7 +24,7 @@
 #include "../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION			"v1.0"
+#define PROGRAM_VERSION			"v1.01"
 #define BUFFER_SIZE				1024
 #define QC_AUTO_PATH			"qc_auto"
 #define USTAR_MP_PATH			"ustar_mp"

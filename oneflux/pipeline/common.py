@@ -53,7 +53,8 @@ ERA_LAST_TIMESTAMP_START = ERA_LAST_TIMESTAMP_START_TEMPLATE.format(y=str(ERA_LA
 HOME_DIRECTORY = os.path.expanduser('~')
 TOOL_DIRECTORY = os.path.join(HOME_DIRECTORY, 'bin', 'oneflux')
 MCR_DIRECTORY = os.path.join(HOME_DIRECTORY, 'bin', 'MATLAB_Compiler_Runtime', 'v717')
-WORKING_DIRECTORY = os.path.join(HOME_DIRECTORY, 'data', 'fluxnet', 'FLUXNET2015')
+ERA_SOURCE_DIRECTORY = os.path.join(HOME_DIRECTORY, 'data', 'ERA')
+WORKING_DIRECTORY = os.path.join(HOME_DIRECTORY, 'data', 'fluxnet', 'FLUXNET')
 WORKING_DIRECTORY_SITE = os.path.join(WORKING_DIRECTORY, '{sd}')
 QCDIR = os.path.join(WORKING_DIRECTORY_SITE, "01_qc_visual", "qcv_files") # NEW FOR APRIL2016
 MPDIR = os.path.join(WORKING_DIRECTORY_SITE, "04_ustar_mp")
@@ -445,6 +446,38 @@ def create_and_empty_dir(tdir, label, suffix=datetime.now().strftime("%Y%m%d%H%M
             os.makedirs(tdir)
         log.debug("Created '{d}'".format(d=tdir))
         return True
+
+def copy_files_pattern(src_dir, tgt_dir, file_pattern='*', label='common.copy_files_pattern', simulation=False):
+    """
+    Copy all files matching pattern inside src_dir into tgt_dir (non-recursive)
+
+    :param src_dir: Source directory for files to be copied from
+    :type src_dir: str
+    :param tgt_dir: Target directory for files to be copied into
+    :type tgt_dir: str
+    :param file_pattern: Filename pattern to be matched, defaults to '*'
+    :type file_pattern: str, optional
+    :param simulation: If true, copies files from source into target, defaults to False
+    :type simulation: bool, optional
+    """
+    if (not os.path.isdir(src_dir)) or (not os.access(src_dir, os.R_OK)):
+        msg = "Cannot read from pipeline {l} directory '{d}'".format(l=label, d=src_dir)
+        log.critical(msg)
+        raise ONEFluxPipelineError(msg)
+    if (not os.path.isdir(tgt_dir)) or (not os.access(tgt_dir, os.W_OK)):
+        msg = "Cannot write to pipeline {l} directory '{d}'".format(l=label, d=tgt_dir)
+        log.critical(msg)
+        raise ONEFluxPipelineError(msg)
+    filelist = test_pattern(tdir=src_dir, tpattern=file_pattern, label='Copy files from {s} to {t}'.format(s=src_dir, t=tgt_dir))
+    log.debug('Found files in source dir ({s}): {f}'.format(s=src_dir, f=filelist))
+    if not simulation:
+        for filename in [os.path.join(src_dir, f) for f in filelist]:
+            if os.path.isfile(filename):
+                shutil.copy(filename, tgt_dir)
+                log.debug('Copied {f} to {t}'.format(f=filename, t=tgt_dir))
+            else:
+                log.error('Cannot copy {f} into {t}'.format(f=filename, t=tgt_dir))
+    return True
 
 def get_headers(filename):
     """

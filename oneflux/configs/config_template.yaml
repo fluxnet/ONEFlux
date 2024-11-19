@@ -1,15 +1,15 @@
 run:
   command: all
   datadir: ./data
-  siteid: <replace_me>
-  sitedir: <replace_me>
-  firstyear: 2005
-  lastyear: 2006
+  siteid: <REPLACE_ME>
+  sitedir: <REPLACE_ME>
+  firstyear: <REPLACE_ME>
+  lastyear: <REPLACE_ME>
   perc:
   prod:
   logfile: oneflux.log
   force_py: false
-  mcr: <replace_me>/MATLAB_Runtime/v94
+  mcr: <REPLACE_ME>/MATLAB_Runtime/v94
   ts: oneflux.tools.pipeline:NOW_TS
   recint: hh
   versionp: oneflux:VERSION_PROCESSING

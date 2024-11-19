@@ -193,9 +193,9 @@ static const char output_format_yy[] =	"%04d,"
 										"%.3f,%g";
 
 static const char output_stat_file[] = "%s%s_meteo_%s_info.txt";
-static const char err_no_files_founded[] = "no files founded.";
-static const char err_no_meteo_files_founded[] = "no meteo files founded.";
-static const char err_no_era_files_founded[] = "no era files founded.";
+static const char err_no_files_found[] = "no files found.";
+static const char err_no_meteo_files_found[] = "no meteo files found.";
+static const char err_no_era_files_found[] = "no era files found.";
 
 /* */
 static int is_valid_era_filename(const char *const filename) {
@@ -776,6 +776,11 @@ static int get_dataset_details(DATASET *const dataset) {
 
 /* */
 static int import_meteo_values(DATASET *const dataset) {
+	typedef struct {
+		int profile;
+		int index;
+	} COLUMN;
+
 	int i;
 	int y;
 	int j;
@@ -785,12 +790,14 @@ static int import_meteo_values(DATASET *const dataset) {
 	int rows_count;
 	int error;
 	int year;
-	int columns_founded_count;
+	int columns_found_count;
 	int columns_index[MET_VALUES];
 	int profile;
 	int *int_no_leak;
-	int *swc_columns;
-	int *ts_columns;
+	COLUMN *column_no_leak;
+	COLUMN *swc_columns;
+	COLUMN *ts_columns;
+
 	int swc_columns_count;
 	int ts_columns_count;
 	int *ts_profiles;
@@ -855,8 +862,13 @@ static int import_meteo_values(DATASET *const dataset) {
 		for ( token = string_tokenizer(buffer, dataset_delimiter, &p), i = 0; token; token = string_tokenizer(NULL, dataset_delimiter, &p), ++i ) {
 			/* check for Ts */
 			if ( ! string_n_compare_i(token, "TS_", 3) || ! string_n_compare_i(token, "itpTS_", 6) ) {
-				/* get profile */
-				profile = convert_string_to_int(token+3, &error);
+				if ( ! string_n_compare_i(token, "TS_", 3) ) {
+					/* get profile */
+					profile = convert_string_to_int(token+3, &error);
+				} else {
+					profile = convert_string_to_int(token+6, &error);
+				}
+
 				if ( error ) {
 					printf("unable to get profile from var %s\n", token);
 					free(ts_profiles);
@@ -870,7 +882,7 @@ static int import_meteo_values(DATASET *const dataset) {
 				/* check for same profile on header */
 				for ( j = 0; j < ts_profiles_count; j++ ) {
 					if ( profile == ts_profiles[j] ) {
-						printf("profile %d for var TS already founded\n", profile);
+						printf("profile %d for var TS already found\n", profile);
 						free(ts_profiles);
 						free(swc_profiles);
 						free(swc_columns);		
@@ -932,8 +944,12 @@ static int import_meteo_values(DATASET *const dataset) {
 			} else
 			/* check for SWC */
 			if ( ! string_n_compare_i(token, "SWC_", 4) || ! string_n_compare_i(token, "itpSWC_", 7) ) {
-				/* get profile */
-				profile = convert_string_to_int(token+4, &error);
+				if ( ! string_n_compare_i(token, "SWC_", 4) ) {
+					/* get profile */
+					profile = convert_string_to_int(token+4, &error);
+				} else {
+					profile = convert_string_to_int(token+7, &error);
+				}
 				if ( error ) {
 					printf("unable to get profile from var %s\n", token);
 					free(ts_profiles);
@@ -947,7 +963,7 @@ static int import_meteo_values(DATASET *const dataset) {
 				/* check for same profile on header */
 				for ( j = 0; j < swc_profiles_count; j++ ) {
 					if ( profile == swc_profiles[j] ) {
-						printf("profile %d for var SWC already founded\n", profile);
+						printf("profile %d for var SWC already found\n", profile);
 						free(ts_profiles);
 						free(swc_profiles);
 						free(swc_columns);		
@@ -1020,6 +1036,7 @@ static int import_meteo_values(DATASET *const dataset) {
 
 	/* alloc memory for ts ? */
 	if ( dataset->ts_count ) {
+		qsort(dataset->ts_profiles, dataset->ts_count, sizeof*dataset->ts_profiles, compare_int);
 		/* row */
 		dataset->tss = malloc(dataset->rows_count*sizeof*dataset->tss);
 		if ( !dataset->tss ) {
@@ -1111,6 +1128,7 @@ static int import_meteo_values(DATASET *const dataset) {
 
 	/* alloc memory for swcs ? */
 	if ( dataset->swc_count ) {
+		qsort(dataset->swc_profiles, dataset->swc_count, sizeof*dataset->swc_profiles, compare_int);
 		/* row */
 		dataset->swcs = malloc(dataset->rows_count*sizeof*dataset->swcs);
 		if ( !dataset->swcs ) {
@@ -1303,49 +1321,78 @@ static int import_meteo_values(DATASET *const dataset) {
 
 				/* check for TS */
 				if ( ! string_n_compare_i(token, "TS_", 3) || ! string_n_compare_i(token, "itpTS_", 6) ) {			
-					/* realloc memory for indexes */
-					int_no_leak = realloc(ts_columns, (ts_columns_count+1)*sizeof*int_no_leak);
-					if ( !int_no_leak ) {
-						puts(err_out_of_memory);
+					/* get profile */
+					if ( ! string_n_compare_i(token, "TS_", 3) ) {
+						profile = convert_string_to_int(token+3, &error);
+					} else {
+						profile = convert_string_to_int(token+6, &error);
+					}
+					if ( error ) {
+						printf("unable to get profile from var %s\n", token);
 						free(swc_columns);		
 						free(ts_columns);
 						fclose(f);
 						return 0;
 					}
-					ts_columns = int_no_leak;
-					ts_columns[ts_columns_count] = i;
+					/* realloc memory for indexes */
+					column_no_leak = realloc(ts_columns, (ts_columns_count+1)*sizeof*column_no_leak);
+					if ( !column_no_leak ) {
+						puts(err_out_of_memory);
+						free(swc_columns);		
+						free(ts_columns);
+						fclose(f);
+						return 0;
+					}					
+					ts_columns = column_no_leak;
+					ts_columns[ts_columns_count].profile = profile;
+					ts_columns[ts_columns_count].index = i;
 
 					/* inc columns count */
 					++ts_columns_count;
 				} else
 				/* check for SWC */
 				if ( ! string_n_compare_i(token, "SWC_", 4) || ! string_n_compare_i(token, "itpSWC_", 7) ) {
-					/* realloc memory for indexes */
-					int_no_leak = realloc(swc_columns, (swc_columns_count+1)*sizeof*int_no_leak);
-					if ( !int_no_leak ) {
-					puts(err_out_of_memory);
+					/* get profile */
+					if ( ! string_n_compare_i(token, "SWC_", 4) ) {
+						profile = convert_string_to_int(token+4, &error);
+					} else {
+						profile = convert_string_to_int(token+7, &error);
+					}
+					if ( error ) {
+						printf("unable to get profile from var %s\n", token);
 						free(swc_columns);		
 						free(ts_columns);
 						fclose(f);
 						return 0;
 					}
-					swc_columns = int_no_leak;
-					swc_columns[swc_columns_count] = i;
+					/* realloc memory for indexes */
+					column_no_leak = realloc(swc_columns, (swc_columns_count+1)*sizeof*column_no_leak);
+					if ( !column_no_leak ) {
+						puts(err_out_of_memory);
+						free(swc_columns);		
+						free(ts_columns);
+						fclose(f);
+						return 0;
+					}
+					
+					swc_columns = column_no_leak;
+					swc_columns[swc_columns_count].profile = profile;
+					swc_columns[swc_columns_count].index = i;
 
 					/* inc columns count */
 					++swc_columns_count;
 				}
 			}
 
-			/* check founded columns */
-			columns_founded_count = swc_columns_count+ts_columns_count;
+			/* check found columns */
+			columns_found_count = swc_columns_count+ts_columns_count;
 			for (  i = 0; i < MET_VALUES; i++ ) {
 				if ( columns_index[i] != -1 ) {
-					++columns_founded_count;
+					++columns_found_count;
 				}
 			}
 
-			if ( !columns_founded_count ) {
+			if ( !columns_found_count ) {
 				puts("no columns found!");
 				fclose(f);
 				return 0;
@@ -1390,11 +1437,12 @@ static int import_meteo_values(DATASET *const dataset) {
 				for ( token = string_tokenizer(buffer, dataset_delimiter, &p), i = 0; token; token = string_tokenizer(NULL, dataset_delimiter, &p), ++i ) {
 					/* check for ts */
 					for ( y = 0; y < ts_columns_count; y++ ) {
-						if ( i == ts_columns[y] ) {
+						if ( i == ts_columns[y].index ) {
+							int profile = ts_columns[y].profile;
 							/* convert string to prec */
 							value = convert_string_to_prec(token, &error);
 							if ( error ) {
-								printf("unable to convert value %s at row %d, column TS_%d\n", token, element+1, dataset->ts_profiles[y]);
+								printf("unable to convert value %s at row %d, column TS_%d\n", token, element+1, profile);
 								free(swc_columns);		
 								free(ts_columns);
 								fclose(f);
@@ -1404,20 +1452,29 @@ static int import_meteo_values(DATASET *const dataset) {
 							/* convert nan to invalid value */
 							if ( value != value ) {
 								value = INVALID_VALUE;
+							}
+
+							for ( y = 0; y < dataset->ts_count; ++y ) {
+								if ( dataset->ts_profiles[y] == profile ) {
+									break;
+								}
 							}
 
 							/* assign value */
 							dataset->tss[index+element-1][y].value = value;
 							++assigned;
+
+							break;
 						}
 					}
 					/* check for swc */
 					for ( y = 0; y < swc_columns_count; y++ ) {
-						if ( i == swc_columns[y] ) {
+						if ( i == swc_columns[y].index ) {
+							int profile = swc_columns[y].profile;
 							/* convert string to prec */
 							value = convert_string_to_prec(token, &error);
 							if ( error ) {
-								printf("unable to convert value %s at row %d, column SWC_%d\n", token, element+1, dataset->swc_profiles[y]);
+								printf("unable to convert value %s at row %d, column SWC_%d\n", token, element+1, profile);
 								free(swc_columns);		
 								free(ts_columns);
 								fclose(f);
@@ -1429,9 +1486,17 @@ static int import_meteo_values(DATASET *const dataset) {
 								value = INVALID_VALUE;
 							}
 
+							for ( y = 0; y < dataset->ts_count; ++y ) {
+								if ( dataset->ts_profiles[y] == profile ) {
+									break;
+								}
+							}
+
 							/* assign value */
 							dataset->swcs[index+element-1][y].value = value;
 							++assigned;
+
+							break;
 						}
 					}
 					/* check other vars */
@@ -1510,8 +1575,8 @@ static int import_meteo_values(DATASET *const dataset) {
 				}
 
 				/* check assigned */
-				if ( assigned != columns_founded_count ) {
-					printf("imported %d value not %d\n", assigned, columns_founded_count);
+				if ( assigned != columns_found_count ) {
+					printf("imported %d value not %d\n", assigned, columns_found_count);
 					free(swc_columns);		
 					free(ts_columns);
 					fclose(f);
@@ -2990,10 +3055,10 @@ static int save_dataset_hh(const DATASET *const dataset) {
 		}
 		for ( row = 0; row < y; row++ ) {
 			/* TIMESTAMP_START */
-			p = timestamp_start_by_row_s(row, dataset->years[i].year, dataset->hourly); 
+			p = timestamp_start_by_row_s(row, dataset->years[i].year, dataset->timeres); 
 			fputs(p, f);
 			/* TIMESTAMP_END */
-			p = timestamp_end_by_row_s(row, dataset->years[i].year, dataset->hourly); 
+			p = timestamp_end_by_row_s(row, dataset->years[i].year, dataset->timeres); 
 			fprintf(f, ",%s,", p);
 			/* write values */
 			fprintf(f, output_format_hh,
@@ -3146,7 +3211,7 @@ static int save_dataset_dd(const DATASET *const dataset) {
 		}
 		y /= (dataset->hourly ? 24 : 48);
 		for ( row = 0; row < y; row++ ) {
-			t = timestamp_end_by_row(row*(dataset->hourly ? 24 : 48), dataset->years[i].year, dataset->hourly);
+			t = timestamp_end_by_row(row*(dataset->hourly ? 24 : 48), dataset->years[i].year, dataset->timeres);
 			/* write values */
 			fprintf(f, output_format_dd,
 										t->YYYY,
@@ -3312,10 +3377,10 @@ static int save_dataset_ww(const DATASET *const dataset) {
 		year = dataset->years[i].year;
 		for ( row = 0; row < 52; row++ ) {
 			/* write timestamp_start */
-			p = timestamp_ww_get_by_row_s(row, year, dataset->hourly, 1);
+			p = timestamp_ww_get_by_row_s(row, year, dataset->timeres, 1);
 			fprintf(f, "%s,", p);
 			/* write timestamp_end */
-			p = timestamp_ww_get_by_row_s(row, year, dataset->hourly, 0);
+			p = timestamp_ww_get_by_row_s(row, year, dataset->timeres, 0);
 			fprintf(f, "%s,", p);
 			/* write values */
 			fprintf(f, output_format_ww,
@@ -3874,7 +3939,7 @@ DATASET *get_datasets(int *const datasets_count) {
 	if ( error ) {
 		return NULL;
 	} else if ( !files_temp_count ) {
-		puts(err_no_meteo_files_founded);
+		puts(err_no_meteo_files_found);
 		return NULL;
 	}
 
@@ -3886,7 +3951,7 @@ DATASET *get_datasets(int *const datasets_count) {
 		return NULL;
 	}
 
-	/* loop on each files founded */
+	/* loop on each files found */
 	for ( file = 0; file < files_temp_count; file++ ) {
 		/* check filename */
 		if ( is_valid_era_filename(files_temp[file].list[0].name) ) {
@@ -3912,13 +3977,13 @@ DATASET *get_datasets(int *const datasets_count) {
 	/* free memory */
 	free_files(files_temp, files_temp_count);
 
-	/* check for non files founded */
+	/* check for non files found */
 	if ( !files_count ) {
-		puts(err_no_files_founded);
+		puts(err_no_files_found);
 		return NULL;
 	}
 	
-	/* loop on each files founded */
+	/* loop on each files found */
 	for ( file = 0; file < files_count; file++ ) {
 		type = files[file].type;
 		if ( ERA_FILES == type ) {
@@ -4131,7 +4196,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 
 		/* check if has any met files */
 		if ( !check_met_files(current_dataset) ) {
-			puts("MET files not founded.");
+			puts("MET files not found.");
 			continue;
 		}
 
@@ -4266,28 +4331,38 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				end_row = current_dataset->rows_count;
 			}
 		
-			gf_rows = gf_mds_with_bounds(	current_dataset->rows->value,
-											sizeof(ROW),
-											current_dataset->rows_count,
-											VALUES,
-											current_dataset->hourly,
-											GF_SW_IN_TOLERANCE_MIN,
-											GF_SW_IN_TOLERANCE_MAX,
-											GF_TA_TOLERANCE,
-											GF_VPD_TOLERANCE,
-											TA_MET,
-											SW_IN_MET,
-											TA_MET,
-											VPD_MET,
-											-1,
-											-1,
-											-1,
-											INVALID_VALUE,
-											GF_ROWS_MIN,
-											0,
-											start_row,
-											end_row,
-											&not_gf_count
+			gf_rows = gf_mds(	current_dataset->rows->value,
+								sizeof(ROW),
+								current_dataset->rows_count,
+								VALUES,
+								current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
+								GF_DRIVER_1_TOLERANCE_MIN,
+								GF_DRIVER_1_TOLERANCE_MAX,
+								GF_DRIVER_2A_TOLERANCE_MIN,
+								GF_DRIVER_2A_TOLERANCE_MAX,
+								GF_DRIVER_2B_TOLERANCE_MIN,
+								GF_DRIVER_2B_TOLERANCE_MAX,
+								TA_MET,
+								SW_IN_MET,
+								TA_MET,
+								VPD_MET,
+								-1,
+								-1,
+								-1,
+								INVALID_VALUE,
+								INVALID_VALUE,
+								INVALID_VALUE,
+								GF_ROWS_MIN,
+								0,
+								start_row,
+								end_row,
+								&not_gf_count,
+								0,
+								0,
+								0,
+								NULL,
+								0
+
 			);
 
 			if ( !gf_rows ) {
@@ -4360,28 +4435,37 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				end_row = current_dataset->rows_count;
 			}
 		
-			gf_rows = gf_mds_with_bounds(	current_dataset->rows->value,
-											sizeof(ROW),
-											current_dataset->rows_count,
-											VALUES,
-											current_dataset->hourly,
-											GF_SW_IN_TOLERANCE_MIN,
-											GF_SW_IN_TOLERANCE_MAX,
-											GF_TA_TOLERANCE,
-											GF_VPD_TOLERANCE,
-											SW_IN_MET,
-											SW_IN_MET,
-											TA_MET,
-											VPD_MET,
-											-1,
-											-1,
-											-1,
-											INVALID_VALUE,
-											GF_ROWS_MIN,
-											0,
-											start_row,
-											end_row,
-											&not_gf_count
+			gf_rows = gf_mds(	current_dataset->rows->value,
+								sizeof(ROW),
+								current_dataset->rows_count,
+								VALUES,
+								current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
+								GF_DRIVER_1_TOLERANCE_MIN,
+								GF_DRIVER_1_TOLERANCE_MAX,
+								GF_DRIVER_2A_TOLERANCE_MIN,
+								GF_DRIVER_2A_TOLERANCE_MAX,
+								GF_DRIVER_2B_TOLERANCE_MIN,
+								GF_DRIVER_2B_TOLERANCE_MAX,
+								SW_IN_MET,
+								SW_IN_MET,
+								TA_MET,
+								VPD_MET,
+								-1,
+								-1,
+								-1,
+								INVALID_VALUE,
+								INVALID_VALUE,
+								INVALID_VALUE,
+								GF_ROWS_MIN,
+								0,
+								start_row,
+								end_row,
+								&not_gf_count,
+								0,
+								0,
+								0,
+								NULL,
+								0
 			);
 
 			if ( !gf_rows ) {
@@ -4454,28 +4538,37 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				end_row = current_dataset->rows_count;
 			}
 		
-			gf_rows = gf_mds_with_bounds(	current_dataset->rows->value,
-											sizeof(ROW),
-											current_dataset->rows_count,
-											VALUES,
-											current_dataset->hourly,
-											GF_SW_IN_TOLERANCE_MIN,
-											GF_SW_IN_TOLERANCE_MAX,
-											GF_TA_TOLERANCE,
-											GF_VPD_TOLERANCE,
-											LW_IN_MET,
-											SW_IN_MET,
-											TA_MET,
-											VPD_MET,
-											-1,
-											-1,
-											-1,
-											INVALID_VALUE,
-											GF_ROWS_MIN,
-											0,
-											start_row,
-											end_row,
-											&not_gf_count
+			gf_rows = gf_mds(	current_dataset->rows->value,
+								sizeof(ROW),
+								current_dataset->rows_count,
+								VALUES,
+								current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
+								GF_DRIVER_1_TOLERANCE_MIN,
+								GF_DRIVER_1_TOLERANCE_MAX,
+								GF_DRIVER_2A_TOLERANCE_MIN,
+								GF_DRIVER_2A_TOLERANCE_MAX,
+								GF_DRIVER_2B_TOLERANCE_MIN,
+								GF_DRIVER_2B_TOLERANCE_MAX,
+								LW_IN_MET,
+								SW_IN_MET,
+								TA_MET,
+								VPD_MET,
+								-1,
+								-1,
+								-1,
+								INVALID_VALUE,
+								INVALID_VALUE,
+								INVALID_VALUE,
+								GF_ROWS_MIN,
+								0,
+								start_row,
+								end_row,
+								&not_gf_count,
+								0,
+								0,
+								0,
+								NULL,
+								0
 			);
 
 			if ( !gf_rows ) {
@@ -4548,28 +4641,37 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				end_row = current_dataset->rows_count;
 			}
 		
-			gf_rows = gf_mds_with_bounds(	current_dataset->rows->value,
-											sizeof(ROW),
-											current_dataset->rows_count,
-											VALUES,
-											current_dataset->hourly,
-											GF_SW_IN_TOLERANCE_MIN,
-											GF_SW_IN_TOLERANCE_MAX,
-											GF_TA_TOLERANCE,
-											GF_VPD_TOLERANCE,
-											VPD_MET,
-											SW_IN_MET,
-											TA_MET,
-											VPD_MET,
-											-1,
-											-1,
-											-1,
-											INVALID_VALUE,
-											GF_ROWS_MIN,
-											0,
-											start_row,
-											end_row,
-											&not_gf_count
+			gf_rows = gf_mds(	current_dataset->rows->value,
+								sizeof(ROW),
+								current_dataset->rows_count,
+								VALUES,
+								current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
+								GF_DRIVER_1_TOLERANCE_MIN,
+								GF_DRIVER_1_TOLERANCE_MAX,
+								GF_DRIVER_2A_TOLERANCE_MIN,
+								GF_DRIVER_2A_TOLERANCE_MAX,
+								GF_DRIVER_2B_TOLERANCE_MIN,
+								GF_DRIVER_2B_TOLERANCE_MAX,
+								VPD_MET,
+								SW_IN_MET,
+								TA_MET,
+								VPD_MET,
+								-1,
+								-1,
+								-1,
+								INVALID_VALUE,
+								INVALID_VALUE,
+								INVALID_VALUE,
+								GF_ROWS_MIN,
+								0,
+								start_row,
+								end_row,
+								&not_gf_count,
+								0,
+								0,
+								0,
+								NULL,
+								0
 			);
 
 			if ( !gf_rows ) {
@@ -4642,28 +4744,37 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				end_row = current_dataset->rows_count;
 			}
 		
-			gf_rows = gf_mds_with_bounds(	current_dataset->rows->value,
-											sizeof(ROW),
-											current_dataset->rows_count,
-											VALUES,
-											current_dataset->hourly,
-											GF_SW_IN_TOLERANCE_MIN,
-											GF_SW_IN_TOLERANCE_MAX,
-											GF_TA_TOLERANCE,
-											GF_VPD_TOLERANCE,
-											CO2_MET,
-											SW_IN_MET,
-											TA_MET,
-											VPD_MET,
-											-1,
-											-1,
-											-1,
-											INVALID_VALUE,
-											GF_ROWS_MIN,
-											0,
-											start_row,
-											end_row,
-											&not_gf_count
+			gf_rows = gf_mds(	current_dataset->rows->value,
+								sizeof(ROW),
+								current_dataset->rows_count,
+								VALUES,
+								current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
+								GF_DRIVER_1_TOLERANCE_MIN,
+								GF_DRIVER_1_TOLERANCE_MAX,
+								GF_DRIVER_2A_TOLERANCE_MIN,
+								GF_DRIVER_2A_TOLERANCE_MAX,
+								GF_DRIVER_2B_TOLERANCE_MIN,
+								GF_DRIVER_2B_TOLERANCE_MAX,
+								CO2_MET,
+								SW_IN_MET,
+								TA_MET,
+								VPD_MET,
+								-1,
+								-1,
+								-1,
+								INVALID_VALUE,
+								INVALID_VALUE,
+								INVALID_VALUE,
+								GF_ROWS_MIN,
+								0,
+								start_row,
+								end_row,
+								&not_gf_count,
+								0,
+								0,
+								0,
+								NULL,
+								0
 			);
 
 			if ( !gf_rows ) {
@@ -4739,28 +4850,37 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				}
 			
 				/* do gf */
-				gf_rows = gf_mds_with_bounds(	current_dataset->rows->value,
-												sizeof(ROW),
-												current_dataset->rows_count,
-												VALUES,
-												current_dataset->hourly,
-												GF_SW_IN_TOLERANCE_MIN,
-												GF_SW_IN_TOLERANCE_MAX,
-												GF_TA_TOLERANCE,
-												GF_VPD_TOLERANCE,
-												TEMP,
-												SW_IN_MET,
-												TA_MET,
-												VPD_MET,
-												-1,
-												-1,
-												-1,
-												INVALID_VALUE,
-												GF_ROWS_MIN,
-												0,
-												start_row,
-												end_row,
-												&not_gf_count
+				gf_rows = gf_mds(	current_dataset->rows->value,
+									sizeof(ROW),
+									current_dataset->rows_count,
+									VALUES,
+									current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
+									GF_DRIVER_1_TOLERANCE_MIN,
+									GF_DRIVER_1_TOLERANCE_MAX,
+									GF_DRIVER_2A_TOLERANCE_MIN,
+									GF_DRIVER_2A_TOLERANCE_MAX,
+									GF_DRIVER_2B_TOLERANCE_MIN,
+									GF_DRIVER_2B_TOLERANCE_MAX,
+									TEMP,
+									SW_IN_MET,
+									TA_MET,
+									VPD_MET,
+									-1,
+									-1,
+									-1,
+									INVALID_VALUE,
+									INVALID_VALUE,
+									INVALID_VALUE,
+									GF_ROWS_MIN,
+									0,
+									start_row,
+									end_row,
+									&not_gf_count,
+									0,
+									0,
+									0,
+									NULL,
+									0
 				);
 
 				if ( !gf_rows ) {
@@ -4837,28 +4957,38 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				}
 			
 				/* do gf */
-				gf_rows = gf_mds_with_bounds(	current_dataset->rows->value,
-												sizeof(ROW),
-												current_dataset->rows_count,
-												VALUES,
-												current_dataset->hourly,
-												GF_SW_IN_TOLERANCE_MIN,
-												GF_SW_IN_TOLERANCE_MAX,
-												GF_TA_TOLERANCE,
-												GF_VPD_TOLERANCE,
-												TEMP,
-												SW_IN_MET,
-												TA_MET,
-												VPD_MET,
-												-1,
-												-1,
-												-1,
-												INVALID_VALUE,
-												GF_ROWS_MIN,
-												0,
-												start_row,
-												end_row,
-												&not_gf_count
+				gf_rows = gf_mds(	current_dataset->rows->value,
+									sizeof(ROW),
+									current_dataset->rows_count,
+									VALUES,
+									current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
+									GF_DRIVER_1_TOLERANCE_MIN,
+									GF_DRIVER_1_TOLERANCE_MAX,
+									GF_DRIVER_2A_TOLERANCE_MIN,
+									GF_DRIVER_2A_TOLERANCE_MAX,
+									GF_DRIVER_2B_TOLERANCE_MIN,
+									GF_DRIVER_2B_TOLERANCE_MAX,
+									TEMP,
+									SW_IN_MET,
+									TA_MET,
+									VPD_MET,
+									-1,
+									-1,
+									-1,
+									INVALID_VALUE,
+									INVALID_VALUE,
+									INVALID_VALUE,
+									GF_ROWS_MIN,
+									0,
+									start_row,
+									end_row,
+									&not_gf_count,
+									0,
+									0,
+									0,
+									NULL,
+									0
+
 				);
 
 				if ( !gf_rows ) {
@@ -4914,7 +5044,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				New option added 20160616 to take into account the possibility that ERA is
 				not present in a given year (recent years). In this case the data filled using
 				MDS are used for the _M and the QC is set as 3
-				AGGIUNGI COME SOPRA, SE LW_IN_CALC_M è ancora -9999 metter LW_IN_CALC e QC = 3
+				if LW_IN_CALC_M is still INVALID_VALUE, LW_IN_CALC and LW_IN_CALC_M_QC are set to 3
 			*/
 			if ( IS_INVALID_VALUE(current_dataset->rows[i].value[LW_IN_CALC_M]) ) {
 				current_dataset->rows[i].value[LW_IN_CALC_M] = current_dataset->rows[i].value[LW_IN_CALC];

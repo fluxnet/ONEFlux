@@ -41,8 +41,8 @@
 /* externs */
 extern char *input_path;
 extern char *output_path;
-const char *types_suffix[TYPES_SUFFIX];
-const char *authors_suffix[AUTHORS_SUFFIX];
+extern const char *types_suffix[TYPES_SUFFIX];
+extern const char *authors_suffix[AUTHORS_SUFFIX];
 
 /* constants */
 #define GPP_FILENAME_LEN	22		/* .ext included */
@@ -831,7 +831,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count, const in
 	P_MATRIX *p_matrix_c = NULL;			/* mandatory */
 	TIMESTAMP *t;
 
-	const int columns_founded_count = PERCENTILES_COUNT_2+PERCENTILES_COUNT_2;
+	const int columns_found_count = PERCENTILES_COUNT_2+PERCENTILES_COUNT_2;
 
 	/* allocate memory for buffer */
 	buffer = malloc(HUGE_BUFFER_SIZE*sizeof*buffer);
@@ -998,8 +998,8 @@ int compute_datasets(DATASET *const datasets, const int datasets_count, const in
 					}
 
 					/* check assigned */
-					if ( assigned != columns_founded_count ) {
-						printf("expected %d columns not %d\n", columns_founded_count, assigned);
+					if ( assigned != columns_found_count ) {
+						printf("expected %d columns not %d\n", columns_found_count, assigned);
 						free(buffer);
 						fclose(f);
 						return 0;
@@ -1280,10 +1280,10 @@ int compute_datasets(DATASET *const datasets, const int datasets_count, const in
 			exists = datasets[dataset].years[i].exist;
 			for ( row = 0; row < y; row++ ) {
 				/* TIMESTAMP_START */
-				p = timestamp_start_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].hourly); 
+				p = timestamp_start_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres); 
 				fputs(p, f);
 				/* TIMESTAMP_END */
-				p = timestamp_end_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].hourly); 
+				p = timestamp_end_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres); 
 				fprintf(f, ",%s,", p);
 				/* dtime */
 				fprintf(f, "%g,", get_dtime_by_row(row, datasets[dataset].hourly));
@@ -1549,7 +1549,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count, const in
 
 			exists = datasets[dataset].years[i].exist;
 			for ( row = 0; row < y; row++ ) {
-				t = timestamp_end_by_row(row*(datasets[dataset].hourly ? 24 : 48), datasets[dataset].years[i].year, datasets[dataset].hourly);
+				t = timestamp_end_by_row(row*(datasets[dataset].hourly ? 24 : 48), datasets[dataset].years[i].year, datasets[dataset].details->timeres);
 
 				fprintf(f, "%04d%02d%02d,%d,",			t->YYYY,
 														t->MM,
@@ -1841,10 +1841,10 @@ int compute_datasets(DATASET *const datasets, const int datasets_count, const in
 			exists = datasets[dataset].years[i].exist;
 			for ( row = 0; row < 52; row++ ) {
 				/* write timestamp_start */
-				p = timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].hourly, 1);
+				p = timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres, 1);
 				fprintf(f, "%s,", p);
 				/* write timestamp_end */
-				p = timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].hourly, 0);
+				p = timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres, 0);
 				fprintf(f, "%s,", p);
 				/* write week */
 				fprintf(f, "%d,", row+1);
@@ -2704,10 +2704,10 @@ int compute_sr_datasets(DATASET *const datasets, const int datasets_count, const
 			}
 			for ( row = 0; row < y; row++ ) {
 				/* TIMESTAMP_START */
-				p = timestamp_start_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].hourly); 
+				p = timestamp_start_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres); 
 				fputs(p, f);
 				/* TIMESTAMP_END */
-				p = timestamp_end_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].hourly); 
+				p = timestamp_end_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres); 
 				fprintf(f, ",%s,", p);
 				/* values */
 				fprintf(f, "%g,%g\n", get_dtime_by_row(row, datasets[dataset].hourly), datasets[dataset].srs[j+row].reco);
@@ -2810,7 +2810,7 @@ int compute_sr_datasets(DATASET *const datasets, const int datasets_count, const
 			}
 			y /= rows_per_day;
 			for ( row = 0; row < y; row++ ) {
-				t = timestamp_end_by_row(row*(datasets[dataset].hourly ? 24 : 48), datasets[dataset].years[i].year, datasets[dataset].hourly);
+				t = timestamp_end_by_row(row*(datasets[dataset].hourly ? 24 : 48), datasets[dataset].years[i].year, datasets[dataset].details->timeres);
 				fprintf(f, "%04d%02d%02d,%d,%g,%g\n",	t->YYYY,
 														t->MM,
 														t->DD,
@@ -2934,10 +2934,10 @@ int compute_sr_datasets(DATASET *const datasets, const int datasets_count, const
 		for ( i = 0; i < datasets[dataset].years_count; i++ ) {
 			for ( row = 0; row < 52; row++ ) {
 				/* write timestamp_start */
-				p = timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].hourly, 1);
+				p = timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres, 1);
 				fprintf(f, "%s,", p);
 				/* write timestamp_end */
-				p = timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].hourly, 0);
+				p = timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres, 0);
 				fprintf(f, "%s,", p);
 				fprintf(f, "%d,%g,%g\n",	row+1,
 											srs_temp[j+row].reco,
@@ -3128,11 +3128,11 @@ DATASET *get_datasets(const char *const path, const int author_index, const int 
 	int error;
 	int assigned;
 	int file_index;
-	int files_founded_count;
+	int files_found_count;
 	int year;
 	char year_c[YEAR_LEN];
 	char buffer[FILENAME_SIZE];
-	FILES *files_founded;
+	FILES *files_found;
 	YEAR *years_no_leak;
 	DATASET *datasets;
 	DATASET *datasets_no_leak;
@@ -3149,9 +3149,9 @@ DATASET *get_datasets(const char *const path, const int author_index, const int 
 
 	/* scan path */
 	sprintf(buffer, "*_%s_%s.csv", authors_suffix[author_index], types_suffix[type_index]);
-	files_founded = get_files(path, buffer, &files_founded_count, &error);
-	if ( error || !files_founded_count ) {
-		puts("no files founded!");
+	files_found = get_files(path, buffer, &files_found_count, &error);
+	if ( error || !files_found_count ) {
+		puts("no files found!");
 		return NULL;
 	}
 
@@ -3161,25 +3161,25 @@ DATASET *get_datasets(const char *const path, const int author_index, const int 
 		return NULL;
 	}
 
-	/* loop on each files founded */
-	for ( file_index = 0; file_index < files_founded_count; file_index++ ) {
+	/* loop on each files found */
+	for ( file_index = 0; file_index < files_found_count; file_index++ ) {
 		/* check filename */
-		if ( !is_valid_filename(files_founded[file_index].list[0].name, author_index, type_index) ) {
+		if ( !is_valid_filename(files_found[file_index].list[0].name, author_index, type_index) ) {
 			continue;
 		}
 
 		/* get site */
-		strncpy(details->site, files_founded[file_index].list[0].name, SITE_LEN - 1);
+		strncpy(details->site, files_found[file_index].list[0].name, SITE_LEN - 1);
 		details->site[SITE_LEN - 1] = '\0';
 
 		/* get year */
-		strncpy(year_c, files_founded[file_index].list[0].name+SITE_LEN, YEAR_LEN - 1);
+		strncpy(year_c, files_found[file_index].list[0].name+SITE_LEN, YEAR_LEN - 1);
 		year_c[YEAR_LEN-1] = '\0';
 
 		/* convert year string to int */
 		year = convert_string_to_int(year_c, &error);
 		if ( error ) {
-			printf("unable to convert year for %s\n\n", files_founded[file_index].list[0].name);
+			printf("unable to convert year for %s\n\n", files_found[file_index].list[0].name);
 			free_dd(details);
 			free_datasets(datasets, *datasets_count);
 			return NULL;
@@ -3187,9 +3187,9 @@ DATASET *get_datasets(const char *const path, const int author_index, const int 
 		details->year = year;
 
 		/* get timeres */
-		f = fopen(files_founded[file_index].list[0].fullpath, "r");
+		f = fopen(files_found[file_index].list[0].fullpath, "r");
 		if ( !f ) {
-			printf("unable to get rows count for %s\n\n", files_founded[file_index].list[0].name);
+			printf("unable to get rows count for %s\n\n", files_found[file_index].list[0].name);
 			free_dd(details);
 			free_datasets(datasets, *datasets_count);
 			return NULL;
@@ -3198,7 +3198,7 @@ DATASET *get_datasets(const char *const path, const int author_index, const int 
 
 		i = get_rows_count_from_file(f);
 		if ( !i ) {
-			printf("no valid rows founded for %s\n\n", files_founded[file_index].list[0].name);
+			printf("no valid rows found for %s\n\n", files_found[file_index].list[0].name);
 			fclose(f);
 			free_dd(details);
 			free_datasets(datasets, *datasets_count);
@@ -3213,7 +3213,7 @@ DATASET *get_datasets(const char *const path, const int author_index, const int 
 		} else if ( (LEAP_YEAR_ROWS/2 == i) || (YEAR_ROWS/2 == i) ) {
 			details->timeres = HOURLY_TIMERES;
 		} else {
-			printf("no valid timeres founded for %s\n\n", files_founded[file_index].list[0].name);
+			printf("no valid timeres found for %s\n\n", files_found[file_index].list[0].name);
 			free_dd(details);
 			free_datasets(datasets, *datasets_count);
 			return NULL;
@@ -3266,7 +3266,7 @@ DATASET *get_datasets(const char *const path, const int author_index, const int 
 			if ( details->timeres != datasets[i].details->timeres ) {
 				puts("Different time resolution between years|");
 				free_dd(details);
-				free_files(files_founded, files_founded_count);
+				free_files(files_found, files_found_count);
 				free_datasets(datasets, *datasets_count);
 				return NULL;
 			}
@@ -3277,7 +3277,7 @@ DATASET *get_datasets(const char *const path, const int author_index, const int 
 			if ( details->year == datasets[i].years[y].year ) {
 				puts(err_out_of_memory);
 				free_dd(details);
-				free_files(files_founded, files_founded_count);
+				free_files(files_found, files_found_count);
 				free_datasets(datasets, *datasets_count);
 				return NULL;
 			}
@@ -3303,7 +3303,7 @@ DATASET *get_datasets(const char *const path, const int author_index, const int 
 	free_dd(details);
 
 	/* free memory */
-	free_files(files_founded, files_founded_count);
+	free_files(files_found, files_found_count);
 
 	/* sort per year */
 	for ( i = 0 ; i < *datasets_count; i++ ) {

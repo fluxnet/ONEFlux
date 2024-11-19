@@ -1,7 +1,12 @@
 /*
 	main.c
 
-	this file is part of energy_proc
+	This file is part of the energy_proc step of processing.
+	It is responsible for the gapfilling of the sensible heat
+	and latent heat fluxes and the calculation of the energy
+	balance closure to create a version of H and LE with the 
+	closure forced (bowen ration method). It also performs the
+	temporal aggregation at different time resolutions.
 
 	author: Alessio Ribeca <a.ribeca@unitus.it>
 	owner: DIBAF - University of Tuscia, Viterbo, Italy
@@ -20,7 +25,7 @@
 #include "../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION		"v1.0"
+#define PROGRAM_VERSION		"v1.01"
 #define BUFFER_SIZE			1024
 
 /* global variables */

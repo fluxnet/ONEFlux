@@ -62,10 +62,10 @@ void random_method_1(DATASET *const dataset, const int index) {
 					
 			/* compute tolerance for SWin */
 			swin_tolerance = dataset->rows[i].value[SWIN];
-			if ( swin_tolerance < GF_SW_IN_TOLERANCE_MIN ) {
-				swin_tolerance = GF_SW_IN_TOLERANCE_MIN;
-			} else if ( swin_tolerance > GF_SW_IN_TOLERANCE_MAX ) {
-				swin_tolerance = GF_SW_IN_TOLERANCE_MAX;
+			if ( swin_tolerance < GF_DRIVER_1_TOLERANCE_MIN ) {
+				swin_tolerance = GF_DRIVER_1_TOLERANCE_MIN;
+			} else if ( swin_tolerance > GF_DRIVER_1_TOLERANCE_MAX ) {
+				swin_tolerance = GF_DRIVER_1_TOLERANCE_MAX;
 			}
 
 			/* loop through window */
@@ -77,9 +77,9 @@ void random_method_1(DATASET *const dataset, const int index) {
 
 					if (	(!dataset->gf_rows[index][window_current+y].quality) &&
 							IS_FLAG_SET(dataset->gf_rows[index][window_current+y].mask, GF_ALL_VALID) &&
-							(FABS(dataset->rows[window_current+y].value[TA]-dataset->rows[i].value[TA]) < GF_TA_TOLERANCE) &&
+							(FABS(dataset->rows[window_current+y].value[TA]-dataset->rows[i].value[TA]) < GF_DRIVER_2A_TOLERANCE_MIN) &&
 							(FABS(dataset->rows[window_current+y].value[SWIN]-dataset->rows[i].value[SWIN]) < swin_tolerance ) &&
-							(FABS(dataset->rows[window_current+y].value[VPD]-dataset->rows[i].value[VPD]) < GF_VPD_TOLERANCE) ) {
+							(FABS(dataset->rows[window_current+y].value[VPD]-dataset->rows[i].value[VPD]) < GF_DRIVER_2B_TOLERANCE_MIN) ) {
 						dataset->gf_rows[index][samples_count++].similiar = dataset->rows[window_current+y].value[index];
 					}
 				}

@@ -455,10 +455,10 @@ int save_output_diff(const DATASET *const dataset) {
 		}
 		for ( row = 0; row < y; row++ ) {
 			/* TIMESTAMP_START */
-			p = timestamp_start_by_row_s(row, dataset->years[i].year, dataset->hourly); 
+			p = timestamp_start_by_row_s(row, dataset->years[i].year, dataset->details->timeres); 
 			fputs(p, f);
 			/* TIMESTAMP_END */
-			p = timestamp_end_by_row_s(row, dataset->years[i].year, dataset->hourly); 
+			p = timestamp_end_by_row_s(row, dataset->years[i].year, dataset->details->timeres); 
 			fprintf(f, ",%s,", p);		
 			/* write values */
 			fprintf(f, output_format_diff,	get_dtime_by_row(row, dataset->hourly),
@@ -530,10 +530,10 @@ int save_output_midhourly(const DATASET *const dataset) {
 		}
 		for ( row = 0; row < y; row++ ) {
 			/* TIMESTAMP_START */
-			p = timestamp_start_by_row_s(row, dataset->years[i].year, dataset->hourly); 
+			p = timestamp_start_by_row_s(row, dataset->years[i].year, dataset->details->timeres); 
 			fputs(p, f);
 			/* TIMESTAMP_END */
-			p = timestamp_end_by_row_s(row, dataset->years[i].year, dataset->hourly); 
+			p = timestamp_end_by_row_s(row, dataset->years[i].year, dataset->details->timeres); 
 			fprintf(f, ",%s,", p);
 			/* write values */
 			if ( no_rand_unc ) {
@@ -659,7 +659,7 @@ int save_output_daily(const DATASET *const dataset) {
 	for ( i = 0; i < dataset->years_count; i++ ) {
 		y = IS_LEAP_YEAR(dataset->years[i].year) ? 366 : 365;
 		for ( row = 0; row < y; row++ ) {
-			t = timestamp_end_by_row(row*(dataset->hourly ? 24 : 48), dataset->years[i].year, dataset->hourly);
+			t = timestamp_end_by_row(row*(dataset->hourly ? 24 : 48), dataset->years[i].year, dataset->details->timeres);
 			/* write values */
 			if ( no_rand_unc ) {
 				fprintf(f, output_format_dd_no_rand_unc,	t->YYYY,
@@ -778,10 +778,10 @@ int save_output_weekly(const DATASET *const dataset) {
 	for ( i = 0; i < dataset->years_count; i++ ) {
 		for ( row = 0; row < 52; row++ ) {
 			/* write timestamp_start */
-			p = timestamp_ww_get_by_row_s(row, dataset->years[i].year, dataset->hourly, 1);
+			p = timestamp_ww_get_by_row_s(row, dataset->years[i].year, dataset->details->timeres, 1);
 			fprintf(f, "%s,", p);
 			/* write timestamp_end */
-			p = timestamp_ww_get_by_row_s(row, dataset->years[i].year, dataset->hourly, 0);
+			p = timestamp_ww_get_by_row_s(row, dataset->years[i].year, dataset->details->timeres, 0);
 			fprintf(f, "%s,", p);
 			/* write values */
 			if ( no_rand_unc ) {
@@ -1029,10 +1029,10 @@ int debug_save_original(const DATASET *const dataset) {
 		}
 		for ( row = 0; row < y; row++ ) {
 			/* TIMESTAMP_START */
-			p = timestamp_start_by_row_s(row, dataset->years[i].year, dataset->hourly); 
+			p = timestamp_start_by_row_s(row, dataset->years[i].year, dataset->details->timeres); 
 			fputs(p, f);
 			/* TIMESTAMP_END */
-			p = timestamp_end_by_row_s(row, dataset->years[i].year, dataset->hourly); 
+			p = timestamp_end_by_row_s(row, dataset->years[i].year, dataset->details->timeres); 
 			fprintf(f, ",%s,", p);
 			/* write values */
 			fprintf(f, output_format_debug_original,	get_dtime_by_row(row, dataset->hourly),
@@ -1086,10 +1086,10 @@ int debug_save_gapfilled(const DATASET *const dataset) {
 		}
 		for ( row = 0; row < y; row++ ) {
 			/* TIMESTAMP_START */
-			p = timestamp_start_by_row_s(row, dataset->years[i].year, dataset->hourly); 
+			p = timestamp_start_by_row_s(row, dataset->years[i].year, dataset->details->timeres); 
 			fputs(p, f);
 			/* TIMESTAMP_END */
-			p = timestamp_end_by_row_s(row, dataset->years[i].year, dataset->hourly); 
+			p = timestamp_end_by_row_s(row, dataset->years[i].year, dataset->details->timeres); 
 			fprintf(f, ",%s,", p);
 			/* write values */
 			fprintf(f, output_format_debug_gapfilled,	get_dtime_by_row(row, dataset->hourly),
@@ -1146,10 +1146,10 @@ int debug_save_ecbcf_hh(const DATASET *const dataset, const PREC *const EBCcfs, 
 		}
 		for ( row = 0; row < y; row++ ) {
 			/* TIMESTAMP_START */
-			p = timestamp_start_by_row_s(row, dataset->years[i].year, dataset->hourly); 
+			p = timestamp_start_by_row_s(row, dataset->years[i].year, dataset->details->timeres); 
 			fputs(p, f);
 			/* TIMESTAMP_END */
-			p = timestamp_end_by_row_s(row, dataset->years[i].year, dataset->hourly); 
+			p = timestamp_end_by_row_s(row, dataset->years[i].year, dataset->details->timeres); 
 			fprintf(f, ",%s,", p);
 			/* write values */
 			fprintf(f, output_format_debug_ecbcf_hh,	get_dtime_by_row(row, dataset->hourly),
@@ -1193,7 +1193,7 @@ int debug_save_aggr_by_day(const DATASET *const dataset, const PREC *const ECBcf
 	for ( i = 0; i < dataset->years_count; i++ ) {
 		y = IS_LEAP_YEAR(dataset->years[i].year) ? 366 : 365;
 		for ( row = 0; row < y; row++ ) {
-			t = timestamp_end_by_row(row*(dataset->hourly ? 24: 48), dataset->years[i].year, dataset->hourly);
+			t = timestamp_end_by_row(row*(dataset->hourly ? 24: 48), dataset->years[i].year, dataset->details->timeres);
 			/* write values */
 			fprintf(f, output_format_debug_aggr_by_day,	t->YYYY,
 														t->MM,
@@ -1425,13 +1425,13 @@ static int get_meteo(DATASET *const dataset) {
 	for ( token = string_tokenizer(buffer, dataset_delimiter, &p), i = 0; token; token = string_tokenizer(NULL, dataset_delimiter, &p), ++i ) {
 		if ( ! string_compare_i(token, "TA_m") ) {
 			TA = i;
-		} else if ( ! string_compare_i(token, "SWIN_m") ) {
+		} else if ( ! string_compare_i(token, "SW_IN_m") ) {
 			SWIN = i;
 		} else if ( ! string_compare_i(token, "VPD_m") ) {
 			VPD = i;
 		} else if ( ! string_compare_i(token, "TA_mqc") ) {
 			TA_QC = i;
-		} else if ( ! string_compare_i(token, "SWIN_mqc") ) {
+		} else if ( ! string_compare_i(token, "SW_IN_mqc") ) {
 			SWIN_QC = i;
 		} else if ( ! string_compare_i(token, "VPD_mqc") ) {
 			VPD_QC = i;
@@ -1497,7 +1497,7 @@ static int get_meteo(DATASET *const dataset) {
 			return 0;
 		}
 	}
-	puts("founded");
+	puts("found");
 
 	/* get values */
 	index = 0;
@@ -1514,7 +1514,12 @@ static int get_meteo(DATASET *const dataset) {
 		}
 		while ( fgets(buffer, BUFFER_SIZE, f) ) {
 			for ( token = string_tokenizer(buffer, dataset_delimiter, &p), i = 0; token; token = string_tokenizer(NULL, dataset_delimiter, &p), i++ ) {
-				if ( !i ) {
+				if ( ! i ) {
+					// skip TIMESTAMP_START
+					continue;
+				}
+				// get TIMESTAMP_END
+				if ( 1 == i ) {
 					t = get_timestamp(token);
 					if ( ! t ) {
 						fclose(f);
@@ -1537,10 +1542,10 @@ static int get_meteo(DATASET *const dataset) {
 						}
 					}
 
-					current_row = get_row_by_timestamp(t, (HOURLY_TIMERES==dataset->details->timeres));
+					current_row = get_row_by_timestamp(t, dataset->details->timeres);
 					free(t);
 					if ( element != current_row ) {
-						printf("bad timestamp: %s", token);
+						printf("bad timestamp: %s\n", token);
 						fclose(f);
 						return 0;
 					}							
@@ -1827,51 +1832,38 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 
 		/* gapfilling LE */
 		printf("gapfilling LE...");
-		current_dataset->gf_rows[LE_INDEX] = gf_mds_with_qc(	current_dataset->rows->value,
-																sizeof(ROW),
-																current_dataset->rows_count,
-																DATASET_VALUES,
-																current_dataset->hourly,
-																GF_SW_IN_TOLERANCE_MIN,
-																GF_SW_IN_TOLERANCE_MAX,
-																GF_TA_TOLERANCE,
-																GF_VPD_TOLERANCE,
-																LE,
-																SWIN,
-																TA,
-																VPD,
-																SWIN_QC_GF,
-																TA_QC_GF,
-																VPD_QC_GF,
-																qc_gf_threshold,
-																GF_ROWS_MIN,
-																1,
-																&no_gaps_filled_count);
+		current_dataset->gf_rows[LE_INDEX] = gf_mds(current_dataset->rows->value,
+													sizeof(ROW),
+													current_dataset->rows_count,
+													DATASET_VALUES,
+													current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
+													GF_DRIVER_1_TOLERANCE_MIN,
+													GF_DRIVER_1_TOLERANCE_MAX,
+													GF_DRIVER_2A_TOLERANCE_MIN,
+													GF_DRIVER_2A_TOLERANCE_MAX,
+													GF_DRIVER_2B_TOLERANCE_MIN,
+													GF_DRIVER_2B_TOLERANCE_MAX,
+													LE,
+													SWIN,
+													TA,
+													VPD,
+													SWIN_QC_GF,
+													TA_QC_GF,
+													VPD_QC_GF,
+													qc_gf_threshold,
+													qc_gf_threshold,
+													qc_gf_threshold,
+													GF_ROWS_MIN,
+													1,
+													-1,
+													-1,
+													&no_gaps_filled_count,
+													0,
+													0,
+													0,
+													NULL,
+													0);
 		
-		/*
-		current_dataset->gf_rows[LE_INDEX] = dev_gf_mds_with_bounds(current_dataset->rows->value,
-																sizeof(ROW),
-																current_dataset->rows_count,
-																DATASET_VALUES,
-																current_dataset->hourly,
-																GF_SW_IN_TOLERANCE_MIN,
-																GF_SW_IN_TOLERANCE_MAX,
-																GF_TA_TOLERANCE,
-																GF_VPD_TOLERANCE,
-																LE,
-																SWIN,
-																TA,
-																VPD,
-																SWIN_QC_GF,
-																TA_QC_GF,
-																VPD_QC_GF,
-																qc_gf_threshold,
-																GF_ROWS_MIN,
-																1,
-																-1,
-																-1,
-																&no_gaps_filled_count);
-		*/
 		if ( ! current_dataset->gf_rows[LE_INDEX] ) {
 			/* free memory */
 			free(temp);
@@ -1910,50 +1902,37 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 
 		/* gapfilling H */
 		printf("gapfilling H...");
-		current_dataset->gf_rows[H_INDEX] = gf_mds_with_qc(	current_dataset->rows->value,
-															sizeof(ROW),
-															current_dataset->rows_count,
-															DATASET_VALUES,
-															current_dataset->hourly,
-															GF_SW_IN_TOLERANCE_MIN,
-															GF_SW_IN_TOLERANCE_MAX,
-															GF_TA_TOLERANCE,
-															GF_VPD_TOLERANCE,
-															H,
-															SWIN,
-															TA,
-															VPD,
-															SWIN_QC_GF,
-															TA_QC_GF,
-															VPD_QC_GF,
-															qc_gf_threshold,
-															GF_ROWS_MIN,
-															1,
-															&no_gaps_filled_count);
-		/*
-		current_dataset->gf_rows[H_INDEX] = dev_gf_mds_with_bounds(	current_dataset->rows->value,
-															sizeof(ROW),
-															current_dataset->rows_count,
-															DATASET_VALUES,
-															current_dataset->hourly,
-															GF_SW_IN_TOLERANCE_MIN,
-															GF_SW_IN_TOLERANCE_MAX,
-															GF_TA_TOLERANCE,
-															GF_VPD_TOLERANCE,
-															H,
-															SWIN,
-															TA,
-															VPD,
-															SWIN_QC_GF,
-															TA_QC_GF,
-															VPD_QC_GF,
-															qc_gf_threshold,
-															GF_ROWS_MIN,
-															1,
-															-1,
-															-1,
-															&no_gaps_filled_count);
-		*/
+		current_dataset->gf_rows[H_INDEX] = gf_mds(	current_dataset->rows->value,
+													sizeof(ROW),
+													current_dataset->rows_count,
+													DATASET_VALUES,
+													current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
+													GF_DRIVER_1_TOLERANCE_MIN,
+													GF_DRIVER_1_TOLERANCE_MAX,
+													GF_DRIVER_2A_TOLERANCE_MIN,
+													GF_DRIVER_2A_TOLERANCE_MAX,
+													GF_DRIVER_2B_TOLERANCE_MIN,
+													GF_DRIVER_2B_TOLERANCE_MAX,
+													H,
+													SWIN,
+													TA,
+													VPD,
+													SWIN_QC_GF,
+													TA_QC_GF,
+													VPD_QC_GF,
+													qc_gf_threshold,
+													qc_gf_threshold,
+													qc_gf_threshold,
+													GF_ROWS_MIN,
+													1,
+													-1,
+													-1,
+													&no_gaps_filled_count,
+													0,
+													0,
+													0,
+													NULL,
+													0);
 		if ( ! current_dataset->gf_rows[H_INDEX] ) {
 			/* free memory */
 			free(temp);
@@ -1993,15 +1972,17 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 		/* gapfilling G */
 		if ( g_valid_rows_count ) {
 			printf("gapfilling G...");
-			current_dataset->gf_rows[G_INDEX] = temp_gf_mds(	current_dataset->rows->value,
+			current_dataset->gf_rows[G_INDEX] = gf_mds(	current_dataset->rows->value,
 																sizeof(ROW),
 																current_dataset->rows_count,
 																DATASET_VALUES,
-																current_dataset->hourly,
-																GF_SW_IN_TOLERANCE_MIN,
-																GF_SW_IN_TOLERANCE_MAX,
-																GF_TA_TOLERANCE,
-																GF_VPD_TOLERANCE,
+																current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
+																GF_DRIVER_1_TOLERANCE_MIN,
+																GF_DRIVER_1_TOLERANCE_MAX,
+																GF_DRIVER_2A_TOLERANCE_MIN,
+																INVALID_VALUE,
+																GF_DRIVER_2B_TOLERANCE_MIN,
+																INVALID_VALUE,
 																G,
 																SWIN,
 																TA,
@@ -2009,36 +1990,19 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 																SWIN_QC_GF,
 																TA_QC_GF,
 																VPD_QC_GF,
+																qc_gf_threshold,
+																qc_gf_threshold,
 																qc_gf_threshold,
 																GF_ROWS_MIN,
 																0, /* do not compute hat for G */
-																&no_gaps_filled_count);
-
-			
-			/*
-			current_dataset->gf_rows[G_INDEX] = dev_gf_mds_with_bounds(	current_dataset->rows->value,
-																sizeof(ROW),
-																current_dataset->rows_count,
-																DATASET_VALUES,
-																current_dataset->hourly,
-																GF_SW_IN_TOLERANCE_MIN,
-																GF_SW_IN_TOLERANCE_MAX,
-																GF_TA_TOLERANCE,
-																GF_VPD_TOLERANCE,
-																G,
-																SWIN,
-																TA,
-																VPD,
-																SWIN_QC_GF,
-																TA_QC_GF,
-																VPD_QC_GF,
-																qc_gf_threshold,
-																GF_ROWS_MIN,
-																0, /* do not compute hat for G *
 																-1,
 																-1,
-																&no_gaps_filled_count);
-			*/			
+																&no_gaps_filled_count,
+																0,
+																45,
+																0,
+																NULL,
+																0);		
 		} else {
 			/* FIX: alloc an empty array */
 			printf("gapfilling G...");
@@ -2741,14 +2705,14 @@ DATASET *get_datasets(const char *const path, const char *ext, int *const datase
 	int y;
 	int gap;
 	int assigned;
-	int files_founded_count;
+	int files_found_count;
 	int error;
 	int file_index;
 	YEAR *years_no_leak;
 	DD *details;
 	DATASET *datasets;
 	DATASET *datasets_no_leak;
-	FILES *files_founded;
+	FILES *files_found;
 	FILE *f;
 	
 	/* check parameters */
@@ -2759,31 +2723,31 @@ DATASET *get_datasets(const char *const path, const char *ext, int *const datase
 	*datasets_count = 0;
 
 	/* scan path */
-	files_founded = get_files(path, ext, &files_founded_count, &error);
-	if ( error || !files_founded_count ) {
-		puts("no files founded!");
+	files_found = get_files(path, ext, &files_found_count, &error);
+	if ( error || !files_found_count ) {
+		puts("no files found!");
 		return NULL;
 	}
 
-	/* loop on each files founded */
-	for ( file_index = 0; file_index < files_founded_count; file_index++ ) {
+	/* loop on each files found */
+	for ( file_index = 0; file_index < files_found_count; file_index++ ) {
 		/* check filename */
-		if ( !is_valid_filename(files_founded[file_index].list[0].name) ) {
+		if ( !is_valid_filename(files_found[file_index].list[0].name) ) {
 			continue;
 		}
 
 		/* open file */
-		printf("processing %s...", files_founded[file_index].list[0].name);
-		f = fopen(files_founded[file_index].list[0].fullpath, "r");
+		printf("processing %s...", files_found[file_index].list[0].name);
+		f = fopen(files_found[file_index].list[0].fullpath, "r");
 		if ( !f ) {
-			printf("unable to open %s\n", files_founded[file_index].list[0].fullpath);
+			printf("unable to open %s\n", files_found[file_index].list[0].fullpath);
 			continue;
 		}
 
 		/* get details */
 		details = parse_dd(f);
 		if ( !details ) {
-			free_files(files_founded, files_founded_count);
+			free_files(files_found, files_found_count);
 			free_datasets(datasets, *datasets_count);
 			return NULL;
 		}
@@ -2805,7 +2769,7 @@ DATASET *get_datasets(const char *const path, const char *ext, int *const datase
 			datasets_no_leak = realloc(datasets, ++*datasets_count*sizeof*datasets_no_leak);
 			if ( !datasets_no_leak ) {
 				puts(err_out_of_memory);
-				free_files(files_founded, files_founded_count);
+				free_files(files_found, files_found_count);
 				free_datasets(datasets, *datasets_count);
 				return NULL;
 
@@ -2838,7 +2802,7 @@ DATASET *get_datasets(const char *const path, const char *ext, int *const datase
 		for ( y = 0; y < datasets[i].years_count; y++ ) {
 			if ( details->year == datasets[i].years[y].year ) {
 				puts(err_out_of_memory);
-				free_files(files_founded, files_founded_count);
+				free_files(files_found, files_found_count);
 				free_datasets(datasets, *datasets_count);
 				return NULL;
 			}
@@ -2848,7 +2812,7 @@ DATASET *get_datasets(const char *const path, const char *ext, int *const datase
 		years_no_leak = realloc(datasets[i].years, ++datasets[i].years_count*sizeof*years_no_leak);
 		if ( !years_no_leak ) {
 			puts(err_out_of_memory);
-			free_files(files_founded, files_founded_count);
+			free_files(files_found, files_found_count);
 			free_datasets(datasets, *datasets_count);
 			return NULL;
 		}
@@ -2858,7 +2822,7 @@ DATASET *get_datasets(const char *const path, const char *ext, int *const datase
 		datasets[i].years[datasets[i].years_count-1].year = details->year;
 		datasets[i].years[datasets[i].years_count-1].exist = 1;
 		datasets[i].years[datasets[i].years_count-1].hle = 0;
-		strcpy(datasets[i].years[datasets[i].years_count-1].filename, files_founded[file_index].list[0].fullpath); 
+		strcpy(datasets[i].years[datasets[i].years_count-1].filename, files_found[file_index].list[0].fullpath); 
 		datasets[i].rows_count += ((IS_LEAP_YEAR(details->year) ? LEAP_YEAR_ROWS : YEAR_ROWS) / (datasets[i].hourly ? 2 : 1));
 
 		/* free memory */
@@ -2870,7 +2834,7 @@ DATASET *get_datasets(const char *const path, const char *ext, int *const datase
 	}
 
 	/* free memory */
-	free_files(files_founded, files_founded_count);
+	free_files(files_found, files_found_count);
 
 	/* sort per year */
 	for ( i = 0 ; i < *datasets_count; i++ ) {
