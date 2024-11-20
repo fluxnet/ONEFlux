@@ -8,7 +8,7 @@ def get_FmaxTable():
     globals().update(load_all_vars())
 
     # get_FmaxTable returns the critical F-max values.
-    FmaxTable = concat(
+    FmaxTable = matlabarray(
         [
             [11.646, 15.559, 28.412],
             [9.651, 11.948, 18.043],

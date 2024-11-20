@@ -191,7 +191,7 @@ def cpdEvaluateUStarTh4Season20100901(
 
     itD = find(m == 12)
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:109
-    itReOrder = concat([arange(min(itD), nt), arange(1, (min(itD) - 1))])
+    itReOrder = matlabarray([arange(min(itD), nt), arange(1, (min(itD) - 1))])
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:110
     t[itD] = t[itD] - EndDOY
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:111
@@ -307,7 +307,7 @@ def cpdEvaluateUStarTh4Season20100901(
             xs2.mT = copy(mean(take(T, itStrata)))
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:165
             xs2.ciT = copy(
-                dot(0.5, diff(prctile(take(T, itStrata), concat([2.5, 97.5]))))
+                dot(0.5, diff(prctile(take(T, itStrata), matlabarray([2.5, 97.5]))))
             )
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh4Season20100901.m:165
             xs3 = check_struct(xs3)

@@ -30,14 +30,14 @@ def cpdFmax2pCp2(Fmax=None, n=None):
     if logical_or(logical_or(isnan(Fmax), isnan(n)), n < 10):
         return p
 
-    pTable = concat([0.8, 0.9, 0.95, 0.99]).T
+    pTable = matlabarray([0.8, 0.9, 0.95, 0.99]).T
     # oneflux_steps/ustar_cp_refactor_wip/cpdFmax2pCp2.m:23
     np = length(pTable)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFmax2pCp2.m:23
-    nTable = concat([10, 15, 20, 30, 50, 70, 100, 150, 200, 300, 500, 700, 1000]).T
+    nTable = matlabarray([10, 15, 20, 30, 50, 70, 100, 150, 200, 300, 500, 700, 1000]).T
     # oneflux_steps/ustar_cp_refactor_wip/cpdFmax2pCp2.m:24
 
-    FmaxTable = concat(
+    FmaxTable = matlabarray(
         [
             [3.9293, 6.2992, 9.1471, 18.2659],
             [3.7734, 5.6988, 7.877, 13.81],

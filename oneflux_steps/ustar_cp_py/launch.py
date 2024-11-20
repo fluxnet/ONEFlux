@@ -81,7 +81,7 @@ def launch(input_folder=None, output_folder=None):
     for n in arange(1, numel(d)).reshape(-1):
         # by alessio
         fprintf("processing n.%02d, %s...", n, take(d, n).name)
-        fid = fopen(concat([input_folder, take(d, n).name]), "r")
+        fid = fopen(matlabarray([input_folder, take(d, n).name]), "r")
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:59
         if -1 == fid:
             fprintf("unable to open file\n")
@@ -198,7 +198,7 @@ def launch(input_folder=None, output_folder=None):
 
         fclose(fid)
         clear("temp", "fid")
-        imported_data = importdata(concat([input_folder, take(d, n).name]), ",", m)
+        imported_data = importdata(matlabarray([input_folder, take(d, n).name]), ",", m)
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:166
         header = matlabarray(getattr(imported_data, "textdata"))
         # oneflux_steps/ustar_cp_refactor_wip/launch.m:167
@@ -398,7 +398,7 @@ def launch(input_folder=None, output_folder=None):
             clear("fid")
             fprintf("ok\n")
         else:
-            error_str = concat(
+            error_str = matlabarray(
                 [[error_str], [char(site), "_uscp_", char(year), " ", cFailure]]
             )
             # oneflux_steps/ustar_cp_refactor_wip/launch.m:331

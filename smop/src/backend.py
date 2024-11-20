@@ -386,8 +386,7 @@ def _backend(self, level=0):
     elif any(b.__class__ is node.string for a in self.args for b in a):
         return " + ".join(b._backend(level) for a in self.args for b in a)
     else:
-        # import pdb; pdb.set_trace()
-        return "concat([%s])" % self.args[0]._backend(level)
+        return "matlabarray([%s])" % self.args[0]._backend(level)
 
 
 @extend(node.null_stmt)
