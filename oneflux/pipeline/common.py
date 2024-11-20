@@ -96,10 +96,10 @@ NEE_PERC_NEE = os.path.join(NEEDIR, NEE_PERC_NEE_F)
 #NEE_MEF_MATRIX = os.path.join(NEEDIR, '{s}_mef_matrix_{r}_{t}_{fy}_{ly}.csv') # HH, DD, WW, MM, YY __ VUT, CUT
 #ENERGY_INFO = None # No metadata
 UNC_INFO_F = 'info_{s}_{m}_{v}_{r}.txt'
-UNC_INFO = os.path.join(UNCDIR, UNC_INFO_F) # DT, NT, SR __ GPP, RECO __ HH, DD, WW, MM, YY
+UNC_INFO = os.path.join(UNCDIR, UNC_INFO_F) # DT, NT __ GPP, RECO __ HH, DD, WW, MM, YY
 UNC_INFO_ALT_F = '{s}_{m}_{v}_{r}_info.txt'
-UNC_INFO_ALT = os.path.join(UNCDIR, UNC_INFO_ALT_F) # DT, NT, SR __ GPP, RECO __ HH, DD, WW, MM, YY
-#UNC_MEF_MATRIX = os.path.join(UNCDIR, '{s}_{m}_{v}_mef_matrix_{r}_{t}_{fy}_{ly}.csv') # DT, NT, SR __ GPP, RECO __ HH, DD, WW, MM, YY __ VUT, CUT
+UNC_INFO_ALT = os.path.join(UNCDIR, UNC_INFO_ALT_F) # DT, NT __ GPP, RECO __ HH, DD, WW, MM, YY
+#UNC_MEF_MATRIX = os.path.join(UNCDIR, '{s}_{m}_{v}_mef_matrix_{r}_{t}_{fy}_{ly}.csv') # DT, NT __ GPP, RECO __ HH, DD, WW, MM, YY __ VUT, CUT
 
 FULLSET_STR = 'FULLSET'
 SUBSET_STR = 'SUBSET'

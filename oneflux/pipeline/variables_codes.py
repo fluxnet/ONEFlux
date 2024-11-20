@@ -289,13 +289,7 @@ VARIABLE_LIST_FULL = [
 'GPP_DT_CUT_MEAN',
 'GPP_DT_CUT_SE',
 ] + \
-['GPP_DT_CUT_{n}'.format(n=i) for i in ['05', '16', '25', '50', '75', '84', '95']] + \
-[
-
-### PARTITIONING SUNDOWN
-'RECO_SR',
-'RECO_SR_N'
-]
+['GPP_DT_CUT_{n}'.format(n=i) for i in ['05', '16', '25', '50', '75', '84', '95']]
 
 for i, e in enumerate(VARIABLE_LIST_FULL):
     if VARIABLE_LIST_FULL.count(e) != 1:
@@ -393,11 +387,7 @@ VARIABLE_LIST_SUB = [
 [
 'GPP_DT_VUT_REF',
 ] + \
-['GPP_DT_VUT_{n}'.format(n=i) for i in ['25', '50', '75']] + \
-[
-'RECO_SR',
-'RECO_SR_N',
-]
+['GPP_DT_VUT_{n}'.format(n=i) for i in ['25', '50', '75']]
 
 for i, e in enumerate(VARIABLE_LIST_SUB):
     if VARIABLE_LIST_SUB.count(e) != 1:
@@ -667,13 +657,7 @@ VARIABLE_LIST_FULL_MAP = [
 ['GPP_DT_CUT_MEAN', ['DT_GPP_mean_c', ]],
 ['GPP_DT_CUT_SE', ['DT_GPP_SE_c', ]],
 ] + \
-[['GPP_DT_CUT_{n}'.format(n=i), ['DT_GPP_{n}_c'.format(n=i), ]] for i in ['05', '16', '25', '50', '75', '84', '95']] + \
-[
-
-### PARTITIONING SUNDOWN
-['RECO_SR', ['SR_RECO', ]],
-['RECO_SR_N', ['SR_RECO_n', 'SR_RECO_N']],
-]
+[['GPP_DT_CUT_{n}'.format(n=i), ['DT_GPP_{n}_c'.format(n=i), ]] for i in ['05', '16', '25', '50', '75', '84', '95']]
 
 FULL_DIRECT_D = {i[0]:i[1] for i in VARIABLE_LIST_FULL_MAP}
 
@@ -789,7 +773,6 @@ VARIABLE_LIST_COULD_BE_PRESENT = [
     'H_CORR_25', 'H_CORR_75', 'H_RANDUNC_METHOD', 'H_RANDUNC_N', 'H_CORR_JOINTUNC',
     'NEE_CUT_REF', 'NEE_CUT_REF_QC', 'NEE_CUT_REF_RANDUNC',
     'RECO_NT_CUT_REF', 'GPP_NT_CUT_REF', 'RECO_DT_CUT_REF', 'GPP_DT_CUT_REF',
-    'RECO_SR', 'RECO_SR_N',
     ] + \
    ['TS_F_MDS_{n}'.format(n=i) for i in range(1, 20)] + \
    ['TS_F_MDS_{n}_QC'.format(n=i) for i in range(1, 20)] + \

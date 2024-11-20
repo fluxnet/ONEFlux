@@ -89,7 +89,6 @@ class Pipeline(object):
                         PipelineEnergyProc,
                         PipelineNEEPartitionNT,
                         PipelineNEEPartitionDT,
-                        PipelineNEEPartitionSR,
                         PipelinePrepareURE,
                         PipelineURE,
                         FLUXNET_PRODUCT_CLASS,
@@ -189,7 +188,6 @@ class Pipeline(object):
         self.energy_proc = PipelineEnergyProc(pipeline=self)
         self.nee_partition_nt = PipelineNEEPartitionNT(pipeline=self)
         self.nee_partition_dt = PipelineNEEPartitionDT(pipeline=self)
-        self.nee_partition_sr = PipelineNEEPartitionSR(pipeline=self)
         self.prepare_ure = PipelinePrepareURE(pipeline=self)
         self.ure = PipelineURE(pipeline=self)
         self.fluxnet2015 = FLUXNET_PRODUCT_CLASS(pipeline=self)
@@ -210,7 +208,6 @@ class Pipeline(object):
                         self.energy_proc,
                         self.nee_partition_nt,
                         self.nee_partition_dt,
-                        self.nee_partition_sr,
                         self.prepare_ure,
                         self.ure,
                         self.fluxnet2015,
@@ -1638,66 +1635,6 @@ class PipelineNEEPartitionDT(object):
         log.info("Pipeline {s} execution finished".format(s=self.label))
 
 
-
-class PipelineNEEPartitionSR(object):
-    '''
-    Class to control execution of nee_partition_nt step
-    '''
-    NEE_PARTITION_SR_EXECUTE = False # TODO: change default when method implemented
-    NEE_PARTITION_SR_DIR = os.path.join("13_nee_partition_sr", "reco")
-    _OUTPUT_FILE_PATTERNS = [
-        "{s}_????_sr_reco.csv",
-    ]
-
-    def __init__(self, pipeline):
-        '''
-        Initializes parameters for execution of nee_partition_sr step
-        
-        :param pipeline: ONEFlux Pipeline object driving the execution
-        :type pipeline: Pipeline
-        '''
-        self.pipeline = pipeline
-        self.execute = self.pipeline.configs.get('nee_partition_st_execute', self.NEE_PARTITION_SR_EXECUTE)
-        self.execute = self.NEE_PARTITION_SR_EXECUTE # TODO: remove when method implemented
-        self.nee_partition_sr_dir = self.pipeline.configs.get('nee_partition_sr_dir', os.path.join(self.pipeline.data_dir, self.NEE_PARTITION_SR_DIR))
-        self.output_file_patterns = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS]
-
-    def pre_validate(self):
-        '''
-        Validate pre-execution requirements
-        '''
-        # check dependency steps
-        self.pipeline.nee_proc.post_validate()
-
-    def post_validate(self, executed=False):
-        '''
-        Validate post-execution results
-        '''
-        log_only = not executed
-
-        # check output directory
-        test_dir(tdir=self.nee_partition_sr_dir, label='nee_partition_sr.post_validate', log_only=log_only)
-
-        # check output files
-        test_file_list(file_list=self.output_file_patterns, tdir=self.nee_partition_sr_dir, label='nee_partition_sr.post_validate', log_only=log_only)
-
-
-    def run(self):
-        '''
-        Executes nee_partition_sr
-        '''
-
-        log.info("Pipeline nee_partition_sr execution started")
-        self.pre_validate()
-
-        create_replace_dir(tdir=self.nee_partition_sr_dir, label='nee_partition_sr.run', suffix=self.pipeline.run_id, simulation=self.pipeline.simulation)
-
-        # TODO: implement run
-
-        self.post_validate(executed=True)
-        log.info("Pipeline nee_partition_sr execution finished")
-
-
 class PipelinePrepareUREPW(object):
     '''
     Class to control execution of data conversions in preparation
@@ -1712,9 +1649,6 @@ class PipelinePrepareUREPW(object):
         "{s}_????_NT_GPP.csv",
         "{s}_????_NT_Reco.csv",
     ]
-    _OUTPUT_FILE_PATTERNS_SR = [
-        "{s}_????_sr_reco.csv",
-    ]
 
     def __init__(self, pipeline):
         '''
@@ -1727,7 +1661,6 @@ class PipelinePrepareUREPW(object):
         self.execute = self.pipeline.configs.get('prepare_ure_execute', self.PREPARE_URE_EXECUTE)
         self.prepare_ure_dir = self.pipeline.configs.get('prepare_ure_dir', os.path.join(self.pipeline.data_dir, self.PREPARE_URE_DIR))
         self.output_file_patterns_nt_dt = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_NT_DT]
-        self.output_file_patterns_sr = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_SR]
 
     def pre_validate(self):
         '''
@@ -1736,7 +1669,6 @@ class PipelinePrepareUREPW(object):
         # check dependency steps
         self.pipeline.nee_partition_nt.post_validate()
         self.pipeline.nee_partition_dt.post_validate()
-        self.pipeline.nee_partition_sr.post_validate()
 
     def post_validate(self):
         '''
@@ -1748,9 +1680,6 @@ class PipelinePrepareUREPW(object):
         # check output files
         # NT and DT
         test_file_list(file_list=self.output_file_patterns_nt_dt, tdir=self.prepare_ure_dir, label='prepare_ure.post_validate')
-
-        # SR
-        test_file_list(file_list=self.output_file_patterns_sr, tdir=self.prepare_ure_dir, label='prepare_ure.post_validate', log_only=True)
 
     def run(self):
         '''
@@ -1765,16 +1694,11 @@ class PipelinePrepareUREPW(object):
 #       #  TODO: finish implementation
         for root, _, filenames in os.walk(self.pipeline.nee_partition_nt.nee_partition_nt_dir):
             for f in filenames:
-                print(os.path.join(root, f))
+                log.debug('NT outputs: {f}'.format(f=os.path.join(root, f)))
 
         for root, _, filenames in os.walk(self.pipeline.nee_partition_dt.nee_partition_dt_dir):
             for f in filenames:
-                print(os.path.join(root, f))
-
-        if os.path.isdir(self.pipeline.nee_partition_sr.nee_partition_sr_dir):
-            for root, _, filenames in os.walk(self.pipeline.nee_partition_dt.nee_partition_sr_dir):
-                for f in filenames:
-                    print(os.path.join(root, f))
+                log.debug('DT outputs: {f}'.format(f=os.path.join(root, f)))
 
         # execute prepare_ure step
         if not self.execute and not self.pipeline.simulation:
@@ -1803,9 +1727,6 @@ class PipelinePrepareURE(object):
         NT_GPP_TEMPLATE.format(y='????', s='{s}'),
         NT_RECO_TEMPLATE.format(y='????', s='{s}'),
     ]
-    _OUTPUT_FILE_PATTERNS_SR = [
-        "{s}_????_sr_reco.csv",
-    ]
 
     def __init__(self, pipeline, perc=PERC_TO_COMPARE, prod=PROD_TO_COMPARE):
         '''
@@ -1822,8 +1743,6 @@ class PipelinePrepareURE(object):
         self.prepare_ure_dir = self.pipeline.configs.get('prepare_ure_dir', os.path.join(self.pipeline.data_dir, self.PREPARE_URE_DIR))
         self.prepare_ure_dir_fmt = self.prepare_ure_dir + os.sep
         self.output_file_patterns_nt_dt = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_NT_DT]
-        self.output_file_patterns_sr = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_SR]
-
 
     def pre_validate(self):
         '''
@@ -1832,8 +1751,6 @@ class PipelinePrepareURE(object):
         # check dependency steps
         self.pipeline.nee_partition_nt.post_validate()
         self.pipeline.nee_partition_dt.post_validate()
-        self.pipeline.nee_partition_sr.post_validate()
-
 
     def post_validate(self):
         '''
@@ -1845,10 +1762,6 @@ class PipelinePrepareURE(object):
         # check output files
         # NT and DT
         test_file_list(file_list=self.output_file_patterns_nt_dt, tdir=self.prepare_ure_dir, label='prepare_ure.post_validate')
-
-        # SR
-        test_file_list(file_list=self.output_file_patterns_sr, tdir=self.prepare_ure_dir, label='prepare_ure.post_validate', log_only=True)
-
 
     def check_cleanup_nt(self, reco, gpp, filename):
         """
@@ -1889,7 +1802,6 @@ class PipelinePrepareURE(object):
             log.warning('URE checks: NT GPP NaN values [{c}]: {s}'.format(c=count_gpp_nan, s=filename))
 
         return reco, gpp
-
 
     def check_cleanup_dt(self, reco, gpp, filename):
         """

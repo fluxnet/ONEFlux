@@ -656,7 +656,7 @@ def load_energy(siteid, ddir, resolution):
     log.debug("Loading energy/{r} file: {f}".format(r=resolution, f=filename))
     return _load_data(filename=filename, resolution=resolution)
 
-def merge_unc(dt_reco, dt_gpp, nt_reco, nt_gpp, sr_reco, resolution):
+def merge_unc(dt_reco, dt_gpp, nt_reco, nt_gpp, resolution):
     dtype_ts = TIMESTAMP_DTYPE_BY_RESOLUTION_IN[resolution]
     htype = [dt[0] for dt in dtype_ts]
     dtype_ts = TIMESTAMP_DTYPE_BY_RESOLUTION[resolution]
@@ -669,8 +669,6 @@ def merge_unc(dt_reco, dt_gpp, nt_reco, nt_gpp, sr_reco, resolution):
             raise ONEFluxError("Timestamps differ for DT_RECO and NT_RECO")
         if not numpy.all(dt_reco[label] == nt_gpp[label]):
             raise ONEFluxError("Timestamps differ for DT_RECO and NT_GPP")
-        if not numpy.all(dt_reco[label] == sr_reco[label]):
-            raise ONEFluxError("Timestamps differ for DT_RECO and SR_RECO")
 
     for dt in dt_reco.dtype.descr:
         if dt[0] not in htype:
@@ -684,9 +682,6 @@ def merge_unc(dt_reco, dt_gpp, nt_reco, nt_gpp, sr_reco, resolution):
     for dt in nt_gpp.dtype.descr:
         if dt[0] not in htype:
             dtype_comp.append(('NT_' + dt[0], dt[1]))
-    for dt in sr_reco.dtype.descr:
-        if dt[0] not in htype:
-            dtype_comp.append(('SR_' + dt[0], dt[1]))
 
     dtype = dtype_ts + dtype_comp
     h = [i[0] for i in dtype]
@@ -708,9 +703,6 @@ def merge_unc(dt_reco, dt_gpp, nt_reco, nt_gpp, sr_reco, resolution):
     for dt in nt_gpp.dtype.descr:
         if dt[0] not in htype:
             d['NT_' + dt[0]] = nt_gpp[dt[0]]
-    for dt in sr_reco.dtype.descr:
-        if dt[0] not in htype:
-            d['SR_' + dt[0]] = sr_reco[dt[0]]
 
     log.debug("Merged UNC headers: {h}".format(h=d.dtype.names))
     return d
@@ -720,7 +712,6 @@ def load_unc(siteid, ddir, resolution):
     dt_gpp_filename = os.path.join(ddir, "{s}_DT_GPP_{r}.csv".format(s=siteid, r=resolution))
     nt_reco_filename = os.path.join(ddir, "{s}_NT_RECO_{r}.csv".format(s=siteid, r=resolution))
     nt_gpp_filename = os.path.join(ddir, "{s}_NT_GPP_{r}.csv".format(s=siteid, r=resolution))
-    sr_reco_filename = os.path.join(ddir, "{s}_SR_RECO_{r}.csv".format(s=siteid, r=resolution))
 
     if not os.path.isfile(dt_reco_filename):
         raise ONEFluxError("DT_RECO file not found: {f}".format(f=dt_reco_filename))
@@ -730,8 +721,6 @@ def load_unc(siteid, ddir, resolution):
         raise ONEFluxError("NT_RECO file not found: {f}".format(f=nt_reco_filename))
     if not os.path.isfile(nt_gpp_filename):
         raise ONEFluxError("NT_RECO file not found: {f}".format(f=nt_gpp_filename))
-    if not os.path.isfile(sr_reco_filename):
-        log.info("Skipping SR_RECO, file not found: {f}".format(f=sr_reco_filename))
 
     # DT RECO
     log.debug("Loading partitioning/{r} file: {f}".format(r=resolution, f=dt_reco_filename))
@@ -756,61 +745,7 @@ def load_unc(siteid, ddir, resolution):
     if nt_gpp.size != nrecords:
         raise ONEFluxError("Incompatible number of records DT_RECO={p}  and  NT_GPP={s}".format(p=nrecords, s=nt_gpp.size))
 
-    # SR RECO
-    if os.path.isfile(sr_reco_filename):
-        log.debug("Loading partitioning/{r} file: {f}".format(r=resolution, f=sr_reco_filename))
-        sr_reco = _load_data(filename=sr_reco_filename, resolution=resolution)
-        if  sr_reco.size != nrecords:
-            if sr_reco.size < nrecords:
-                # TODO: incompatible, check range, allocate array of correct size, fill with -9999, find ts indices, copy non-NA part to new array
-                log.info(("Number of records DT_RECO={p}  more than  SR_RECO={s}, adjusting".format(p=nrecords, s=sr_reco.size)))
-                sr_first, sr_last = sr_reco[sr_reco.dtype.names[0]][0].strip(), sr_reco[sr_reco.dtype.names[0]][-1].strip()
-                first_idx, last_idx = None, None
-                for idx in xrange(0, len(dt_reco), 1):
-                    if dt_reco[dt_reco.dtype.names[0]][idx] == sr_first:
-                        log.debug("Found first SR timestamp in DT [{i}]={v}".format(i=idx, v=dt_reco[dt_reco.dtype.names[0]][idx]))
-                        first_idx = idx
-                        break
-                for idx in xrange(len(dt_reco) - 1, 0, -1):
-                    if dt_reco[dt_reco.dtype.names[0]][idx] == sr_last:
-                        log.debug("Found last SR timestamp in DT [{i}]={v}".format(i=idx, v=dt_reco[dt_reco.dtype.names[0]][idx]))
-                        last_idx = idx
-                        break
-                if first_idx is not None and last_idx is not None:
-                    log.debug("SR subset of DT: [{f_i}]={f} ({of})  [{l_i}]={l} ({ol})".format(f_i=first_idx,
-                                                                                               f=dt_reco[dt_reco.dtype.names[0]][first_idx],
-                                                                                               l_i=last_idx,
-                                                                                               l=dt_reco[dt_reco.dtype.names[0]][last_idx],
-                                                                                               of=sr_first,
-                                                                                               ol=sr_last,
-                                                                                               ))
-                    dtype = [dt_reco.dtype.descr[0]] + ([] if 's' not in str(dt_reco.dtype[1]).lower() else [dt_reco.dtype.descr[1]]) + [('RECO', 'f8'), ('RECO_n', 'f8')]
-                    sr_reco_alt = numpy.empty(nrecords, dtype=dtype)
-                    for dt in dtype:
-                        if dt[1] == 'f8':
-                            sr_reco_alt[dt[0]].fill(-9999)
-                        else:
-                            sr_reco_alt[dt[0]][:] = dt_reco[dt[0]]
-                        sr_reco_alt['RECO'][first_idx:last_idx + 1] = sr_reco['RECO']
-                        if resolution != 'hh':
-                            sr_reco_alt['RECO_n'][first_idx:last_idx + 1] = sr_reco['RECO_n']
-                    sr_reco = sr_reco_alt
-                else:
-                    raise ONEFluxError("Cannot find SR timestamps in DT timestamps".format(p=nrecords, s=sr_reco.size))
-            else:
-                raise ONEFluxError("Number of records DT_RECO={p}  less than  SR_RECO={s}".format(p=nrecords, s=sr_reco.size))
-    else:
-        dtype = [dt_reco.dtype.descr[0]] + ([] if 's' not in str(dt_reco.dtype[1]).lower() else [dt_reco.dtype.descr[1]]) + [('RECO', 'f8'), ('RECO_n', 'f8')]
-#        dtype = TIMESTAMP_DTYPE_BY_RESOLUTION[resolution] + [('RECO', 'f8'), ('RECO_n', 'f8')]
-        sr_reco = numpy.empty(nrecords, dtype=dtype)
-        for dt in dtype:
-            if dt[1] == 'f8':
-                sr_reco[dt[0]].fill(-9999)
-            else:
-                sr_reco[dt[0]][:] = dt_reco[dt[0]]
-    log.debug("{s}: SR RECO file headers: {h}".format(s=siteid, h=sr_reco.dtype.names))
-
-    return merge_unc(dt_reco=dt_reco, dt_gpp=dt_gpp, nt_reco=nt_reco, nt_gpp=nt_gpp, sr_reco=sr_reco, resolution=resolution)
+    return merge_unc(dt_reco=dt_reco, dt_gpp=dt_gpp, nt_reco=nt_reco, nt_gpp=nt_gpp, resolution=resolution)
 
 def update_names(data):
     old_h = []
