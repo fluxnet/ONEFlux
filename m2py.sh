@@ -14,4 +14,4 @@ cp smop/src/libsmop.py "$target_dir/libsmop.py"
 find "$target_dir" -name "*.py" -exec 2to3 -x import -w -n {} +
 ruff format "$target_dir"
 ruff check "$target_dir" --fix
-pytest tests/unit_tests/test_ustar_cp/test_cpdFmax2pCp3.py --pdb -n0 -x -s -vv
+pytest tests/unit_tests/test_ustar_cp/test_cpdFmax2pCp3.py --pdb -n0  -s -vv
