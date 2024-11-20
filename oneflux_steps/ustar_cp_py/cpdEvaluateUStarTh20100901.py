@@ -191,15 +191,15 @@ def cpdEvaluateUStarTh20100901(
     itAdd1 = arange(take(itAnnual, end() - nInc - 1), nt)
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:122
 
-    t = concat([[take(t, itAdd1) - EndDOY], [t]])
+    t = matlabarray([[take(t, itAdd1) - EndDOY], [t]])
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:124
-    T = concat([[take(T, itAdd1)], [T]])
+    T = matlabarray([[take(T, itAdd1)], [T]])
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:125
-    uStar = concat([[take(uStar, itAdd1)], [uStar]])
+    uStar = matlabarray([[take(uStar, itAdd1)], [uStar]])
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:126
-    NEE = concat([[take(NEE, itAdd1)], [NEE]])
+    NEE = matlabarray([[take(NEE, itAdd1)], [NEE]])
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:127
-    fNight = concat([[take(fNight, itAdd1)], [fNight]])
+    fNight = matlabarray([[take(fNight, itAdd1)], [fNight]])
     # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:128
     itAnnual = matlabarray(
         find(logical_and(fNight == 1, logical_not(isnan(NEE + uStar + T))))
@@ -273,7 +273,9 @@ def cpdEvaluateUStarTh20100901(
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:169
             xs2.mT = copy(mean(T[itStrata]))
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:170
-            xs2.ciT = copy(dot(0.5, diff(prctile(T[itStrata], concat([2.5, 97.5])))))
+            xs2.ciT = copy(
+                dot(0.5, diff(prctile(T[itStrata], matlabarray([2.5, 97.5]))))
+            )
             # oneflux_steps/ustar_cp_refactor_wip/cpdEvaluateUStarTh20100901.m:170
             xs3 = check_struct(xs3)
             xs3.mt = copy(xs2.mt)

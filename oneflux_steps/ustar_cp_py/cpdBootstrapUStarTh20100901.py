@@ -172,7 +172,7 @@ def cpdBootstrapUStarTh20100901(
         "cpdBootstrapUStarTh20100901  %s   nObs: %g %g %g %g \n",
         cSiteYr,
         nt,
-        sum(logical_not(isnan(concat([NEE, uStar, T])))),
+        sum(logical_not(isnan(matlabarray([NEE, uStar, T])))),
     )
     disp(" ")
     # Bootstrapping.

@@ -96,7 +96,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
 
     # Exclude extreme lin reg outliers.
 
-    a = linsolve(concat([ones(n, 1), x]), y)
+    a = linsolve(matlabarray([ones(n, 1), x]), y)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:57
     yHat = take(a, 1) + dot(take(a, 2), x)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:57
@@ -126,7 +126,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:66
     SSERed2 = sum((y - yHat2) ** 2)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:66
-    a = linsolve(concat([ones(n, 1), x]), y)
+    a = linsolve(matlabarray([ones(n, 1), x]), y)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:67
     yHat3 = take(a, 1) + dot(take(a, 2), x)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:67
@@ -167,7 +167,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:85
         x1[iAbv] = take(x, i)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:85
-        a2 = linsolve(concat([ones(n, 1), x1]), y)
+        a2 = linsolve(matlabarray([ones(n, 1), x1]), y)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:86
         yHat2 = take(a2, 1) + dot(take(a2, 2), x1)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:87
@@ -185,7 +185,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:96
         x2 = multiply((x - take(x, i)), zAbv)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:96
-        a3 = linsolve(concat([ones(n, 1), x1, x2]), y)
+        a3 = linsolve(matlabarray([ones(n, 1), x1, x2]), y)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:97
         yHat3 = take(a3, 1) + dot(take(a3, 2), x1) + dot(take(a3, 3), x2)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:98
@@ -209,7 +209,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:110
     x1[iAbv] = xCp2
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:110
-    a2, a2int = regress(y, concat([ones(n, 1), x1]), nargout=2)
+    a2, a2int = regress(y, matlabarray([ones(n, 1), x1]), nargout=2)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:111
     yHat2 = take(a2, 1) + dot(take(a2, 2), x1)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:112
@@ -235,7 +235,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:118
     x2 = multiply((x - xCp3), zAbv)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:118
-    a3, a3int = regress(y, concat([ones(n, 1), x1, x2]), nargout=2)
+    a3, a3int = regress(y, matlabarray([ones(n, 1), x1, x2]), nargout=2)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:119
     yHat3 = take(a3, 1) + dot(take(a3, 2), x1) + dot(take(a3, 3), x2)
     # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:120
@@ -329,8 +329,20 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
         plot(x, y, "ko", "MarkerFaceColor", "k")
         plot(x, yHat2, "r-", "linewidth", 2)
         plot(x, yHat3, "g-", "linewidth", 2)
-        plot(concat([xCp2, xCp2]), concat([min(y), max(y)]), "r-", "linewidth", 2)
-        plot(concat([xCp3, xCp3]), concat([min(y), max(y)]), "g-", "linewidth", 2)
+        plot(
+            matlabarray([xCp2, xCp2]),
+            matlabarray([min(y), max(y)]),
+            "r-",
+            "linewidth",
+            2,
+        )
+        plot(
+            matlabarray([xCp3, xCp3]),
+            matlabarray([min(y), max(y)]),
+            "g-",
+            "linewidth",
+            2,
+        )
         hold("off")
         grid("on")
         box("on")
@@ -344,7 +356,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
         xX = dot(max(x), 1.02)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:168
         if xX > 0:
-            xlim(concat([0, xX]))
+            xlim(matlabarray([0, xX]))
         yN = min(y)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:169
         yX = max(y)
@@ -356,7 +368,7 @@ def cpdFindChangePoint20100901(xx=None, yy=None, fPlot=None, cPlot=None):
         yX = yX + dot(0.02, dy)
         # oneflux_steps/ustar_cp_refactor_wip/cpdFindChangePoint20100901.m:170
         if yN < yX:
-            ylim(concat([yN, yX]))
+            ylim(matlabarray([yN, yX]))
         set(gca, "FontSize", 10)
 
     # =======================================================================

@@ -1045,6 +1045,8 @@ class matlabarray(np.ndarray):
     def __new__(cls, a=(), dtype=None):
         if isinstance(a, matlabarray) and dtype is None:
             return a
+        if isinstance(a, list) and np.any([isinstance(x, np.ndarray) for x in a]):
+            return concat(a)
         if np.size(a) == 0 and dtype is None:
             dtype = object
         copy = not isinstance(a, np.ndarray) or dtype and a.dtype != dtype

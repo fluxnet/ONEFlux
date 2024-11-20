@@ -132,7 +132,7 @@ def myFigLoc(iFig=None, dx=None, dy=None, cLoc=None):
     # oneflux_steps/ustar_cp_refactor_wip/fcFigLoc.m:59
     yLocBottom = nyPixelsBottom + dot(dot(yFractionShift, (1 - dy)), nyPixelsFull)
     # oneflux_steps/ustar_cp_refactor_wip/fcFigLoc.m:60
-    FigLoc = concat([xLocLeft, yLocBottom, nxPixels, nyPixels])
+    FigLoc = matlabarray([xLocLeft, yLocBottom, nxPixels, nyPixels])
     # oneflux_steps/ustar_cp_refactor_wip/fcFigLoc.m:62
     if length(FigLoc) < 4:
         disp("myFigLoc aborted.")

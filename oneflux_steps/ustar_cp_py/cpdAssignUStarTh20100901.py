@@ -277,13 +277,13 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
     # Exclude outliers from Select mode based on Cp and regression stats
 
     if 2 == nPar:
-        x = concat([Cp, b1, cib1])
+        x = matlabarray([Cp, b1, cib1])
         # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:145
         nx = 3
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:145
     else:
         if 3 == nPar:
-            x = concat([Cp, b1, xc2, cib1, cic2])
+            x = matlabarray([Cp, b1, xc2, cib1, cic2])
             # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:146
             nx = 5
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:146
@@ -393,7 +393,7 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:180
     # Fit annual sine curve
 
-    bSine = concat([1, 1, 1])
+    bSine = matlabarray([1, 1, 1])
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:184
     bSine = nlinfit(mt(iSelect), Cp(iSelect), "fcEqnAnnualSine", bSine)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:185
@@ -413,7 +413,7 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
 
     bSine[3] = mod(bSine[3], 365.25)
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:190
-    sSine = concat([fcx2rowvec(bSine), r2])
+    sSine = matlabarray([fcx2rowvec(bSine), r2])
     # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:191
     # =======================================================================
     # =======================================================================
@@ -426,7 +426,7 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
         mtByWindow = nanmean(reshape(xmt, nWindows, dot(nStrata, nBoot)), 2)
         # oneflux_steps/ustar_cp_refactor_wip/cpdAssignUStarTh20100901.m:199
         fcFigLoc(1, 0.5, 0.45, "NE")
-        subplot("position", concat([0.08, 0.56, 0.6, 0.38]))
+        subplot("position", matlabarray([0.08, 0.56, 0.6, 0.38]))
         hold("on")
         box("on")
         plot(mt, Cp, "r.", mt(iModeE), Cp(iModeE), "b.", mt(iModeD), Cp(iModeD), "g.")
@@ -457,7 +457,7 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
         fcDatetick(mt, "Mo", 4, 1)
         ylabel("Cp")
         ylabel("Raw Cp Modes D (green) E (red)")
-        ylim(concat([0, prctile(Cp, 99.9)]))
+        ylim(matlabarray([0, prctile(Cp, 99.9)]))
         hold("off")
         title(
             sprintf(
@@ -468,10 +468,10 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
                 nSelect,
                 nTry,
                 nanmedian(Cp(iSelect)),
-                dot(0.5, diff(prctile(Cp(iSelect), concat([2.5, 97.5])))),
+                dot(0.5, diff(prctile(Cp(iSelect), matlabarray([2.5, 97.5])))),
             )
         )
-        subplot("position", concat([0.08, 0.06, 0.6, 0.38]))
+        subplot("position", matlabarray([0.08, 0.06, 0.6, 0.38]))
         hold("on")
         box("on")
         if "G" == cMode:
@@ -488,27 +488,27 @@ def cpdAssignUStarTh20100901(Stats=None, fPlot=None, cSiteYr=None, *varargin):
         plot(tW, CpW, "ro", "MarkerFaceColor", "y", "MarkerSize", 9, "LineWidth", 2)
         fcDatetick(mt(iSelect), "Mo", 4, 1)
         ylabel("Select Cp")
-        ylim(concat([0, prctile(Cp(iSelect), 99)]))
+        ylim(matlabarray([0, prctile(Cp(iSelect), 99)]))
         title(sprintf("Cp = %5.3f + %5.3f sin(wt - %3.0f) (r^2 = %5.3f) ", bSine, r2))
-        subplot("position", concat([0.76, 0.56, 0.22, 0.38]))
+        subplot("position", matlabarray([0.76, 0.56, 0.22, 0.38]))
         hist(CpA, 30)
         grid("on")
         box("on")
-        xlim(concat([min(CpA), max(CpA)]))
+        xlim(matlabarray([min(CpA), max(CpA)]))
         xlabel("Annual \itu_*^{Th}")
         ylabel("Frequency")
         title(
             sprintf(
                 "Median (CI): %5.3f (%5.3f) ",
                 nanmedian(CpA),
-                dot(0.5, diff(prctile(CpA, concat([2.5, 97.5])))),
+                dot(0.5, diff(prctile(CpA, matlabarray([2.5, 97.5])))),
             )
         )
-        subplot("position", concat([0.76, 0.06, 0.22, 0.38]))
+        subplot("position", matlabarray([0.76, 0.06, 0.22, 0.38]))
         plot(mtByWindow, FracSelectByWindow, "o-")
         fcDatetick(mtByWindow, "Mo", 4, 1)
         ylabel("FracSelectByWindow")
-        ylim(concat([0, 1]))
+        ylim(matlabarray([0, 1]))
 
     # =======================================================================
     # =======================================================================
