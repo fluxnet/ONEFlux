@@ -56,7 +56,6 @@ def test_cpdFmax2pCp3_return_numeric(ustar_cp, Fmax, n, expected):
     (30, 15, 100, 4.4960217949308046e-05),
 ],
 )
-
 def test_calculate_p_high_return_numeric(ustar_cp, Fmax, FmaxCritical_high, n, expected_p):
     """
     Test the cpdFmax2pCp3 MATLAB function for cases where numeric values are returned.
@@ -165,7 +164,7 @@ def test_calculate_p_interpolate(ustar_cp, Fmax, FmaxCritical, pTable, expected_
         result = ustar_cp.calculate_p_interpolate(Fmax_matlab, FmaxCritical_matlab, pTable_matlab)
         p = result  # MATLAB returns a scalar
 
-        if np.isnan(expected_p):
+        if expected_p is not None and np.isnan(expected_p):
             # Expecting NaN as result
             assert np.isnan(p), f"{description}: Expected NaN, got {p}"
         else:

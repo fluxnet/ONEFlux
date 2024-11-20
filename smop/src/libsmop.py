@@ -750,10 +750,13 @@ def interp1(x, v, xq, method):
     v = np.asarray(v).flatten()
     xq = np.asarray(xq).flatten()
 
+    if np.isnan(x).any() or np.isnan(v).any() or np.size(x) < 2 or np.size(v) < 2 or np.diff(x).min() < 0:
+        return matlabarray(np.full_like(xq, np.nan))
+    
     if method in ['linear', 'nearest', 'next', 'previous', 'cubic']:
-        f = scipy.interp1d(x, v, kind=method, fill_value='extrapolate')
+        f = scipy.interp1d(x, v, kind=method)
     elif method == 'pchip':
-        f = scipy.interpolate.PchipInterpolator(x, v, extrapolate=True)
+        f = scipy.interpolate.PchipInterpolator(x, v, extrapolate=False)
     else:
         raise ValueError(f"Unknown interpolation method: {method}")
 
