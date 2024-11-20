@@ -1,6 +1,40 @@
 import numpy as np
+from typing import Optional
 from scipy.stats import f
 from scipy.interpolate import PchipInterpolator
+
+def cpdFmax2pCp3(Fmax: float, n: int) -> Optional[float]:
+    """
+    Calculates the probability `p` that the 3-parameter diagnostic change-point model fit is significant.
+
+    Args:
+        Fmax: The Fmax value to be evaluated.
+        n: Sample size or degrees of freedom.
+
+    Returns:
+        The calculated probability `p`, or `NaN` if inputs are invalid.
+    """
+
+    # Validate inputs
+    if not validate_inputs(Fmax, n):
+        return np.nan
+
+    # Get data tables
+    pTable = get_pTable()
+    nTable = get_nTable()
+    FmaxTable = get_FmaxTable()
+
+    # Interpolate critical Fmax values
+    FmaxCritical = interpolate_FmaxCritical(n, nTable, FmaxTable)
+
+    # Calculate p based on Fmax comparison
+    if Fmax < FmaxCritical[0]:
+        return float(calculate_p_low(Fmax, FmaxCritical[0], n))
+    elif Fmax > FmaxCritical[2]:
+        return float(calculate_p_high(Fmax, FmaxCritical[2], n))
+    else:
+        return float(calculate_p_interpolate(Fmax, FmaxCritical, pTable))
+
 
 def calculate_p_high(Fmax: float, FmaxCritical_high: float, n: float) -> float:
     """
@@ -60,12 +94,6 @@ def calculate_p_low(Fmax: float, FmaxCritical_low: float, n: float) -> float:
     Returns:
         The calculated p-value or NaN if inputs are invalid.
     """
-    # Handle invalid inputs
-    if (
-        np.isnan(Fmax) or np.isnan(FmaxCritical_low) or np.isnan(n) or
-        FmaxCritical_low <= 0 or n <= 0 or Fmax <= 0
-    ):
-        return np.nan
 
     # Compute the adjusted F statistic
     fAdj = f.ppf(0.95, 3, n) * Fmax / FmaxCritical_low
@@ -74,7 +102,10 @@ def calculate_p_low(Fmax: float, FmaxCritical_low: float, n: float) -> float:
     p = 2 * (1 - f.cdf(fAdj, 3, n))
     
     # Ensure p is at most 1
-    return min(p, 1)
+    if np.isnan(p):
+        return 1.0
+    else:
+        return min(p, 1)
 
 def get_FmaxTable() -> np.ndarray:
     """
@@ -143,6 +174,9 @@ def interpolate_FmaxCritical(n: float, nTable: np.ndarray, FmaxTable: np.ndarray
     Returns:
         A 1D NumPy array containing the interpolated Fmax values for the given n.
     """
+    if np.any(np.isnan(nTable)) or nTable.size == 0:
+        return np.array([np.nan,np.nan,np.nan])
+
     FmaxCritical = np.zeros(3)
     for ip in range(3):
         interpolator = PchipInterpolator(nTable, FmaxTable[:, ip])
