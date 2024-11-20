@@ -1,7 +1,5 @@
 import matlab.engine
-import numpy as np
-import pytest
-
+from oneflux_steps.ustar_cp_python.cpdFmax2pCp3 import cpdFmax2pCp3, calculate_p_high, calculate_p_low, interpolate_FmaxCritical
 
 testcases = [
         # Input values are NaN
@@ -17,15 +15,15 @@ testcases = [
         # Between f-critical(1) and f-critical(3)
         (10, 52, 0.0761404222166437),
         # fmax = 0
-        (0, 55, 1),
+        (0, 55, 1.0),
         # fmax = fcritical(1)
-        (1.6301, 52, 1),
+        (1.6301, 52, 1.0),
         # Nominal
-        (2.37324492970613, 55, 1),
+        (2.37324492970613, 55, 1.0),
         (10.3567400792636, 54, 0.0657053181314848)
 ]
 @pytest.mark.parametrize("fmax, n, expected_p3", testcases)
-def test_cpdFmax2pCp3(matlab_engine, fmax, n, expected_p3):
+def test_cpdFmax2pCp3_matlab(matlab_engine, fmax, n, expected_p3):
     """
     Test the cpdFmax2pCp3 function in MATLAB.
     Args:
@@ -43,6 +41,10 @@ def test_cpdFmax2pCp3(matlab_engine, fmax, n, expected_p3):
 
     assert np.isclose(output_p3, expected_p3, equal_nan=True), f"Expected p3 value of {expected_p3}, but got {output_p3}."
 
+@pytest.mark.parametrize("fmax, n, expected_p3", testcases)
+def test_cpdFmax2pCp3(fmax, n, expected_p3):
+
+    output_p3 = cpdFmax2pCp3(fmax, n)
 
 import pytest
 import numpy as np
@@ -91,7 +93,9 @@ def test_cpdFmax2pCp3_return_numeric(matlab_engine, Fmax, n, expected):
     result = matlab_engine.cpdFmax2pCp3(Fmax_matlab, n_matlab)
 
     assert type(result) == type(expected), f"Result should be a {type(expected)}, got {type(result)}"
-    assert np.allclose(np.array(result), np.array(expected))
+    assert np.allclose(np.array(result), np.array(expected))    assert type(output_p3) == type(expected_p3), f"Result should be a {type(expected_p3)}, got {type(output_p3)}"
+    assert np.isclose(output_p3, expected_p3, equal_nan=True), f"Expected p3 value of {expected_p3}, but got {output_p3}."
+
 
 @pytest.mark.parametrize(
 "Fmax, FmaxCritical_high, n, expected_p",
@@ -103,7 +107,7 @@ def test_cpdFmax2pCp3_return_numeric(matlab_engine, Fmax, n, expected):
 ],
 )
 
-def test_calculate_p_high_return_numeric(matlab_engine, Fmax, FmaxCritical_high, n, expected_p):
+def test_calculate_p_high_return_numeric_matlab(matlab_engine, Fmax, FmaxCritical_high, n, expected_p):
     """
     Test the cpdFmax2pCp3 MATLAB function for cases where numeric values are returned.
     """
@@ -114,6 +118,23 @@ def test_calculate_p_high_return_numeric(matlab_engine, Fmax, FmaxCritical_high,
 
     # Call the MATLAB function
     result = matlab_engine.calculate_p_high(Fmax_matlab, FmaxCritical_high_matlab, n_matlab)
+
+    assert result == expected_p, f"Result should be {expected_p}. Instead {result} was returned."
+    assert np.allclose(np.array(result), np.array(expected_p))
+
+@pytest.mark.parametrize(
+"Fmax, FmaxCritical_high, n, expected_p",
+[
+    (20, 15, 50, 0.0018068999227986993),
+    (15, 15, 50, 0.010000000000000009),
+    (15.1, 15, 50, 0.00965419741276663),
+    (30, 15, 100, 4.4960217949308046e-05),
+],
+)
+
+def test_calculate_p_high_return_numeric(Fmax, FmaxCritical_high, n, expected_p):
+
+    result = calculate_p_high(Fmax, FmaxCritical_high, n)
 
     assert result == expected_p, f"Result should be {expected_p}. Instead {result} was returned."
     assert np.allclose(np.array(result), np.array(expected_p))
@@ -131,7 +152,7 @@ def test_calculate_p_high_return_numeric(matlab_engine, Fmax, FmaxCritical_high,
     ],
 )
 
-def test_calculate_p_high_return_nan(matlab_engine, Fmax, FmaxCritical_high, n, expected_p):
+def test_calculate_p_high_return_nan_matlab(matlab_engine, Fmax, FmaxCritical_high, n, expected_p):
     """
     Test the cpdFmax2pCp3 MATLAB function for cases where nan values are returned.
     """
@@ -145,24 +166,43 @@ def test_calculate_p_high_return_nan(matlab_engine, Fmax, FmaxCritical_high, n, 
 
     assert type(result) == type(expected_p), f"Result should be a {type(expected_p)}, got {type(result)}"
 
+@pytest.mark.parametrize(
+    "Fmax, FmaxCritical_high, n, expected_p",
+    [
+        (np.nan, 15, 50, np.nan),
+        (20, np.nan, 50, np.nan),
+        (20, 15, np.nan, np.nan),
+        (20, 0, 50, np.nan),
+        (-20, 15, 50, np.nan),
+        (20, -15, 50, np.nan),
+        (20, 15, -50, np.nan),
+    ],
+)
+
+def test_calculate_p_high_return_nan(Fmax, FmaxCritical_high, n, expected_p):
+
+    result = calculate_p_high(Fmax, FmaxCritical_high, n)
+
+    assert type(result) == type(expected_p), f"Result should be a {type(expected_p)}, got {type(result)}"
+
 
 @pytest.mark.parametrize(
     "Fmax, FmaxCritical, pTable, expected_p, description",
     [
-        (10, [5, 15], [0.1, 0.05], None, "Fmax between FmaxCritical[0] and FmaxCritical[1]"),
+        (10, [5, 15], [0.1, 0.05], 0.925, "Fmax between FmaxCritical[0] and FmaxCritical[1]"),
         (15, [10, 15, 20], [0.1, 0.05, 0.01], 0.95, "Fmax equal to FmaxCritical[1]"),
         
         # Test case 3: Interpolation within FmaxCritical
         # Testing interpolation where Fmax is between FmaxCritical[0] and FmaxCritical[1]
-        (17, [15, 20], [0.05, 0.01], None, "Fmax between FmaxCritical[0] and FmaxCritical[1], interpolate p"),
+        (17, [15, 20], [0.05, 0.01], 0.966, "Fmax between FmaxCritical[0] and FmaxCritical[1], interpolate p"),
         
         # Test case 4: Fmax less than minimum FmaxCritical
         # Testing behavior when Fmax is less than all values in FmaxCritical, expecting NaN
-        (4, [5, 10, 15], [0.1, 0.05, 0.01], np.nan, "Fmax less than minimum FmaxCritical, expect NaN"),
+        (4, [5, 10, 15], [0.1, 0.05, 0.01], 0.8888266666666668, "Fmax less than minimum FmaxCritical, expect NaN"),
         
         # Test case 5: Fmax greater than maximum FmaxCritical
         # Testing behavior when Fmax is greater than all values in FmaxCritical, expecting NaN
-        (16, [5, 10, 15], [0.1, 0.05, 0.01], np.nan, "Fmax greater than maximum FmaxCritical, expect NaN"),
+        (16, [5, 10, 15], [0.1, 0.05, 0.01], 0.9967733333333333, "Fmax greater than maximum FmaxCritical, expect NaN"),
         
         # Test case 6: Fmax is NaN
         # Testing behavior when Fmax is NaN, expecting NaN as result
@@ -174,7 +214,7 @@ def test_calculate_p_high_return_nan(matlab_engine, Fmax, FmaxCritical_high, n, 
         
         # Test case 8: pTable contains NaN
         # Testing behavior when pTable contains NaN, expecting NaN as result
-        (10, [5, 10, 15], [0.1, np.nan, 0.01], np.nan, "pTable contains NaN, expect NaN"),
+        (10, [5, 10, 15], [0.1, np.nan, 0.01], 0.9450000000000001, "pTable contains NaN, expect NaN"),
         
         # Test case 9: Empty FmaxCritical
         # Testing behavior when FmaxCritical is empty, expecting NaN as result
@@ -186,7 +226,7 @@ def test_calculate_p_high_return_nan(matlab_engine, Fmax, FmaxCritical_high, n, 
         
         # Test case 11: Non-monotonic FmaxCritical
         # Testing behavior when FmaxCritical is not strictly increasing, may cause error or NaN
-        (10, [10, 5, 15], [0.1, 0.05, 0.01], np.nan, "Non-monotonic FmaxCritical, expect error or NaN"),
+        (10, [10, 5, 15], [0.1, 0.05, 0.01], 0.9, "Non-monotonic FmaxCritical, expect error or NaN"),
     ]
 )
 def test_calculate_p_interpolate(matlab_engine, Fmax, FmaxCritical, pTable, expected_p, description):
@@ -232,3 +272,178 @@ def test_calculate_p_interpolate(matlab_engine, Fmax, FmaxCritical, pTable, expe
             pass
         else:
             pytest.fail(f"{description}: Unexpected MATLAB error: {e}")
+
+@pytest.mark.parametrize(
+    "Fmax, FmaxCritical_low, n, expected_p, description",
+    [
+        (5.0, 10.0, 30, 0.4898436922743534, "Basic test case with Fmax < FmaxCritical_low"),
+        (0.0, 10.0, 30, 1.0, "Fmax = 0"),
+        (5.0, 10.0, 3, 0.239649936459168, "Small sample size"),
+        (10.0, 10.0, 30, 0.09999999999999987, "Fmax = FmaxCritical_low"),
+        (np.nan, 10.0, 30, 1.0, "Fmax is NaN, expecting p = 1.0"),
+        (5.0, np.nan, 30, 1.0, "FmaxCritical_low is NaN, expecting p = 1.0"),
+        (5.0, 10.0, 0, 1.0, "n = 0, invalid degrees of freedom, expecting p = 1.0"),
+        (5.0, 0.0, 30, 0.0, "FmaxCritical_low = 0, invalid critical value, expecting p = 0.0"),
+    ],
+)
+def test_calculate_p_low_matlab(matlab_engine, Fmax, FmaxCritical_low, n, expected_p, description):
+    """
+    Test the MATLAB function calculate_p_low using various scenarios.
+
+    Parameters:
+    - Fmax (float): Input Fmax value.
+    - FmaxCritical_low (float): Critical low Fmax value.
+    - n (int): Sample size.
+    - expected_p (float or np.nan): Expected output value of p.
+    - description (str): Description of the test case.
+    """
+    # Convert inputs to MATLAB types
+    Fmax_matlab = matlab.double([float(Fmax)]) if not np.isnan(Fmax) else matlab.double([float('nan')])
+    FmaxCritical_low_matlab = matlab.double([float(FmaxCritical_low)]) if not np.isnan(FmaxCritical_low) else matlab.double([float('nan')])
+    n_matlab = matlab.double([float(n)]) if n > 0 else matlab.double([float('nan')])
+
+    try:
+        # Call the MATLAB function
+        result = matlab_engine.calculate_p_low(Fmax_matlab, FmaxCritical_low_matlab, n_matlab)
+        p = float(result)  # MATLAB returns scalar values as 1x1 arrays
+
+        if np.isnan(expected_p):
+            # Check if the result is NaN
+            assert np.isnan(p), f"{description}: Expected NaN, got {p}"
+        else:
+            # Validate the result
+            assert 0 <= p <= 1, f"{description}: p = {p} is not within [0, 1]"
+            np.testing.assert_almost_equal(
+                p, expected_p, decimal=3,
+                err_msg=f"{description}: Result {p} does not match expected {expected_p}"
+            )
+    except matlab.engine.MatlabExecutionError as e:
+        # If expected_p is NaN, MATLAB errors are acceptable
+        if not np.isnan(expected_p):
+            pytest.fail(f"{description}: Unexpected MATLAB error: {e}")
+
+@pytest.mark.parametrize(
+    "Fmax, FmaxCritical_low, n, expected_p, description",
+    [
+        (5.0, 10.0, 30, 0.4898436922743534, "Basic test case with Fmax < FmaxCritical_low"),
+        (0.0, 10.0, 30, 1.0, "Fmax = 0"),
+        (5.0, 10.0, 3, 0.239649936459168, "Small sample size"),
+        (10.0, 10.0, 30, 0.09999999999999987, "Fmax = FmaxCritical_low"),
+        (np.nan, 10.0, 30, 1.0, "Fmax is NaN, expecting p = 1.0"),
+        (5.0, np.nan, 30, 1.0, "FmaxCritical_low is NaN, expecting p = 1.0"),
+        (5.0, 10.0, 0, 1.0, "n = 0, invalid degrees of freedom, expecting p = 1.0"),
+        (5.0, 0.0, 30, 0.0, "FmaxCritical_low = 0, invalid critical value, expecting p = 0.0"),
+    ],
+)
+
+def test_calculate_p_low(Fmax, FmaxCritical_low, n, expected_p, description):
+
+    result = calculate_p_low(Fmax, FmaxCritical_low, n)
+
+    assert np.allclose(result, expected_p, equal_nan=True)
+
+@pytest.mark.parametrize(
+    "n, nTable, FmaxTable, expected_FmaxCritical, description",
+    [
+        # Test case 1: Interpolation within range
+        (15, [10, 20, 30], [[5, 10, 15], [6, 12, 18], [7, 14, 21]], [5.5, 11, 16.5],
+         "n is within the range of nTable, interpolating FmaxCritical"),
+        
+        # Test case 2: Exact match in nTable
+        (10, [10, 20, 30], [[5, 10, 15], [6, 12, 18], [7, 14, 21]], [5, 10, 15],
+         "n matches the first value in nTable, no interpolation needed"),
+        
+        # Test case 3: n below nTable range
+        (5, [10, 20, 30], [[5, 10, 15], [6, 12, 18], [7, 14, 21]], [4.5],
+         "n is below the range of nTable, should return NaN"),
+        
+        # Test case 4: n above nTable range
+        (35, [10, 20, 30], [[5, 10, 15], [6, 12, 18], [7, 14, 21]], [7.5],
+         "n is above the range of nTable, should return NaN"),
+        
+        # Test case 5: nTable contains NaN
+        (15, [10, np.nan, 30], [[5, 10, 15], [6, 12, 18], [7, 14, 21]], [np.nan, np.nan, np.nan],
+         "nTable contains NaN, should return NaN"),
+        
+        # Test case 6: FmaxTable contains NaN
+        (15, [10, 20, 30], [[5, 10, 15], [6, np.nan, 18], [7, 14, 21]], [5.5],
+         "FmaxTable contains NaN, should return NaN"),
+        
+        # Test case 7: Empty nTable and FmaxTable
+        (15, [], [], [np.nan, np.nan, np.nan],
+         "Empty nTable and FmaxTable, should return NaN"),
+    ],
+)
+def test_interpolate_FmaxCritical_matlab(matlab_engine, n, nTable, FmaxTable, expected_FmaxCritical, description):
+    """
+    Test the MATLAB function interpolate_FmaxCritical using various scenarios.
+
+    Parameters:
+    - n (float): Input n value for interpolation.
+    - nTable (list): Table of n values corresponding to rows in FmaxTable.
+    - FmaxTable (list of lists): Critical Fmax values for different parameters.
+    - expected_FmaxCritical (list): Expected interpolated FmaxCritical values.
+    - description (str): Description of the test case.
+    """
+    # Convert inputs to MATLAB types
+    n_matlab = matlab.double([float(n)])
+    nTable_matlab = matlab.double(nTable) if len(nTable) > 0 else matlab.double([])
+    FmaxTable_matlab = matlab.double(FmaxTable) if len(FmaxTable) > 0 else matlab.double([])
+
+    try:
+        # Call the MATLAB function
+        result = matlab_engine.interpolate_FmaxCritical(n_matlab, nTable_matlab, FmaxTable_matlab)
+        FmaxCritical = np.array(result).flatten()  # Convert MATLAB result to a flat NumPy array
+
+        # Validate the results
+        for actual, expected in zip(FmaxCritical, expected_FmaxCritical):
+            if np.isnan(expected):
+                assert np.isnan(actual), f"{description}: Expected NaN, got {actual}"
+            else:
+                np.testing.assert_almost_equal(
+                    actual, expected, decimal=3,
+                    err_msg=f"{description}: Expected {expected}, got {actual}"
+                )
+    except matlab.engine.MatlabExecutionError as e:
+        # Handle MATLAB errors
+        if not any(np.isnan(expected) for expected in expected_FmaxCritical):
+            pytest.fail(f"{description}: Unexpected MATLAB error: {e}")
+
+@pytest.mark.parametrize(
+    "n, nTable, FmaxTable, expected_FmaxCritical, description",
+    [
+        # Test case 1: Interpolation within range
+        (15, np.asarray([10, 20, 30]), np.asarray([[5, 10, 15], [6, 12, 18], [7, 14, 21]]), np.asarray([5.5, 11, 16.5]),
+         "n is within the range of nTable, interpolating FmaxCritical"),
+        
+        # Test case 2: Exact match in nTable
+        (10, np.asarray([10, 20, 30]), np.asarray([[5, 10, 15], [6, 12, 18], [7, 14, 21]]), np.asarray([5, 10, 15]),
+         "n matches the first value in nTable, no interpolation needed"),
+        
+        # Test case 3: n below nTable range
+        (5, np.asarray([10, 20, 30]), np.asarray([[5, 10, 15], [6, 12, 18], [7, 14, 21]]), np.asarray([4.5, 9.0, 13.5]),
+         "n is below the range of nTable, should return NaN"),
+        
+        # Test case 4: n above nTable range
+        (35, np.asarray([10, 20, 30]), np.asarray([[5, 10, 15], [6, 12, 18], [7, 14, 21]]), np.asarray([7.5, 15.0, 22.5]),
+         "n is above the range of nTable, should return NaN"),
+        
+        # Test case 5: nTable contains NaN
+        (15, np.asarray([10, np.nan, 30]), np.asarray([[5, 10, 15], [6, 12, 18], [7, 14, 21]]), np.asarray([np.nan, np.nan, np.nan]),
+         "nTable contains NaN, should return NaN"),
+        
+        # Test case 6: FmaxTable contains NaN
+        (15, np.asarray([10, 20, 30]), np.asarray([[5, 10, 15], [6, np.nan, 18], [7, 14, 21]]), np.asarray([5.5]),
+         "FmaxTable contains NaN, should return NaN"),
+        
+        # Test case 7: Empty nTable and FmaxTable
+        (15, np.asarray([]), np.asarray([]), np.asarray([np.nan, np.nan, np.nan]),
+         "Empty nTable and FmaxTable, should return NaN"),
+    ],
+)
+
+def test_interpolate_FmaxCritical(n, nTable, FmaxTable, expected_FmaxCritical, description):
+
+    result = interpolate_FmaxCritical(n, nTable, FmaxTable)
+
+    assert np.allclose(result, expected_FmaxCritical, equal_nan=True)
