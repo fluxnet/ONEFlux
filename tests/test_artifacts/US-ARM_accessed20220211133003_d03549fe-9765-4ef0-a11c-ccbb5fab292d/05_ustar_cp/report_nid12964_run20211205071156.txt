@@ -1,3 +1,27 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:ad0798e18d6dd44f3d2bc74a4017a513e8ebc54dadd0035a8e35cb03bcd69d75
-size 1424
+
+
+Ustar Threshold Computation by Alan Barr
+
+input in /global/cscratch1/sd/gilberto/US-ARM_accessed20211205071156_fec74096-87e6-4e08-95af-a89ad9a0d1e9/05_ustar_cp/input/
+output in /global/cscratch1/sd/gilberto/US-ARM_accessed20211205071156_fec74096-87e6-4e08-95af-a89ad9a0d1e9/05_ustar_cp/
+
+18 files founded.
+
+processing n.01, US-ARM_qca_ustar_2003.csv...Too few selected change points: 0/400
+processing n.02, US-ARM_qca_ustar_2004.csv...ok
+processing n.03, US-ARM_qca_ustar_2005.csv...ok
+processing n.04, US-ARM_qca_ustar_2006.csv...ok
+processing n.05, US-ARM_qca_ustar_2007.csv...ok
+processing n.06, US-ARM_qca_ustar_2008.csv...ok
+processing n.07, US-ARM_qca_ustar_2009.csv...ok
+processing n.08, US-ARM_qca_ustar_2010.csv...Too few selected change points: 382/400
+processing n.09, US-ARM_qca_ustar_2011.csv...ok
+processing n.10, US-ARM_qca_ustar_2012.csv...Too few selected change points: 0/400
+processing n.11, US-ARM_qca_ustar_2013.csv...ok
+processing n.12, US-ARM_qca_ustar_2014.csv...Too few selected change points: 324/400
+processing n.13, US-ARM_qca_ustar_2015.csv...Too few selected change points: 0/400
+processing n.14, US-ARM_qca_ustar_2016.csv...Too few selected change points: 340/400
+processing n.15, US-ARM_qca_ustar_2017.csv...ok
+processing n.16, US-ARM_qca_ustar_2018.csv...ok
+processing n.17, US-ARM_qca_ustar_2019.csv...ok
+processing n.18, US-ARM_qca_ustar_2020.csv...Less than 10% successful detections. 

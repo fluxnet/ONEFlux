@@ -129,7 +129,7 @@ def matlab_engine(refactored=True):
     eng.quit()
 
 @pytest.fixture
-def setup_folders(tmp_path, testcase: str = "US_ARc"):
+def setup_folders(tmp_path, request, testcase: str = "US_ARc"):
     """
     Fixture to set up input and output folders for tests by copying all files 
     from a specified local directory.
@@ -144,6 +144,11 @@ def setup_folders(tmp_path, testcase: str = "US_ARc"):
         tuple: A tuple containing the paths to the temporary input, the reference output, and 
                the empty output directories as strings.
     """
+
+    # If 'testcase' is provided by the test function, use its value
+    if 'testcase' in request.fixturenames:
+        testcase = request.getfixturevalue('testcase')
+
     # Define paths for the temporary directories
     input_folder = tmp_path / "input"
     reference_output_folder = tmp_path / "ref_output"

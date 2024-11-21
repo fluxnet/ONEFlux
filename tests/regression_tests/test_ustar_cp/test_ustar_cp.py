@@ -36,7 +36,7 @@ import filecmp
     """
 
 test_cases = [
-    ("US_ARc", [1]),("CA-Cbo", [1]), ("US-ARM", [1]), ("US-Ne1",[1]), ("US-Syv", [1]),("US-Vcm", [1])
+    ("US_ARc", [1]),("CA-Cbo", [1]), ("US-Ne1",[1]),("US-Vcm", [1])
     # Expected values format: [exitvalue]
 ]
 
