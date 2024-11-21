@@ -50,41 +50,8 @@ function varargout = logFuncResult(filename, f, metadata, varargin)
     % Get function name
     function_name = func2str(f);
 
-    % Create input paths structure
-    inputPaths = struct();
-    numArgs = length(varargin);
-    for i = 1:numArgs
-        if length(metadata.inputNames) >= i
-            fieldName = metadata.inputNames{i};
-            
-        else
-            fieldName = sprintf('arg%d', i);
-        end
-        % Save input variable to CSV
-        inputFilename = sprintf('%s_input_%s.csv', function_name, fieldName)
-        inputFilePath = fullfile(dirPath, inputFilename);
-        relativeInputFilePath = fullfile(relArtifactsDir, inputFilename);
-        saveVariableAsCSV(varargin{i}, inputFilePath);
-        % Store the path in the log
-        inputPaths.(fieldName) = relativeInputFilePath;
-    end
-
-    % Save output variables to CSV
-    outputPaths = struct();
-    numOutputs = length(outputs);
-    for i = 1:numOutputs
-        if length(metadata.outputNames) >= i
-            fieldName = metadata.outputNames{i};
-        else
-            fieldName = sprintf('out%d', i);
-        end
-        outputFilename = sprintf('%s_output_%s.csv', function_name, fieldName)
-        outputFilePath = fullfile(dirPath, outputFilename);
-        relativeOutputFilePath = fullfile(relArtifactsDir, outputFilename);
-        saveVariableAsCSV(outputs{i}, outputFilePath);
-        % Store the path in the log
-        outputPaths.(fieldName) = relativeOutputFilePath;
-    end
+    inputPaths = saveVariables(varargin, metadata.inputNames, 'input', function_name, dirPath, relArtifactsDir);
+    outputPaths = saveVariables(outputs, metadata.outputNames, 'output', function_name, dirPath, relArtifactsDir);
 
     % Create the log entry structure
     logEntry = struct();
@@ -105,6 +72,28 @@ function varargout = logFuncResult(filename, f, metadata, varargin)
     % Inform the user
     % fprintf('Result has been saved to %s\n', filePath); 
 end
+
+
+
+function paths = saveVariables(vars, varNames, function_name, ioPrefix, dirPath, artifactsDir)
+    % Helper function to process and save variables and generate paths
+    paths = struct();
+    numVars = length(vars);
+    for i = 1:numVars
+        if length(varNames) >= i
+            fieldName = varNames{i};
+        else
+            fieldName = sprintf('var%d', i);
+        end
+        % Save variable as CSV
+        filename = sprintf('%s_%s_%s.csv', function_name, ioPrefix, fieldName);
+        filePath = fullfile(dirPath, filename);
+        relativeFilePath = fullfile(artifactsDir, filename);
+        saveVariableAsCSV(vars{i}, filePath);
+        paths.(fieldName) = relativeFilePath;
+    end
+end
+
 
 function saveVariableAsCSV(var, filePath)
     % SAVEVARIABLEASCSV Saves a variable to a CSV file.
