@@ -1,5 +1,5 @@
 function varargout = logFuncResult(filename, f, metadata, varargin)
-    % LOGFUNCRESULT Logs function inputs and outputs, saving each variable as a CSV file.
+    % LOGFUNCRESULT Logs function inputs and outputs, saving each variable as a CSV or JSON file.
     %
     %   [outputs...] = LOGFUNCRESULT(filename, f, varargin)
     %
@@ -50,8 +50,8 @@ function varargout = logFuncResult(filename, f, metadata, varargin)
     % Get function name
     function_name = func2str(f);
 
-    inputPaths = saveVariables(varargin, metadata.inputNames, 'input', function_name, dirPath, relArtifactsDir);
-    outputPaths = saveVariables(outputs, metadata.outputNames, 'output', function_name, dirPath, relArtifactsDir);
+    inputPaths = saveVariables(varargin, metadata.inputNames, 'input', dirPath, relArtifactsDir);
+    outputPaths = saveVariables(outputs, metadata.outputNames, 'output', dirPath, relArtifactsDir);
 
     % Create the log entry structure
     logEntry = struct();
@@ -65,7 +65,7 @@ function varargout = logFuncResult(filename, f, metadata, varargin)
     jsonStr = jsonencode(logEntry);
 
     % Write the JSON string to the file
-    fileID = fopen(filePath, 'a');
+    fileID = fopen(filePath, 'w');
     fprintf(fileID, '%s\n', jsonStr);
     fclose(fileID);
 
@@ -75,7 +75,7 @@ end
 
 
 
-function paths = saveVariables(vars, varNames, function_name, ioPrefix, dirPath, artifactsDir)
+function paths = saveVariables(vars, varNames, ioPrefix, dirPath, artifactsDir)
     % Helper function to process and save variables and generate paths
     paths = struct();
     numVars = length(vars);
@@ -86,7 +86,7 @@ function paths = saveVariables(vars, varNames, function_name, ioPrefix, dirPath,
             fieldName = sprintf('var%d', i);
         end
         % Save variable as CSV
-        filename = sprintf('%s_%s_%s.csv', function_name, ioPrefix, fieldName);
+        filename = sprintf('%s_%s.csv', ioPrefix, fieldName);
         filePath = fullfile(dirPath, filename);
         relativeFilePath = fullfile(artifactsDir, filename);
         saveVariableAsCSV(vars{i}, filePath);
@@ -114,7 +114,6 @@ function saveVariableAsCSV(var, filePath)
     elseif isstruct(var)
         % Convert struct to table
         try
-            % disp(var);
             T = struct2table(var);
             writetable(T, filePath);
         catch csvError
@@ -122,9 +121,6 @@ function saveVariableAsCSV(var, filePath)
 
             try
                 jsonFilePath = strrep(filePath, '.csv', '.json');
-                % disp('filepath')
-                % disp(jsonFilePath)
-                % disp('hello')
                 jsonData = jsonencode(var);
                 
                 fid = fopen(jsonFilePath, 'w');
