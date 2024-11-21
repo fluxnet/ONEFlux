@@ -15,6 +15,9 @@ function varargout = logFuncResult(filename, f, metadata, varargin)
     metadata.description = func2str(f);
     metadata.inputNames;
     metadata.outputNames;
+    oneFluxDir = metadata.oneFluxDir;
+    relArtifactsDir = metadata.relArtifactsDir;
+    functionDir = string(func2str(f)) + '_artifacts';
     
 
 
@@ -35,9 +38,9 @@ function varargout = logFuncResult(filename, f, metadata, varargin)
     % Return outputs to caller
     varargout = outputs;
     
-    oneFluxDir = '/home/ia/iccs_repos/ONEFlux/';
-    artifactsDir = 'tests/test_artifacts/launch_artifacts/';
-    dirPath = fullfile(oneFluxDir, artifactsDir);
+    siteDir = metadata.siteFile;
+
+    dirPath = fullfile(oneFluxDir, relArtifactsDir, functionDir, siteDir);
     if ~exist(dirPath, 'dir')
         mkdir(dirPath);
     end
@@ -58,9 +61,9 @@ function varargout = logFuncResult(filename, f, metadata, varargin)
             fieldName = sprintf('arg%d', i);
         end
         % Save input variable to CSV
-        inputFilename = sprintf('%s_input_%s_%s.csv', function_name, fieldName, metadata.siteFile);
+        inputFilename = sprintf('%s_input_%s.csv', function_name, fieldName)
         inputFilePath = fullfile(dirPath, inputFilename);
-        relativeInputFilePath = fullfile(artifactsDir, inputFilename);
+        relativeInputFilePath = fullfile(relArtifactsDir, inputFilename);
         saveVariableAsCSV(varargin{i}, inputFilePath);
         % Store the path in the log
         inputPaths.(fieldName) = relativeInputFilePath;
@@ -75,9 +78,9 @@ function varargout = logFuncResult(filename, f, metadata, varargin)
         else
             fieldName = sprintf('out%d', i);
         end
-        outputFilename = sprintf('%s_output_%s_%s.csv', function_name, fieldName, metadata.siteFile);
+        outputFilename = sprintf('%s_output_%s.csv', function_name, fieldName)
         outputFilePath = fullfile(dirPath, outputFilename);
-        relativeOutputFilePath = fullfile(artifactsDir, outputFilename);
+        relativeOutputFilePath = fullfile(relArtifactsDir, outputFilename);
         saveVariableAsCSV(outputs{i}, outputFilePath);
         % Store the path in the log
         outputPaths.(fieldName) = relativeOutputFilePath;
@@ -130,8 +133,13 @@ function saveVariableAsCSV(var, filePath)
 
             try
                 jsonFilePath = strrep(filePath, '.csv', '.json');
+                % disp('filepath')
+                % disp(jsonFilePath)
+                % disp('hello')
                 jsonData = jsonencode(var);
+                
                 fid = fopen(jsonFilePath, 'w');
+                % fid = fopen(jsonFilePath, 'a');
                 
                 if fid == -1
                     error('Could not open file for writing JSON.');
