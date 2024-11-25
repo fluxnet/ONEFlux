@@ -12,9 +12,6 @@ import os
 from tests.conftest import to_matlab_type, read_file, parse_testcase, compare_matlab_arrays
 
 nan = np.nan
-from tests.conftest import to_matlab_type, read_file, parse_testcase, compare_matlab_arrays
-
-nan = np.nan
 
 @pytest.fixture(scope="module")
 def mock_data(nt=300, tspan=(0, 1), uStar_pars=(0.1, 3.5), T_pars=(-10, 30), fNight=None):
@@ -158,7 +155,7 @@ def test_cpdBootstrap_against_testcases(matlab_engine):
 def test_get_nPerDay(matlab_engine, input_data, expected_result):
     input_data = to_matlab_type(input_data)
     result = matlab_engine.get_nPerDay(input_data)
-    assert result == expected_result, f"Expected {expected_result}, but got {result}"
+    assert np.all(result == expected_result), f"Expected {expected_result}, but got {result}"
 
 # Parameterized test for the get_nPerBin function
 @pytest.mark.parametrize("input_data, expected_result", [
@@ -171,7 +168,7 @@ def test_get_nPerDay(matlab_engine, input_data, expected_result):
 def test_get_nPerBin(matlab_engine, input_data, expected_result):
     input_data = to_matlab_type(input_data)
     result = matlab_engine.get_nPerBin(input_data)
-    assert result == expected_result, f"Expected {expected_result}, but got {result}"
+    assert np.all(result == expected_result), f"Expected {expected_result}, but got {result}"
 
 # Parameterized test for the get_iNight function
 @pytest.mark.parametrize("input_data, expected_result", [
@@ -184,7 +181,7 @@ def test_get_nPerBin(matlab_engine, input_data, expected_result):
 def test_get_iNight(matlab_engine, input_data, expected_result):
     input_data = to_matlab_type(input_data)
     result = matlab_engine.get_iNight(input_data)
-    assert result == expected_result, f"Expected {expected_result}, but got {result}"
+    assert np.all(result == expected_result), f"Expected {expected_result}, but got {result}"
 
 # Parameterized test for the update_ustar function
 @pytest.mark.parametrize("input_data, expected_result", [
@@ -228,7 +225,7 @@ def test_get_ntN(matlab_engine, t_input, nSeasons, expected_ntN):
 
     # Call get_ntN and check the result
     result = matlab_engine.get_ntN(t_input, nSeasons)
-    assert result == expected_ntN, f"Expected {expected_ntN}, but got {result}"
+    assert np.all(result == expected_ntN), f"Expected {expected_ntN}, but got {result}"
 
 # Test for the get_itNee function
 @pytest.mark.parametrize(
@@ -247,7 +244,7 @@ def test_get_ntN(matlab_engine, t_input, nSeasons, expected_ntN):
         ([np.nan, np.nan], [np.nan, np.nan], [np.nan, np.nan], [1, 2], matlab.double([[]])),
         
         # Case 5: All valid values, but no intersection with iNight
-        ([1, 2, 3, 4], [1, 1, 1, 1], [1, 1, 1, 1], [], []),
+        ([1, 2, 3, 4], [1, 1, 1, 1], [1, 1, 1, 1], [], matlab.double([[]])),
         
         # Case 6: All valid values and full intersection with iNight
         ([1, 2, 3], [1, 1, 1], [1, 1, 1], [1, 2, 3], matlab.double([1.0, 2.0, 3.0]))

@@ -3,6 +3,7 @@
 
 # MIT license
 
+from copy import deepcopy
 import numpy as np
 from numpy import sqrt, prod, exp, log, multiply, inf, rint as fix
 from numpy.fft import fft2
@@ -68,7 +69,10 @@ def function(f):
             args = list(args)
             for i, a in enumerate(args):
                 if isinstance(a, ALL_MATLAB_TYPES):
-                    args[i] = matlabarray(a)
+                    if np.size(a) == 1:
+                        args[i] = a.item()
+                    else:
+                        args[i] = matlabarray(a)
             out = f(*args, **kwargs)
             if nargout:
                 out = out[:nargout]
@@ -82,7 +86,7 @@ def function(f):
                 if isinstance(a, np.ndarray):
                     if a.size == 1:
                         out[i] = a.item()
-                    else:
+                    elif not isinstance(a, matlabarray):
                         out[i] = matlabarray(a)
             return out[0] if flag else tuple(out)
 
@@ -156,6 +160,9 @@ def take(a, *i):
     """Get an item with matlab indexing (1-based)."""
     if isinstance(a, matlabarray):
         return a[i]
+    elif not isinstance(a, np.ndarray):
+        assert len(i) == 1
+        return a[i[0] - 1]
     else:
         return matlabarray(a)[i]
 
@@ -210,6 +217,12 @@ def concat(args, axis=1):
     return np.concatenate(t, axis=axis).view(matlabarray)
 
 
+def squeeze(a, axis=None):
+    if axis is not None and a.shape[axis] != 1:
+        return a
+    return np.squeeze(a, axis=axis).view(type(a))
+
+
 def reshape(a, *shape):
     return np.reshape(a, shape)
 
@@ -229,7 +242,11 @@ def clc():
 
 
 def copy(a):
-    return matlabarray(np.asanyarray(a).copy(order="F"))
+    if isinstance(a, matlabarray):
+        return a.copy()
+    if isinstance(a, np.ndarray):
+        return matlabarray(np.asanyarray(a).copy(order="F"))
+    return deepcopy(a)
 
 
 def deal(a, nargout=1):
@@ -265,7 +282,7 @@ def logical_or(a, b):
 
 
 def diff(a, n=1, axis=0):
-    x = np.asarray(a).view(np.ndarray)
+    x = squeeze(np.asarray(a))
     return np.diff(x, n=n, axis=axis).view(matlabarray)
 
 
@@ -681,7 +698,7 @@ def mean(a, axis=0):
     """
     Compute the mean of the elements along the specified axis.
     """
-    return np.mean(np.asarray(a), axis=axis)
+    return np.mean(squeeze(np.asarray(a)), axis=axis)
 
 
 @function
@@ -689,7 +706,7 @@ def std(a, axis=0):
     """
     Compute the standard deviation of the elements along the specified axis.
     """
-    return np.std(np.asarray(a), axis=axis)
+    return np.std(squeeze(np.asarray(a)), axis=axis)
 
 
 @function
@@ -697,7 +714,7 @@ def var(a, axis=0):
     """
     Compute the variance of the elements along the specified axis.
     """
-    return np.var(np.asarray(a), axis=axis)
+    return np.var(squeeze(np.asarray(a)), axis=axis)
 
 
 @function
@@ -715,10 +732,11 @@ def max(a, b=[], axis=0, nargout=1):
         axis = None
     if axis:
         axis -= 1
-    m = np.max(np.asarray(a), axis=axis)
+    a = squeeze(np.asarray(a))
+    m = np.max(a, axis=axis)
     if nargout == 1:
         return m
-    i = np.argmax(np.asarray(a), axis=axis)
+    i = np.argmax(a, axis=axis)
     return m, i
 
 
@@ -731,10 +749,11 @@ def min(a, axis=0, nargout=1):
         if nargout == 1:
             return a
         return a, a
-    m = np.min(np.asarray(a), axis=axis)
+    a = squeeze(np.asarray(a))
+    m = np.min(a, axis=axis)
     if nargout == 1:
         return m
-    i = np.argmin(np.asarray(a), axis=axis)
+    i = np.argmin(a, axis=axis)
     return m, i
 
 
@@ -832,7 +851,7 @@ def median(a, axis=0):
     """
     Compute the median of an array.
     """
-    return np.median(np.asarray(a), axis=axis)
+    return np.median(squeeze(np.asarray(a)), axis=axis)
 
 
 @function
@@ -840,7 +859,7 @@ def nanmean(a, axis=0):
     """
     Compute the mean of an array while ignoring NaNs.
     """
-    return np.nanmean(np.asarray(a), axis=axis)
+    return np.nanmean(squeeze(np.asarray(a)), axis=axis)
 
 
 @function
@@ -848,7 +867,7 @@ def nanmedian(a, axis=0):
     """
     Compute the median of an array while ignoring NaNs.
     """
-    return np.nanmedian(np.asarray(a), axis=axis)
+    return np.nanmedian(squeeze(np.asarray(a)), axis=axis)
 
 
 def fcdf(x, dfn, dfd):
@@ -1077,7 +1096,7 @@ class matlabarray(np.ndarray):
         return obj
 
     def __array_finalize__(self, obj):
-        pass
+        return
 
     def __copy__(self):
         return np.ndarray.copy(self, order="F")
@@ -1347,6 +1366,8 @@ class char(matlabarray):
 
 class struct(matlabarray):
     def __init__(self, *args):
+        if len(args) < 2:
+            return
         for i in range(0, len(args), 2):
             setattr(self, str(args[i]), args[i + 1])
 
