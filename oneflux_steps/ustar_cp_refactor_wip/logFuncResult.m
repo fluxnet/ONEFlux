@@ -87,18 +87,17 @@ function paths = saveVariables(vars, varNames, ioPrefix, dirPath, artifactsDir)
         end
         % Save variable as CSV
         filename = sprintf('%s_%s.csv', ioPrefix, fieldName);
-        filePath = fullfile(dirPath, filename);
+        filename = saveVariableAsCSVorJSON(vars{i}, dirPath, filename);
         relativeFilePath = fullfile(artifactsDir, filename);
-        saveVariableAsCSV(vars{i}, filePath);
         paths.(fieldName) = relativeFilePath;
     end
 end
 
 
-function saveVariableAsCSV(var, filePath)
+function filename = saveVariableAsCSVorJSON(var, dirPath, filename)
     % SAVEVARIABLEASCSV Saves a variable to a CSV file.
     % Supports numeric arrays, tables, cell arrays, structs, strings.
-
+    filePath = fullfile(dirPath, filename);
     if isnumeric(var) || islogical(var)
         writematrix(var, filePath)
         % writematrix(var, filePath, 'WriteMode','append');
@@ -120,7 +119,8 @@ function saveVariableAsCSV(var, filePath)
             warning('Failed to write to CSV. Trying JSON format instead.');
 
             try
-                jsonFilePath = strrep(filePath, '.csv', '.json');
+                jsonFilename = strrep(filename, '.csv', '.json');
+                jsonFilePath = fullfile(dirPath, jsonFilename);
                 jsonData = jsonencode(var);
                 
                 fid = fopen(jsonFilePath, 'w');
@@ -132,6 +132,7 @@ function saveVariableAsCSV(var, filePath)
                 
                 fwrite(fid, jsonData, 'char');
                 fclose(fid);
+                filename = jsonFilename;
                 % disp('Successfully written struct to JSON.');
                 
             catch jsonError
