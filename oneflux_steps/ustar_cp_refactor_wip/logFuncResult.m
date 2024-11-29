@@ -19,6 +19,25 @@ function varargout = logFuncResult(filename, f, metadata, varargin)
     relArtifactsDir = metadata.relArtifactsDir;
     functionDir = string(func2str(f)) + '_artifacts';
     
+    % Initialize frequency
+    if ~isfield(metadata, 'frequency')
+        metadata.frequency = 10; % Initialize frequency
+    end
+    frequency = metadata.frequency;
+    
+    % Declare a global variable to persist call counts across invocations
+    global globalFrequencyMetadata;
+    if isempty(globalFrequencyMetadata)
+        globalFrequencyMetadata = struct(); % Initialize if not already set
+    end
+
+    % Use the string representation of the function handle as a unique identifier
+    funcId = func2str(f);
+
+    % Initialize call count for this function in the global metadata if not already present
+    if ~isfield(globalFrequencyMetadata, funcId)
+        globalFrequencyMetadata.(funcId) = 0; % Initialize call count
+    end
 
 
     % Apply the function f to the input arguments and capture outputs
@@ -38,39 +57,49 @@ function varargout = logFuncResult(filename, f, metadata, varargin)
     % Return outputs to caller
     varargout = outputs;
     
-    siteDir = metadata.siteFile;
 
-    dirPath = fullfile(oneFluxDir, relArtifactsDir, functionDir, siteDir);
-    if ~exist(dirPath, 'dir')
-        mkdir(dirPath);
+    % Check if we should log based on the frequency
+    if mod(globalFrequencyMetadata.(funcId), frequency) == 0
+
+        siteDir = metadata.siteFile;
+        % Add the value as a suffix to siteDir
+        siteDirWithSuffix = sprintf('%s_%d', siteDir, globalFrequencyMetadata.(funcId));
+
+        dirPath = fullfile(oneFluxDir, relArtifactsDir, functionDir, siteDirWithSuffix);
+        if ~exist(dirPath, 'dir')
+            mkdir(dirPath);
+        end
+        filePath = fullfile(dirPath, filename);
+
+
+        % Get function name
+        function_name = func2str(f);
+
+        inputPaths = saveVariables(varargin, metadata.inputNames, 'input', dirPath, relArtifactsDir);
+        outputPaths = saveVariables(outputs, metadata.outputNames, 'output', dirPath, relArtifactsDir);
+
+        % Create the log entry structure
+        logEntry = struct();
+        logEntry.(function_name) = struct();
+        logEntry.(function_name).siteFile = metadata.siteFile;
+        logEntry.(function_name).description = metadata.description;
+        logEntry.(function_name).input = inputPaths;
+        logEntry.(function_name).output = outputPaths;
+
+        % Convert the log entry to JSON
+        jsonStr = jsonencode(logEntry);
+
+        % Write the JSON string to the file
+        fileID = fopen(filePath, 'w');
+        fprintf(fileID, '%s\n', jsonStr);
+        fclose(fileID);
+
+        % Inform the user
+        % fprintf('Result has been saved to %s\n', filePath); 
     end
-    filePath = fullfile(dirPath, filename);
 
-
-    % Get function name
-    function_name = func2str(f);
-
-    inputPaths = saveVariables(varargin, metadata.inputNames, 'input', dirPath, relArtifactsDir);
-    outputPaths = saveVariables(outputs, metadata.outputNames, 'output', dirPath, relArtifactsDir);
-
-    % Create the log entry structure
-    logEntry = struct();
-    logEntry.(function_name) = struct();
-    logEntry.(function_name).siteFile = metadata.siteFile;
-    logEntry.(function_name).description = metadata.description;
-    logEntry.(function_name).input = inputPaths;
-    logEntry.(function_name).output = outputPaths;
-
-    % Convert the log entry to JSON
-    jsonStr = jsonencode(logEntry);
-
-    % Write the JSON string to the file
-    fileID = fopen(filePath, 'w');
-    fprintf(fileID, '%s\n', jsonStr);
-    fclose(fileID);
-
-    % Inform the user
-    % fprintf('Result has been saved to %s\n', filePath); 
+    % Increment the call count in the global metadata
+    globalFrequencyMetadata.(funcId) = globalFrequencyMetadata.(funcId) + 1;
 end
 
 
