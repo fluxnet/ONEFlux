@@ -12,22 +12,40 @@ import matlab.engine
 # Test fixtures for an empty or scalar dx
 test_data_dx_length_leq_one = [
   # Case with empty dx
-   {"x": matlab.double([])
-  , "y": matlab.double([])
-  , "dx": matlab.double([])
-  , "nPerBin": matlab.double([1])
-  , "mx": matlab.double([])
-  , "my": matlab.double([])
-  , "nBins": 0}]
+   {"x": []
+  , "y": []
+  , "dx": []
+  , "nPerBin": [1]
+  , "mx": []
+  , "my": []
+  , "nBins": 0},
+  # Case with scalar dx and simple binning
+   {"x": [1.0, 2.0, 3.0]
+  , "y": [1.0, 2.0, 3.0]
+  , "dx": [1.0]
+  , "nPerBin": [1]
+  , "mx": [[1.0],[2.0],[3.0]]
+  , "my": [[1.0],[2.0],[3.0]]
+  , "nBins": 3}]
+
+def reverse(x):
+  return x.T[::-1]
 
 @pytest.mark.parametrize('data', test_data_dx_length_leq_one)
 def test_cpdBin_dx_sclar(matlab_engine, data):
     """
     Test cpdBin with scalar dx or empty dx
     """
-    nBins, mx, my  = matlab_engine.fcBin(data["x"], data["y"], data["dx"], data["nPerBin"], nargout=3)
-
+    # Apply the test case
+    nBins, mx, my  = matlab_engine.fcBin(np.asarray(data["x"]), np.asarray(data["y"]), np.asarray(data["dx"]), np.asarray(data["nPerBin"]), nargout=3)
     # Check the results
-    assert mx == data["mx"]
-    assert my == data["my"]
+    assert mx == matlab.double(data["mx"])
+    assert my == matlab.double(data["my"])
+    assert nBins == data["nBins"]
+
+    # Apply the test case but reversing one set of data
+    nBins, mx, my  = matlab_engine.fcBin(np.asarray(data["x"][::-1]), np.asarray(data["y"]), np.asarray(data["dx"]), np.asarray(data["nPerBin"]), nargout=3)
+    # Check the results
+    assert mx == matlab.double(data["mx"])
+    assert my == matlab.double(data["my"][::-1])
     assert nBins == data["nBins"]
