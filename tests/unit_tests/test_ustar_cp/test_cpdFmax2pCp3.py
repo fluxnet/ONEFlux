@@ -27,7 +27,7 @@ testcases = [
         (10.3567400792636, 54, 0.0657053181314848)
 ]
 @pytest.mark.parametrize("fmax, n, expected_p3", testcases)
-def test_cpdFmax2pCp3_matlab(matlab_engine, fmax, n, expected_p3):
+def test_cpdFmax2pCp3_matlab(ustar_cp, fmax, n, expected_p3):
     """
     Test the cpdFmax2pCp3 MATLAB function for cases where `nan` is returned.
     """
@@ -72,7 +72,7 @@ def test_cpdFmax2pCp3_return_numeric(ustar_cp, Fmax, n, expected):
 ],
 )
 
-def test_calculate_p_high_return_numeric_matlab(matlab_engine, Fmax, FmaxCritical_high, n, expected_p):
+def test_calculate_p_high_return_numeric_matlab(ustar_cp, Fmax, FmaxCritical_high, n, expected_p):
     """
     Test the cpdFmax2pCp3 MATLAB function for cases where numeric values are returned.
     """
@@ -117,7 +117,7 @@ def test_calculate_p_high_return_numeric(Fmax, FmaxCritical_high, n, expected_p)
     ],
 )
 
-def test_calculate_p_high_return_nan_matlab(matlab_engine, Fmax, FmaxCritical_high, n, expected_p):
+def test_calculate_p_high_return_nan_matlab(ustar_cp, Fmax, FmaxCritical_high, n, expected_p):
     """
     Test the cpdFmax2pCp3 MATLAB function for cases where nan values are returned.
     """
@@ -251,7 +251,7 @@ def test_calculate_p_interpolate(ustar_cp, Fmax, FmaxCritical, pTable, expected_
         (5.0, 0.0, 30, 0.0, "FmaxCritical_low = 0, invalid critical value, expecting p = 0.0"),
     ],
 )
-def test_calculate_p_low_matlab(matlab_engine, Fmax, FmaxCritical_low, n, expected_p, description):
+def test_calculate_p_low_matlab(ustar_cp, Fmax, FmaxCritical_low, n, expected_p, description):
     """
     Test the MATLAB function calculate_p_low using various scenarios.
 
@@ -269,7 +269,7 @@ def test_calculate_p_low_matlab(matlab_engine, Fmax, FmaxCritical_low, n, expect
 
     try:
         # Call the MATLAB function
-        result = matlab_engine.calculate_p_low(Fmax_matlab, FmaxCritical_low_matlab, n_matlab)
+        result = ustar_cp.calculate_p_low(Fmax_matlab, FmaxCritical_low_matlab, n_matlab)
         p = float(result)  # MATLAB returns scalar values as 1x1 arrays
 
         if np.isnan(expected_p):
@@ -339,7 +339,7 @@ def test_calculate_p_low(Fmax, FmaxCritical_low, n, expected_p, description):
          "Empty nTable and FmaxTable, should return NaN"),
     ],
 )
-def test_interpolate_FmaxCritical_matlab(matlab_engine, n, nTable, FmaxTable, expected_FmaxCritical, description):
+def test_interpolate_FmaxCritical_matlab(ustar_cp, n, nTable, FmaxTable, expected_FmaxCritical, description):
     """
     Test the MATLAB function interpolate_FmaxCritical using various scenarios.
 
@@ -357,7 +357,7 @@ def test_interpolate_FmaxCritical_matlab(matlab_engine, n, nTable, FmaxTable, ex
 
     try:
         # Call the MATLAB function
-        result = matlab_engine.interpolate_FmaxCritical(n_matlab, nTable_matlab, FmaxTable_matlab)
+        result = ustar_cp.interpolate_FmaxCritical(n_matlab, nTable_matlab, FmaxTable_matlab)
         FmaxCritical = np.array(result).flatten()  # Convert MATLAB result to a flat NumPy array
 
         # Validate the results
