@@ -26,8 +26,8 @@ testcases = [
         (2.37324492970613, 55, 1.0),
         (10.3567400792636, 54, 0.0657053181314848)
 ]
-@pytest.mark.parametrize("fmax, n, expected_p3", testcases)
-def test_cpdFmax2pCp3_matlab(ustar_cp, fmax, n, expected_p3):
+@pytest.mark.parametrize("Fmax, n, expected", testcases)
+def test_cpdFmax2pCp3_matlab(ustar_cp, Fmax, n, expected):
     """
     Test the cpdFmax2pCp3 MATLAB function for cases where `nan` is returned.
     """
