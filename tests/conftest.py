@@ -28,7 +28,7 @@ import io
 import atexit
 import numpy as np
 from matlab.engine.matlabengine import MatlabFunc
-from smop.src.libsmop import matlabarray
+from oneflux_steps.ustar_cp_py.libsmop import matlabarray, struct
 
 
 class MFWrapper:
@@ -84,6 +84,21 @@ class MFWrapper:
                 # ret[j] = matlabarray(ret[j])
             if nargout <= 1:
                 ret = ret[0]
+
+        # nargout = kwargs.get('nargout', 1)
+        # if nargout <= 1:
+        #     ret = [ret]
+        # else:
+        #     ret = list(ret)
+        # for j, y in enumerate(ret):
+        #     if j in jsonencode:
+        #         y = json.loads(y, object_hook=lambda d: 
+        #             {k: np.nan if v is None else v for k, v in d.items()})
+        #         ret[j] = struct(y)
+        #     elif isinstance(y, np.ndarray):
+        #         ret[j] = matlabarray(y)
+        # if nargout <= 1:
+        #     ret = ret[0]
         return ret
 
 def mf_factory(cls, *args, **kwargs):

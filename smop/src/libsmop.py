@@ -1357,19 +1357,74 @@ class char(matlabarray):
 
 class struct(dict):
     def __init__(self, *args):
-        if len(args) < 2:
-            return
-        for i in range(0, len(args), 2):
-            setattr(self, str(args[i]), args[i + 1])
+        if len(args) == 0:
+            super().__setattr__('_arrview', matlabarray())
+        elif len(args) == 1:
+            if isinstance(args[0], np.ndarray):
+                super().__setattr__('_arrview', matlabarray(args[0]))
+                self._validate_from_array()
+            elif isinstance(args[0], dict):
+                super().__init__(args[0])
+                self._validate_from_dict()
+            else:
+                raise NotImplementedError
+        else:
+            for i in range(0, len(args), 2):
+                self[args[i]] = args[i + 1]
+            self._validate_from_dict()
+
+    def __setattr__(self, name, value):
+        self[name] = value
+        self._validate_from_dict()
+        
+    def __getattr__(self, name):
+        if name in self.keys():
+            return self[name]
+        return super().__getattribute__(name)
+        
+    @property
+    def shape(self):
+        return self._arrview.shape
+    
+    @property
+    def ndim(self):
+        return self._arrview.ndim
+    
+    @property
+    def size(self):
+        return self._arrview.size
+    
+    def _validate_from_array(self):
+        for k in next(iter(self._arrview.reshape(-1))).keys():
+            self[k] = matlabarray(np.vectorize(lambda x: x[k])(self._arrview))
             
+    def _validate_from_dict(self):
+        from builtins import max
+        sz, sh = max((np.size(a), np.shape(a)) for a in self.values())
+        if self.shape != sh:
+            super().__setattr__('_arrview',
+                matlabarray([{} for _ in range(sz)]).reshape(sh, order='F'))
+        arrs = [a.reshape(-1, order='F') for a in [self._arrview, *self.values()]]
+        for (d, *a) in zip(*arrs):
+            for k, v in zip(self.keys(), a):
+                d[k] = v
+
     def __getitem__(self, index):
-        item = struct()
-        for i, v in vars(self):
-            setattr(item, i, v.get(index))
-        return item
+        if isinstance(index, str):
+            return super().__getitem__(index)
+        return struct({k: v.get(index) for k, v in self.items()})
     
     def __setitem__(self, index, value):
-        raise NotImplementedError
+        if isinstance(index, str):
+            super().__setitem__(index, value)
+        elif isinstance(value, dict):
+            for k, v in value.items():
+                if not isinstance(self[k], matlabarray):
+                    self[k] = matlabarray(self[k])
+                self[k][index] = v
+        else:
+            for k, v in self.items():
+                v[index] = value
     
 
 class dataframe(pd.DataFrame):
