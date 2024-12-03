@@ -8,8 +8,8 @@ import pytest
 import matlab.engine
 import numpy as np
 import json
-import os
-from tests.conftest import to_matlab_type, read_file, parse_testcase, compare_matlab_arrays
+from oneflux_steps.ustar_cp_py.libsmop import struct
+from tests.conftest import to_matlab_type, read_file, parse_testcase, objects_are_equal
 
 nan = np.nan
 
@@ -71,10 +71,10 @@ def test_cpdBootstrapUStarTh4Season20100901_basic(matlab_engine, mock_data):
     )
 
     # Assertions for output types
-    assert isinstance(Cp2, matlab.double), "Cp2 should be a MATLAB double array."
-    assert isinstance(Stats2, list), "Stats2 should be a list of MATLAB structs."
-    assert isinstance(Cp3, matlab.double), "Cp3 should be a MATLAB double array."
-    assert isinstance(Stats3, list), "Stats3 should be a list of MATLAB structs."
+    assert isinstance(Cp2, np.ndarray), "Cp2 should be a MATLAB double array."
+    assert isinstance(Stats2, struct), "Stats2 should be a list of MATLAB structs."
+    assert isinstance(Cp3, np.ndarray), "Cp3 should be a MATLAB double array."
+    assert isinstance(Stats3, struct), "Stats3 should be a list of MATLAB structs."
 
     # Validate dimensions of the output arrays
     assert len(Cp2) == 4, "Cp2 should have 4 seasons."
@@ -83,11 +83,11 @@ def test_cpdBootstrapUStarTh4Season20100901_basic(matlab_engine, mock_data):
     assert len(Stats3) == 4, "Stats3 should have 4 entries for each season."
 
     # Check the structure of Stats2 and Stats3
-    struct = ['n', 'Cp', 'Fmax', 'p', 'b0', 'b1', 'b2', 'c2', 'cib0', 'cib1', 'cic2', 'mt' , 'ti', 'tf', 'ruStarVsT', 'puStarVsT', 'mT', 'ciT']
+    ss = ['n', 'Cp', 'Fmax', 'p', 'b0', 'b1', 'b2', 'c2', 'cib0', 'cib1', 'cic2', 'mt' , 'ti', 'tf', 'ruStarVsT', 'puStarVsT', 'mT', 'ciT']
     for s2, s3 in zip(Stats2, Stats3):
         for i in range(8):  # Assuming nStrataX = 8
             for j in range(nBoot):
-                for k in struct:
+                for k in ss:
                     assert k in (s2[i][j] and s3[i][j])
 
 def test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap(matlab_engine, mock_data):
@@ -139,10 +139,10 @@ def test_cpdBootstrap_against_testcases(matlab_engine):
         outputs_list = [outputs[str(i)] for i in range(len(outputs))]
 
         # Assertions to compare MATLAB results to expected outputs
-        assert compare_matlab_arrays(Cp2, outputs_list[0])
-        assert compare_matlab_arrays(Stats2, outputs_list[1])
-        assert compare_matlab_arrays(Cp3, outputs_list[2])
-        assert compare_matlab_arrays(Stats3, outputs_list[3])
+        assert objects_are_equal(Cp2, outputs_list[0])
+        assert objects_are_equal(Stats2, outputs_list[1])
+        assert objects_are_equal(Cp3, outputs_list[2])
+        assert objects_are_equal(Stats3, outputs_list[3])
 
 # Parameterized test for the get_nPerDay function
 @pytest.mark.parametrize("input_data, expected_result", [
@@ -195,7 +195,7 @@ def test_update_uStar(matlab_engine, input_data, expected_result):
     input_data = to_matlab_type(input_data)
     result = matlab_engine.update_uStar(input_data)
     # Compare the MATLAB arrays, allowing for NaN equality
-    assert compare_matlab_arrays(result, expected_result), f"Expected {expected_result}, but got {result}"
+    assert objects_are_equal(result, expected_result), f"Expected {expected_result}, but got {result}"
 
 # Define the expected field names for StatsMT
 expected_fields = ['n', 'Cp', 'Fmax', 'p', 'b0', 'b1', 'b2', 'c2', 'cib0', 'cib1', 'cic2',
@@ -262,7 +262,7 @@ def test_get_itNee(matlab_engine, NEE, uStar, T, iNight, expected_itNee):
     
     # Compare results
     if not isinstance(itNee, float):
-        assert compare_matlab_arrays(itNee, expected_itNee), f"Expected {expected_itNee}, but got {itNee}"
+        assert objects_are_equal(itNee, expected_itNee), f"Expected {expected_itNee}, but got {itNee}"
     else:
         assert itNee==expected_itNee
 
