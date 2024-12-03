@@ -62,18 +62,20 @@ class MFWrapper:
         out = kwargs.pop('stdout', self.out)
         err = kwargs.pop('stderr', self.err)
         ret = self.func(*args, **kwargs, stdout=out, stderr=err)
-        if jsonencode:
-            nargout = kwargs.get('nargout', 1)
-            if nargout <= 1:
-                ret = [ret]
-            else:
-                ret = list(ret)
-            for j in jsonencode:
-                ret[j] = json.loads(ret[j], object_hook=lambda d: 
+        nargout = kwargs.get('nargout', 1)
+        if nargout <= 1:
+            ret = [ret]
+        else:
+            ret = list(ret)
+        for j, y in enumerate(ret):
+            if j in jsonencode:
+                y = json.loads(y, object_hook=lambda d: 
                     {k: np.nan if v is None else v for k, v in d.items()})
-                ret[j] = matlabarray(ret[j])
-            if nargout <= 1:
-                ret = ret[0]
+                ret[j] = matlabarray(y)
+            elif isinstance(y, np.ndarray):
+                ret[j] = matlabarray(y)
+        if nargout <= 1:
+            ret = ret[0]
         return ret
 
 
@@ -354,20 +356,20 @@ def to_matlab_type(data):
         return data  # If the data type is already MATLAB-compatible
     
 # Helper function to compare MATLAB double arrays element-wise, handling NaN comparisons
-def compare_matlab_arrays(result, expected):
+def objects_are_equal(result, expected):
     if isinstance(result, dict):
         if not isinstance(expected, dict):
             return False
         if set(result.keys()) != set(expected.keys()):
             return False
-        return all(compare_matlab_arrays(result[k], expected[k]) for k in result.keys())
-    if not hasattr(result, '__len__') or not hasattr(expected, '__len__'):
+        return all(objects_are_equal(result[k], expected[k]) for k in result.keys())
+    if min(map(np.ndim, (result, expected))) == 0:
         if np.isnan(result) and np.isnan(expected):
             return True  # NaNs are considered equal
         return np.allclose(result, expected)
-    if len(result) != len(expected):
+    if np.shape(result) != np.shape(expected):
         return False
-    return all(compare_matlab_arrays(r, e) for r, e in zip(result, expected))
+    return all(objects_are_equal(r, e) for r, e in zip(result, expected))
     
 def read_csv_with_csv_module(file_path):
     """

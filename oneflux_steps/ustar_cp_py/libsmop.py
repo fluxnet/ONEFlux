@@ -220,7 +220,9 @@ def concat(args, axis=1):
 def squeeze(a, axis=None):
     if axis is not None and a.shape[axis] != 1:
         return a
-    return np.squeeze(a, axis=axis).view(type(a))
+    if axis is None and a.ndim == 2 and a.shape[0] == 1:
+        return a.reshape(-1)
+    return np.squeeze(a, axis=axis)
 
 
 def reshape(a, *shape):
@@ -741,14 +743,20 @@ def max(a, b=[], axis=0, nargout=1):
 
 
 @function
-def min(a, axis=0, nargout=1):
+def min(a, b=[], axis=0, nargout=1):
     """
     Return the minimum of an array or minimum along an axis.
     """
+    if np.size(b) > 0:
+        return np.minimum(np.asarray(a), np.asarray(b))
     if np.size(a) == 0:
         if nargout == 1:
             return a
         return a, a
+    if axis == "all":
+        axis = None
+    if axis:
+        axis -= 1
     a = squeeze(np.asarray(a))
     m = np.min(a, axis=axis)
     if nargout == 1:

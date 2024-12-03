@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 import matlab.engine
 from oneflux_steps.ustar_cp_python.cpdFmax2pCp3 import cpdFmax2pCp3, calculate_p_high, calculate_p_low, interpolate_FmaxCritical
+from tests.conftest import objects_are_equal
 
 testcases = [
         # Fmax = NaN
@@ -26,6 +27,7 @@ testcases = [
         (2.37324492970613, 55, 1.0),
         (10.3567400792636, 54, 0.0657053181314848)
 ]
+
 @pytest.mark.parametrize("Fmax, n, expected", testcases)
 def test_cpdFmax2pCp3_matlab(ustar_cp, Fmax, n, expected):
     """
@@ -48,6 +50,7 @@ def test_cpdFmax2pCp3(fmax, n, expected_p3):
     assert type(output_p3) == type(expected_p3), f"Result should be a {type(expected_p3)}, got {type(output_p3)}"
     assert np.isclose(output_p3, expected_p3, equal_nan=True), f"Expected p3 value of {expected_p3}, but got {output_p3}."
 
+@pytest.mark.parametrize("Fmax, n, expected", testcases)
 def test_cpdFmax2pCp3_return_numeric(ustar_cp, Fmax, n, expected):
     """
     Test the cpdFmax2pCp3 MATLAB function for cases where numeric values are returned.
@@ -60,7 +63,7 @@ def test_cpdFmax2pCp3_return_numeric(ustar_cp, Fmax, n, expected):
     result = ustar_cp.cpdFmax2pCp3(Fmax_matlab, n_matlab)
 
     assert type(result) == type(expected), f"Result should be a {type(expected)}, got {type(result)}"
-    assert np.allclose(np.array(result), np.array(expected))
+    assert objects_are_equal(np.array(result), np.array(expected))
 
 @pytest.mark.parametrize(
 "Fmax, FmaxCritical_high, n, expected_p",
