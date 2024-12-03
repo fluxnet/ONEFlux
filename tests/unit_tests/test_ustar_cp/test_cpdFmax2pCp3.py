@@ -163,11 +163,11 @@ def test_calculate_p_high_return_nan(Fmax, FmaxCritical_high, n, expected_p):
         
         # Test case 4: Fmax less than minimum FmaxCritical
         # Testing behavior when Fmax is less than all values in FmaxCritical, expecting NaN
-        (4, [5, 10, 15], [0.1, 0.05, 0.01], 0.8888266666666668, "Fmax less than minimum FmaxCritical, expect NaN"),
+        (4, [5, 10, 15], [0.1, 0.05, 0.01], np.nan, "Fmax less than minimum FmaxCritical, expect NaN"),
         
         # Test case 5: Fmax greater than maximum FmaxCritical
         # Testing behavior when Fmax is greater than all values in FmaxCritical, expecting NaN
-        (16, [5, 10, 15], [0.1, 0.05, 0.01], 0.9967733333333333, "Fmax greater than maximum FmaxCritical, expect NaN"),
+        (16, [5, 10, 15], [0.1, 0.05, 0.01], np.nan, "Fmax greater than maximum FmaxCritical, expect NaN"),
         
         # Test case 6: Fmax is NaN
         # Testing behavior when Fmax is NaN, expecting NaN as result
@@ -179,7 +179,7 @@ def test_calculate_p_high_return_nan(Fmax, FmaxCritical_high, n, expected_p):
         
         # Test case 8: pTable contains NaN
         # Testing behavior when pTable contains NaN, expecting NaN as result
-        (10, [5, 10, 15], [0.1, np.nan, 0.01], 0.9450000000000001, "pTable contains NaN, expect NaN"),
+        (10, [5, 10, 15], [0.1, np.nan, 0.01], np.nan, "pTable contains NaN, expect NaN"),
         
         # Test case 9: Empty FmaxCritical
         # Testing behavior when FmaxCritical is empty, expecting NaN as result
@@ -191,7 +191,7 @@ def test_calculate_p_high_return_nan(Fmax, FmaxCritical_high, n, expected_p):
         
         # Test case 11: Non-monotonic FmaxCritical
         # Testing behavior when FmaxCritical is not strictly increasing, may cause error or NaN
-        (10, [10, 5, 15], [0.1, 0.05, 0.01], 0.9, "Non-monotonic FmaxCritical, expect error or NaN"),
+        (10, [10, 5, 15], [0.1, 0.05, 0.01], np.nan, "Non-monotonic FmaxCritical, expect error or NaN"),
     ]
 )
 def test_calculate_p_interpolate(ustar_cp, Fmax, FmaxCritical, pTable, expected_p, description):
