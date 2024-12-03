@@ -1355,13 +1355,22 @@ class char(matlabarray):
         return super().__eq__(other)
 
 
-class struct(matlabarray):
+class struct(dict):
     def __init__(self, *args):
         if len(args) < 2:
             return
         for i in range(0, len(args), 2):
             setattr(self, str(args[i]), args[i + 1])
-
+            
+    def __getitem__(self, index):
+        item = struct()
+        for i, v in vars(self):
+            setattr(item, i, v.get(index))
+        return item
+    
+    def __setitem__(self, index, value):
+        raise NotImplementedError
+    
 
 class dataframe(pd.DataFrame):
     @property

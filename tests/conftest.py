@@ -368,7 +368,7 @@ def to_matlab_type(data):
         return data  # If the data type is already MATLAB-compatible
 
 # Helper function to compare MATLAB double arrays element-wise, handling NaN comparisons
-def objects_are_equal(result, expected):
+def compare_matlab_arrays(result, expected):
     if isinstance(result, dict):
         if not isinstance(expected, dict):
             return False
