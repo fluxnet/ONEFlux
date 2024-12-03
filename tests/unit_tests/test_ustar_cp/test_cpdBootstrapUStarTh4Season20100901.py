@@ -8,7 +8,7 @@ import pytest
 import matlab.engine
 import numpy as np
 import json
-from oneflux_steps.ustar_cp_py.libsmop import struct
+from oneflux_steps.ustar_cp_py.libsmop import struct, matlabarray
 from tests.conftest import to_matlab_type, read_file, parse_testcase, objects_are_equal
 
 nan = np.nan
@@ -174,11 +174,11 @@ def test_get_nPerBin(ustar_cp, input_data, expected_result):
 
 # Parameterized test for the get_iNight function
 @pytest.mark.parametrize("input_data, expected_result", [
-    ([0, 1, 0, 1, 0], matlab.double([2.0, 4.0])),                # Two true values at indices 2 and 4 (MATLAB uses 1-based indexing)
-    ([1, 1, 1, 1], matlab.double([1.0, 2.0, 3.0, 4.0])),             # All true values, expect all indices
-    ([0, 0, 0, 0], matlab.double([[]])),                       # No true values, expect empty array
-    #([0, 1, np.nan, 1, 0], matlab.double([2.0, 4.0])),           # NaN should be ignored, expect indices 2 and 4
-    ([1, 0, 0, 1, 1, 0], matlab.double([1.0, 4.0, 5.0]))           # True values at indices 1, 4, and 5
+    ([0, 1, 0, 1, 0], matlabarray([2.0, 4.0])),                # Two true values at indices 2 and 4 (MATLAB uses 1-based indexing)
+    ([1, 1, 1, 1], matlabarray([1.0, 2.0, 3.0, 4.0])),             # All true values, expect all indices
+    ([0, 0, 0, 0], matlabarray([[]])),                       # No true values, expect empty array
+    #([0, 1, np.nan, 1, 0], matlabarray([2.0, 4.0])),           # NaN should be ignored, expect indices 2 and 4
+    ([1, 0, 0, 1, 1, 0], matlabarray([1.0, 4.0, 5.0]))           # True values at indices 1, 4, and 5
 ])
 def test_get_iNight(ustar_cp, input_data, expected_result):
     input_data = to_matlab_type(input_data)
@@ -187,11 +187,11 @@ def test_get_iNight(ustar_cp, input_data, expected_result):
 
 # Parameterized test for the update_ustar function
 @pytest.mark.parametrize("input_data, expected_result", [
-    ([1, 2, 3, 4], matlab.double([1.0, 2.0, 3.0, 4.0])),                     # No values out of bounds
-    ([-1, 2, 3, 5], matlab.double([np.nan, 2.0, 3.0, np.nan])),               # Values < 0 or > 4 should be NaN
-    ([0, 4, 4.1], matlab.double([0.0, 4.0, np.nan])),                         # Edge cases with 0, 4, and out-of-bound 4.1
-    ([np.nan, 2, 3], matlab.double([np.nan, 2.0, 3.0])),                      # Input with NaN should remain NaN
-    ([5, -2, 0, 3], matlab.double([np.nan, np.nan, 0.0, 3.0]))                # Multiple values out of bounds
+    ([1, 2, 3, 4], matlabarray([1.0, 2.0, 3.0, 4.0])),                     # No values out of bounds
+    ([-1, 2, 3, 5], matlabarray([np.nan, 2.0, 3.0, np.nan])),               # Values < 0 or > 4 should be NaN
+    ([0, 4, 4.1], matlabarray([0.0, 4.0, np.nan])),                         # Edge cases with 0, 4, and out-of-bound 4.1
+    ([np.nan, 2, 3], matlabarray([np.nan, 2.0, 3.0])),                      # Input with NaN should remain NaN
+    ([5, -2, 0, 3], matlabarray([np.nan, np.nan, 0.0, 3.0]))                # Multiple values out of bounds
 ])
 def test_update_uStar(ustar_cp, input_data, expected_result):
     input_data = to_matlab_type(input_data)
@@ -234,22 +234,22 @@ def test_get_ntN(ustar_cp, t_input, nSeasons, expected_ntN):
     "NEE, uStar, T, iNight, expected_itNee",
     [
         # Case 1: No NaNs and full intersection with iNight
-        ([1, 2, 3, 4], [1, 1, 1, 1], [1, 1, 1, 1], [1, 2, 3], matlab.double([1.0,2.0,3.0])),
+        ([1, 2, 3, 4], [1, 1, 1, 1], [1, 1, 1, 1], [1, 2, 3], matlabarray([1.0,2.0,3.0])),
         
         # Case 2: Some NaN values, partial intersection with iNight
         ([1, np.nan, 3, 4], [1, 1, np.nan, 1], [1, 1, 1, np.nan], [1, 3], 1.0),
         
         # Case 3: No intersection with iNight
-        ([1, 2, 3, 4], [1, 1, 1, 1], [1, 1, 1, 1], [5, 6], [[]]),
+        ([1, 2, 3, 4], [1, 1, 1, 1], [1, 1, 1, 1], [5, 6], matlabarray([])),
         
         # Case 4: All elements are NaN, so no valid indices
-        ([np.nan, np.nan], [np.nan, np.nan], [np.nan, np.nan], [1, 2], matlab.double([[]])),
+        ([np.nan, np.nan], [np.nan, np.nan], [np.nan, np.nan], [1, 2], matlabarray([])),
         
         # Case 5: All valid values, but no intersection with iNight
-        ([1, 2, 3, 4], [1, 1, 1, 1], [1, 1, 1, 1], [], matlab.double([[]])),
+        ([1, 2, 3, 4], [1, 1, 1, 1], [1, 1, 1, 1], [], matlabarray([])),
         
         # Case 6: All valid values and full intersection with iNight
-        ([1, 2, 3], [1, 1, 1], [1, 1, 1], [1, 2, 3], matlab.double([1.0, 2.0, 3.0]))
+        ([1, 2, 3], [1, 1, 1], [1, 1, 1], [1, 2, 3], matlabarray([1.0, 2.0, 3.0]))
     ]
 )
 def test_get_itNee(ustar_cp, NEE, uStar, T, iNight, expected_itNee):
@@ -266,7 +266,7 @@ def test_get_itNee(ustar_cp, NEE, uStar, T, iNight, expected_itNee):
     if not isinstance(itNee, float):
         assert objects_are_equal(itNee, expected_itNee), f"Expected {expected_itNee}, but got {itNee}"
     else:
-        assert itNee==expected_itNee
+        assert np.allclose(itNee, expected_itNee)
 
 # Test for the setup_Cp function
 @pytest.mark.skip(reason="Too long")
@@ -305,7 +305,7 @@ def test_setup_Cp(ustar_cp, nSeasons, nStrataX, nBoot, expected_shape):
 stats_entry = {'n': nan, 'Cp': nan, 'Fmax': nan, 'p': nan, 'b0': nan, 'b1': nan, 'b2': nan, 'c2': nan, 'cib0': nan, 'cib1': nan, 'cic2': nan, 'mt': nan, 'ti': nan, 'tf': nan, 'ruStarVsT': nan, 'puStarVsT': nan, 'mT': nan, 'ciT': nan}
 # Test for the setup_Stats function
 @pytest.mark.parametrize(
-    "nBoot, nSeasons, nStrataX, expected_shape",
+    "nBoot, nSeasons, nStrataX, expected",
     [
         # Case 1: Basic 2x2x2 array
         (2, 2, 2, ([[[stats_entry, stats_entry],[stats_entry,stats_entry]],[[stats_entry,stats_entry],[stats_entry,stats_entry]]])),
@@ -317,8 +317,8 @@ stats_entry = {'n': nan, 'Cp': nan, 'Fmax': nan, 'p': nan, 'b0': nan, 'b1': nan,
         (0, 2, 3, stats_entry),
     ]
 )
-def test_setup_Stats(ustar_cp, nBoot, nSeasons, nStrataX, expected_shape):
+def test_setup_Stats(ustar_cp, nBoot, nSeasons, nStrataX, expected):
     # Call the MATLAB function
     Stats= ustar_cp.setup_Stats(nBoot, nSeasons, nStrataX, jsonencode=[0])
 
-    assert Stats == expected_shape
+    assert objects_are_equal(Stats, expected)
