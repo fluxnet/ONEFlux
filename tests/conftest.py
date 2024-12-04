@@ -54,6 +54,11 @@ class MFWrapper:
         Returns:
             The result of the wrapped function, with specified outputs JSON decoded if necessary.
         """
+
+        if self.func._name == '_repr_pretty_':
+            # Overload attempts to pretty print matlab engines (e.g., by hypothesis)
+            return 'MATLAB'
+
         args = list(args)
         if jsonencode:
             args.append(['jsonencode'] + [i+1 for i in jsonencode])
