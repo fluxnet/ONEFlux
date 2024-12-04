@@ -39,7 +39,10 @@ class MFWrapper:
         # make matlab stdout and stderr printed at the end of pytest
         atexit.register(lambda: (s := self.out.getvalue()) and print(f"{name} stdout:\n{s}"))
         atexit.register(lambda: (s := self.err.getvalue()) and print(f"{name} stderr:\n{s}"))
-        
+
+    def _repr_pretty_(self, p):
+        return "MATLAB"
+
     def __call__(self, *args, jsonencode=(), jsondecode=(), **kwargs):
         """
         Call the wrapped function with optional JSON encoding/decoding to handle the issue that non-scalar structs (arrays of structs) cannot be returned from MATLAB functions to Python.
