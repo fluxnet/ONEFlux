@@ -57,32 +57,44 @@ test_data_dx_length_leq_one = [
 def reverse(x):
   return x.T[::-1]
 
-@given(data=lists(floats(allow_nan=True, allow_infinity=False), min_size=2))
+@given(data=lists(floats(allow_nan=True, allow_infinity=False), min_size=2),
+       scale=floats(allow_infinity=False),
+       translate=floats(allow_infinity=False))
 @settings(deadline=500)
-def test_singleton_bins_equal_data(data, matlab_engine):
+def test_singleton_bins_equal_data(data, scale, translate, matlab_engine):
     """
     Tests the behaviour of `fcBin` for binning based on discrete bins of size 1"""
 
-    # Use the same data for both vectors, i.e., means in each bin will be the
-    # same as the original data
-    nBins, mx, my  = matlab_engine.fcBin(to_matlab_type(data), to_matlab_type(data),
+    # Use the initial data to generate two vectors worth of data
+    # based on some scaling and translation to get data2
+    data1 = data
+    data2 = [scale * item + translate for item in data]
+
+    # Use `fcBin`
+    nBins, mx, my  = matlab_engine.fcBin(to_matlab_type(data1), to_matlab_type(data2),
                                          to_matlab_type([]), 1.0, nargout=3)
 
     # Number of bins is the length of the data
-    assert nBins == len(data)
+    # minus the number of NaNs in combined data
+    datacomb =[data1[i] + data2[i] for i in range(len(data1))]
+    assert nBins == (len(data1) - sum([np.isnan(item) for item in datacomb]))
 
     # Helper routine to check results
-    def check(ys):
-      for bin in ys:
-        # every bin is of size 1
-        assert len(bin) == 1
-        # every element of the bin came originally from data
-        # unless it is `inf` which seems a corner case in `fcBin` not considered
-        if not(np.isinf(bin[0])):
-          assert np.any([np.isclose(bin[0], item, equal_nan=True) for item in data])
+    def check(ys, data):
+      # If the result was a singleton float, it should be in the original data
+      if type(ys) == float:
+        assert np.any([np.isclose(ys, item, equal_nan=True) for item in data])
+      else:
+        for bin in ys:
+          # every bin is of size 1
+          assert len(bin) == 1
+          # every element of the bin came originally from data
+          # unless it is `inf` which seems a corner case in `fcBin` not considered
+          if not(np.isinf(bin[0])):
+            assert np.any([np.isclose(bin[0], item, equal_nan=True) for item in data])
 
-    check(mx)
-    check(my)
+    check(mx, data1)
+    check(my, data2)
 
 @pytest.mark.parametrize('data', test_data_dx_length_leq_one)
 def test_cpdBin_dx_sclar(matlab_engine, data):
