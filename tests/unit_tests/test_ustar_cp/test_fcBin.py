@@ -12,50 +12,6 @@ import matlab.engine
 from hypothesis import given, settings, HealthCheck
 from hypothesis.strategies import floats, lists, integers
 
-# Test fixtures for an empty or scalar dx
-test_data_dx_length_leq_one = [
-  # Cases with empty dx
-   {"x": []
-  , "y": []
-  , "dx": []
-  , "nPerBin": 1.0
-  , "mx": []
-  , "my": []
-  , "nBins": 0
-  },
-
-  {"x": [10.0, 8.0, 6.0, 4.0, 2.0]
-  , "y": [0, 2.0, 4.0, 6.0, 8.0]
-  , "dx": []
-  , "nPerBin": 2.0
-  , "mx": [[4.0], [8.0]]
-  , "my": [[6.0], [2.0]]
-  , "nBins": 2
-  },
-
-    {"x": [10.0, 8.0, 6.0, 4.0, 2.0]
-  , "y": [0, 2.0, 4.0, 6.0, 8.0]
-  , "dx": []
-  , "nPerBin": 1.0
-   , "mx": [[2.0], [4.0], [6.0], [8.0], [10.0]]
-   , "my": [[8.0], [6.0], [4.0], [2.0], [0.0]]
-   , "nBins": 5
-  },
-
-  # Cases with scalar dx and simple binning
-   {"x": [1.0, 2.0, 3.0]
-  , "y": [1.0, 2.0, 3.0]
-  , "dx": [1.0]
-  , "nPerBin": 1
-  , "mx": [[1.0],[2.0],[3.0]]
-  , "my": [[1.0],[2.0],[3.0]]
-  , "nBins": 3
-   }
-  ]
-
-def reverse(x):
-  return x.T[::-1]
-
 @given(data=lists(floats(allow_nan=True, allow_infinity=False), min_size=2),
        scale=floats(allow_infinity=False),
        translate=floats(allow_infinity=False))
@@ -97,8 +53,8 @@ def test_singleton_bins_1D_data(data, scale, translate, matlab_engine):
     check(my, data2)
 
 @given(data=lists(floats(allow_nan=True, allow_infinity=False), min_size=2),
-       scale=floats(allow_infinity=False),
-       translate=floats(allow_infinity=False),
+       scale=floats(allow_infinity=False,allow_nan=False),
+       translate=floats(allow_infinity=False,allow_nan=False),
        row=integers(min_value=1, max_value=4))
 @settings(deadline=1000)
 def test_singleton_bins_2D_data(data, scale, row, translate, matlab_engine):
@@ -122,8 +78,8 @@ def test_singleton_bins_2D_data(data, scale, row, translate, matlab_engine):
 
     # Number of bins is the length of the data
     # minus the number of NaNs in combined data
-    # datacomb =[data1[i][j] + data2[i][j] for j in range(row) for i in range(len(data1))]
-    # assert nBins == (len(data1) - sum([np.isnan(item) for item in datacomb]))
+    datacomb =[data1[i][j] + data2[i][j] for j in range(row) for i in range(len(data1))]
+    assert nBins == (len(datacomb) - sum([np.isnan(item) for item in datacomb]))
 
     # Helper routine to check results
     def check(ys, data):
@@ -142,6 +98,57 @@ def test_singleton_bins_2D_data(data, scale, row, translate, matlab_engine):
     check(mx, data1)
     check(my, data2)
 
+# Test fixtures for an empty or scalar dx
+test_data_dx_length_leq_one = [
+  # # Cases with empty dx
+   {"x": []
+  , "y": []
+  , "dx": []
+  , "nPerBin": 1.0
+  , "mx": []
+  , "my": []
+  , "nBins": 0
+  },
+
+  {"x": [10.0, 8.0, 6.0, 4.0, 2.0]
+  , "y": [0, 2.0, 4.0, 6.0, 8.0]
+  , "dx": []
+  , "nPerBin": 2.0
+  , "mx": [[4.0], [8.0]]
+  , "my": [[6.0], [2.0]]
+  , "nBins": 2
+  },
+
+    {"x": [10.0, 8.0, 6.0, 4.0, 2.0]
+  , "y": [0, 2.0, 4.0, 6.0, 8.0]
+  , "dx": []
+  , "nPerBin": 1.0
+   , "mx": [[2.0], [4.0], [6.0], [8.0], [10.0]]
+   , "my": [[8.0], [6.0], [4.0], [2.0], [0.0]]
+   , "nBins": 5
+  },
+
+  # Cases with scalar dx and simple binning
+  {"x": np.array([[5.0,10.0,20.0,10.0],[1.3,2.0,3.0,40.0]])
+  , "y": np.array([[1.0,2.0,3.0,4.0],[10.0,200.0,30.0,40.0]])
+  , "dx": 10.0
+  , "nPerBin": 1.0
+  , "mx": [[2.1000],[10.0000]]
+  , "my": [[80.0],[3.0]]
+  , "nBins": 2
+   },
+
+   {"x": np.array([[5.0,1.3],[10.0,2.0],[20.0,3.0],[10.0,40.0]])
+  , "y": np.array([[1.0,10.0],[2.0,200.0],[3.0,30.0],[4.0,40.0]])
+  , "dx": 10.0
+  , "nPerBin": 1.0
+  , "mx": [[2.1000],[10.0000],[20.0]]
+  , "my": [[80.0],[3.0],[3.0]]
+  , "nBins": 3
+   }
+
+  ]
+
 @pytest.mark.parametrize('data', test_data_dx_length_leq_one)
 def test_cpdBin_dx_sclar(matlab_engine, data):
     """
@@ -155,10 +162,3 @@ def test_cpdBin_dx_sclar(matlab_engine, data):
     assert compare_matlab_arrays(mx, to_matlab_type(data["mx"]))
     assert compare_matlab_arrays(my, to_matlab_type(data["my"]))
     assert nBins == data["nBins"]
-
-    # # Apply the test case but reversing one set of the data
-    # nBins, mx, my  = matlab_engine.fcBin(to_matlab_type(np.asarray(data["x"][::-1])), np.asarray(data["y"]), np.asarray(data["dx"]), np.asarray(data["nPerBin"]), nargout=3)
-    # # Check the results
-    # assert compare_matlab_arrays(mx, matlab.double(data["mx"][::-1]))
-    # assert compare_matlab_arrays(my, matlab.double(data["my"][::-1]))
-    # assert nBins == data["nBins"]

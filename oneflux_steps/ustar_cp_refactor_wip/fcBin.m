@@ -42,9 +42,9 @@ function [nBins,mx,my] = cpdBin(x,y,dx,nPerBin);
       % xU has all but first point
 			xL=dx(1:(end-1)); xU=dx(2:end);
 			jx=0; for i=1:length(xL);
-        % indices of all points that should go in this bin
+        % indices of all points that should go in bin `jx`
 				ix=find(~isnan(x+y) & x>=xL(i) & x<=xU(i));
-        % if there are enough points to go in the bin
+        % if there are not too many points to go in the bin
         % store the mean of x and y vectors in the bin
 				if length(ix)>=nPerBin;
 					jx=jx+1;
@@ -53,13 +53,29 @@ function [nBins,mx,my] = cpdBin(x,y,dx,nPerBin);
 				end;
 			end;
 		case 1; % dx is a scalar specifying the binning interval.
+
+      % Find the lower and upper bounds with x
 			nx=min(x); xx=max(x);
+
+      % Turn these into the integer values of the bounds
 			nx=floor(nx/dx)*dx;
 			xx=ceil(xx/dx)*dx;
-			for jx=nx:dx:xx;
-				ix=find(~isnan(x+y) & abs(x-jx)<0.5*dx);
+
+      % Iterate through the space with `jx` giving
+      % the bottom of the bin value between the lower and
+      % upper bounds here, covering `dx` at a time
+      for jx=nx:dx:xx;
+        % indices of all points that should go in this bin:
+        % those which arent nan and which lie within the lower half of the bin
+        % (which will *throw some data away*)
+        ix=find(~isnan(x+y) & abs(x-jx)<0.5*dx);
+        % if we have more points to include in this bin than the
+        % current bin size, then include the means in this
+        % bin (counted by `nBins` so far)
+
 				if length(ix)>=nPerBin;
 					nBins=nBins+1;
+          % update the bins
 					mx(nBins,1)=mean(x(ix));
 					my(nBins,1)=mean(y(ix));
 				end;
