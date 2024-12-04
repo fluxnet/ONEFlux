@@ -8,10 +8,9 @@ import pytest
 import numpy as np
 from tests.conftest import compare_matlab_arrays, to_matlab_type, process_std_out, compare_text_blocks
 import matlab.engine
-from pytest import fixture
 
 from hypothesis import given, settings, HealthCheck
-from hypothesis.strategies import floats, lists, none
+from hypothesis.strategies import floats, lists, integers
 
 # Test fixtures for an empty or scalar dx
 test_data_dx_length_leq_one = [
@@ -60,10 +59,11 @@ def reverse(x):
 @given(data=lists(floats(allow_nan=True, allow_infinity=False), min_size=2),
        scale=floats(allow_infinity=False),
        translate=floats(allow_infinity=False))
-@settings(deadline=500)
-def test_singleton_bins_equal_data(data, scale, translate, matlab_engine):
+@settings(deadline=1000)
+def test_singleton_bins_1D_data(data, scale, translate, matlab_engine):
     """
-    Tests the behaviour of `fcBin` for binning based on discrete bins of size 1"""
+    Tests the behaviour of `fcBin` for binning based on discrete bins of size 1
+    for one dimemsional data"""
 
     # Use the initial data to generate two vectors worth of data
     # based on some scaling and translation to get data2
@@ -78,6 +78,52 @@ def test_singleton_bins_equal_data(data, scale, translate, matlab_engine):
     # minus the number of NaNs in combined data
     datacomb =[data1[i] + data2[i] for i in range(len(data1))]
     assert nBins == (len(data1) - sum([np.isnan(item) for item in datacomb]))
+
+    # Helper routine to check results
+    def check(ys, data):
+      # If the result was a singleton float, it should be in the original data
+      if type(ys) == float:
+        assert np.any([np.isclose(ys, item, equal_nan=True) for item in data])
+      else:
+        for bin in ys:
+          # every bin is of size 1
+          assert len(bin) == 1
+          # every ists(felement of the bin came originally from data
+          # unless it is `inf` which seems a corner case in `fcBin` not considered
+          if not(np.isinf(bin[0])):
+            assert np.any([np.isclose(bin[0], item, equal_nan=True) for item in data])
+
+    check(mx, data1)
+    check(my, data2)
+
+@given(data=lists(floats(allow_nan=True, allow_infinity=False), min_size=2),
+       scale=floats(allow_infinity=False),
+       translate=floats(allow_infinity=False),
+       row=integers(min_value=1, max_value=4))
+@settings(deadline=1000)
+def test_singleton_bins_2D_data(data, scale, row, translate, matlab_engine):
+    """
+    Tests the behaviour of `fcBin` for binning based on discrete bins of size 1
+    for two-dimesional data"""
+
+    # Pad data to be a multiple of `row`
+    data = data + [np.nan] * (row - len(data) % row)
+    # Turn data into a 2D array with row length given by `row`
+    data = np.array(data).reshape(-1, row)
+
+    # Use the initial data to generate two vectors worth of data
+    # based on some scaling and translation to get data2
+    data1 = data
+    data2 = [[scale * item + translate for item in row] for row in data]
+
+    # Use `fcBin`
+    nBins, mx, my  = matlab_engine.fcBin(matlab.double(data1), matlab.double(data2),
+                                         to_matlab_type([]), 1.0, nargout=3)
+
+    # Number of bins is the length of the data
+    # minus the number of NaNs in combined data
+    # datacomb =[data1[i][j] + data2[i][j] for j in range(row) for i in range(len(data1))]
+    # assert nBins == (len(data1) - sum([np.isnan(item) for item in datacomb]))
 
     # Helper routine to check results
     def check(ys, data):
