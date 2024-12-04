@@ -57,8 +57,8 @@ test_data_dx_length_leq_one = [
 def reverse(x):
   return x.T[::-1]
 
-@given(data=lists(floats(allow_nan=False, allow_infinity=False), min_size=2))
-@settings(deadline=1000)
+@given(data=lists(floats(allow_nan=True, allow_infinity=False), min_size=2))
+@settings(deadline=500)
 def test_singleton_bins_equal_data(data, matlab_engine):
     """
     Tests the behaviour of `fcBin` for binning based on discrete bins of size 1"""
