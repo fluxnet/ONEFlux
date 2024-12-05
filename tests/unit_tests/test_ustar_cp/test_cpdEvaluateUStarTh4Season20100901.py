@@ -73,3 +73,23 @@ def test_cpdEvaluateUStarTh4Season20100901(matlab_engine, year):
     assert np.allclose(xCp3, expected_xCp3, equal_nan=True)
 
 
+testcases = [ (matlab.double([1.0000, 1.0417, 1.0834]), 3, matlab.double([0,1,1]), 366, 3, 2400), #nPerDay = 24, nPerBin = 3
+                (matlab.double([1.083, 1.083, 1.125]), 3, matlab.double([1,1,1]), 366, 5, 4000) # nPerBin = 5
+                ]
+
+@pytest.mark.parametrize('t, expected_nt, expected_m, expected_EndDOY, expected_nPerBin, expected_nN', testcases)
+def test_initializeParameters(matlab_engine, t, expected_nt, expected_m, expected_EndDOY, expected_nPerBin, expected_nN):
+    """
+    Tests the initializeParameters function in MATLAB.
+    """
+    nSeasons = 4
+    nStrataN = 4
+    nBins = 50
+
+    nt, m, EndDOY, nPerBin, nN = matlab_engine.initializeParameters(t, nSeasons, nStrataN, nBins, nargout=5)
+    
+    assert nt == expected_nt
+    assert m == expected_m
+    assert EndDOY == expected_EndDOY
+    assert nPerBin == expected_nPerBin
+    assert nN == expected_nN
