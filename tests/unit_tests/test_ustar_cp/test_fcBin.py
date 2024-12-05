@@ -12,6 +12,7 @@ import matlab.engine
 from hypothesis import given, settings, HealthCheck
 from hypothesis.strategies import floats, lists, integers
 
+# Hypothesis tests for fcBin
 @given(data=lists(floats(allow_nan=True, allow_infinity=False), min_size=2),
        scale=floats(allow_infinity=False),
        translate=floats(allow_infinity=False))
@@ -98,8 +99,8 @@ def test_singleton_bins_2D_data(data, scale, row, translate, matlab_engine):
     check(mx, data1)
     check(my, data2)
 
-# Test fixtures for an empty or scalar dx
-test_data_dx_length_leq_one = [
+# Test fixtures for an empty dx
+test_data_dx_length_eq_zero = [
   # # Cases with empty dx
    {"x": []
   , "y": []
@@ -126,14 +127,16 @@ test_data_dx_length_leq_one = [
    , "mx": [[2.0], [4.0], [6.0], [8.0], [10.0]]
    , "my": [[8.0], [6.0], [4.0], [2.0], [0.0]]
    , "nBins": 5
-  },
+  }]
 
+# Test fixtures for scalar dx
+test_data_dx_length_eq_one = [
   # Cases with scalar dx and simple binning
   {"x": np.array([[5.0,10.0,20.0,10.0],[1.3,2.0,3.0,40.0]])
   , "y": np.array([[1.0,2.0,3.0,4.0],[10.0,200.0,30.0,40.0]])
   , "dx": 10.0
   , "nPerBin": 1.0
-  , "mx": [[2.1000],[10.0000]]
+  , "mx": [[2.1],[10.0]]
   , "my": [[80.0],[3.0]]
   , "nBins": 2
    },
@@ -142,14 +145,31 @@ test_data_dx_length_leq_one = [
   , "y": np.array([[1.0,10.0],[2.0,200.0],[3.0,30.0],[4.0,40.0]])
   , "dx": 10.0
   , "nPerBin": 1.0
-  , "mx": [[2.1000],[10.0000],[20.0]]
+  , "mx": [[2.1],[10.0],[20.0]]
   , "my": [[80.0],[3.0],[3.0]]
   , "nBins": 3
-   }
+   },
 
+  {"x": np.array([[5.0,1.3],[10.0,2.0],[20.0,3.0],[10.0,40.0]])
+  , "y": np.array([[1.0,10.0],[2.0,200.0],[3.0,30.0],[4.0,40.0]])
+  , "dx": 10.0
+  , "nPerBin": 2.0
+  , "mx": [[2.1], [10.0]]
+  , "my": [[80.0], [3.0]]
+  , "nBins": 2
+   },
+
+   {"x": np.array([[5.0,1.3],[10.0,2.0],[20.0,3.0],[10.0,40.0]])
+  , "y": np.array([[1.0,10.0],[2.0,200.0],[3.0,30.0],[4.0,40.0]])
+  , "dx": 10.0
+  , "nPerBin": 2.1
+  , "mx": [[2.1000]]
+  , "my": [[80.0]]
+  , "nBins": 1
+   }
   ]
 
-@pytest.mark.parametrize('data', test_data_dx_length_leq_one)
+@pytest.mark.parametrize('data', test_data_dx_length_eq_zero + test_data_dx_length_eq_one)
 def test_cpdBin_dx_sclar(matlab_engine, data):
     """
     Test cpdBin with scalar dx or empty dx
