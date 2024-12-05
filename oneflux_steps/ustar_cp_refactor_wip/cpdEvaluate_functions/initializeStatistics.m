@@ -1,10 +1,5 @@
 function [Stats2, Stats3] = initializeStatistics(nSeasons, nStrataX, varargin)
 
-	if length(varargin) > 0
-		Stats2 = jsonencode(Stats2);
-		Stats3 = jsonencode(Stats3);
-	end
-
 	StatsMT=[]; 
 	StatsMT.n=NaN; StatsMT.Cp=NaN; StatsMT.Fmax=NaN; StatsMT.p=NaN; 
 	StatsMT.b0=NaN; StatsMT.b1=NaN; StatsMT.b2=NaN; StatsMT.c2=NaN; 
@@ -20,5 +15,10 @@ function [Stats2, Stats3] = initializeStatistics(nSeasons, nStrataX, varargin)
 			Stats3(iSeason,iStrata)=StatsMT;
 		end; 
 	end;
+
+	if length(varargin) > 0
+		Stats2 = jsonencode(Stats2);
+		Stats3 = jsonencode(Stats3);
+	end
 
 end
