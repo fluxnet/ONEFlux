@@ -93,3 +93,33 @@ def test_initializeParameters(matlab_engine, t, expected_nt, expected_m, expecte
     assert EndDOY == expected_EndDOY
     assert nPerBin == expected_nPerBin
     assert nN == expected_nN
+
+
+def test_filterInvalidPoints(matlab_engine):
+    """
+    Test the filterInvalidPoints function in MATLAB.
+    """
+    artifacts_dir = 'tests/test_artifacts/filterInvalidPoints_artifacts'
+    input_names = ['fNight', 'NEE', 'uStar', 'T']
+    input_data = {}
+    for name in input_names:
+        path_to_artifacts = artifacts_dir + f'/CA-Cbo_qca_ustar_2007_0/input_{name}.csv'
+        column = pd.read_csv(path_to_artifacts, header=None).iloc[:,0].to_numpy()
+        print(column)
+        if name == 'fNight':
+            input_data[name] = matlab.int8(column.tolist())
+        else:
+            input_data[name] = matlab.double(column.tolist())
+    
+    expected_output_names = ['uStar', 'itAnnual', 'ntAnnual']
+    expected_output_data = {}
+    for name in expected_output_names:
+        path_to_artifacts = artifacts_dir + f'/CA-Cbo_qca_ustar_2007_0/output_{name}.csv'
+        column = pd.read_csv(path_to_artifacts, header=None).iloc[:,0].to_numpy()
+        expected_output_data[name] = matlab.double(column.tolist())
+
+    uStar, itAnnual, ntAnnual = matlab_engine.filterInvalidPoints(input_data['uStar'], input_data['fNight'], input_data['NEE'], input_data['T'], nargout=3)
+
+    assert np.allclose(uStar, expected_output_data['uStar'], equal_nan=True)
+    assert np.allclose(itAnnual, expected_output_data['itAnnual'], equal_nan=True)
+    assert np.allclose(ntAnnual, expected_output_data['ntAnnual'], equal_nan=True)
