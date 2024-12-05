@@ -131,7 +131,6 @@ test_data_dx_length_eq_zero = [
 
 # Test fixtures for scalar dx
 test_data_dx_length_eq_one = [
-  # Cases with scalar dx and simple binning
   {"x": np.array([[5.0,10.0,20.0,10.0],[1.3,2.0,3.0,40.0]])
   , "y": np.array([[1.0,2.0,3.0,4.0],[10.0,200.0,30.0,40.0]])
   , "dx": 10.0
@@ -169,7 +168,36 @@ test_data_dx_length_eq_one = [
    }
   ]
 
-@pytest.mark.parametrize('data', test_data_dx_length_eq_zero + test_data_dx_length_eq_one)
+# Test fixtures for vector dx
+test_data_dx_length_gt_one = [
+   {"x": np.array([[1.0,2.0,3.0],[4.0,5.0,6.0],[7.0,8.0,9.0]])
+  , "y": np.array([[10.0, 100.0, 2.0],[42.0, 29.0, 615.0], [77.0, 7.0, 12.0]])
+  , "dx": [1.0, 2.0, 3.0, 4.0]
+  , "nPerBin": 2
+  , "mx": [[1.5],[2.5],[3.5]]
+  , "my": [[55.0], [51.0], [22.0]]
+  , "nBins": 3
+   }
+ , {"x": np.array([[1.0,2.0,3.0],[4.0,5.0,6.0],[7.0,8.0,9.0]])
+  , "y": np.array([[10.0, 100.0, 2.0],[42.0, 29.0, 615.0], [77.0, 7.0, 12.0]])
+  , "dx": [2.0, 3.0, 1.0]
+  , "nPerBin": 2
+  , "mx": [[2.5]]
+  , "my": [[51.0]]
+  , "nBins": 1
+   }
+, {"x": np.array([[1.0,2.0,3.0],[4.0,5.0,6.0],[7.0,8.0,9.0]])
+  , "y": np.array([[10.0, 100.0, 2.0],[42.0, 29.0, 615.0], [77.0, 7.0, 12.0]])
+  , "dx": [1.0, 10.0]
+  , "nPerBin": 3
+  , "mx": [[5.0]]
+  , "my": [[99.3333]]
+  , "nBins": 1
+ }]
+
+@pytest.mark.parametrize('data', test_data_dx_length_eq_zero +
+                                 test_data_dx_length_eq_one +
+                                 test_data_dx_length_gt_one)
 def test_cpdBin_dx_sclar(matlab_engine, data):
     """
     Test cpdBin with scalar dx or empty dx
