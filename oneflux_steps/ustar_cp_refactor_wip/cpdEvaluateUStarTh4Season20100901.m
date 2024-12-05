@@ -62,21 +62,25 @@
 %	========================================================================
 
 %	Initializations
+	metadata = struct();
+	metadata.siteFile = cSiteYr;
+	metadata.oneFluxDir = '/home/ia/iccs_repos/ONEFlux/';
+	metadata.relArtifactsDir = 'tests/test_artifacts';
+	metadata.frequency = 20;  %frequncy_to_log_input/ouput, defualt is 10 if not specified
 
-	params = initializeParameters(t, NEE, uStar, T, fNight);
-	m = params.m;
-	nt = params.nt;
-	EndDOY = params.EndDOY;
-	nBins = params.nBins;
-	nPerBin = params.nPerBin;
-	nStrataN = params.nStrataN;
 
-%	Initialize outputs. 	
-	nSeasons = params.nSeasons;
-	nStrataX = params.nStrataX;
-	nN = params.nN; 
-	ntAnnual = params.ntAnnual;
-	itAnnual = params.itAnnual;
+	nSeasons = 4; nStrataN = 4; 
+	nStrataX = 8; nBins = 50;
+
+	metadata.inputNames = {'t', 'nSeasons', 'nStrataN', 'nBins'};
+	metadata.outputNames = {'nt', 'm', 'EndDOY', 'nPerBin', 'nN'};	
+
+	[nt, m, EndDOY, nPerBin, nN] = logFuncResult('log.json', @initializeParameters, metadata, t, nSeasons, nStrataN, nBins);
+
+	% [nt, m, EndDOY, nPerBin, nN] = initializeParameters(t, nSeasons, nStrataN, nBins);
+
+
+	[uStar, itAnnual, ntAnnual] = filterInvalidPoints(uStar, fNight, NEE, T);
 
 	Cp2=NaN*ones(nSeasons,nStrataX); 
 	Cp3=NaN*ones(nSeasons,nStrataX); 
@@ -139,162 +143,124 @@ end
 
 
 
+% function [Stats2, Stats3, StatsMT] = initializeStatistics(nSeasons, nStrataX)
 
-
-
-function params = initializeParameters(t, NEE, uStar, T, fNight)
-	% Derive basic time information
-	params = struct();
-	params.nt = length(t); [params.y, params.m, params.d] = fcDatevec(t);
-	params.iYr = median(params.y); params.EndDOY = fcDoy(datenum(params.iYr, 12, 31.5));
-
-	params.nPerDay = round(1 / nanmedian(diff(t)));
-	
-	% Define constants
-	params.nSeasons = 4; params.nStrataN = 4; params.nStrataX = 8; 
-	params.nBins = 50; params.nPerBin = 5;
-
-	% Adjust binning based on sampling frequency
-	switch params.nPerDay
-		case 24
-			params.nPerBin = 3;
-		case 48
-			params.nPerBin = 5;
-	end
-
-
-	params.nPerSeasonN=params.nStrataN*params.nBins*params.nPerBin; 
-	params.nN=params.nSeasons*params.nPerSeasonN;
-	
-
-	% Filter edge cases for uStar
-	
-	params.itOut = find(uStar < 0 | uStar > 3);
-	uStar(params.itOut) = NaN;
-
-	params.itAnnual=find(fNight==1 & ~isnan(NEE+uStar+T)); params.ntAnnual=length(params.itAnnual); 
-	params.uStar = uStar;
-
-end
-
-function [Stats2, Stats3, StatsMT] = initializeStatistics(nSeasons, nStrataX)
-
-	StatsMT=[]; 
-	StatsMT.n=NaN; StatsMT.Cp=NaN; StatsMT.Fmax=NaN; StatsMT.p=NaN; 
-	StatsMT.b0=NaN; StatsMT.b1=NaN; StatsMT.b2=NaN; StatsMT.c2=NaN; 
-	StatsMT.cib0=NaN; StatsMT.cib1=NaN; StatsMT.cic2=NaN; % preceding elements output by changepoint function
-	StatsMT.mt=NaN; StatsMT.ti=NaN; StatsMT.tf=NaN; 
-	StatsMT.ruStarVsT=NaN; StatsMT.puStarVsT=NaN; 
-	StatsMT.mT=NaN; StatsMT.ciT=NaN; % these elements added by this program.  
+% 	StatsMT=[]; 
+% 	StatsMT.n=NaN; StatsMT.Cp=NaN; StatsMT.Fmax=NaN; StatsMT.p=NaN; 
+% 	StatsMT.b0=NaN; StatsMT.b1=NaN; StatsMT.b2=NaN; StatsMT.c2=NaN; 
+% 	StatsMT.cib0=NaN; StatsMT.cib1=NaN; StatsMT.cic2=NaN; % preceding elements output by changepoint function
+% 	StatsMT.mt=NaN; StatsMT.ti=NaN; StatsMT.tf=NaN; 
+% 	StatsMT.ruStarVsT=NaN; StatsMT.puStarVsT=NaN; 
+% 	StatsMT.mT=NaN; StatsMT.ciT=NaN; % these elements added by this program.  
 						
-	Stats2=StatsMT; Stats3=StatsMT; 
-	for iSeason=1:nSeasons;
-		for iStrata=1:nStrataX;
-			Stats2(iSeason,iStrata)=StatsMT;
-			Stats3(iSeason,iStrata)=StatsMT;
-		end; 
-	end;
+% 	Stats2=StatsMT; Stats3=StatsMT; 
+% 	for iSeason=1:nSeasons;
+% 		for iStrata=1:nStrataX;
+% 			Stats2(iSeason,iStrata)=StatsMT;
+% 			Stats3(iSeason,iStrata)=StatsMT;
+% 		end; 
+% 	end;
 
-end
+% end
 
 
-function [t, T, uStar, NEE, fNight, itAnnual, ntAnnual] = ...
-	reorderAndPreprocessData(t, T, uStar, NEE, fNight, EndDOY, m, nt)
+% function [t, T, uStar, NEE, fNight, itAnnual, ntAnnual] = ...
+% 	reorderAndPreprocessData(t, T, uStar, NEE, fNight, EndDOY, m, nt)
 
-	itD=find(m==12); 
-	itReOrder=[min(itD):nt 1:(min(itD)-1)]; 
-	t(itD)=t(itD)-EndDOY; t=t(itReOrder); 
-	T=T(itReOrder); uStar=uStar(itReOrder); 
-	NEE=NEE(itReOrder); fNight=fNight(itReOrder); 
+% 	itD=find(m==12); 
+% 	itReOrder=[min(itD):nt 1:(min(itD)-1)]; 
+% 	t(itD)=t(itD)-EndDOY; t=t(itReOrder); 
+% 	T=T(itReOrder); uStar=uStar(itReOrder); 
+% 	NEE=NEE(itReOrder); fNight=fNight(itReOrder); 
 	
-	itAnnual=find(fNight==1 & ~isnan(NEE+uStar+T)); ntAnnual=length(itAnnual); 
+% 	itAnnual=find(fNight==1 & ~isnan(NEE+uStar+T)); ntAnnual=length(itAnnual); 
 	
-end
+% end
 
-function jtSeason = computeSeasonIndices(iSeason, nSeasons, nPerSeason, ntAnnual)
-	switch iSeason
-        case 1
-            jtSeason = 1:nPerSeason;
-        case nSeasons
-            jtSeason = ((nSeasons - 1) * nPerSeason + 1):ntAnnual;
-        otherwise
-            jtSeason = ((iSeason - 1) * nPerSeason + 1):(iSeason * nPerSeason);
-    end
-end
-
-
-function nStrata = computeStrataCount(ntSeason, nBins, nPerBin, nStrataN, nStrataX)
-    nStrata = floor(ntSeason / (nBins * nPerBin));
-    nStrata = max(nStrata, nStrataN); % Ensure minimum strata count
-    nStrata = min(nStrata, nStrataX); % Enforce maximum strata count
-end
+% function jtSeason = computeSeasonIndices(iSeason, nSeasons, nPerSeason, ntAnnual)
+% 	switch iSeason
+%         case 1
+%             jtSeason = 1:nPerSeason;
+%         case nSeasons
+%             jtSeason = ((nSeasons - 1) * nPerSeason + 1):ntAnnual;
+%         otherwise
+%             jtSeason = ((iSeason - 1) * nPerSeason + 1):(iSeason * nPerSeason);
+%     end
+% end
 
 
-function TTh = computeTemperatureThresholds(T, itSeason, nStrata)
-    TTh = prctile(T(itSeason), 0:(100 / nStrata):100);
-end
-
-function itStrata = findStratumIndices(T, itSeason, TTh, iStrata)
-    itStrata = find(T >= TTh(iStrata) & T <= TTh(iStrata + 1));
-    itStrata = intersect(itStrata, itSeason); % Filter by current season
-end
+% function nStrata = computeStrataCount(ntSeason, nBins, nPerBin, nStrataN, nStrataX)
+%     nStrata = floor(ntSeason / (nBins * nPerBin));
+%     nStrata = max(nStrata, nStrataN); % Ensure minimum strata count
+%     nStrata = min(nStrata, nStrataX); % Enforce maximum strata count
+% end
 
 
-function xs = addStatisticsFields(xs, t, r, p, T, itStrata)
-    xs.mt = mean(t(itStrata));
-    xs.ti = t(itStrata(1));
-    xs.tf = t(itStrata(end));
-    xs.ruStarVsT = r(2, 1);
-    xs.puStarVsT = p(2, 1);
-    xs.mT = mean(T(itStrata));
-    xs.ciT = 0.5 * diff(prctile(T(itStrata), [2.5, 97.5]));
-end
+% function TTh = computeTemperatureThresholds(T, itSeason, nStrata)
+%     TTh = prctile(T(itSeason), 0:(100 / nStrata):100);
+% end
+
+% function itStrata = findStratumIndices(T, itSeason, TTh, iStrata)
+%     itStrata = find(T >= TTh(iStrata) & T <= TTh(iStrata + 1));
+%     itStrata = intersect(itStrata, itSeason); % Filter by current season
+% end
 
 
-function [cPlot, iPlot] = plotStratum(fPlot, nSeasons, nStrata, iPlot, iSeason, iStrata, cSiteYr)
-    cPlot=''; 
-	if fPlot==1; 
-		iPlot=iPlot+1; 
-		subplot(nSeasons,nStrata,iPlot); 
-		if iSeason==1 & iStrata==1
-			cPlot=cSiteYr; 
-		end
-	end; 
-end
+% function xs = addStatisticsFields(xs, t, r, p, T, itStrata)
+%     xs.mt = mean(t(itStrata));
+%     xs.ti = t(itStrata(1));
+%     xs.tf = t(itStrata(end));
+%     xs.ruStarVsT = r(2, 1);
+%     xs.puStarVsT = p(2, 1);
+%     xs.mT = mean(T(itStrata));
+%     xs.ciT = 0.5 * diff(prctile(T(itStrata), [2.5, 97.5]));
+% end
 
 
-function [Cp2, Stats2, Cp3, Stats3, iPlot] = ...
-	 processStrata(nSeasons, iSeason, nStrata, nPerBin, itSeason, T, uStar, NEE, t, ...
-	TTh, fPlot, cSiteYr, iPlot, Cp2, Stats2, Cp3, Stats3)
+% function [cPlot, iPlot] = plotStratum(fPlot, nSeasons, nStrata, iPlot, iSeason, iStrata, cSiteYr)
+%     cPlot=''; 
+% 	if fPlot==1; 
+% 		iPlot=iPlot+1; 
+% 		subplot(nSeasons,nStrata,iPlot); 
+% 		if iSeason==1 & iStrata==1
+% 			cPlot=cSiteYr; 
+% 		end
+% 	end; 
+% end
 
 
-	for iStrata=1:nStrata;
+% function [Cp2, Stats2, Cp3, Stats3, iPlot] = ...
+% 	 processStrata(nSeasons, iSeason, nStrata, nPerBin, itSeason, T, uStar, NEE, t, ...
+% 	TTh, fPlot, cSiteYr, iPlot, Cp2, Stats2, Cp3, Stats3)
+
+
+% 	for iStrata=1:nStrata;
 			
-		[cPlot, iPlot ]= plotStratum(fPlot, nSeasons, nStrata, iPlot, iSeason, iStrata, cSiteYr);
+% 		[cPlot, iPlot ]= plotStratum(fPlot, nSeasons, nStrata, iPlot, iSeason, iStrata, cSiteYr);
 		
-		itStrata = findStratumIndices(T, itSeason, TTh, iStrata);
+% 		itStrata = findStratumIndices(T, itSeason, TTh, iStrata);
 		
-		[n,muStar,mNEE] = fcBin(uStar(itStrata),NEE(itStrata),[],nPerBin);
+% 		[n,muStar,mNEE] = fcBin(uStar(itStrata),NEE(itStrata),[],nPerBin);
 
-		[xCp2,xs2,xCp3,xs3] = cpdFindChangePoint20100901(muStar,mNEE,fPlot,cPlot); 
+% 		[xCp2,xs2,xCp3,xs3] = cpdFindChangePoint20100901(muStar,mNEE,fPlot,cPlot); 
 		
-		%	add fields not assigned by cpdFindChangePoint function
+% 		%	add fields not assigned by cpdFindChangePoint function
 		
-		[n,muStar,mT] = fcBin(uStar(itStrata),T(itStrata),[],nPerBin);
-		[r,p]=corrcoef(muStar,mT); 
+% 		[n,muStar,mT] = fcBin(uStar(itStrata),T(itStrata),[],nPerBin);
+% 		[r,p]=corrcoef(muStar,mT); 
 		
-		xs2 = addStatisticsFields(xs2, t, r, p, T, itStrata);
+% 		xs2 = addStatisticsFields(xs2, t, r, p, T, itStrata);
 		
-		xs3.mt=xs2.mt; xs3.ti=xs2.ti; xs3.tf=xs2.tf; 
-		xs3.ruStarVsT=xs2.ruStarVsT; xs3.puStarVsT=xs2.puStarVsT; 
-		xs3.mT=xs2.mT; xs3.ciT=xs2.ciT; 
+% 		xs3.mt=xs2.mt; xs3.ti=xs2.ti; xs3.tf=xs2.tf; 
+% 		xs3.ruStarVsT=xs2.ruStarVsT; xs3.puStarVsT=xs2.puStarVsT; 
+% 		xs3.mT=xs2.mT; xs3.ciT=xs2.ciT; 
 		
-		Cp2(iSeason,iStrata)=xCp2; 
-		Stats2(iSeason,iStrata)=xs2; 
+% 		Cp2(iSeason,iStrata)=xCp2; 
+% 		Stats2(iSeason,iStrata)=xs2; 
 		
-		Cp3(iSeason,iStrata)=xCp3; 
-		Stats3(iSeason,iStrata)=xs3; 
+% 		Cp3(iSeason,iStrata)=xCp3; 
+% 		Stats3(iSeason,iStrata)=xs3; 
 		
-	end;
+% 	end;
 
-end
+% end
