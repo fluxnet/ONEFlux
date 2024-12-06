@@ -1,5 +1,6 @@
-function [error_str, cSiteYr, exitcode] = saveResult(cFailure, cSiteYr, output_folder, site, year, Cp, clock, notes)
+function [error_str, cSiteYr, errorCode] = saveResult(cFailure, cSiteYr, output_folder, site, year, Cp, clock, notes)
     error_str = "";
+    errorCode = 0;
     if isempty(cFailure)
         %save([cOut,'4-season_analysis_',strrep(cSiteYr,'.txt',''),'.mat'],'Cp2','Stats2','Cp3','Stats3',...
         %    'Cp','n','tW','CpW','cMode','cFailure','fSelect','sSine','FracSig','FracModeD','FracSelect');
@@ -18,6 +19,6 @@ function [error_str, cSiteYr, exitcode] = saveResult(cFailure, cSiteYr, output_f
     else
         error_str = [error_str; char(site),'_uscp_',char(year),' ',cFailure];
         fprintf('%s\n', cFailure);
-        exitcode = 1;
+        errorCode = 1;
     end
 end
