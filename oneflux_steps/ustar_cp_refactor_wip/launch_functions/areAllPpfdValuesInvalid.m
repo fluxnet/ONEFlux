@@ -1,5 +1,5 @@
 function [PPFD, ppfd_from_rg] = areAllPpfdValuesInvalid(ppfd_from_rg, columns_index, PPFD_INDEX, data, varargin)
-    
+    PPFD = '';
     if length(varargin) > 0
         data = importdata(varargin{1}, ',');
     end

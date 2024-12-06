@@ -1,6 +1,6 @@
-function [ppfd_from_rg, exitcode] = ppfdColExists(PPFD_INDEX, columns_index, input_columns_names)
+function [ppfd_from_rg, errorCode] = ppfdColExists(PPFD_INDEX, columns_index, input_columns_names)
 
-    exitcode = 0;
+    errorCode = 0;
     on_error = 0;
     ppfd_from_rg = 0;
     for i = 1:numel(columns_index)
@@ -15,7 +15,7 @@ function [ppfd_from_rg, exitcode] = ppfdColExists(PPFD_INDEX, columns_index, inp
     end
     
     if 1 == on_error
-        exitcode = 1;
+        errorCode = 1;
         return;
     end
 
