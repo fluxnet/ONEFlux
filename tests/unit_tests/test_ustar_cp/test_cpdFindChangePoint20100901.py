@@ -137,6 +137,3 @@ def test_cpdFindChangePoint_insufficient_data(matlab_engine):
     # Assertions
     assert np.isnan(Cp2), "Cp2 should be NaN for insufficient data"
     assert np.isnan(Cp3), "Cp3 should be NaN for insufficient data"
-
-if __name__ == "__main__":
-    pytest.main()
