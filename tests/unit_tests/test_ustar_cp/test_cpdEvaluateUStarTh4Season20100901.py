@@ -123,3 +123,25 @@ def test_filterInvalidPoints(matlab_engine):
     assert np.allclose(uStar, expected_output_data['uStar'], equal_nan=True)
     assert np.allclose(itAnnual, expected_output_data['itAnnual'], equal_nan=True)
     assert np.allclose(ntAnnual, expected_output_data['ntAnnual'], equal_nan=True)
+
+
+def test_initializeStatistics(matlab_engine):
+    """
+    Test the initializeStatistics function in MATLAB.
+    """
+    nSeasons = 4
+    nStataX = 8
+
+    Stats2, Stats3 = matlab_engine.initializeStatistics(nSeasons, nStataX, 'encode', nargout=2)
+    Stats2 = json.loads(Stats2)
+    Stats3 = json.loads(Stats3)
+    assert len(Stats2) == 4, "Stats2 should have 4 entries for each season."
+    assert len(Stats3) == 4, "Stats3 should have 4 entries for each season."
+
+    # Check the structure of Stats2 and Stats3
+    # struct = ['n', 'Cp', 'Fmax', 'p', 'b0', 'b1', 'b2', 'c2', 'cib0', 'cib1', 'cic2', 'mt' , 'ti', 'tf', 'ruStarVsT', 'puStarVsT', 'mT', 'ciT']
+    # for s2, s3 in zip(Stats2, Stats3):
+    #     for i in range(nSeasons):  # Assuming nStrataX = 8
+    #         for j in range(nStataX):
+    #             for k in struct:
+    #                 assert k in (s2[i][j] and s3[i][j])
