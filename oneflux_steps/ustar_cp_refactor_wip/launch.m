@@ -42,10 +42,11 @@ function exitcode = launch(input_folder, output_folder)
         
         dataset = textscan(fid,'%[^\n]');dataset = dataset{1};
         
-        [exitcode, site, year, lat, lon, timezone, htower, timeres, sc_negl, notes] ...
+        [errorCode, site, year, lat, lon, timezone, htower, timeres, sc_negl, notes] ...
             = notValidHeader(dataset);
 
-        if exitcode == 1
+        if errorCode == 1
+            exitcode = 1;
             continue;
         end
         
@@ -70,15 +71,17 @@ function exitcode = launch(input_folder, output_folder)
         [header, data, columns_index] = loadData(input_folder, filename, notes, input_columns_names);
         
         % parse header, by alessio
-        [exitcode, columns_index] = mapColumnNamesToIndices(header, input_columns_names, notes, columns_index);
+        [errorCode, columns_index] = mapColumnNamesToIndices(header, input_columns_names, notes, columns_index);
         
-        if exitcode == 1
+        if errorCode == 1
+            exitcode = 1;
             continue;
         end
         
-        [ppfd_from_rg, exitcode] = ppfdColExists(PPFD_INDEX, columns_index, input_columns_names);
+        [ppfd_from_rg, errorCode] = ppfdColExists(PPFD_INDEX, columns_index, input_columns_names);
         
-        if exitcode == 1
+        if errorCode == 1
+            exitcode = 1;
             continue;
         end
         
@@ -87,7 +90,9 @@ function exitcode = launch(input_folder, output_folder)
         Ta = data(:, columns_index(TA_INDEX));
         Rg = data(:, columns_index(RG_INDEX));
 
-        [PPFD, ppfd_from_rg] = areAllPpfdValuesInvalid(ppfd_from_rg, columns_index, PPFD_INDEX, data);
+        %ppfd_from_rg == 0 can be evaluated outside the function below
+        [PPFD, ppfd_from_rg] = areAllPpfdValuesInvalid(ppfd_from_rg, columns_index, PPFD_INDEX, data); 
+
         
         if 1 == ppfd_from_rg
 
@@ -99,8 +104,9 @@ function exitcode = launch(input_folder, output_folder)
 
         [uStar, NEE, Ta, PPFD, Rg] = setMissingDataNan(uStar, NEE, Ta, PPFD, Rg);
 
-        [exitcode] = anyColumnsEmpty(uStar, NEE, Ta, Rg);
-        if exitcode == 1
+        [errorCode] = anyColumnsEmpty(uStar, NEE, Ta, Rg);
+        if errorCode == 1
+            exitcode = 1;
             continue;
         end
 
@@ -163,14 +169,17 @@ function exitcode = launch(input_folder, output_folder)
             = cpdAssignUStarTh20100901(Stats2,fPlot,cSiteYr); 
         
 
-        [error_str, cSiteYr, exitcode] = saveResult(cFailure, cSiteYr, output_folder, site, year, Cp, clock, notes);
-
+        [error_str, cSiteYr, errorCode] = saveResult(cFailure, cSiteYr, output_folder, site, year, Cp, clock, notes);
+        if errorCode == 1
+            exitcode = 1;
+            continue;
+        end
         % by alessio
         %end    
     %     print -djpeg100 Plot2_4Season_CACa1-2001; 
 
         
-
+        clear global globalFrequencyMetadata
         clear uStar cFailure cMode cSiteYr fNight fPlot fSelect n nBoot sSine t 
         clear tW Cp3 CpW FracModeD FracSelect FracSig NEE PPFD Rg Stats2 Stats3 T Ta Cp Cp2
     end

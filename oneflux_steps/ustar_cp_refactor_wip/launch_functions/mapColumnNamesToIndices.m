@@ -1,4 +1,4 @@
-function [exitcode, columns_index] = ...
+function [errorCode, columns_index] = ...
     mapColumnNamesToIndices(header, input_columns_names, notes, columns_index, varargin)
 
     if length(varargin) > 0
@@ -10,7 +10,7 @@ function [exitcode, columns_index] = ...
 
     end
     on_error = 0;
-    exitcode = 0;
+    errorCode = 0;
 
     for y = 1:length(header(9+length(notes),:))
         for i = 1:numel(input_columns_names)
@@ -30,7 +30,7 @@ function [exitcode, columns_index] = ...
     end
     
     if 1 == on_error 
-        exitcode = 1;
+        errorCode = 1;
         return;
     end
 end
