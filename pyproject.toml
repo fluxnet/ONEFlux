@@ -2,3 +2,8 @@
 addopts = "-v -p no:warnings --doctest-modules --show-progress -n 1 --dist=loadfile"
 python_files = 'test_*.py'
 testpaths = ['tests']
+
+[tool.ruff]
+# Exclude everything except "my_folder/"
+exclude = ["*"]
+include = ["tests/"]
