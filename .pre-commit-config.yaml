@@ -3,6 +3,5 @@ repos:
     rev: v0.7.3  # Update to the desired version
     hooks:
       - id: ruff-format
-        files: "tests/"
-        
+
 
