@@ -61,11 +61,13 @@ class PythonEngine(TestEngine):
         return x == y
 
     # Overload calling of methods and 'rethrow' to global context
-    def __getattribute__(self,name):
-        def newfunc(*args, **kwargs):
-          result = eval(name + "(*" + str(args) + ", *" + str(kwargs) + ")")
-          return result
-        return newfunc
+  def __getattribute__(self, name):
+      def newfunc(*args, **kwargs):
+          func = globals().get(name)  # Access global dictionary of defined functions
+          if callable(func):
+              return func(*args, **kwargs)
+          raise AttributeError(f"'{name}' is not callable")
+      return newfunc
 
 # MATLAB Engine wrapper
 class MatlabEngine:
