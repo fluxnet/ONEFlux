@@ -101,7 +101,7 @@ def test_fcnaniqr_2D_cases(matlab_engine, matrix, expected):
         # Case 1b: No NaNs, Fully Populated, 4 rows (>3)
         (matlab.double([[[1, 2], [4, 5]],[[7, 8], [10, 11]],[[13, 14], [16, 17]],[[19, 20], [22, 23]]]), [[12.0, 12.0]]),
 
-        # Case 1b: No NaNs, Fully Populated, 4 rows (>3), single nan
+        # Case 1b: Single NaN, Fully Populated, 4 rows (>3)
         (matlab.double([[[np.nan, 2], [4, 5]],[[7, 8], [10, 11]],[[13, 14], [16, 17]],[[19, 20], [22, 23]]]), [[np.nan, 12.0]]),
 
         # Case 1c: Single Layer 3D
