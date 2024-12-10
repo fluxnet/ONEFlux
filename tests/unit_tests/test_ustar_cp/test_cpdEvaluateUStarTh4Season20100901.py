@@ -217,4 +217,27 @@ def test_computeSeasonIndices(matlab_engine, iSeasons, nSeasons, nPerSeason, ntA
     assert np.array_equal(jtSeasons, expected_jtSeasons)
     
 
+testcases = [
+             (1339, 5, 5), # Nominal case, nStrata between 4 and 8
+             (1339, 3, 8), # nStrata > 8, ntSeason is not perfectly divisible
+             (1500, 3, 8), # nStrata > 8, ntSeason is perfectly divisible
+             (2000, 5, 8), # nStrata = 8, ntSeason is perfectly divisible
+             (1000, 5, 4), # nStrata = 4, ntSeason is perfectly divisible
+             (369, 3, 4), # nStrata < 4, ntSeason is not perfectly divisible
+             (750, 5, 4) # nStrata < 4, ntSeason is perfectly divisible
+             ]
 
+@pytest.mark.parametrize('ntSeason, nPerBin, expected_nStrata', testcases)
+def test_computeStrataCount(matlab_engine, ntSeason, nPerBin, expected_nStrata):
+    """
+    Test the computeStrataCount function in MATLAB.
+    """
+    nStrataX = 8
+    nStrataN = 4
+    nBins = 50
+    ntSeason = matlab.double(ntSeason)
+    nPerBin = matlab.double(nPerBin)
+
+    nStrata = matlab_engine.computeStrataCount(ntSeason, nBins, nPerBin, nStrataN, nStrataX)
+
+    assert nStrata == expected_nStrata
