@@ -241,3 +241,28 @@ def test_computeStrataCount(matlab_engine, ntSeason, nPerBin, expected_nStrata):
     nStrata = matlab_engine.computeStrataCount(ntSeason, nBins, nPerBin, nStrataN, nStrataX)
 
     assert nStrata == expected_nStrata
+
+
+@pytest.mark.parametrize('nStrata', [5])
+def test_computeTemperatureThresholds(matlab_engine, nStrata):
+    """
+    Test the computeTemperatureTresholds function in MATLAB.
+    Tests a single case, function is essentially a wrapper to the matlab percentile function.
+    """
+    artifacts_dir = 'tests/test_artifacts/computeTemperatureThresholds_artifacts'
+    input_names = ['T', 'itSeason']
+    input_data = {}
+    for name in input_names:
+        path_to_artifacts = artifacts_dir + f'/CA-Cbo_qca_ustar_2007_0/input_{name}.csv'
+        column = pd.read_csv(path_to_artifacts, header=None).iloc[:,0].to_numpy()
+        input_data[name] = matlab.double(column.tolist())
+
+    TTh = matlab_engine.computeTemperatureThresholds(input_data['T'], input_data['itSeason'], nStrata, nargout=1)
+    TTh = np.array(TTh.tomemoryview().tolist()[0])
+    expected_TTh = artifacts_dir + f'/CA-Cbo_qca_ustar_2007_0/output_TTh.csv'
+    expected_TTh = pd.read_csv(expected_TTh, header=None).iloc[0,:].to_numpy()
+
+    assert np.allclose(TTh, expected_TTh)
+
+
+    
