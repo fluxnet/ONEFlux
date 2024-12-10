@@ -152,6 +152,45 @@ def test_initializeStatistics(matlab_engine):
                 assert np.isnan(temp_s3).any() == True
 
 
+# Empty data
+# all nightime data
+# all daytime data
+
+def test_reorderAndPreprocessData(matlab_engine):
+    """
+    Test the reorderAndPreprocessData function in MATLAB.
+    """
+    artifacts_dir = 'tests/test_artifacts/reorderAndPreprocessData_artifacts'
+    input_names = ['t', 'T', 'uStar', 'NEE', 'fNight', 'EndDOY', 'm', 'nt']
+    input_data = {}
+    for name in input_names:
+        path_to_artifacts = artifacts_dir + f'/CA-Cbo_qca_ustar_2007_0/input_{name}.csv'
+        column = pd.read_csv(path_to_artifacts, header=None).iloc[:,0].to_numpy()
+        if name in {'EndDOY', 'nt'}:
+            input_data[name] = matlab.double(int(column[0]))
+        else:
+            input_data[name] = matlab.double(column.tolist())
+
+    expected_output_names = ['t', 'T', 'uStar', 'NEE', 'fNight', 'itAnnual', 'ntAnnual']
+    expected_output_data = {}
+    for name in expected_output_names:
+        path_to_artifacts = artifacts_dir + f'/CA-Cbo_qca_ustar_2007_0/output_{name}.csv'
+        column = pd.read_csv(path_to_artifacts, header=None).iloc[:,0].to_numpy()
+        if name == 'ntAnnual':
+            expected_output_data[name] = matlab.double(int(column[0]))
+        else:
+            expected_output_data[name] = matlab.double(column.tolist())
+        
+    t, T, uStar, NEE, fNight, itAnnual, ntAnnual = matlab_engine.reorderAndPreprocessData(*[input_data[name] for name in input_names], nargout=7)
+
+    assert np.allclose(t, expected_output_data['t'], equal_nan=True)
+    assert np.allclose(T, expected_output_data['T'], equal_nan=True)
+    assert np.allclose(uStar, expected_output_data['uStar'], equal_nan=True)
+    assert np.allclose(NEE, expected_output_data['NEE'], equal_nan=True)
+    assert np.allclose(fNight, expected_output_data['fNight'], equal_nan=True)
+    assert np.allclose(itAnnual, expected_output_data['itAnnual'], equal_nan=True)
+    assert ntAnnual == expected_output_data['ntAnnual'].tomemoryview().tolist()[0][0]
+
 
 
     
