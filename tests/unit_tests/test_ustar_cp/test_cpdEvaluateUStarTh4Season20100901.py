@@ -27,7 +27,7 @@ def json_to_numpy(data):
 
 cpdEvaluateUStar_test_cases = ['2007', '2007_fnight_zero_0']
 @pytest.mark.parametrize('year', cpdEvaluateUStar_test_cases)
-def test_cpdEvaluateUStarTh4Season20100901(matlab_engine, year):
+def test_cpdEvaluateUStarTh4Season20100901(matlab_engine, year): # This test stores the logged data as row major instead of column major
     """
     Test the cpdEvaluateUStarTh4Season20100901 function in MATLAB.
     """
@@ -66,7 +66,6 @@ def test_cpdEvaluateUStarTh4Season20100901(matlab_engine, year):
     xCp2 = xCp2.tomemoryview().tolist()
     xCp2 = np.array(xCp2)
 
-    # assert 1 == 0
     assert np.allclose(xStats2, expected_xStats2, equal_nan=True)
     assert np.allclose(xStats3, expected_xStats3, equal_nan=True)
     assert np.allclose(xCp2, expected_xCp2, equal_nan=True)
@@ -105,7 +104,7 @@ def test_filterInvalidPoints(matlab_engine):
     for name in input_names:
         path_to_artifacts = artifacts_dir + f'/CA-Cbo_qca_ustar_2007_0/input_{name}.csv'
         column = pd.read_csv(path_to_artifacts, header=None).iloc[:,0].to_numpy()
-        print(column)
+        #print(column)
         if name == 'fNight':
             input_data[name] = matlab.int8(column.tolist())
         else:
@@ -130,18 +129,31 @@ def test_initializeStatistics(matlab_engine):
     Test the initializeStatistics function in MATLAB.
     """
     nSeasons = 4
-    nStataX = 8
+    nStrataX = 8
 
-    Stats2, Stats3 = matlab_engine.initializeStatistics(nSeasons, nStataX, 'encode', nargout=2)
+    Stats2, Stats3 = matlab_engine.initializeStatistics(nSeasons, nStrataX, 1, nargout=2)
     Stats2 = json.loads(Stats2)
     Stats3 = json.loads(Stats3)
     assert len(Stats2) == 4, "Stats2 should have 4 entries for each season."
     assert len(Stats3) == 4, "Stats3 should have 4 entries for each season."
+    # print(Stats2)
+    # print(Stats3)
 
     # Check the structure of Stats2 and Stats3
-    # struct = ['n', 'Cp', 'Fmax', 'p', 'b0', 'b1', 'b2', 'c2', 'cib0', 'cib1', 'cic2', 'mt' , 'ti', 'tf', 'ruStarVsT', 'puStarVsT', 'mT', 'ciT']
-    # for s2, s3 in zip(Stats2, Stats3):
-    #     for i in range(nSeasons):  # Assuming nStrataX = 8
-    #         for j in range(nStataX):
-    #             for k in struct:
-    #                 assert k in (s2[i][j] and s3[i][j])
+    struct = set(['n', 'Cp', 'Fmax', 'p', 'b0', 'b1', 'b2', 'c2', 'cib0', 'cib1', 'cic2', 'mt' , 'ti', 'tf', 'ruStarVsT', 'puStarVsT', 'mT', 'ciT'])
+    for s2, s3 in zip(Stats2, Stats3):
+        for i in range(nStrataX): 
+                assert set(s2[i].keys()) == struct
+                assert set(s3[i].keys()) == struct
+
+                temp_s2 = np.array(list(s2[i].values()), dtype=float) # Convert to numpy array
+                temp_s3 = np.array(list(s3[i].values()), dtype=float)
+                assert np.isnan(temp_s2).any() == True # Checks all values are NaN
+                assert np.isnan(temp_s3).any() == True
+
+
+
+
+    
+
+
