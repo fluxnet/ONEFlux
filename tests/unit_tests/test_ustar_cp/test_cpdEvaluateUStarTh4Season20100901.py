@@ -192,7 +192,29 @@ def test_reorderAndPreprocessData(matlab_engine):
     assert ntAnnual == expected_output_data['ntAnnual'].tomemoryview().tolist()[0][0]
 
 
+testcases = [
+    (1, 4, 1000/4, 1000, range(1, 251)), # iSeasons = 1
+    (2, 4, 1000/4, 1000, range(251, 500+1)), # iSeasons = 2
+    (3, 4, 1000/4, 1000, range(501, 750+1)), # iSeasons = 3
+    (4, 4, 1000/4, 1000, range(751, 1000+1)), # iSeasons = 4
+    (1, 4, round(2055/4), 2055, range(1, 514+1)), # iSeasons = 1, ntAnnual is odd
+    (2, 4, round(3879/4), 3879, range(971, 1940+1)), # iSeasons = 2, ntAnnual is odd
+    (3, 4, round(5347/4), 5347, range(2675, 4011+1)), # iSeasons = 3, ntAnnual is odd
+    (4, 4, round(4999/4), 4999, range(3751, 4999+1)), # iSeasons = 4, ntAnnual is odd
+]
+@pytest.mark.parametrize('iSeasons, nSeasons, nPerSeason, ntAnnual, expected_jtSeasons', testcases)
+def test_computeSeasonIndices(matlab_engine, iSeasons, nSeasons, nPerSeason, ntAnnual, expected_jtSeasons):
+    """
+    Test the computeSeasonIndices function in MATLAB.
+    """
+    iSeasons = matlab.double(iSeasons)
+    nSeasons = matlab.double(nSeasons)
+    nPerSeason = matlab.double(nPerSeason)
+    ntAnnual = matlab.double(ntAnnual)
 
+    jtSeasons = matlab_engine.computeSeasonIndices(iSeasons, nSeasons, nPerSeason, ntAnnual)
+    jtSeasons = np.array(jtSeasons.tomemoryview().tolist()[0])
+    assert np.array_equal(jtSeasons, expected_jtSeasons)
     
 
 
