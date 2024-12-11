@@ -6,11 +6,13 @@
 
 import pytest
 import numpy as np
+import pandas as pd
 from tests.conftest import compare_matlab_arrays, to_matlab_type, process_std_out, compare_text_blocks
 import matlab.engine
 
 from hypothesis import given, settings, HealthCheck
 from hypothesis.strategies import floats, lists, integers
+import os
 
 # Hypothesis tests for fcBin
 @given(data=lists(floats(allow_nan=True, allow_infinity=False), min_size=2),
@@ -210,3 +212,40 @@ def test_cpdBin_dx_sclar(matlab_engine, data):
     assert compare_matlab_arrays(mx, to_matlab_type(data["mx"]))
     assert compare_matlab_arrays(my, to_matlab_type(data["my"]))
     assert nBins == data["nBins"]
+
+# Lastly test against site-specific data
+def test_cpdBin_sitedata(matlab_engine):
+    input_names  = ['x', 'y', 'dx', 'nPerBin']
+    output_names = ['nBins', 'mx', 'my']
+    artifacts_dir = 'tests/test_artifacts/fcBin_artifacts'
+    # Get all directories within artifacts_dir
+    for site_year in os.listdir(artifacts_dir):
+      if os.path.isdir(f'{artifacts_dir}/{site_year}'):
+        input_data = {}
+        for name in input_names:
+          path_to_data = f'{artifacts_dir}/{site_year}/input_{name}.csv'
+          # check if the file is zero bytes or not
+          if os.path.getsize(path_to_data) != 0:
+            column = pd.read_csv(path_to_data, header=None).iloc[:,:].to_numpy()
+            input_data[name] = matlab.double(column.tolist())
+          else:
+            input_data[name] = matlab.double([])
+
+        output_data = {}
+        for name in output_names:
+          path_to_data = f'{artifacts_dir}/{site_year}/output_{name}.csv'
+          # check if the file is zero bytes or not
+          if os.path.getsize(path_to_data) != 0:
+            column = pd.read_csv(path_to_data, header=None).iloc[:,:].to_numpy()
+            output_data[name] = matlab.double(column.tolist())
+          else:
+            output_data[name] = matlab.double([])
+
+        # Apply fcBin
+        nBins, mx, my  = matlab_engine.fcBin(input_data["x"], input_data["y"],
+                                      input_data["dx"], input_data["nPerBin"],
+                                      nargout=3)
+
+        assert compare_matlab_arrays(mx, output_data["mx"])
+        assert compare_matlab_arrays(my, output_data["my"])
+        assert compare_matlab_arrays(nBins, output_data["nBins"])
