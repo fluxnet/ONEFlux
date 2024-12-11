@@ -1,7 +1,7 @@
 function varargout = logFuncResult(filename, f, metadata, varargin)
     % LOGFUNCRESULT Logs function inputs and outputs, saving each variable as a CSV or JSON file.
     %
-    %   [outputs...] = LOGFUNCRESULT(filename, f, varargin)
+    %   [outputs...] = LOGFUNCRESULT(filename, f, metadata, varargin)
     %
     %   Inputs:
     %       - filename: Name of the log file (e.g., 'log.json').
