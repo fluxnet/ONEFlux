@@ -133,7 +133,7 @@ function varargout = logFuncResult(filename, f, metadata, varargin)
         fclose(fileID);
 
         % Inform the user
-        % fprintf('Result has been saved to %s\n', filePath); 
+        % fprintf('Result has been saved to %s\n', filePath);
     end
 
     % Increment the call count in the global metadata
@@ -189,19 +189,19 @@ function filename = saveVariableAsCSVorJSON(var, dirPath, filename)
                 jsonFilename = strrep(filename, '.csv', '.json');
                 jsonFilePath = fullfile(dirPath, jsonFilename);
                 jsonData = jsonencode(var);
-                
+
                 fid = fopen(jsonFilePath, 'w');
                 % fid = fopen(jsonFilePath, 'a');
-                
+
                 if fid == -1
                     error('Could not open file for writing JSON.');
                 end
-                
+
                 fwrite(fid, jsonData, 'char');
                 fclose(fid);
                 filename = jsonFilename;
                 % disp('Successfully written struct to JSON.');
-                
+
             catch jsonError
                 % If both CSV and JSON writing fail, throw an error
                 error('Error writing struct to CSV and JSON.\nCSV Error: %s\nJSON Error: %s', ...
