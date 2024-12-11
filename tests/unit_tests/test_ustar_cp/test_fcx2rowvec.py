@@ -1,7 +1,7 @@
 import pytest
 import matlab
 import numpy as np
-
+from tests.conftest import to_matlab_type, compare_matlab_arrays
 
 @pytest.mark.parametrize(
     "input_data, expected",
@@ -46,19 +46,4 @@ def test_fcx2rowvec(matlab_engine, input_data, expected):
     """
     # Call MATLAB function
     result = matlab_engine.fcx2rowvec(input_data)
-
-    # Extract values from MATLAB result
-    if isinstance(result, float):  # Scalar result from MATLAB
-        result_list = [result]
-    elif isinstance(result, matlab.double):  # Array result from MATLAB
-        result_list = list(result[0]) if len(result) > 0 else []
-    else:
-        raise TypeError(f"Unexpected result type: {type(result)}")
-
-    # Compare expected and actual results
-    assert len(result_list) == len(expected), "Result length mismatch"
-    for idx, exp_val in enumerate(expected):
-        if np.isnan(exp_val):
-            assert np.isnan(result_list[idx]), f"Expected NaN, got {result_list[idx]} at index {idx}"
-        else:
-            assert result_list[idx] == exp_val, f"Expected {exp_val}, got {result_list[idx]} at index {idx}"
+    assert compare_matlab_arrays(result, to_matlab_type(expected))
