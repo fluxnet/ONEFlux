@@ -5,12 +5,46 @@ function varargout = logFuncResult(filename, f, metadata, varargin)
     %
     %   Inputs:
     %       - filename: Name of the log file (e.g., 'log.json').
-    %       - f: Function handle to the function you want to log.
+    %       - f       : Function handle to the function you want to log.
+    %       - metadata: Structure containing information about how to log the function.
     %       - varargin: Cell array of input arguments for the function f.
     %
     %   Outputs:
-    %       - varargout: The outputs returned by the function f. 
+    %       - varargout: The outputs returned by the function f.
 
+    % Example metadata structure:
+    % metadata = struct();
+    % metadata.siteFile = 'US-Seg'; % Site file name
+    % metadata.oneFluxDir = '/path/to/ONEFlux/directory';
+    % metadata.relArtifactsDir = '/relative/path/to/tests/test_artifacts';
+    % metadata.frequency = 10; % Log every 10th call
+    % metadata.offset = 0; % Start logging from the first call
+
+    % The site file name can be extracted as so if `cSiteYr` is present
+
+    % cSiteYrSplit = strsplit(cSiteYr, '.');
+    % metadata.siteFile = cSiteYrSplit{1};
+
+    % cpdFindChangePoint does not take cSitreYr in as an argument, so could be passed in using varargin.
+
+    % Uusage. Replace
+
+    %   [xCp2,xStats2, xCp3,xStats3] = ...
+  	% cpdEvaluateUStarTh4Season20100901 ...
+	  % 	(t(it),NEE(it),updated_uStar(it),T(it),fNight(it),fPlot,cSiteYr);
+
+    % with this:
+
+    %   metadata.inputNames = {'t_it_', 'NEE_it_', 'updated_uStar_it_', 'T_it_', 'fNight_it_', 'fplot', 'cSiteYr'};
+    %   metadata.outputNames = {'xCp2', 'xStats2', 'xCp3', 'xStats3'};
+
+    %   [xCp2,xStats2, xCp3,xStats3] = ...
+    %     logFuncResult('log.json', @cpdEvaluateUStarTh4Season20100901, metadata,
+    %                   t(it),NEE(it),updated_uStar(it),T(it),fNight(it),fPlot,cSiteYr);
+
+    % In the main launch.m function at the very end you must clear the global frequency cache:
+
+    % clear global globalFrequencyMetadata
 
     metadata.description = func2str(f);
     metadata.inputNames;
