@@ -19,7 +19,11 @@ import numpy as np
 
         # Case 5: Negative Amplitude
         ([0, -1, 0], [0, 90, 180, 270, 360], [0, -0.9997458409224182, -0.04507749933823567, 0.9977133433981337, 0.09006335547871482]),
+        # Case 6: Pure Sine Wave, Zero Offset, small time frame
+        ([0, 1, 0], [0, 180, 360], [0, 0.04507749933823567, -0.09006335547871482]),
 
+        # Case 7: Pure Sine Wave, Zero Offset, non monotonic time frame
+        ([0, 1, 0], [0, 360, 180], [0,  -0.09006335547871482, 0.04507749933823567]),
         # Edge Case: NaN in Parameters
         ([np.nan, 1, 0], [0, 90, 180, 270, 360], [np.nan, np.nan, np.nan, np.nan, np.nan]),
 
