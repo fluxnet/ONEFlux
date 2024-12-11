@@ -18,13 +18,17 @@ function varargout = logFuncResult(filename, f, metadata, varargin)
     oneFluxDir = metadata.oneFluxDir;
     relArtifactsDir = metadata.relArtifactsDir;
     functionDir = string(func2str(f)) + '_artifacts';
-    
+
     % Initialize frequency
     if ~isfield(metadata, 'frequency')
         metadata.frequency = 10; % Initialize frequency
     end
+    if ~isfield(metadata, 'offset')
+        metadata.offset = 0; % Initialize offset
+    end
+    offset = metadata.offset;
     frequency = metadata.frequency;
-    
+
     % Declare a global variable to persist call counts across invocations
     global globalFrequencyMetadata;
     if isempty(globalFrequencyMetadata)
@@ -36,7 +40,7 @@ function varargout = logFuncResult(filename, f, metadata, varargin)
 
     % Initialize call count for this function in the global metadata if not already present
     if ~isfield(globalFrequencyMetadata, funcId)
-        globalFrequencyMetadata.(funcId) = 0; % Initialize call count
+        globalFrequencyMetadata.(funcId) = offset; % Initialize call count
     end
 
 
@@ -56,10 +60,10 @@ function varargout = logFuncResult(filename, f, metadata, varargin)
 
     % Return outputs to caller
     varargout = outputs;
-    
+
 
     % Check if we should log based on the frequency
-    if mod(globalFrequencyMetadata.(funcId), frequency) == 0
+    if mod(globalFrequencyMetadata.(funcId), frequency) == offset
 
         siteDir = metadata.siteFile;
         % Add the value as a suffix to siteDir
