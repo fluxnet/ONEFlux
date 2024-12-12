@@ -18,9 +18,9 @@ To run ONEFlux, certain data variables and additional information about the site
   - Encouraged: SC (if applicable), G, NETRAD, PPFD_IN, LW_IN, P, SWC, TS
   - Suggested: WD, PPFD_DIF, PPFD_OUT, SW_DIF, SW_OUT, LW_OUT
 
-Additional information information about data variables is [available](https://ameriflux.lbl.gov/data/aboutdata/data-variables/). Also note that multiple depths of soil temperature (TS) and soil water content (SWC) are supported by ONEFlux, using the numeric \_# suffix notation (e.g., TS_1).
+Additional information about data variables is [available](https://ameriflux.lbl.gov/data/aboutdata/data-variables/). Also note that multiple depths of soil temperature (TS) and soil water content (SWC) are supported by ONEFlux, using the numeric \_# suffix notation (e.g., TS_1).
 
-Information including site FLUXNET ID, latitude, longitude, timezone (adopted for timestamps in data file), complete history of the height for eddy covariance system (gas analyser and sonic anemometer), the temporal resoltion for the data files (usually 30 or 60 minuted), and how CO2 flux storage is handled at the site, are also all required information for ONEFlux runs.
+Information including site FLUXNET ID, latitude, longitude, timezone (adopted for timestamps in data file), complete history of the height for eddy covariance system (gas analyser and sonic anemometer), the temporal resolution for the data files (usually 30 or 60 minuted), and how CO2 flux storage is handled at the site, are also all required information for ONEFlux runs.
 
 
 ## Implemented steps
@@ -183,7 +183,7 @@ and the outputs will be generated, respectively, in the directories:
 
 - **NO SUPPORT.** We are not offering any kind of support for the code at this time (including creation of GitHub issues). This is so we are able to concentrate in improving the code and creating a more usable set of steps within the pipeline. This version of the code is intended to offer insight into how some of the steps work, but not a fully supported codebase. Once the code is more mature, we will revise this approach.
 
-- **NO CODE CONTRIBUTIONS.** Following the same reasoning for not offering support at this time, we will not accept code contributions for now. Once the we have a more mature code and development process we will revise this approach (and start encouraging contributions at that point).
+- **NO CODE CONTRIBUTIONS.** Following the same reasoning for not offering support at this time, we will not accept code contributions for now. Once we have a more mature code and development process we will revise this approach (and start encouraging contributions at that point).
 
 - **Execution environment requirements.** Many of the steps of the ONEFlux codebase have very specific requirements for the execution environment, including how the intermediate files are formatted, what outputs were generated successfully, execution logs being in place, etc. For this reason, it might be difficult for someone else to run this code if there are any unexpected conditions. Someone familiar with Python and C coding and Unix environments might be able to navigate and remedy errors, but the current version of the code is not intended to be "friendly" to the user (we hope to improve this in upcoming versions).
 
