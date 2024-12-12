@@ -13,7 +13,7 @@ The pipeline controlling code uses **Python version 2.7** (it should work with P
 
 ## Required data and metadata variables
 
-To run ONEFlux, certain data variables and addtional information about the site and instrument configuration are needed. *Required* data variables must be available in the input data, otherwise the ONEFlux will not run. *Encouraged* data variables must be present for realated derived data products to be generated, and although ONEFlux will run if these are missing, not all products will be generated. *Suggested* data variables are supported by ONEFlux, but are not directly used for the generation of any derived data products.
+To run ONEFlux, certain data variables and additional information about the site and instrument configuration are needed. *Required* data variables must be available in the input data, otherwise the ONEFlux will not run. *Encouraged* data variables must be present for related derived data products to be generated, and although ONEFlux will run if these are missing, not all products will be generated. *Suggested* data variables are supported by ONEFlux, but are not directly used for the generation of any derived data products.
   - Required: CO2, FC, H, LE, WS, USTAR, TA, RH, PA, SW_IN (or PPFD_IN)
   - Encouraged: SC (if applicable), G, NETRAD, PPFD_IN, LW_IN, P, SWC, TS
   - Suggested: WD, PPFD_DIF, PPFD_OUT, SW_DIF, SW_OUT, LW_OUT
