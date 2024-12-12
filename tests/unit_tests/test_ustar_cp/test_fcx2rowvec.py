@@ -40,10 +40,10 @@ from tests.conftest import to_matlab_type, compare_matlab_arrays
         ),
     ],
 )
-def test_fcx2rowvec(matlab_engine, input_data, expected):
+def test_fcx2rowvec(test_engine, input_data, expected):
     """
     Test MATLAB's fcx2rowvec function with various matrices and arrays, verifying reshaping.
     """
     # Call MATLAB function
-    result = matlab_engine.fcx2rowvec(input_data)
+    result = test_engine.fcx2rowvec(input_data)
     assert compare_matlab_arrays(result, to_matlab_type(expected))
