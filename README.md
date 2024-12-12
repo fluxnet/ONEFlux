@@ -27,7 +27,7 @@ Information including site FLUXNET ID, latitude, longitude, timezone (adopted fo
 
 The steps implemented in the ONEFlux processing pipeline are detailed in the [data processing description page](http://fluxnet.fluxdata.org/data/fluxnet2015-dataset/data-processing/) of the [FLUXNET2015 dataset](http://fluxnet.fluxdata.org/data/fluxnet2015-dataset/data-processing/).
 
-The outputs of each of these steps is saved to a sub-directories of a directory containing the data for a site. The structure of these output folders includes:
+The outputs of each of these steps is saved to sub-directories of a directory containing the data for a site. The structure of these output folders includes:
 
 - **`01_qc_visual/`**: output of QA/QC procedures and visual inspection of data; _this is the main input for the ONEFlux pipeline_.
 - **`02_qc_auto/`**: output of data preparation procedures for next steps and automated flagging of data based on quality tests (this step is implemented in C, and source available under `../ONEFlux/oneflux_steps/qc_auto/`).
