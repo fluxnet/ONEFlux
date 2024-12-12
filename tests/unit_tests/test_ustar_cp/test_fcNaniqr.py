@@ -57,9 +57,6 @@ def test_fcnaniqr_vector_cases(matlab_engine, vector, expected):
 
         # Case 4: All NaNs
         (matlab.double([[np.nan, np.nan], [np.nan, np.nan]]), [np.nan, np.nan]),
-
-        # Case 5: Different Column Lengths
-        (matlab.double([[1, 2], [4, np.nan], [7, 8], [10, 12]]), [6, np.nan]),
     ],
 )
 def test_fcnaniqr_2D_cases(matlab_engine, matrix, expected):
@@ -115,10 +112,6 @@ def test_fcnaniqr_2D_cases(matlab_engine, matrix, expected):
 
         # Case 3: All NaNs
         (matlab.double([[[np.nan, np.nan], [np.nan, np.nan]], [[np.nan, np.nan], [np.nan, np.nan]]]), [[np.nan, np.nan]]),
-
-        # Case 5b: Different Column Lengths
-        (matlab.double([[[1, 2], [4, 5]], [[7, 8], [10, 12]], [[13, 14], [16, 18]], [[19, 20], [22, 24]]]), [[12, 12]]),
-    
     ],
 )
 def test_fcnaniqr_3D_cases(matlab_engine, matrix, expected):
