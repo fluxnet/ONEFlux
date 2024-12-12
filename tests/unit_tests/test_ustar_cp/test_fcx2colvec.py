@@ -1,7 +1,7 @@
 import pytest
 import matlab.engine
 import numpy as np
-
+from tests.conftest import to_matlab_type, compare_matlab_arrays
 
 @pytest.mark.parametrize(
     "input_data, expected",
@@ -40,23 +40,4 @@ def test_fcx2colvec(matlab_engine, input_data, expected):
     """
     # Call MATLAB function
     result = matlab_engine.fcx2colvec(input_data)
-
-    try:
-        if isinstance(result, matlab.double):
-            # Convert to a nested list structure
-            result_list = [list(row) for row in result]
-        elif isinstance(result, (float, int)):
-            # Handle single numbers as a 1x1 list
-            result_list = [[float(result)]]
-        else:
-            raise TypeError(f"Unexpected result type: {type(result)}")
-    except Exception as e:
-        pytest.fail(f"Unexpected extraction error: {e}")
-
-    # Compare expected and actual results
-    assert len(result_list) == len(expected), "Result length mismatch"
-    for idx, exp_val in enumerate(expected):
-        if np.isnan(exp_val[0]):
-            assert np.isnan(result_list[idx][0]), f"Expected NaN, got {result_list[idx][0]} at index {idx}"
-        else:
-            assert result_list[idx][0] == exp_val[0], f"Expected {exp_val[0]}, got {result_list[idx][0]} at index {idx}"
+    assert compare_matlab_arrays(result, to_matlab_type(expected))
