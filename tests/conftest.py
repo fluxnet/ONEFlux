@@ -39,7 +39,7 @@ class MFWrapper:
         # make matlab stdout and stderr printed at the end of pytest
         atexit.register(lambda: (s := self.out.getvalue()) and print(f"{name} stdout:\n{s}"))
         atexit.register(lambda: (s := self.err.getvalue()) and print(f"{name} stderr:\n{s}"))
-        
+
     def __call__(self, *args, jsonencode=(), jsondecode=(), **kwargs):
         """
         Call the wrapped function with optional JSON encoding/decoding to handle the issue that non-scalar structs (arrays of structs) cannot be returned from MATLAB functions to Python.
@@ -354,9 +354,14 @@ def compare_matlab_arrays(result, expected):
             return True  # NaNs are considered equal
         return np.allclose(result, expected)
     if len(result) != len(expected):
-        return False
+        # Potentially we are in the situation where the MATLAB is wrapped in an extra layer of array
+        if isinstance(result, matlab.double) and len(result) == 1:
+            result = result[0]
+            return all(compare_matlab_arrays(r, e) for r, e in zip(result, expected))
+        else:
+            return False
     return all(compare_matlab_arrays(r, e) for r, e in zip(result, expected))
-    
+
 def read_csv_with_csv_module(file_path):
     """
     Reads a CSV file and returns its contents as a NumPy array.
