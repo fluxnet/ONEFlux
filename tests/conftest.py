@@ -5,6 +5,7 @@ handle MATLAB engine interactions, and process text files for comparison in unit
 Contents:
     Fixtures:
         test_engine
+        test_engine
         setup_folders
         find_text_file
         extract_section_between_keywords
@@ -79,6 +80,10 @@ class MatlabEngine:
         # make matlab stdout and stderr printed at the end of pytest
         atexit.register(lambda: (s := self.out.getvalue()) and print(f"{name} stdout:\n{s}"))
         atexit.register(lambda: (s := self.err.getvalue()) and print(f"{name} stderr:\n{s}"))
+
+    def _repr_pretty(self, p):
+        return "MATLAB Test Engine"
+
 
     def _repr_pretty(self, p):
         return "MATLAB Test Engine"
