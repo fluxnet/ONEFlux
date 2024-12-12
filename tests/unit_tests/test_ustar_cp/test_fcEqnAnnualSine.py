@@ -1,6 +1,7 @@
 import pytest
 import matlab.engine
 import numpy as np
+from tests.conftest import to_matlab_type, compare_matlab_arrays
 
 @pytest.mark.parametrize(
     "b, t, expected",
@@ -34,7 +35,7 @@ import numpy as np
         ([0, 1, 0], [], []),
     ],
 )
-def test_fcEqnAnnualSine_edge_cases(matlab_engine, b, t, expected):
+def test_fcEqnAnnualSine_edge_cases(test_engine, b, t, expected):
     """
     Test MATLAB's fcEqnAnnualSine function with various edge cases.
     """
@@ -43,21 +44,9 @@ def test_fcEqnAnnualSine_edge_cases(matlab_engine, b, t, expected):
     t_matlab = matlab.double(t)
 
     # Call MATLAB function
-    result = np.array(matlab_engine.fcEqnAnnualSine(b_matlab, t_matlab)).flatten()
+    result = test_engine.fcEqnAnnualSine(b_matlab, t_matlab)
 
     # Verify Result
     assert result is not None, "Expected non-None result from MATLAB function"
 
-    # Perform Element-wise Comparison
-    for idx, exp_val in enumerate(expected):
-        # Extract result as scalar
-        try:
-            result_value = float(result[idx])
-        except (IndexError, TypeError):
-            result_value = np.nan
-
-        # Handle NaN and numerical comparisons
-        if np.isnan(exp_val):
-            assert np.isnan(result_value), f"Expected NaN, got {result_value} at index {idx}"
-        else:
-            assert np.isclose(result_value, exp_val, atol=1e-6), f"Expected {exp_val}, got {result_value} at index {idx}"
+    assert compare_matlab_arrays(result, to_matlab_type(expected))
