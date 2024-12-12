@@ -2,6 +2,7 @@ import pytest
 import matlab.engine
 import numpy as np
 from tests.conftest import to_matlab_type, compare_matlab_arrays
+from oneflux_steps.ustar_cp_python.fcEqnAnnualSine import fc_eqn_annual_sine
 
 @pytest.mark.parametrize(
     "b, t, expected",
@@ -45,8 +46,11 @@ def test_fcEqnAnnualSine_edge_cases(test_engine, b, t, expected):
 
     # Call MATLAB function
     result = test_engine.fcEqnAnnualSine(b_matlab, t_matlab)
+    # Call python function
+    result_python = fc_eqn_annual_sine(np.asarray(b), np.asarray(t))
 
     # Verify Result
     assert result is not None, "Expected non-None result from MATLAB function"
 
     assert compare_matlab_arrays(result, to_matlab_type(expected))
+    assert np.allclose(result_python, np.asarray(expected), equal_nan=True)
