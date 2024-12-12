@@ -61,7 +61,7 @@ class PythonEngine(TestEngine):
         return x == y
 
     # Overload calling of methods and 'rethrow' to global context
-  def __getattribute__(self, name):
+    def __getattribute__(self, name):
       def newfunc(*args, **kwargs):
           func = globals().get(name)  # Access global dictionary of defined functions
           if callable(func):
