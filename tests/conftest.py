@@ -95,14 +95,16 @@ class MatlabEngine:
         Returns:
             The result of the wrapped function, with specified outputs JSON decoded if necessary.
         """
+
+        # For `convert` and `equal` we need to handle these directly here since
+        # we have overriden `call`.
         if (self.func._name == "convert") | (self.func._name == "equal"):
+          
+          # Locally scoped definitions
           def _convert(x):
-              return to_matlab_type(x[0])
+              return to_matlab_type(x)
 
-          def _equal(p):
-              x = p[0]
-              y = p[1]
-
+          def _equal(x, y):
               if isinstance(x, float):
                   # Floating point equality using numpy
                   return np.isclose(x, y, equal_nan=True)
@@ -113,10 +115,11 @@ class MatlabEngine:
                   # Drop through to usual equality
                   return x == y
           
+          # Choose which function to call
           if self.func._name == "convert":
-              return _convert(args)
+              return _convert(*args)
           elif self.func._name == "equal":
-              return _equal(list(args))
+              return _equal(*args)
         
         else:
           # Calls mostly going through to the MATLAB engine
