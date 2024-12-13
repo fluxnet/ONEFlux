@@ -61,37 +61,18 @@
 %	========================================================================
 %	========================================================================
 
-%	Initializations
-	metadata = struct();
-	metadata.siteFile = 'CA-Cbo_qca_ustar_2007';
-	metadata.oneFluxDir = '/home/ia/iccs_repos/ONEFlux/';
-	metadata.relArtifactsDir = 'tests/test_artifacts';
-	metadata.frequency = 20;  %frequncy_to_log_input/ouput, defualt is 10 if not specified
-
-
 	nSeasons = 4; nStrataN = 4; 
 	nStrataX = 8; nBins = 50;
 
-	% metadata.inputNames = {'t', 'nSeasons', 'nStrataN', 'nBins'};
-	% metadata.outputNames = {'nt', 'm', 'EndDOY', 'nPerBin', 'nN'};	
-
-	% [nt, m, EndDOY, nPerBin, nN] = logFuncResult('log.json', @initializeParameters, metadata, t, nSeasons, nStrataN, nBins);
 
 	[nt, m, EndDOY, nPerBin, nN] = initializeParameters(t, nSeasons, nStrataN, nBins);
 
-	% metadata.inputNames = {'uStar', 'fNight', 'NEE', 'T'};
-	% metadata.outputNames = {'uStar', 'itAnnual', 'ntAnnual'};
-
-	% [uStar, itAnnual, ntAnnual] = logFuncResult('log.json', @filterInvalidPoints, metadata, uStar, fNight, NEE, T);
 	[uStar, itAnnual, ntAnnual] = filterInvalidPoints(uStar, fNight, NEE, T);
 
 	Cp2=NaN*ones(nSeasons,nStrataX); 
 	Cp3=NaN*ones(nSeasons,nStrataX); 
 		
-	metadata.inputNames = {'nSeasons', 'nStrataX'};
-	metadata.outputNames = {'Stats2', 'Stats3', 'StatsMT'};
-	[Stats2, Stats3] = logFuncResult('log.json', @initializeStatistics, metadata, nSeasons, nStrataX);
-	% [Stats2, Stats3] = initializeStatistics(nSeasons, nStrataX);
+	[Stats2, Stats3] = initializeStatistics(nSeasons, nStrataX);
 	
 	
 
@@ -129,13 +110,14 @@
 		jtSeason = computeSeasonIndices(iSeason, nSeasons, nPerSeason, ntAnnual);
 
 		itSeason=itAnnual(jtSeason); ntSeason=length(itSeason); 
+		
 		nStrata = computeStrataCount(ntSeason, nBins, nPerBin, nStrataN, nStrataX);
 		
 		TTh = computeTemperatureThresholds(T, itSeason, nStrata);
 		
 		[Cp2, Stats2, Cp3, Stats3, iPlot] = ...
-			processStrata(nSeasons, iSeason, nStrata, nPerBin, itSeason, T, uStar, NEE, t, ...
-				TTh, fPlot, cSiteYr, iPlot, Cp2, Stats2, Cp3, Stats3);
+		        processStrata(nSeasons, iSeason, nStrata, nPerBin, itSeason, T, uStar, NEE, t, ...
+		                TTh, fPlot, cSiteYr, iPlot, Cp2, Stats2, Cp3, Stats3);
 	% for iStrata
 		
 	end; % for iSeason
