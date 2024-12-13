@@ -84,10 +84,6 @@ class MatlabEngine:
     def _repr_pretty(self, p):
         return "MATLAB Test Engine"
 
-
-    def _repr_pretty(self, p):
-        return "MATLAB Test Engine"
-
     def __call__(self, *args, jsonencode=(), jsondecode=(), **kwargs):
         """
         Call the wrapped function with optional JSON encoding/decoding to handle the issue that non-scalar structs (arrays of structs) cannot be returned from MATLAB functions to Python.
@@ -99,48 +95,58 @@ class MatlabEngine:
         Returns:
             The result of the wrapped function, with specified outputs JSON decoded if necessary.
         """
-        args = list(args)
-        if jsonencode:
-            args.append(['jsonencode'] + [i+1 for i in jsonencode])
-        if jsondecode:
-            for i in jsondecode:
-                args[i] = json.dumps(args[i])
-            args.append(['jsondecode'] + [i+1 for i in jsondecode])
-        out = kwargs.pop('stdout', self.out)
-        err = kwargs.pop('stderr', self.err)
-        ret = self.func(*args, **kwargs, stdout=out, stderr=err)
-        if jsonencode:
-            nargout = kwargs.get('nargout', 1)
-            if nargout <= 1:
-                ret = [ret]
-            else:
-                ret = list(ret)
-            for j in jsonencode:
-                ret[j] = json.loads(ret[j], object_hook=none2nan)
-            if nargout <= 1:
-                ret = ret[0]
-        return ret
+        if (self.func._name == "convert") | (self.func._name == "equal"):
+          def _convert(x):
+              return to_matlab_type(x[0])
 
-    def convert(self, x):
-        to_matlab_type(x)
+          def _equal(p):
+              x = p[0]
+              y = p[1]
 
-    def equal(self, x, y):
-        if isinstance(x, float):
-            # Floating point equality using numpy
-            return np.isclose(x, y, equal_nan=True)
-        elif isinstance(x, matlab.double):
-            # Compare matlab arrays
-            return compare_matlab_arrays(x, y)
+              if isinstance(x, float):
+                  # Floating point equality using numpy
+                  return np.isclose(x, y, equal_nan=True)
+              elif isinstance(x, matlab.double):
+                  # Compare matlab arrays
+                  return compare_matlab_arrays(x, y)
+              else:
+                  # Drop through to usual equality
+                  return x == y
+          
+          if self.func._name == "convert":
+              return _convert(args)
+          elif self.func._name == "equal":
+              return _equal(list(args))
+        
         else:
-            # Drop through to usual equality
-            return x == y
+          # Calls mostly going through to the MATLAB engine
+          args = list(args)
+          if jsonencode:
+              args.append(['jsonencode'] + [i+1 for i in jsonencode])
+          if jsondecode:
+              for i in jsondecode:
+                  args[i] = json.dumps(args[i])
+              args.append(['jsondecode'] + [i+1 for i in jsondecode])
+          out = kwargs.pop('stdout', self.out)
+          err = kwargs.pop('stderr', self.err)
+          ret = self.func(*args, **kwargs, stdout=out, stderr=err)
+          if jsonencode:
+              nargout = kwargs.get('nargout', 1)
+              if nargout <= 1:
+                  ret = [ret]
+              else:
+                  ret = list(ret)
+              for j in jsonencode:
+                  ret[j] = json.loads(ret[j], object_hook=none2nan)
+              if nargout <= 1:
+                  ret = ret[0]
+          return ret
 
 def mf_factory(cls, *args, **kwargs):
     f = object.__new__(MatlabFunc)
     f.__init__(*args, **kwargs)
     return MatlabEngine(f)
 MatlabFunc.__new__ = mf_factory
-
 
 @pytest.fixture(scope="session")
 def test_engine(refactored=True, language='matlab'):
