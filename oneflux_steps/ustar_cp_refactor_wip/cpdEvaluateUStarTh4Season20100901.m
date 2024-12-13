@@ -131,10 +131,7 @@
 			[r,p]=corrcoef(muStar,mT); 
 			
 			xs2 = addStatisticsFields(xs2, t, r, p, T, itStrata);
-			
-			xs3.mt=xs2.mt; xs3.ti=xs2.ti; xs3.tf=xs2.tf; 
-			xs3.ruStarVsT=xs2.ruStarVsT; xs3.puStarVsT=xs2.puStarVsT; 
-			xs3.mT=xs2.mT; xs3.ciT=xs2.ciT; 
+			xs3 = addStatisticsFields(xs3, t, r, p, T, itStrata);
 			
 			Cp2(iSeason,iStrata)=xCp2; 
 			Stats2(iSeason,iStrata)=xs2; 
