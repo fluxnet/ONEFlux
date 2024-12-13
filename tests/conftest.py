@@ -40,6 +40,9 @@ class MFWrapper:
         atexit.register(lambda: (s := self.out.getvalue()) and print(f"{name} stdout:\n{s}"))
         atexit.register(lambda: (s := self.err.getvalue()) and print(f"{name} stderr:\n{s}"))
 
+    def _repr_pretty_(self, p):
+        return "MATLAB"
+
     def __call__(self, *args, jsonencode=(), jsondecode=(), **kwargs):
         """
         Call the wrapped function with optional JSON encoding/decoding to handle the issue that non-scalar structs (arrays of structs) cannot be returned from MATLAB functions to Python.
@@ -51,6 +54,11 @@ class MFWrapper:
         Returns:
             The result of the wrapped function, with specified outputs JSON decoded if necessary.
         """
+
+        if self.func._name == '_repr_pretty_':
+            # Overload attempts to pretty print matlab engines (e.g., by hypothesis)
+            return 'MATLAB'
+
         args = list(args)
         if jsonencode:
             args.append(['jsonencode'] + [i+1 for i in jsonencode])
@@ -83,25 +91,26 @@ MatlabFunc.__new__ = mf_factory
 @pytest.fixture(scope="session")
 def matlab_engine(refactored=True):
     """
-    Pytest fixture to start a MATLAB engine session, add a specified directory 
+    Pytest fixture to start a MATLAB engine session, add a specified directory
     to the MATLAB path, and clean up after the tests.
 
-    This fixture initializes the MATLAB engine, adds the directory containing 
-    MATLAB functions to the MATLAB path, and then yields the engine instance 
-    for use in tests. After the tests are done, the MATLAB engine is properly 
+    This fixture initializes the MATLAB engine, adds the directory containing
+    MATLAB functions to the MATLAB path, and then yields the engine instance
+    for use in tests. After the tests are done, the MATLAB engine is properly
     closed.
 
     Args:
-        refactored (bool, optional): If True, use the refactored code path 
-            'oneflux_steps/ustar_cp_refactor_wip/'. Defaults to True, using 
+        refactored (bool, optional): If True, use the refactored code path
+            'oneflux_steps/ustar_cp_refactor_wip/'. Defaults to True, using
             the 'oneflux_steps/ustar_cp_refactor_wip/' path.
 
     Yields:
-        matlab.engine.MatlabEngine: The MATLAB engine instance for running MATLAB 
+        matlab.engine.MatlabEngine: The MATLAB engine instance for running MATLAB
             functions within tests.
 
     After the tests complete, the MATLAB engine is closed automatically.
     """
+
     # Start MATLAB engine
     eng = matlab.engine.start_matlab()
 
@@ -119,7 +128,7 @@ def matlab_engine(refactored=True):
             matlab_engine.addpath(root, nargout=0)  # nargout=0 suppresses output
 
         return
-    
+
     # Add the base directory and all its subdirectories to MATLAB path
     _add_all_subdirs_to_matlab_path(matlab_function_path, eng)
 
@@ -131,17 +140,17 @@ def matlab_engine(refactored=True):
 @pytest.fixture
 def setup_folders(tmp_path, request, testcase: str = "US_ARc"):
     """
-    Fixture to set up input and output folders for tests by copying all files 
+    Fixture to set up input and output folders for tests by copying all files
     from a specified local directory.
 
     Args:
-        tmp_path: A pytest fixture that provides a temporary directory unique to 
+        tmp_path: A pytest fixture that provides a temporary directory unique to
                   the test invocation.
-        testcase (str): The name of the subdirectory under 'tests/test_artifacts/' 
+        testcase (str): The name of the subdirectory under 'tests/test_artifacts/'
                         that contains the test files.
 
     Returns:
-        tuple: A tuple containing the paths to the temporary input, the reference output, and 
+        tuple: A tuple containing the paths to the temporary input, the reference output, and
                the empty output directories as strings.
     """
 
@@ -201,11 +210,11 @@ def setup_folders(tmp_path, request, testcase: str = "US_ARc"):
 @pytest.fixture
 def find_text_file():
     """
-    Fixture to find the `report` file in the given folder, open it, 
+    Fixture to find the `report` file in the given folder, open it,
     extract its contents as a list of lines, and return the contents.
 
     Returns:
-        function: A function that takes a folder path and returns the contents 
+        function: A function that takes a folder path and returns the contents
                   of the first `.txt` file found in that folder as a list of lines.
     """
     def _find_text_file_in_folder(folder):
@@ -214,12 +223,12 @@ def find_text_file():
             if filename.startswith('report'):
                 # Construct the full file path
                 file_path = os.path.join(folder, filename)
-                
+
                 # Open the file and read its contents as lines
                 with open(file_path, 'r', encoding='utf-8') as file:
                     contents = file.readlines()  # Read the file as a list of lines
                 return contents
-        
+
         # If no .txt file is found, raise an error
         raise FileNotFoundError(f"No .txt file found in folder: {folder}")
 
@@ -233,12 +242,12 @@ def extract_section_between_keywords():
     Args:
         data (list): The contents of the file as a list of lines.
         start_keyword (str): The keyword to start extracting from.
-        end_keyword (str, optional): The keyword to stop extracting before. 
+        end_keyword (str, optional): The keyword to stop extracting before.
                                      Defaults to None, which means take all text onward from the start keyword.
 
     Returns:
-        function: A function that takes data (list of lines), start_keyword (str), 
-                  and end_keyword (str, optional), and returns the lines between the 
+        function: A function that takes data (list of lines), start_keyword (str),
+                  and end_keyword (str, optional), and returns the lines between the
                   start keyword and the end keyword, exclusive of the end keyword.
     """
     def _extract(data, start_keyword, end_keyword=None):
@@ -340,7 +349,7 @@ def to_matlab_type(data):
         return matlab.double([data])  # Convert single numbers
     else:
         return data  # If the data type is already MATLAB-compatible
-    
+
 # Helper function to compare MATLAB double arrays element-wise, handling NaN comparisons
 def compare_matlab_arrays(result, expected):
     if isinstance(result, dict):
@@ -382,7 +391,7 @@ def read_file(file_path):
         file_path (str): The path to the file to be read. The file can be either a CSV or a JSON file.
 
     Returns:
-        dict or list: The contents of the file. Returns a list of dictionaries if the file is a CSV, 
+        dict or list: The contents of the file. Returns a list of dictionaries if the file is a CSV,
                       or a dictionary if the file is a JSON.
 
     Raises:
@@ -396,7 +405,7 @@ def read_file(file_path):
             return none2nan(json.load(f))  # Load JSON file
     else:
         raise ValueError(f"Unsupported file type: {file_path}")
-    
+
 def none2nan(obj):
     if isinstance(obj, dict):
         return {k: none2nan(v) for k, v in obj.items()}
@@ -424,7 +433,7 @@ def parse_testcase(test_case: dict, path_to_artifacts: str):
     """
     inputs: dict = {}
     outputs: dict = {}
-    
+
     for io_type in ['input', 'expected_output']:
         for key, value in test_case[io_type].items():  # Use test_case here
             if isinstance(value, str):  # Check if the value is a string (likely a file path)
@@ -447,5 +456,5 @@ def parse_testcase(test_case: dict, path_to_artifacts: str):
                     inputs[key] = value
                 else:
                     outputs[key] = value
-    
+
     return inputs, outputs

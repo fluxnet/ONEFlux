@@ -1,29 +1,29 @@
-function [nBins,mx,my] = cpdBin(x,y,dx,nPerBin); 
+function [nBins,mx,my] = cpdBin(x,y,dx,nPerBin);
 
-%cpdBin 
+%cpdBin
 %
-%calculates binned mean values of vectors x and y 
-%for use in change-point (uStarTh) detection 
+%calculates binned mean values of vectors x and y
+%for use in change-point (uStarTh) detection
 %
-%Syntax: [nBins,mx,my] = cpdBin(x,y,dx,nPerBin); 
+%Syntax: [nBins,mx,my] = cpdBin(x,y,dx,nPerBin);
 %
-%dx and nPerBin control how the data are binned. 
-%	if dx is a positive scalar, it specifies the binning increment. 
-%	if dx is a vector, it specifies the bin borders. 
-%	if dx is empty, then nPerBin is used to bin the data, 
-%		into bins with nPerBin points in each bin.   
+%dx and nPerBin control how the data are binned.
+%	if dx is a positive scalar, it specifies the binning increment.
+%	if dx is a vector, it specifies the bin borders.
+%	if dx is empty, then nPerBin is used to bin the data,
+%		into bins with nPerBin points in each bin.
 
 %	-----------------------------------------------------------------------
 
-	nBins=0; mx=[]; my=[]; 
-	if dx<=0; disp('Function cpdBin aborted. dx cannot be <=0. ');  return; end; 
-	
+	nBins=0; mx=[]; my=[];
+	if dx<=0; disp('Function cpdBin aborted. dx cannot be <=0. ');  return; end;
+
 	switch length(dx);
-		case 0; % if dx is empty, use nPerBin to bin the data 
+		case 0; % if dx is empty, use nPerBin to bin the data
 				% into bins with nPerBin points in each bin.
 			iYaN=find(~isnan(x+y)); nYaN=length(iYaN);
-			nBins=floor(nYaN/nPerBin); 
-			mx=NaN*ones(nBins,1); my=NaN*ones(nBins,1); 
+			nBins=floor(nYaN/nPerBin);
+			mx=NaN*ones(nBins,1); my=NaN*ones(nBins,1);
 			iprctile=0:(100/nBins):100;
 			dx=prctile(x(iYaN),iprctile);
 			xL=dx(1:(end-1)); xU=dx(2:end);
@@ -58,6 +58,5 @@ function [nBins,mx,my] = cpdBin(x,y,dx,nPerBin);
 				end;
 			end;
 	end;
-	
-	
-			
+
+
