@@ -363,7 +363,12 @@ def compare_matlab_arrays(result, expected):
             return True  # NaNs are considered equal
         return np.allclose(result, expected)
     if len(result) != len(expected):
-        return False
+        # Potentially we are in the situation where the MATLAB is wrapped in an extra layer of array
+        if isinstance(result, matlab.double) and len(result) == 1:
+            result = result[0]
+            return all(compare_matlab_arrays(r, e) for r, e in zip(result, expected))
+        else:
+            return False
     return all(compare_matlab_arrays(r, e) for r, e in zip(result, expected))
 
 def read_csv_with_csv_module(file_path):

@@ -1,4 +1,16 @@
-	function x = fcReadFields(s,FieldName); 
+	function x = fcReadFields(stats, FieldName, varargin);
+
+		s = [];
+
+		if nargin > 2 && any(strcmp(varargin, 'jsondecode'))
+			s = jsondecode(stats);
+		else
+			s = stats; % Assume stats is already a struct
+		end
+	
+		if isempty(s)
+			error('Decoded structure is empty. Check the JSON format.');
+		end
 		
 	nd=ndims(s); ns=size(s); x=NaN*ones(ns); 
 	
