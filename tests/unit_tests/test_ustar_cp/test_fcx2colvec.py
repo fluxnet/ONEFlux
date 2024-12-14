@@ -1,6 +1,8 @@
 import pytest
 import matlab.engine
 from tests.conftest import to_matlab_type, compare_matlab_arrays
+from oneflux_steps.ustar_cp_python.fcx2colvec import fcx2colvec
+import numpy as np
 
 @pytest.mark.parametrize(
     "input_data, expected",
@@ -39,4 +41,12 @@ def test_fcx2colvec(test_engine, input_data, expected):
     """
     # Call MATLAB function
     result = test_engine.fcx2colvec(input_data)
-    assert compare_matlab_arrays(result, to_matlab_type(expected))
+
+    # Call python version
+    result_python = fcx2colvec(np.asarray(input_data))
+
+    #test outcomes
+    # Test outcomes
+    assert test_engine.equal(result, to_matlab_type(expected))
+    assert np.allclose(result_python, np.asarray(expected), equal_nan=True)
+
