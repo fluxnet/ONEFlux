@@ -2,6 +2,7 @@ import pytest
 import matlab
 import numpy as np
 from tests.conftest import to_matlab_type, compare_matlab_arrays
+from oneflux_steps.ustar_cp_python.fcx2rowvec import fcx2rowvec
 
 @pytest.mark.parametrize(
     "input_data, expected",
@@ -46,4 +47,10 @@ def test_fcx2rowvec(test_engine, input_data, expected):
     """
     # Call MATLAB function
     result = test_engine.fcx2rowvec(input_data)
+
+    # Call python function
+    result_python = fcx2rowvec(np.asarray(input_data))
+
+    # Assess results
     assert compare_matlab_arrays(result, to_matlab_type(expected))
+    assert np.allclose(result_python, expected, equal_nan = True)
