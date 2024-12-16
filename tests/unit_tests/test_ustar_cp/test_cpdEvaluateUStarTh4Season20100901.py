@@ -12,7 +12,7 @@ import pandas as pd
 import json
 import os
 from typing import Tuple
-from oneflux_steps.ustar_cp_python.cpd_evaluate_functions import reorder_and_preprocess_data, filter_invalid_points
+from oneflux_steps.ustar_cp_python.cpd_evaluate_functions import reorder_and_preprocess_data, filter_invalid_points, addStatisticsFields
 
 
 rng = np.random.default_rng()
@@ -367,33 +367,6 @@ def test_findStratumIndices(matlab_engine, T, itSeason, TTh, iStrata):
     # assert 1==0
 
 
-# Function from https://github.com/numpy/numpy/issues/6620
-def matlab_percentile(in_data, percentiles):
-    """
-    Calculate percentiles in the way IDL and Matlab do it.
-
-    By using interpolation between the lowest an highest rank and the
-    minimum and maximum outside.
-
-    Parameters
-    ----------
-    in_data: numpy.ndarray
-        input data
-    percentiles: numpy.ndarray
-        percentiles at which to calculate the values
-
-    Returns
-    -------
-    perc: numpy.ndarray
-        values of the percentiles
-    """
-
-    data = np.sort(in_data)
-    p_rank = 100.0 * (np.arange(data.size) + 0.5) / data.size
-    perc = np.interp(percentiles, p_rank, data, left=data[0], right=data[-1])
-    return perc
-
-
 def test_addStatisticsFields(matlab_engine):
     """
     Test the addStatistics function in MATLAB.
@@ -410,19 +383,10 @@ def test_addStatisticsFields(matlab_engine):
     itStrata = np.array(list(range(1,51)) + list(range(200,300)))
 
     xs = matlab_engine.addStatisticsFields(xs, matlab.double(t.tolist()), matlab.double(r), matlab.double(p), matlab.double(T.tolist()), matlab.double((itStrata+1).tolist()), nargout=1)
+    expected_xs = {}
+    expected_xs = addStatisticsFields(expected_xs, t, T, r, p, itStrata)
 
-    # Calculate expected values
-    expected_mt = np.mean(t[itStrata])
-    expected_ti = t[itStrata[0]]
-    expected_tf = t[itStrata[-1]]
-    expected_ruStarVsT = r[1][0]
-    expected_puStarVsT = p[1][0]
-    expected_mT = np.mean(T[itStrata])
-    expected_ciT = 0.5 * np.diff(matlab_percentile(T[itStrata], [2.5, 97.5]))[0]
-    # matlab percentile function is different from numpy. Used a custom function to match matlab's percentile function
-
-    expected_xs = np.array([expected_mt, expected_ti, expected_tf, expected_ruStarVsT, expected_puStarVsT, expected_mT, expected_ciT])
     output_xs = np.array([xs['mt'], xs['ti'], xs['tf'], xs['ruStarVsT'], xs['puStarVsT'], xs['mT'], xs['ciT']])
     
-    assert np.allclose(expected_xs, output_xs, equal_nan=True)
+    assert np.allclose(list(expected_xs.values()), output_xs, equal_nan=True)
 

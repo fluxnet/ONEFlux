@@ -1,5 +1,7 @@
-from typing import List, Tuple
+from typing import List, Tuple, Sequence, Dict
 import numpy as np
+
+
 
 def reorder_and_preprocess_data(
     t: np.ndarray, 
@@ -86,3 +88,93 @@ def filter_invalid_points(
     num_valid_annual = len(valid_annual_indices)
 
     return u_star, valid_annual_indices, num_valid_annual
+
+# Function from https://github.com/numpy/numpy/issues/6620
+def matlab_percentile(in_data, percentiles):
+    """
+    Calculate percentiles in the way IDL and Matlab do it.
+
+    By using interpolation between the lowest an highest rank and the
+    minimum and maximum outside.
+
+    Parameters
+    ----------
+    in_data: numpy.ndarray
+        input data
+    percentiles: numpy.ndarray
+        percentiles at which to calculate the values
+
+    Returns
+    -------
+    perc: numpy.ndarray
+        values of the percentiles
+    """
+
+    data = np.sort(in_data)
+    p_rank = 100.0 * (np.arange(data.size) + 0.5) / data.size
+    perc = np.interp(percentiles, p_rank, data, left=data[0], right=data[-1])
+    return perc
+
+
+def addStatisticsFields(
+    stats: Dict[str, float],
+    t: np.ndarray, 
+    T: np.ndarray, 
+    r: np.ndarray, 
+    p: np.ndarray, 
+    itStrata: np.ndarray
+) -> Dict[str, float]:
+    """
+    Calculate various expected values based on input arrays and indices.
+
+    Parameters
+    ----------
+    t : np.ndarray
+        One-dimensional array of values,  representing time.
+    T : np.ndarray
+        One-dimensional array of values, representing temperature.
+    r : np.ndarray
+        Two-dimensional array from which values for `expected_ruStarVsT` are extracted.
+    p : np.ndarray
+        Two-dimensional array from which values for `expected_puStarVsT` are extracted.
+    itStrata : Sequence[int]
+        Sequence of indices used to subset arrays `t` and `T`.
+
+
+    Returns
+    -------
+    Dict[str, float]
+        A dictionary containing:
+        - "expected_mt": Mean of `t[itStrata]`
+        - "expected_ti": The first element of `t[itStrata]`
+        - "expected_tf": The last element of `t[itStrata]`
+        - "expected_ruStarVsT": Extracted scalar value from `r[1][0]`
+        - "expected_puStarVsT": Extracted scalar value from `p[1][0]`
+        - "expected_mT": Mean of `T[itStrata]`
+        - "expected_ciT": Half the difference between the 2.5th and 97.5th percentiles of `T[itStrata]`
+
+    Notes
+    -----
+    The `matlab_percentile` function should be defined externally and is used to reproduce the behavior
+    of MATLAB's percentile function, as it differs from NumPy's `np.percentile`.
+    """
+
+    expected_mt = float(np.mean(t[itStrata]))
+    expected_ti = float(t[itStrata[0]])
+    expected_tf = float(t[itStrata[-1]])
+    expected_ruStarVsT = float(r[1][0])
+    expected_puStarVsT = float(p[1][0])
+    expected_mT = float(np.mean(T[itStrata]))
+    ciT_vals = matlab_percentile(T[itStrata], [2.5, 97.5])
+    expected_ciT = 0.5 * float(np.diff(ciT_vals)[0])
+
+    stats.update({
+        "expected_mt": expected_mt,
+        "expected_ti": expected_ti,
+        "expected_tf": expected_tf,
+        "expected_ruStarVsT": expected_ruStarVsT,
+        "expected_puStarVsT": expected_puStarVsT,
+        "expected_mT": expected_mT,
+        "expected_ciT": expected_ciT
+    })
+    return stats
