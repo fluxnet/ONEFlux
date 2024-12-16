@@ -12,6 +12,7 @@ import pandas as pd
 import json
 import os
 from typing import Tuple
+from oneflux_steps.ustar_cp_python.cpd_evaluate_functions import reorder_and_preprocess_data, filter_invalid_points
 
 
 rng = np.random.default_rng()
@@ -98,6 +99,41 @@ def test_initializeParameters(matlab_engine, t, expected_nt, expected_m, expecte
     assert EndDOY == expected_EndDOY
     assert nPerBin == expected_nPerBin
     assert nN == expected_nN
+
+
+
+uStar_some_nans = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, np.nan])
+NEE_some_nans = np.array([1, 2, 3, np.nan, 5, 6, 7, 8, 9, 10])
+T_some_nans = np.array([1, 2, 3, 4, 5, 6, 7, np.nan, 9, 10])
+testcases = [ 
+            (uStar_some_nans, np.random.randint(0, 2, size=10), rng.uniform(-20,20,10), rng.uniform(-20,20,10)), #uStar some nans
+            (rng.uniform(-20,20,10), np.random.randint(0, 2, size=10), NEE_some_nans, rng.uniform(-20,20,10)), #NEE some nans
+            (rng.uniform(-20,20,10), np.random.randint(0, 2, size=10), rng.uniform(-20,20,10), T_some_nans), #T some nans
+            (rng.uniform(-20,20,10), np.random.randint(0, 2, size=10), rng.uniform(-20,20,10), rng.uniform(-20,20,10)), # No nans
+            (rng.uniform(-20,20,10), np.ones(10), rng.uniform(-20,20,10), rng.uniform(-20,20,10)), #fNight all zeros
+            (rng.uniform(-20,20,10), np.zeros(10), rng.uniform(-20,20,10), rng.uniform(-20,20,10)), #fNight all zeros
+            ]
+
+@pytest.mark.parametrize('uStar, fNight, NEE, T', testcases)
+def test_filterInvalidPoints(matlab_engine, uStar, fNight, NEE, T):
+    """
+    Test the filterInvalidPoints function in MATLAB.
+    """
+    
+    expected_u_star, expected_valid_annual_indices, expected_num_valid_annual = filter_invalid_points(uStar, fNight, NEE, T)
+    expected_u_star, expected_valid_annual_indices, expected_num_valid_annual = \
+        matlab.double(expected_u_star.tolist()), matlab.double((expected_valid_annual_indices+1).tolist()), matlab.double(expected_num_valid_annual)
+    
+    uStar = matlab.double(uStar.tolist())
+    fNight = matlab.double(fNight.tolist())
+    NEE = matlab.double(NEE.tolist())
+    T = matlab.double(T.tolist())
+
+    uStar, itAnnual, ntAnnual = matlab_engine.filterInvalidPoints(uStar, fNight, NEE, T, nargout=3)
+
+    assert np.allclose(uStar, expected_u_star, equal_nan=True)
+    assert np.allclose(itAnnual, expected_valid_annual_indices, equal_nan=True)
+    assert np.allclose(ntAnnual, expected_num_valid_annual, equal_nan=True)
 
 
 def test_filterInvalidPoints_logged_data(matlab_engine):
