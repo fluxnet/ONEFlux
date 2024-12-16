@@ -12,7 +12,7 @@ import pandas as pd
 import json
 import os
 from typing import Tuple
-from oneflux_steps.ustar_cp_python.cpd_evaluate_functions import reorder_and_preprocess_data, filter_invalid_points, addStatisticsFields
+from oneflux_steps.ustar_cp_python.cpd_evaluate_functions import reorder_and_preprocess_data, filter_invalid_points, addStatisticsFields, findStratumIndices
 
 
 rng = np.random.default_rng()
@@ -344,14 +344,16 @@ def test_findStratumIndices(matlab_engine, T, itSeason, TTh, iStrata):
     Test the findStratumIndices function in MATLAB.
     """
 
-    mask = (T >= TTh[iStrata]) & (T <= TTh[iStrata + 1])
-    # Extract the indices where the condition is true
-    itStrata = mask.nonzero()
-    # print(itStrata)
+    # mask = (T >= TTh[iStrata]) & (T <= TTh[iStrata + 1])
+    # # Extract the indices where the condition is true
+    # itStrata = mask.nonzero()
+    # # print(itStrata)
 
-    # Intersect the selected indices with itSeason
-    expected_itStrata = np.intersect1d(itStrata, itSeason)
-    print(expected_itStrata)
+    # # Intersect the selected indices with itSeason
+    # expected_itStrata = np.intersect1d(itStrata, itSeason)
+    # print(expected_itStrata)
+
+    expected_itStrata = findStratumIndices(T, itSeason, TTh, iStrata)
 
     T = matlab.double(T)
     itSeason = matlab.double(np.array(itSeason+1, dtype=float)) # +1 to account for 1-based indexing in MATLAB

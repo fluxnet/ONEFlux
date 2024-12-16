@@ -1,4 +1,4 @@
-from typing import List, Tuple, Sequence, Dict
+from typing import List, Tuple, Sequence, Dict, Union
 import numpy as np
 
 
@@ -178,3 +178,52 @@ def addStatisticsFields(
         "expected_ciT": expected_ciT
     })
     return stats
+
+
+def findStratumIndices(
+    T: np.ndarray, 
+    itSeason: Union[np.ndarray, np.ndarray],
+    TTh: np.ndarray,
+    iStrata: int
+) -> np.ndarray:
+    """
+    Determine the indices within a specified range of T, and then intersect them with
+    a given seasonal index set.
+
+    The function first creates a boolean mask selecting the elements of T that lie between
+    TTh[iStrata] and TTh[iStrata + 1]. It then extracts the indices of these elements, and
+    intersects them with `itSeason` to produce the final set of indices.
+
+    Parameters
+    ----------
+    T : np.ndarray
+        A one-dimensional array of values (e.g., times, temperatures).
+    TTh : np.ndarray
+        A one-dimensional array of threshold values, used to define intervals in T.
+    iStrata : int
+        Index specifying which interval in TTh to use. The interval is defined as 
+        [TTh[iStrata], TTh[iStrata + 1]].
+    itSeason : Sequence[int] or np.ndarray
+        A set of indices representing a particular season or subset of T.
+
+    Returns
+    -------
+    np.ndarray
+        An array of indices within the specified interval and season.
+
+    Notes
+    -----
+    - The interval is inclusive of the endpoints.
+    - `itSeason` is expected to be a set or list of valid indices for T.
+    """
+
+    # Create a boolean mask to select elements of T in the given interval
+    mask = (T >= TTh[iStrata]) & (T <= TTh[iStrata + 1])
+
+    # Extract indices where the condition is true
+    itStrata_indices = mask.nonzero()
+
+    # Intersect the selected indices with itSeason
+    expected_itStrata = np.intersect1d(itStrata_indices, itSeason)
+
+    return expected_itStrata
