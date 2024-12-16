@@ -343,16 +343,6 @@ def test_findStratumIndices(matlab_engine, T, itSeason, TTh, iStrata):
     """
     Test the findStratumIndices function in MATLAB.
     """
-
-    # mask = (T >= TTh[iStrata]) & (T <= TTh[iStrata + 1])
-    # # Extract the indices where the condition is true
-    # itStrata = mask.nonzero()
-    # # print(itStrata)
-
-    # # Intersect the selected indices with itSeason
-    # expected_itStrata = np.intersect1d(itStrata, itSeason)
-    # print(expected_itStrata)
-
     expected_itStrata = findStratumIndices(T, itSeason, TTh, iStrata)
 
     T = matlab.double(T)
