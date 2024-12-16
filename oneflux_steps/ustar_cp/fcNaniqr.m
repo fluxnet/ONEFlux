@@ -30,6 +30,8 @@
 	% find non-singleton dimensions of length d
 
 	d=size(X); d=setdiff(d,1); nd=length(d); 
+
+    disp(nd);
 	
 	switch nd; 
 		case 1; 
