@@ -101,7 +101,6 @@ def test_initializeParameters(matlab_engine, t, expected_nt, expected_m, expecte
     assert nN == expected_nN
 
 
-
 uStar_some_nans = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, np.nan])
 NEE_some_nans = np.array([1, 2, 3, np.nan, 5, 6, 7, 8, 9, 10])
 T_some_nans = np.array([1, 2, 3, 4, 5, 6, 7, np.nan, 9, 10])
@@ -189,6 +188,37 @@ def test_initializeStatistics(matlab_engine):
                 temp_s3 = np.array(list(s3[i].values()), dtype=float)
                 assert np.isnan(temp_s2).any() == True # Checks all values are NaN
                 assert np.isnan(temp_s3).any() == True
+
+
+occurrences = 50
+size = 600
+testcases = [
+               (rng.uniform(0,5,size), rng.uniform(0,5,size), rng.uniform(0,5,size), rng.uniform(0,5,size), np.random.randint(0,2,size), 366, np.repeat(np.arange(1, 13), occurrences), size), # Nominal case
+                (rng.uniform(0,5,size), rng.uniform(0,5,size), rng.uniform(0,5,size), rng.uniform(0,5,size), np.ones(size), 366, np.repeat(np.arange(1, 13), occurrences), size), # All nighttime data
+                (rng.uniform(0,5,size), rng.uniform(0,5,size), rng.uniform(0,5,size), rng.uniform(0,5,size), np.zeros(size), 366, np.repeat(np.arange(1, 13), occurrences), size) # All daytime data
+             ]
+@pytest.mark.parametrize('t, T, uStar, NEE, fNight, EndDOY, m, nt', testcases)
+def test_reorderAndPreprocessData(matlab_engine, t, T, uStar, NEE, fNight, EndDOY, m, nt):
+    """
+    Test the reorderAndPreprocessData function in MATLAB.
+    """
+    data = [t, T, uStar, NEE, fNight, EndDOY, m, nt]
+    
+    matlab_data = [matlab.double(d) if not isinstance(d, np.ndarray) else matlab.double(d.tolist()) for d in data ]
+
+    t, T, uStar, NEE, fNight, itAnnual, ntAnnual = matlab_engine.reorderAndPreprocessData(*matlab_data, nargout=7)
+    # t = matlab_engine.reorderAndPreprocessData(*matlab_data, nargout=1)
+    expected_t, expected_T, expected_uStar, expected_NEE, expected_fNight, expected_itAnnual, expected_ntAnnual = reorder_and_preprocess_data(*data)
+    # result = reorder_and_preprocess_data(*data)
+    print(T)
+    # print(result)
+    assert np.allclose(t, expected_t, equal_nan=True)
+    assert np.allclose(T, expected_T, equal_nan=True)
+    assert np.allclose(uStar, expected_uStar, equal_nan=True)
+    assert np.allclose(NEE, expected_NEE, equal_nan=True)
+    assert np.allclose(fNight, expected_fNight, equal_nan=True)
+    assert np.allclose(itAnnual, expected_itAnnual+1, equal_nan=True) # +1 to match matlab indexings
+    assert ntAnnual == expected_ntAnnual
 
 
 def test_reorderAndPreprocessData_logged_data(matlab_engine):
