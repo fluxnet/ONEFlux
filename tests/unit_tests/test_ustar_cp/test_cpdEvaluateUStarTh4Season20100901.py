@@ -11,7 +11,10 @@ import numpy as np
 import pandas as pd
 import json
 import os
+from typing import Tuple
 
+
+rng = np.random.default_rng()
 
 def json_to_numpy(data):
     
@@ -25,9 +28,13 @@ def json_to_numpy(data):
     return np.array(all_arrays)
 
 
-cpdEvaluateUStar_test_cases = ['2007', '2007_fnight_zero_0']
+
+
+cpdEvaluateUStar_test_cases = ['2007', # Nomial case 
+                               '2007_fnight_zero_0' # All nighttime data is zero
+                               ]
 @pytest.mark.parametrize('year', cpdEvaluateUStar_test_cases)
-def test_cpdEvaluateUStarTh4Season20100901(matlab_engine, year): # This test stores the logged data as row major instead of column major
+def test_cpdEvaluateUStarTh4Season20100901_logged_data(matlab_engine, year): # This test stores the logged data as row major instead of column major
     """
     Test the cpdEvaluateUStarTh4Season20100901 function in MATLAB.
     """
@@ -75,7 +82,6 @@ def test_cpdEvaluateUStarTh4Season20100901(matlab_engine, year): # This test sto
 testcases = [ (matlab.double([1.0000, 1.0417, 1.0834]), 3, matlab.double([0,1,1]), 366, 3, 2400), #nPerDay = 24, nPerBin = 3
                 (matlab.double([1.083, 1.083, 1.125]), 3, matlab.double([1,1,1]), 366, 5, 4000) # nPerBin = 5
                 ]
-
 @pytest.mark.parametrize('t, expected_nt, expected_m, expected_EndDOY, expected_nPerBin, expected_nN', testcases)
 def test_initializeParameters(matlab_engine, t, expected_nt, expected_m, expected_EndDOY, expected_nPerBin, expected_nN):
     """
@@ -94,7 +100,7 @@ def test_initializeParameters(matlab_engine, t, expected_nt, expected_m, expecte
     assert nN == expected_nN
 
 
-def test_filterInvalidPoints(matlab_engine):
+def test_filterInvalidPoints_logged_data(matlab_engine):
     """
     Test the filterInvalidPoints function in MATLAB.
     """
@@ -104,11 +110,7 @@ def test_filterInvalidPoints(matlab_engine):
     for name in input_names:
         path_to_artifacts = artifacts_dir + f'/CA-Cbo_qca_ustar_2007_0/input_{name}.csv'
         column = pd.read_csv(path_to_artifacts, header=None).iloc[:,0].to_numpy()
-        #print(column)
-        if name == 'fNight':
-            input_data[name] = matlab.int8(column.tolist())
-        else:
-            input_data[name] = matlab.double(column.tolist())
+        input_data[name] = matlab.double(column.tolist())
     
     expected_output_names = ['uStar', 'itAnnual', 'ntAnnual']
     expected_output_data = {}
@@ -124,9 +126,10 @@ def test_filterInvalidPoints(matlab_engine):
     assert np.allclose(ntAnnual, expected_output_data['ntAnnual'], equal_nan=True)
 
 
+
 def test_initializeStatistics(matlab_engine):
     """
-    Test the initializeStatistics function in MATLAB.
+    Test the initializeStatistics function in MATLAB initiliazes the Stats2 and Stats3 structures with NaN values.
     """
     nSeasons = 4
     nStrataX = 8
@@ -152,11 +155,7 @@ def test_initializeStatistics(matlab_engine):
                 assert np.isnan(temp_s3).any() == True
 
 
-# Empty data
-# all nightime data
-# all daytime data
-
-def test_reorderAndPreprocessData(matlab_engine):
+def test_reorderAndPreprocessData_logged_data(matlab_engine):
     """
     Test the reorderAndPreprocessData function in MATLAB.
     """
@@ -243,12 +242,12 @@ def test_computeStrataCount(matlab_engine, ntSeason, nPerBin, expected_nStrata):
     assert nStrata == expected_nStrata
 
 
-@pytest.mark.parametrize('nStrata', [5])
-def test_computeTemperatureThresholds(matlab_engine, nStrata):
+def test_computeTemperatureThresholds_logged_data(matlab_engine):
     """
     Test the computeTemperatureTresholds function in MATLAB.
     Tests a single case, function is essentially a wrapper to the matlab percentile function.
     """
+    nStrata = 5
     artifacts_dir = 'tests/test_artifacts/computeTemperatureThresholds_artifacts'
     input_names = ['T', 'itSeason']
     input_data = {}
@@ -263,6 +262,3 @@ def test_computeTemperatureThresholds(matlab_engine, nStrata):
     expected_TTh = pd.read_csv(expected_TTh, header=None).iloc[0,:].to_numpy()
 
     assert np.allclose(TTh, expected_TTh)
-
-
-    
