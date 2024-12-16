@@ -350,20 +350,20 @@ def test_findStratumIndices(matlab_engine, T, itSeason, TTh, iStrata):
     # print(itStrata)
 
     # Intersect the selected indices with itSeason
-    expected_itStrata = np.intersect1d(itStrata, itSeason) + 1
+    expected_itStrata = np.intersect1d(itStrata, itSeason)
     print(expected_itStrata)
 
     T = matlab.double(T)
-    itSeason = matlab.double(np.array(itSeason+1, dtype=float))
+    itSeason = matlab.double(np.array(itSeason+1, dtype=float)) # +1 to account for 1-based indexing in MATLAB
     TTh = matlab.double(TTh)
-    iStrata = iStrata + 1
+    iStrata = iStrata + 1 # +1 to account for 1-based indexing in MATLAB
 
     itStrata = matlab_engine.findStratumIndices(T, itSeason, TTh, iStrata, nargout=1)
     
     itStrata = np.array(itStrata.tomemoryview().tolist()[0], dtype=int)
     print(itStrata)
 
-    assert np.array_equal(itStrata, expected_itStrata)
+    assert np.array_equal(itStrata-1, expected_itStrata)
     # assert 1==0
 
 
