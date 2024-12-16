@@ -328,3 +328,40 @@ def test_computeTemperatureThresholds_logged_data(matlab_engine):
     expected_TTh = pd.read_csv(expected_TTh, header=None).iloc[0,:].to_numpy()
 
     assert np.allclose(TTh, expected_TTh)
+
+tetcases = [
+    (rng.uniform(-20,20,1000), np.array(rng.choice(1000, size=500, replace=False)), [-14.601,-5.22904,-2.095605,1.836835,5.136015,14.2835], 0), # Nominal case
+    (np.array([-20, -19, -15, 1, 4 ,14, 8, 7, 8 ,4], dtype=float), np.array([0, 1, 2]), [-14.601,-5.22904,-2.095605,1.836835,5.136015,14.2835], 1), # # No matching indices
+    (np.array([-1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=float), np.array([4, 7, 9]), [1, 1, 1, 1, 1, 1], 4), # Non increasing threshold TTH 
+    (rng.uniform(-5,25,900), np.array(rng.choice(1000, size=300, replace=False)), [-1.34166,5.217795,8.340625,12.45965,16.9017,24.672], 2), # iStrata = 2
+    (rng.uniform(0,30,400), np.array(rng.choice(1000, size=200, replace=False)), [2.34335,6.89097,11.09125,14.6745,17.95015,27.262], 4), # iStrata = 4
+    (rng.uniform(-5,15,800), np.array(rng.choice(1000, size=400, replace=False)), [-2.22904,0.904395,4.836835,8.136015,13.2835], 3), # iStrata = 3, length(TTh) = 5
+
+]
+@pytest.mark.parametrize('T, itSeason, TTh, iStrata', tetcases)
+def test_findStratumIndices(matlab_engine, T, itSeason, TTh, iStrata):
+    """
+    Test the findStratumIndices function in MATLAB.
+    """
+
+    mask = (T >= TTh[iStrata]) & (T <= TTh[iStrata + 1])
+    # Extract the indices where the condition is true
+    itStrata = mask.nonzero()
+    # print(itStrata)
+
+    # Intersect the selected indices with itSeason
+    expected_itStrata = np.intersect1d(itStrata, itSeason) + 1
+    print(expected_itStrata)
+
+    T = matlab.double(T)
+    itSeason = matlab.double(np.array(itSeason+1, dtype=float))
+    TTh = matlab.double(TTh)
+    iStrata = iStrata + 1
+
+    itStrata = matlab_engine.findStratumIndices(T, itSeason, TTh, iStrata, nargout=1)
+    
+    itStrata = np.array(itStrata.tomemoryview().tolist()[0], dtype=int)
+    print(itStrata)
+
+    assert np.array_equal(itStrata, expected_itStrata)
+    # assert 1==0
