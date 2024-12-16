@@ -1,23 +1,24 @@
 import matlab
 import numpy as np
 import pytest
+from oneflux_steps.ustar_cp_python.fcNaniqr import fc_nan_iqr, get_dims, iqr_1d_eval, iqr_2d_eval, iqr_3d_eval
 
 # Parameterized Test Cases
 @pytest.mark.parametrize(
     "vector, expected",
     [
         # Case 1: Array is 3 and has no NaNs
-        (matlab.double([[1], [2], [3]]), 1.5),  # IQR of [1, 2, 3]
+        (([[1], [2], [3]]), 1.5),  # IQR of [1, 2, 3]
 
         # Case 2: Array >3, contains NaNs, but has >3 real numbers
-        (matlab.double([[1], [2], [3], [4], [np.nan], [6]]), np.nan),
+        (([[1], [2], [3], [4], [np.nan], [6]]), np.nan),
 
         # Case 3: Array >3, contains NaNs, but has 3 or fewer real numbers
         # Note this result is erroneous!
-        (matlab.double([[np.nan], [2], [3] ,[np.nan]]), 1.0),
+        ([[np.nan], [2], [3] ,[np.nan]], 1.0),
 
         # Case 4: Array >3 and has no NaNs
-        (matlab.double([[1], [2], [3], [4], [5]]), np.nan),
+        ([[1], [2], [3], [4], [5]], np.nan),
     ],
 )
 def test_fcnaniqr_vector_cases(test_engine, vector, expected):
@@ -36,6 +37,11 @@ def test_fcnaniqr_vector_cases(test_engine, vector, expected):
     else:
         assert np.isclose(result, expected), f"Expected {expected}, got {result}"
 
+    # Call python function
+    result_python = fc_nan_iqr(np.asarray(vector))
+
+    assert np.allclose(result_python, expected, equal_nan=True)
+
 @pytest.mark.parametrize(
     "matrix, expected",
     [
@@ -53,7 +59,7 @@ def test_fcnaniqr_vector_cases(test_engine, vector, expected):
 
         # Case 3: Columns with < 4 Real Rows
         #Note weird behaviour of IQR estimation
-        (matlab.double([[1, np.nan], [2, 3]]), [1.5, np.nan]),
+        (matlab.double([[1, np.nan], [2, 3]]), [1.5]),
 
         # Case 4: All NaNs
         (matlab.double([[np.nan, np.nan], [np.nan, np.nan]]), [np.nan, np.nan]),
@@ -69,25 +75,14 @@ def test_fcnaniqr_2D_cases(test_engine, matrix, expected):
     # Verify Result
     assert result is not None, "Expected non-None result from MATLAB function"
 
-    # Normalize result to ensure consistent access
-    if isinstance(result, float):  # Scalar result
-        result = [[result]]
-    elif isinstance(result, list) and isinstance(result[0], float):  # 1D result from MATLAB
-        result = [result]
+    assert np.allclose(result, expected, equal_nan=True)
 
-    # Check each column's IQR
-    for idx, exp_val in enumerate(expected):
-        # Access the correct result value
-        try:
-            result_value = result[0][idx] if len(result[0]) > idx else np.nan
-        except (IndexError, TypeError):
-            result_value = np.nan
+    # Do python calc
 
-        # Perform the assertion
-        if np.isnan(exp_val):
-            assert np.isnan(result_value), f"Expected NaN, got {result_value} for column {idx}"
-        else:
-            assert np.isclose(result_value, exp_val), f"Expected {exp_val}, got {result_value} for column {idx}"
+    result_python = fc_nan_iqr(np.asarray(matrix))
+
+    assert np.allclose(result_python, np.asarray(expected), equal_nan=True)
+
 
 @pytest.mark.parametrize(
     "matrix, expected",
@@ -96,10 +91,10 @@ def test_fcnaniqr_2D_cases(test_engine, matrix, expected):
         (matlab.double([[[1, 2], [4, 5]], [[7, 8], [10, 11]]]), [[np.nan, np.nan]]),
 
         # Case 1b: No NaNs, Fully Populated, 4 rows (>3)
-        (matlab.double([[[1, 2], [4, 5]],[[7, 8], [10, 11]],[[13, 14], [16, 17]],[[19, 20], [22, 23]]]), [[12.0, 12.0]]),
+        (matlab.double([[[1, 2], [4, 5]],[[7, 8], [10, 11]],[[13, 14], [16, 17]],[[19, 20], [22, 23]]]), [[12.0, 12.0, 12.0, 12.0]]),
 
         # Case 1b: Single NaN, Fully Populated, 4 rows (>3)
-        (matlab.double([[[np.nan, 2], [4, 5]],[[7, 8], [10, 11]],[[13, 14], [16, 17]],[[19, 20], [22, 23]]]), [[np.nan, 12.0]]),
+        (matlab.double([[[np.nan, 2], [4, 5]],[[7, 8], [10, 11]],[[13, 14], [16, 17]],[[19, 20], [22, 23]]]), [[np.nan, 12.0, 12.0, 12.0]]),
 
         # Case 1c: Single Layer 3D
         (matlab.double([[[1, 2, 3]], [[4, 5, 6]], [[7, 8, 9]]]), [[np.nan, np.nan, np.nan]]),
@@ -124,23 +119,114 @@ def test_fcnaniqr_3D_cases(test_engine, matrix, expected):
     # Verify Result
     assert result is not None, "Expected non-None result from MATLAB function"
 
-    # Normalize result to ensure consistent access
-    if isinstance(result, float):  # Scalar result
-        result = [[result]]
-    elif isinstance(result, list) and isinstance(result[0], float):  # 1D result from MATLAB
-        result = [result]
+    assert np.allclose(result, expected, equal_nan=True)
 
-    # Check each column's IQR
-    for row_idx, expected_row in enumerate(expected):
-        for col_idx, exp_val in enumerate(expected_row):
-            # Access the correct result value
-            try:
-                result_value = result[row_idx][col_idx] if len(result[row_idx]) > col_idx else np.nan
-            except (IndexError, TypeError):
-                result_value = np.nan
+TEST_CASES_dims = [
+    ["1D vector", [[1], [2], [3], [4]], 1],
+    ["2D matrix", [[1, 2, 3], [4, 5, 6]], 2],
+    ["3D matrix, shape 3,4,5", [[[1]*5]*4]*3, 3],
+    ["Singleton dimensions", [[[1]]*5]*3, 2],
+    ["Empty array", [], 1.0],
+    ["Large array", [[[1]*3]*2000]*1000, 3],
+    ["High-dimensional array", [[[[[1]*6]*5]*4]*3]*2, 5],
+    ["Trailing singleton dimension", [[[1]]*4]*4, 1],
+    ["Leading and trailing singleton dimensions", [[[[1]]*4]*4], 1],
+    ["Fully singleton array", [[[[1]]]], 0],
+    ["Mixed regular and singleton dimensions", [[[1]]*9]*10, 2],
+    ["High-dimensional with many singletons", [[[[[[1]]]*10]*1]*1]*10, 1],
+]
 
-            # Perform the assertion
-            if np.isnan(exp_val):
-                assert np.isnan(result_value), f"Expected NaN, got {result_value} for row {row_idx}, col {col_idx}"
-            else:
-                assert np.isclose(result_value, exp_val), f"Expected {exp_val}, got {result_value} for row {row_idx}, col {col_idx}"
+@pytest.mark.parametrize("description, X, expected", TEST_CASES_dims)
+def test_get_dims(matlab_engine, description, X, expected):
+    """Parameterized test for various inputs with MATLAB column-major consideration."""
+    # Matlab calcs
+    X = matlab.double(X)
+
+    result = matlab_engine.get_dims(X)
+
+    assert np.allclose(result, expected, equal_nan=True)
+
+    # Python calcs
+    result_python = get_dims(np.asarray(X))
+
+    # Compare integer values
+    assert np.allclose(result_python, expected, equal_nan=True)
+
+
+
+TEST_CASES = [
+    ["All NaNs", [np.nan, np.nan, np.nan], np.nan],
+    ["Single value", [5], 0],
+    ["Two values", [1, 9], 8],
+    ["Three values no NaNs", [1, 5, 9], 6.0],
+    ["Three values with NaNs", [1, np.nan, 9], 8],
+    ["All identical", [4, 4, 4], 0],
+    ["Mixed values", [2, 8, 4, 6], np.nan], #returns default nan value due to len(X)>3 
+    ["Negative values", [-5, -1, -3], 3],
+    ["Zeroes and positives", [0, 1, 2], 1.5],
+    ["Contains zeros and NaNs", [0, np.nan, 0, 0], 0],
+]
+
+@pytest.mark.parametrize("description, X, expected", TEST_CASES)
+def test_iqr_1d_eval(matlab_engine, description, X, expected):
+    """Parameterized test for IQR evaluation in 1D arrays."""
+    matlab_array = matlab.double([[x] for x in X])
+    result = matlab_engine.iqr_1D_eval(matlab_array)
+    if isinstance(expected, float) and expected != expected:  # Check for NaN
+        assert result != result, f"{description}: Expected NaN but got {result}"
+    else:
+        assert result == expected, f"{description}: Expected {expected} but got {result}"
+
+TEST_CASES_2D = [
+    ["All NaNs, column =< 3", [[np.nan, np.nan], [np.nan, np.nan]], [np.nan, np.nan]],
+    ["Single column, same values", [[5], [5], [5], [5]], [0]],
+    ["Single column, different values", [[5], [6], [7], [8]], [2]],
+    ["Two columns, distinct values", [[1, 9], [2, 8], [3, 7], [4, 6]], [2, 2]],
+    ["Mixed NaNs and values", [[1, np.nan], [2, 8], [np.nan, 7], [4, np.nan]], [np.nan, np.nan]],
+    ["Identical columns", [[4, 4], [4, 4], [4, 4], [4, 4]], [0, 0]],
+    ["Negative values", [[-5, -1], [-4, -2], [-3, -3], [-2, -4]], [2, 2]],
+    ["Zeros and positives", [[0, 1], [1, 2], [2, 3], [3, 4]], [2, 2]],
+    ["Zeros and NaNs", [[0, np.nan], [0, 0], [0, np.nan], [0, 0]], [0, np.nan]],
+]
+
+@pytest.mark.parametrize("description, X, expected", TEST_CASES_2D)
+def test_iqr_2d_eval(matlab_engine, description, X, expected):
+    """Parameterized test for IQR evaluation in 2D arrays."""
+    matlab_array = matlab.double(X)
+    result = matlab_engine.iqr_2d_eval(matlab_array)
+    
+    assert np.allclose(np.asarray(result), np.asarray(expected), equal_nan=True)
+
+TEST_CASES_3D = [
+    ["Single slice", [[[5, 5]], [[5, 5]], [[5, 5]], [[5, 5]]], [[0, 0]]],
+    ["Two slices, distinct values", [[[1, 9], [2, 8]], [[3, 7], [4, 6]], [[5, 5], [6, 4]], [[7, 3], [8, 2]]], [[4, 4], [4, 4]]],
+    ["Mixed NaNs and values", [[[1, np.nan], [2, 8]], [[np.nan, 7], [4, np.nan]], [[3, 5], [np.nan, 6]], [[7, np.nan], [8, 1]]], [[np.nan, np.nan], [np.nan, np.nan]]],
+    ["Identical slices", [[[4, 4], [4, 4]], [[4, 4], [4, 4]], [[4, 4], [4, 4]], [[4, 4], [4, 4]]], [[0, 0], [0, 0]]],
+    ["Negative values", [[[ -5, -1], [-4, -2]], [[ -3, -3], [-2, -4]], [[ -1, -5], [0, -6]], [[-7, -8], [-9, -10]]], [[4, 4.5], [5.5, 5]]],
+    ["Zeros and positives", [[[0, 1], [1, 2]], [[2, 3], [3, 4]], [[4, 5], [5, 6]], [[6, 7], [7, 8]]], [[4, 4], [4, 4]]],
+    ["Zeros and NaNs", [[[0, np.nan], [0, 0]], [[0, np.nan], [0, 0]], [[0, np.nan], [0, 0]], [[0, np.nan], [0, 0]]], [[0, np.nan], [0, 0]]],
+]
+
+@pytest.mark.parametrize("description, X, expected", TEST_CASES_3D)
+def test_iqr_3d_eval(matlab_engine, description, X, expected):
+    """Parameterized test for IQR evaluation in 3D arrays."""
+    # Evaluate matlab
+    # Ensure MATLAB-compatible 3D array creation
+    matlab_array = matlab.double([[[float(val) for val in row] for row in slice_] for slice_ in X])
+    result = matlab_engine.iqr_3d_eval(matlab_array)
+    
+    # Convert both to numpy arrays for consistent comparison
+    result_np = np.asarray(result)
+
+    expected_np = np.asarray(expected)
+
+    # Assert comparison with NaN handling
+    assert np.allclose(result_np, expected_np, equal_nan=True), (
+        f"{description}: Expected {expected_np} but got {result_np}"
+    )
+
+    # Evaluate python
+    result = iqr_3d_eval(np.asarray(X))
+
+    assert np.allclose(result, np.asarray(expected), equal_nan=True)
+
