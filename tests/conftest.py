@@ -91,12 +91,8 @@ class MatlabEngine:
         atexit.register(lambda: (s := self.out.getvalue()) and print(f"{name} stdout:\n{s}"))
         atexit.register(lambda: (s := self.err.getvalue()) and print(f"{name} stderr:\n{s}"))
 
-    def _repr_pretty(self, p):
-        return "MATLAB Test Engine"
-
-
-    def _repr_pretty(self, p):
-        return "MATLAB Test Engine"
+    def _repr_pretty_(self, p):
+        return "MATLAB"
 
     def __call__(self, *args, jsonencode=(), jsondecode=(), **kwargs):
         """
@@ -110,6 +106,10 @@ class MatlabEngine:
             The result of the wrapped function, with specified outputs JSON decoded if necessary.
         """
 
+        if self.func._name == '_repr_pretty_':
+            # Overload attempts to pretty print matlab engines (e.g., by hypothesis)
+            return 'MATLAB'
+      
         # For `convert` and `equal` we need to handle these directly here since
         # we have overriden `call`.
         if (self.func._name == "convert") | (self.func._name == "equal"):
@@ -172,7 +172,6 @@ def test_engine(language, refactored=True):
     Pytest fixture to start a 'running engine' which allows multiple languages
     to be targetted
     """
-
     if language == 'python':
       yield PythonEngine()
 
@@ -222,7 +221,6 @@ def test_engine(language, refactored=True):
 
       # Close MATLAB engine after tests are done
       eng.quit()
-
 
 
 @pytest.fixture
