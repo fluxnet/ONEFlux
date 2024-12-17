@@ -56,6 +56,7 @@ static const char filter[] = "*.*";
 static const char dd_field_delimiter[] = ",\r\n";
 static const char *dds[DETAILS_SIZE] = { "site", "year", "lat", "lon", "timezone", "htower", "timeres", "sc_negl", "notes" };
 static const char *timeress[TIMERES_SIZE] = { "spot", "quaterhourly", "halfhourly", "hourly", "daily", "monthly" };
+static const char variadic[] = "variadic";
 
 /* error strings */
 static const char err_unable_open_path[] = "unable to open path: %s\n\n";
@@ -64,6 +65,7 @@ static const char err_path_too_big[] = "specified path \"%s\" is too big.\n\n";
 static const char err_filename_too_big[] = "filename \"%s\" is too big.\n\n";
 static const char err_empty_argument[] = "empty argument\n";
 static const char err_unknown_argument[] = "unknown argument: \"%s\"\n\n";
+static const char err_too_long_arg[] = "too long argument\n";
 static const char err_gf_too_less_values[] = "too few valid values to apply gapfilling\n";
 static const char err_wildcards_with_no_extension_used[] = "wildcards with no extension used\n";
 
@@ -815,8 +817,50 @@ int parse_arguments(int argc, char *argv[], const ARGUMENT *const args, const in
 
 		/* */
 		if ( !ok ) {
-			printf(err_unknown_argument, argv[1]+1);
-			return 0;
+			for ( i = 0; i < arg_count; i++ ) {
+				if ( !string_compare_i(args[i].name, variadic) ) {
+				#define ARG_MAX_LEN 31
+
+					char arg[ARG_MAX_LEN+1] = { 0 };
+					int n = (int)strlen(argv[1]);
+
+					param = strrchr(argv[1], '=');
+					if ( param ) {
+						n = param - argv[1];
+						++param;
+					}
+					--n; /* we keep '-' in case of no param or '=' out */
+
+					if ( n > ARG_MAX_LEN ) {
+						printf(err_too_long_arg);
+						return 0;
+					}
+					strncpy(arg, argv[1]+1, n);
+
+					/* check if function is present */
+					assert(args[i].f);
+
+					/* call function */
+					ok = args[i].f(arg, param, args[i].p);
+					if ( ! ok  ) {
+						return 0;
+					}
+
+					/* in this way we can alert about unknown argument */
+					if ( -1 == ok ) {
+						i = arg_count;
+					}
+
+					break;
+
+				#undef ARG_MAX_LEN
+				}
+			}
+
+			if ( i == arg_count ) {
+				printf(err_unknown_argument, argv[1]+1);
+				return 0;
+			}
 		}
 
 		/* */

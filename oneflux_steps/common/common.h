@@ -16,6 +16,7 @@
 #endif
 
 /* includes */
+#include <stdio.h>
 #include <math.h>
 
 /* defines stolen to http://www.gnu.org/software/libtool/manual/autoconf/Function-Portability.html */
