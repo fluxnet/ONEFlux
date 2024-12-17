@@ -227,3 +227,40 @@ def findStratumIndices(
     expected_itStrata = np.intersect1d(itStrata_indices, itSeason)
 
     return expected_itStrata
+
+
+def computeStrataCount(nt_season: int, 
+                         n_bins: int, 
+                         n_per_bin: int, 
+                         n_strata_n: int, 
+                         n_strata_x: int) -> int:
+    """
+    Compute the number of strata for a given season length and bin configuration.
+
+    The computation is based on dividing the total number of time steps (nt_season) 
+    by the product of the number of bins (n_bins) and the number of time steps per bin (n_per_bin).
+    The resulting number of strata is then constrained between minimum (n_strata_n) 
+    and maximum (n_strata_x) values.
+
+    Parameters
+    ----------
+    nt_season : int
+        Total number of time steps in a season.
+    n_bins : int
+        Number of bins used for stratification.
+    n_per_bin : int
+        Number of time steps per bin.
+    n_strata_n : int
+        Minimum allowable number of strata.
+    n_strata_x : int
+        Maximum allowable number of strata.
+
+    Returns
+    -------
+    int
+        The computed number of strata, ensuring it falls within the specified bounds.
+    """
+    n_strata = nt_season // (n_bins * n_per_bin)
+    n_strata = max(n_strata, n_strata_n)
+    n_strata = min(n_strata, n_strata_x)
+    return n_strata

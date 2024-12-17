@@ -300,12 +300,12 @@ def test_computeStrataCount(matlab_engine, ntSeason, nPerBin, expected_nStrata):
     nStrataX = 8
     nStrataN = 4
     nBins = 50
-    ntSeason = matlab.double(ntSeason)
-    nPerBin = matlab.double(nPerBin)
 
+    python_nStrata = computeStrataCount(ntSeason, nBins, nPerBin, nStrataN, nStrataX)
     nStrata = matlab_engine.computeStrataCount(ntSeason, nBins, nPerBin, nStrataN, nStrataX)
 
     assert nStrata == expected_nStrata
+    assert python_nStrata == expected_nStrata
 
 
 def test_computeTemperatureThresholds_logged_data(matlab_engine):
