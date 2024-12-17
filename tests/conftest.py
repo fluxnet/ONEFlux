@@ -34,6 +34,13 @@ from abc import ABC, abstractmethod
 # All modules need to be imported here
 from oneflux_steps.ustar_cp_python.utils import *
 
+def pytest_addoption(parser):
+    parser.addoption("--language", action="store", default="matlab")
+
+@pytest.fixture(scope="session")
+def language(pytestconfig):
+    return pytestconfig.getoption("language")
+
 # Specification of a `TestEngine`
 class TestEngine(ABC):
     @abstractmethod
@@ -160,7 +167,7 @@ MatlabFunc.__new__ = mf_factory
 
 
 @pytest.fixture(scope="session")
-def test_engine(refactored=True, language='matlab'):
+def test_engine(language, refactored=True):
     """
     Pytest fixture to start a 'running engine' which allows multiple languages
     to be targetted
