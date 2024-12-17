@@ -322,9 +322,9 @@ def test_setup_Stats(matlab_engine, nBoot, nSeasons, nStrataX, expected_shape):
     assert compare_matlab_arrays(Stats, expected_shape)
 
     # Call the python function
-    #Stats_python = setup_stats(nBoot, nSeasons, nStrataX)
+    Stats_python = setup_stats(nBoot, nSeasons, nStrataX)
 
-    #assert_dicts_with_nan_equal(Stats_python, expected_shape)
+    assert_dicts_with_nan_equal(Stats_python, expected_shape)
 
 def assert_dicts_with_nan_equal(obj1, obj2) -> None:
     """
