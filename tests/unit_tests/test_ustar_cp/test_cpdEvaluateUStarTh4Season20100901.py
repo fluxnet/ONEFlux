@@ -321,14 +321,17 @@ def test_computeTemperatureThresholds_logged_data(matlab_engine):
     for name in input_names:
         path_to_artifacts = artifacts_dir + f'/CA-Cbo_qca_ustar_2007_0/input_{name}.csv'
         column = pd.read_csv(path_to_artifacts, header=None).iloc[:,0].to_numpy()
-        input_data[name] = matlab.double(column.tolist())
+        input_data[name] = column.tolist()
 
-    TTh = matlab_engine.computeTemperatureThresholds(input_data['T'], input_data['itSeason'], nStrata, nargout=1)
+    TTh = matlab_engine.computeTemperatureThresholds(matlab.double(input_data['T']), matlab.double(input_data['itSeason']), nStrata, nargout=1)
+    python_TTh = computeTemperatureThresholds(np.array(input_data['T']), np.array(input_data['itSeason'])-1, nStrata) # -1 to account for 0-based indexing in python
+
     TTh = np.array(TTh.tomemoryview().tolist()[0])
     expected_TTh = artifacts_dir + f'/CA-Cbo_qca_ustar_2007_0/output_TTh.csv'
     expected_TTh = pd.read_csv(expected_TTh, header=None).iloc[0,:].to_numpy()
 
     assert np.allclose(TTh, expected_TTh)
+    assert np.allclose(python_TTh, expected_TTh)
 
 tetcases = [
     (rng.uniform(-20,20,1000), np.array(rng.choice(1000, size=500, replace=False)), [-14.601,-5.22904,-2.095605,1.836835,5.136015,14.2835], 0), # Nominal case

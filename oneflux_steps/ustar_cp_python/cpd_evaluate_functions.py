@@ -284,3 +284,43 @@ def computeSeasonIndices(i_season: int,
         start = (i_season - 1) * n_per_season + 1
         end = i_season * n_per_season
         return range(start, end + 1)
+
+
+def computeTemperatureThresholds(
+    T: np.ndarray, 
+    it_season: Sequence[int], 
+    n_strata: int
+) -> np.ndarray:
+    """
+    Compute temperature thresholds by dividing the specified seasonal subset of 
+    temperatures into `n_strata` strata based on percentile values. The resulting 
+    thresholds will include the 0th percentile (minimum), the 100th percentile (maximum),
+    and evenly spaced percentile boundaries in between.
+
+    Parameters
+    ----------
+    T : np.ndarray
+        A 1D array of temperature values.
+    it_season : Sequence[int]
+        Indices specifying which elements of `T` belong 
+        to the season of interest.
+    n_strata : int
+        The number of strata to divide the temperatures into.
+
+    Returns
+    -------
+    np.ndarray
+        A 1D array of temperature thresholds, representing the percentile boundaries 
+        from 0% to 100% inclusive. The array will have a length of `n_strata + 1`.
+    """
+    # Compute the required percentile values:
+    # np.linspace(0, 100, n_strata + 1) creates an array of percentiles from 0 to 100.
+    percentiles = np.linspace(0, 100, n_strata + 1)
+    
+    # Extract the seasonal temperatures and compute their percentiles
+    T_season = T[it_season]
+    TTh = matlab_percentile(T_season, percentiles)
+
+    return TTh
+
+
