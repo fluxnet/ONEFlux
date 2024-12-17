@@ -31,6 +31,9 @@ import numpy as np
 from matlab.engine.matlabengine import MatlabFunc
 from abc import ABC, abstractmethod
 
+# All modules need to be imported here
+from oneflux_steps.ustar_cp_python.utils import *
+
 # Specification of a `TestEngine`
 class TestEngine(ABC):
     @abstractmethod
