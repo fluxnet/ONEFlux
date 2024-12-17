@@ -312,7 +312,7 @@ def test_computeStrataCount(matlab_engine, ntSeason, nPerBin, expected_nStrata):
 def test_computeTemperatureThresholds_logged_data(matlab_engine):
     """
     Test the computeTemperatureTresholds function in MATLAB.
-    Tests a single case, function is essentially a wrapper to the matlab percentile function.
+    Tests a single case, function is essentially a wrapper to the matlab percentile function but with a contrained statespace of inputs.
     """
     nStrata = 5
     artifacts_dir = 'tests/test_artifacts/computeTemperatureThresholds_artifacts'
