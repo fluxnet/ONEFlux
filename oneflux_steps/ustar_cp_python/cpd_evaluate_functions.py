@@ -264,3 +264,48 @@ def computeStrataCount(nt_season: int,
     n_strata = max(n_strata, n_strata_n)
     n_strata = min(n_strata, n_strata_x)
     return n_strata
+
+
+def computeSeasonIndices(i_season: int, 
+                           n_seasons: int, 
+                           n_per_season: int, 
+                           nt_annual: int) -> range:
+    """
+    Compute the time indices for a given season within an annual cycle.
+
+    The year is divided into `n_seasons` seasons, each ideally consisting of 
+    `n_per_season` time steps. The function returns the indices for the 
+    `i_season`-th season. For the last season, if the total annual length (`nt_annual`)
+    is not perfectly divisible by `n_seasons`, it extends to the end of the year.
+
+    Parameters
+    ----------
+    i_season : int
+        The season index for which to compute the indices (1-based).
+    n_seasons : int
+        The total number of seasons in a year.
+    n_per_season : int
+        The number of time steps per season, ideally. Note that if the total 
+        (`nt_annual`) is not divisible by `n_seasons`, the last season will 
+        include the remainder.
+    nt_annual : int
+        The total number of time steps in a year.
+
+    Returns
+    -------
+    range
+        A range object representing the indices for the specified season.
+    """
+    n_per_season = int(n_per_season)
+    if i_season == 1:
+        # First season
+        return range(1, n_per_season + 1)
+    elif i_season == n_seasons:
+        # Last season, possibly extended to cover the remainder
+        start = (n_seasons - 1) * n_per_season + 1
+        return range(start, nt_annual + 1)
+    else:
+        # Intermediate seasons
+        start = (i_season - 1) * n_per_season + 1
+        end = i_season * n_per_season
+        return range(start, end + 1)

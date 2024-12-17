@@ -272,14 +272,15 @@ def test_computeSeasonIndices(matlab_engine, iSeasons, nSeasons, nPerSeason, ntA
     """
     Test the computeSeasonIndices function in MATLAB.
     """
-    iSeasons = matlab.double(iSeasons)
-    nSeasons = matlab.double(nSeasons)
-    nPerSeason = matlab.double(nPerSeason)
-    ntAnnual = matlab.double(ntAnnual)
 
-    jtSeasons = matlab_engine.computeSeasonIndices(iSeasons, nSeasons, nPerSeason, ntAnnual)
+    python_jtSeasons = computeSeasonIndices(iSeasons, nSeasons, nPerSeason, ntAnnual)
+
+    jtSeasons = matlab_engine.computeSeasonIndices(iSeasons, nSeasons, nPerSeason, matlab.double(ntAnnual))
+
     jtSeasons = np.array(jtSeasons.tomemoryview().tolist()[0])
+
     assert np.array_equal(jtSeasons, expected_jtSeasons)
+    assert np.array_equal(python_jtSeasons, expected_jtSeasons)
     
 
 testcases = [
