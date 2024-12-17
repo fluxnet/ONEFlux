@@ -1,4 +1,5 @@
 from typing import List, Tuple, Sequence, Dict, Union
+from oneflux_steps.ustar_cp_python.utilities import prctile as matlab_percentile
 import numpy as np
 
 
@@ -88,32 +89,6 @@ def filter_invalid_points(
     num_valid_annual = len(valid_annual_indices)
 
     return u_star, valid_annual_indices, num_valid_annual
-
-# Function from https://github.com/numpy/numpy/issues/6620
-def matlab_percentile(in_data, percentiles):
-    """
-    Calculate percentiles in the way IDL and Matlab do it.
-
-    By using interpolation between the lowest an highest rank and the
-    minimum and maximum outside.
-
-    Parameters
-    ----------
-    in_data: numpy.ndarray
-        input data
-    percentiles: numpy.ndarray
-        percentiles at which to calculate the values
-
-    Returns
-    -------
-    perc: numpy.ndarray
-        values of the percentiles
-    """
-
-    data = np.sort(in_data)
-    p_rank = 100.0 * (np.arange(data.size) + 0.5) / data.size
-    perc = np.interp(percentiles, p_rank, data, left=data[0], right=data[-1])
-    return perc
 
 
 def addStatisticsFields(
