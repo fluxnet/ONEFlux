@@ -24,6 +24,8 @@ def setup_stats(n_boot: int, n_seasons: int, n_strata_x: int) -> List[List[List[
     """
     Initialize the Stats structure based on input dimensions.
 
+    This function is correct where the args are all integers > 1.
+
     Args:
         n_boot (int): Number of bootstraps.
         n_seasons (int): Number of seasons.
@@ -32,17 +34,14 @@ def setup_stats(n_boot: int, n_seasons: int, n_strata_x: int) -> List[List[List[
     Returns:
         List[List[List[Dict[str, float]]]]: Preallocated stats structure.
     """
-    stats_mt = generate_stats_mt()
-
-    def has_zero(*args: int) -> bool:
-        """Check if any input argument is zero."""
-        return any(arg == 0 for arg in args)
-
-    if has_zero(n_boot, n_seasons, n_strata_x):
-        return stats_mt
+    args_list = [n_boot, n_seasons, n_strata_x]
+    for n in args_list:
+        if n < 2:
+            raise ValueError(f'Function "setup_stats" has been passed an argument \
+                             with value {n}. This may lead undesired behaviour')
 
     # Preallocate stats array
-    stats = [[[stats_mt.copy() for _ in range(n_strata_x)]
+    stats = [[[generate_stats_mt() for _ in range(n_strata_x)]
               for _ in range(n_seasons)]
              for _ in range(n_boot)]
 
