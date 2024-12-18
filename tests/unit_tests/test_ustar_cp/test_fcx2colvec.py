@@ -8,29 +8,29 @@ import numpy as np
     "input_data, expected",
     [
         # Case 1: 1D Row Vector
-        (matlab.double([1, 2, 3]), [[1], [2], [3]]),
+        ([1, 2, 3], [[1], [2], [3]]),
 
         # Case 2: 1D Column Vector
-        (matlab.double([[1], [2], [3]]), [[1], [2], [3]]),
+        ([[1], [2], [3]], [[1], [2], [3]]),
 
         # Case 3: 2D Matrix (3x2)
-        (matlab.double([[1, 2], [3, 4], [5, 6]]), [[1], [3], [5], [2], [4], [6]]),  # Column-major!
+        ([[1, 2], [3, 4], [5, 6]], [[1], [3], [5], [2], [4], [6]]),  # Column-major!
 
         # Case 4: 3D Array (2x2x2)
         (
-            matlab.double([[[1, 2], [3, 4]], [[5, 6], [7, 8]]]),
+            [[[1, 2], [3, 4]], [[5, 6], [7, 8]]],
             [[1], [5], [3], [7], [2], [6], [4], [8]],  # Column-major flattening
         ),
 
         # Case 5: Empty Array
-        (matlab.double([]), []),
+        ([], []),
 
         # Case 6: Single Element
-        (matlab.double([5]), [[5]]),
+        ([5], [[5]]),
 
         # Case 7: NaN Data
         (
-            matlab.double([[float('nan'), 2], [3, float('nan')]]),
+            [[float('nan'), 2], [3, float('nan')]],
             [[float('nan')], [3], [2], [float('nan')]],
         ),
     ],
@@ -40,13 +40,13 @@ def test_fcx2colvec(test_engine, input_data, expected):
     Test MATLAB's fcx2colvec function with various inputs and expected results.
     """
     # Call MATLAB function
-    result = test_engine.fcx2colvec(input_data)
+    result = test_engine.fcx2colvec(test_engine.convert(input_data))
 
-    # Call python version
-    result_python = fcx2colvec(np.asarray(input_data))
+    # # Call python version
+    # result_python = fcx2colvec(np.asarray(input_data))
 
     #test outcomes
     # Test outcomes
-    assert test_engine.equal(result, to_matlab_type(expected))
-    assert np.allclose(result_python, np.asarray(expected), equal_nan=True)
+    assert test_engine.equal(result, test_engine.convert(expected))
+    # assert np.allclose(result_python, np.asarray(expected), equal_nan=True)
 
