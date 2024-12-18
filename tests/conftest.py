@@ -435,7 +435,7 @@ def to_matlab_type(data):
     elif isinstance(data, (int, float)):
         return matlab.double([data])  # Convert single numbers
     else:
-        return data  # If the data type is already MATLAB-compatible
+      return data  # If the data type is already MATLAB-compatible
 
 def flatten(container):
     """

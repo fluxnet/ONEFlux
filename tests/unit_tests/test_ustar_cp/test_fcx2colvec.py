@@ -37,16 +37,10 @@ import numpy as np
 )
 def test_fcx2colvec(test_engine, input_data, expected):
     """
-    Test MATLAB's fcx2colvec function with various inputs and expected results.
+    Test fcx2colvec function with various inputs and expected results.
     """
-    # Call MATLAB function
     result = test_engine.fcx2colvec(test_engine.convert(input_data))
 
-    # # Call python version
-    # result_python = fcx2colvec(np.asarray(input_data))
-
-    #test outcomes
     # Test outcomes
     assert test_engine.equal(result, test_engine.convert(expected))
-    # assert np.allclose(result_python, np.asarray(expected), equal_nan=True)
 
