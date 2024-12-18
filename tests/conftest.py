@@ -448,7 +448,7 @@ def compare_matlab_arrays(result, expected):
     if not hasattr(result, '__len__') or not hasattr(expected, '__len__'):
         if np.isnan(result) and np.isnan(expected):
             return True  # NaNs are considered equal
-        return np.allclose(result, expected)
+        return np.allclose(result, expected, equal_nan=True)
     if len(result) != len(expected):
         # Potentially we are in the situation where the MATLAB is wrapped in an extra layer of array
         if isinstance(result, matlab.double) and len(result) == 1:
