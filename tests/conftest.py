@@ -427,7 +427,7 @@ def to_matlab_type(data):
             return data.tolist()  # Convert non-numeric arrays to lists
     elif isinstance(data, list):
         # Convert Python list to MATLAB double array if all elements are numbers
-        if all(isinstance(elem, (int, float)) for elem in data):
+        if all(isinstance(elem, (int, float)) for elem in flatten(data)):
             return matlab.double(data)
         else:
             # Create a cell array for lists containing non-numeric data
@@ -436,6 +436,17 @@ def to_matlab_type(data):
         return matlab.double([data])  # Convert single numbers
     else:
         return data  # If the data type is already MATLAB-compatible
+
+def flatten(container):
+    """
+    Flatten a nested container into a single list.
+    """
+    for i in container:
+        if isinstance(i, (list,tuple)):
+            for j in flatten(i):
+                yield j
+        else:
+            yield i
 
 # Helper function to compare MATLAB double arrays element-wise, handling NaN comparisons
 def compare_matlab_arrays(result, expected):
