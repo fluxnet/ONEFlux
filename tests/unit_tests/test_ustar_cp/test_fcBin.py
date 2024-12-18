@@ -47,7 +47,7 @@ def test_singleton_bins_1D_data(data, scale, translate, test_engine):
         for bin in ys:
           # every bin is of size 1
           assert len(bin) == 1
-          # every ists(felement of the bin came originally from data
+          # every element of the bin came originally from data
           # unless it is `inf` which seems a corner case in `fcBin` not considered
           if not(np.isinf(bin[0])):
             assert np.any([np.isclose(bin[0], item, equal_nan=True) for item in data])
