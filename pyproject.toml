@@ -1,5 +1,5 @@
 [tool.pytest.ini_options]
-addopts = "-v -p no:warnings --doctest-modules --show-progress -n 1 --dist=loadfile"
+addopts = "-v -p no:warnings --doctest-modules --show-progress -n 4 --dist=loadfile"
 python_files = 'test_*.py'
 testpaths = ['tests']
 

@@ -26,7 +26,7 @@ def test_fcnaniqr_vector_cases(test_engine, vector, expected):
     Test MATLAB's fcNaniqr function with different 1D vectors, including edge cases.
     """
     
-    # Call MATLAB function
+    # Call function
     result = test_engine.fcNaniqr(test_engine.convert(vector))
 
     # Check for None result
@@ -38,73 +38,73 @@ def test_fcnaniqr_vector_cases(test_engine, vector, expected):
     "matrix, expected",
     [
         # Case 1a: No NaNs, Fully Populated, column length = 3
-        (matlab.double([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), [np.nan, np.nan, np.nan]),
+        ([[1, 2, 3], [4, 5, 6], [7, 8, 9]], [np.nan, np.nan, np.nan]),
 
         # Case 1b: No NaNs, Fully Populated, column length = 4
-        (matlab.double([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]), [6.0, 6.0, 6.0]),
+        ([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]], [6.0, 6.0, 6.0]),
 
         # Case 2a: Columns with NaNs, column length = 3
-        (matlab.double([[1, np.nan, 3], [4, np.nan, 6], [7, 8, 9]]), [np.nan, np.nan, np.nan]),
+        ([[1, np.nan, 3], [4, np.nan, 6], [7, 8, 9]], [np.nan, np.nan, np.nan]),
 
         # Case 2b: Columns with NaNs, column length >3 (after nans ignored)
-        (matlab.double([[1, np.nan, 3], [4, np.nan, 6], [7, 8, 9], [10,11,12]]), [6.0, np.nan, 6.0]),
+        ([[1, np.nan, 3], [4, np.nan, 6], [7, 8, 9], [10,11,12]], [6.0, np.nan, 6.0]),
 
         # Case 3: Columns with < 4 Real Rows
         #Note weird behaviour of IQR estimation
-        (matlab.double([[1, np.nan], [2, 3]]), [1.5]),
+        ([[1, np.nan], [2, 3]], [1.5]),
 
         # Case 4: All NaNs
-        (matlab.double([[np.nan, np.nan], [np.nan, np.nan]]), [np.nan, np.nan]),
+        ([[np.nan, np.nan], [np.nan, np.nan]], [np.nan, np.nan]),
     ],
 )
 def test_fcnaniqr_2D_cases(test_engine, matrix, expected):
     """
     Test MATLAB's fcNaniqr function with 2D matrices, including edge cases.
     """
-    # Call MATLAB function
-    result = test_engine.fcNaniqr(matrix)
+    # Call function
+    result = test_engine.fcNaniqr(test_engine.convert(matrix))
 
     # Verify Result
     assert result is not None, "Expected non-None result from MATLAB function"
 
-    assert np.allclose(result, expected, equal_nan=True)
+    assert test_engine.equal(result, test_engine.convert(expected))
 
 @pytest.mark.parametrize(
     "matrix, expected",
     [
         # Case 1a: No NaNs, Fully Populated, 2 rows (<3)
-        (matlab.double([[[1, 2], [4, 5]], [[7, 8], [10, 11]]]), [[np.nan, np.nan]]),
+        ([[[1, 2], [4, 5]], [[7, 8], [10, 11]]], [[np.nan, np.nan]]),
 
         # Case 1b: No NaNs, Fully Populated, 4 rows (>3)
-        (matlab.double([[[1, 2], [4, 5]],[[7, 8], [10, 11]],[[13, 14], [16, 17]],[[19, 20], [22, 23]]]), [[12.0, 12.0, 12.0, 12.0]]),
+        ([[[1, 2], [4, 5]],[[7, 8], [10, 11]],[[13, 14], [16, 17]],[[19, 20], [22, 23]]], [[12.0, 12.0, 12.0, 12.0]]),
 
         # Case 1b: Single NaN, Fully Populated, 4 rows (>3)
-        (matlab.double([[[np.nan, 2], [4, 5]],[[7, 8], [10, 11]],[[13, 14], [16, 17]],[[19, 20], [22, 23]]]), [[np.nan, 12.0, 12.0, 12.0]]),
+        ([[[np.nan, 2], [4, 5]],[[7, 8], [10, 11]],[[13, 14], [16, 17]],[[19, 20], [22, 23]]], [[np.nan, 12.0, 12.0, 12.0]]),
 
         # Case 1c: Single Layer 3D
-        (matlab.double([[[1, 2, 3]], [[4, 5, 6]], [[7, 8, 9]]]), [[np.nan, np.nan, np.nan]]),
+        ([[[1, 2, 3]], [[4, 5, 6]], [[7, 8, 9]]], [[np.nan, np.nan, np.nan]]),
 
         # Case 2a: Contains NaNs
-        (matlab.double([[[1, np.nan], [4, 5]], [[np.nan, 8], [7, np.nan]]]), [[np.nan, np.nan]]),
+        ([[[1, np.nan], [4, 5]], [[np.nan, 8], [7, np.nan]]], [[np.nan, np.nan]]),
 
         # Case 2b: Mixed NaNs with Real
-        (matlab.double([[[1, np.nan], [4, 5]], [[7, 8], [10, 11]]]), [[np.nan, np.nan]]),
+        ([[[1, np.nan], [4, 5]], [[7, 8], [10, 11]]], [[np.nan, np.nan]]),
 
         # Case 3: All NaNs
-        (matlab.double([[[np.nan, np.nan], [np.nan, np.nan]], [[np.nan, np.nan], [np.nan, np.nan]]]), [[np.nan, np.nan]]),
+        ([[[np.nan, np.nan], [np.nan, np.nan]], [[np.nan, np.nan], [np.nan, np.nan]]], [[np.nan, np.nan]]),
     ],
 )
 def test_fcnaniqr_3D_cases(test_engine, matrix, expected):
     """
     Test MATLAB's fcNaniqr function with 3D matrices, including edge cases.
     """
-    # Call MATLAB function
-    result = test_engine.fcNaniqr(matrix)
+    # Call function
+    result = test_engine.fcNaniqr(test_engine(matrix))
 
     # Verify Result
     assert result is not None, "Expected non-None result from MATLAB function"
 
-    assert np.allclose(result, expected, equal_nan=True)
+    assert test_engine.equal(result, test_engine.convert(expected))
 
 TEST_CASES_dims = [
     ["1D vector", [[1], [2], [3], [4]], 1],
@@ -124,12 +124,11 @@ TEST_CASES_dims = [
 @pytest.mark.parametrize("description, X, expected", TEST_CASES_dims)
 def test_get_dims(test_engine, description, X, expected):
     """Parameterized test for various inputs with MATLAB column-major consideration."""
-    # Matlab calcs
-    X = matlab.double(X)
+    # Run function
 
-    result = test_engine.get_dims(X)
+    result = test_engine.get_dims(test_engine.convert(X))
 
-    assert np.allclose(result, expected, equal_nan=True)
+    assert test_engine.equal(result, test_engine.convert(X))
 
 
 
@@ -149,12 +148,10 @@ TEST_CASES = [
 @pytest.mark.parametrize("description, X, expected", TEST_CASES)
 def test_iqr_1d_eval(test_engine, description, X, expected):
     """Parameterized test for IQR evaluation in 1D arrays."""
-    matlab_array = matlab.double([[x] for x in X])
+    matlab_array = test_engine.convert([[x] for x in X])
     result = test_engine.iqr_1D_eval(matlab_array)
-    if isinstance(expected, float) and expected != expected:  # Check for NaN
-        assert result != result, f"{description}: Expected NaN but got {result}"
-    else:
-        assert result == expected, f"{description}: Expected {expected} but got {result}"
+    
+    assert test_engine.equal(result, test_engine.convert([[x] for x in expected]))
 
 TEST_CASES_2D = [
     ["All NaNs, column =< 3", [[np.nan, np.nan], [np.nan, np.nan]], [np.nan, np.nan]],
@@ -171,10 +168,10 @@ TEST_CASES_2D = [
 @pytest.mark.parametrize("description, X, expected", TEST_CASES_2D)
 def test_iqr_2d_eval(test_engine, description, X, expected):
     """Parameterized test for IQR evaluation in 2D arrays."""
-    matlab_array = matlab.double(X)
-    result = test_engine.iqr_2d_eval(matlab_array)
     
-    assert np.allclose(np.asarray(result), np.asarray(expected), equal_nan=True)
+    result = test_engine.iqr_2d_eval(test_engine.convert(X))
+    
+    assert test_engine.equal(result, test_engine.convert(expected))
 
 TEST_CASES_3D = [
     ["Single slice", [[[5, 5]], [[5, 5]], [[5, 5]], [[5, 5]]], [[0, 0]]],
