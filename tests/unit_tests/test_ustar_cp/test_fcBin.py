@@ -19,7 +19,7 @@ import os
        scale=floats(allow_infinity=False),
        translate=floats(allow_infinity=False))
 @settings(deadline=1000)
-def test_singleton_bins_1D_data(data, scale, translate, matlab_engine):
+def test_singleton_bins_1D_data(data, scale, translate, test_engine):
     """
     Tests the behaviour of `fcBin` for binning based on discrete bins of size 1
     for one dimemsional data"""
@@ -30,7 +30,7 @@ def test_singleton_bins_1D_data(data, scale, translate, matlab_engine):
     data2 = [scale * item + translate for item in data]
 
     # Use `fcBin`
-    nBins, mx, my  = matlab_engine.fcBin(to_matlab_type(data1), to_matlab_type(data2),
+    nBins, mx, my  = test_engine.fcBin(to_matlab_type(data1), to_matlab_type(data2),
                                          to_matlab_type([]), 1.0, nargout=3)
 
     # Number of bins is the length of the data
@@ -60,7 +60,7 @@ def test_singleton_bins_1D_data(data, scale, translate, matlab_engine):
        translate=floats(allow_infinity=False,allow_nan=False),
        row=integers(min_value=1, max_value=4))
 @settings(deadline=1000)
-def test_singleton_bins_2D_data(data, scale, row, translate, matlab_engine):
+def test_singleton_bins_2D_data(data, scale, row, translate, test_engine):
     """
     Tests the behaviour of `fcBin` for binning based on discrete bins of size 1
     for two-dimesional data"""
@@ -76,7 +76,7 @@ def test_singleton_bins_2D_data(data, scale, row, translate, matlab_engine):
     data2 = [[scale * item + translate for item in row] for row in data]
 
     # Use `fcBin`
-    nBins, mx, my  = matlab_engine.fcBin(matlab.double(data1), matlab.double(data2),
+    nBins, mx, my  = test_engine.fcBin(matlab.double(data1), matlab.double(data2),
                                          to_matlab_type([]), 1.0, nargout=3)
 
     # Number of bins is the length of the data
@@ -200,12 +200,12 @@ test_data_dx_length_gt_one = [
 @pytest.mark.parametrize('data', test_data_dx_length_eq_zero +
                                  test_data_dx_length_eq_one +
                                  test_data_dx_length_gt_one)
-def test_cpdBin_dx_sclar(matlab_engine, data):
+def test_cpdBin_dx_sclar(test_engine, data):
     """
     Test cpdBin with scalar dx or empty dx
     """
     # Apply the test case
-    nBins, mx, my  = matlab_engine.fcBin(to_matlab_type(data["x"]), to_matlab_type(data["y"]),
+    nBins, mx, my  = test_engine.fcBin(to_matlab_type(data["x"]), to_matlab_type(data["y"]),
                                          to_matlab_type(data["dx"]), data["nPerBin"],
                                         nargout=3)
     # Check the results
@@ -214,7 +214,7 @@ def test_cpdBin_dx_sclar(matlab_engine, data):
     assert nBins == data["nBins"]
 
 # Lastly test against site-specific data
-def test_cpdBin_sitedata(matlab_engine):
+def test_cpdBin_sitedata(test_engine):
     input_names  = ['x', 'y', 'dx', 'nPerBin']
     output_names = ['nBins', 'mx', 'my']
     artifacts_dir = 'tests/test_artifacts/fcBin_artifacts'
@@ -242,7 +242,7 @@ def test_cpdBin_sitedata(matlab_engine):
             output_data[name] = matlab.double([])
 
         # Apply fcBin
-        nBins, mx, my  = matlab_engine.fcBin(input_data["x"], input_data["y"],
+        nBins, mx, my  = test_engine.fcBin(input_data["x"], input_data["y"],
                                       input_data["dx"], input_data["nPerBin"],
                                       nargout=3)
 

@@ -20,12 +20,12 @@ import pytest
         (matlab.double([[1], [2], [3], [4], [5]]), np.nan),
     ],
 )
-def test_fcnaniqr_vector_cases(matlab_engine, vector, expected):
+def test_fcnaniqr_vector_cases(test_engine, vector, expected):
     """
     Test MATLAB's fcNaniqr function with different 1D vectors, including edge cases.
     """
     # Call MATLAB function
-    result = matlab_engine.fcNaniqr(vector)
+    result = test_engine.fcNaniqr(vector)
 
     # Check for None result
     assert result is not None, "Expected non-None result from MATLAB function"
@@ -59,12 +59,12 @@ def test_fcnaniqr_vector_cases(matlab_engine, vector, expected):
         (matlab.double([[np.nan, np.nan], [np.nan, np.nan]]), [np.nan, np.nan]),
     ],
 )
-def test_fcnaniqr_2D_cases(matlab_engine, matrix, expected):
+def test_fcnaniqr_2D_cases(test_engine, matrix, expected):
     """
     Test MATLAB's fcNaniqr function with 2D matrices, including edge cases.
     """
     # Call MATLAB function
-    result = matlab_engine.fcNaniqr(matrix)
+    result = test_engine.fcNaniqr(matrix)
 
     # Verify Result
     assert result is not None, "Expected non-None result from MATLAB function"
@@ -114,12 +114,12 @@ def test_fcnaniqr_2D_cases(matlab_engine, matrix, expected):
         (matlab.double([[[np.nan, np.nan], [np.nan, np.nan]], [[np.nan, np.nan], [np.nan, np.nan]]]), [[np.nan, np.nan]]),
     ],
 )
-def test_fcnaniqr_3D_cases(matlab_engine, matrix, expected):
+def test_fcnaniqr_3D_cases(test_engine, matrix, expected):
     """
     Test MATLAB's fcNaniqr function with 3D matrices, including edge cases.
     """
     # Call MATLAB function
-    result = matlab_engine.fcNaniqr(matrix)
+    result = test_engine.fcNaniqr(matrix)
 
     # Verify Result
     assert result is not None, "Expected non-None result from MATLAB function"

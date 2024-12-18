@@ -1,9 +1,11 @@
 import pytest
 import matlab.engine
 import numpy as np
+import json
+from tests.conftest import compare_matlab_arrays
 
 @pytest.fixture
-def sample_stats_json(matlab_engine):
+def sample_stats_json():
     """Create a JSON-encoded single-entry MATLAB-compatible stats struct."""
     stats_entry = {
         "n": 1.0, "Cp": float("nan"), "Fmax": float("nan"), "p": float("nan"),
@@ -13,10 +15,10 @@ def sample_stats_json(matlab_engine):
         "ruStarVsT": float("nan"), "puStarVsT": float("nan"),
         "mT": float("nan"), "ciT": float("nan")
     }
-    return matlab_engine.jsonencode(stats_entry)
+    return json.dumps(stats_entry, indent = 4)
 
 @pytest.fixture
-def multi_stats_json(matlab_engine):
+def multi_stats_json():
     """Create a multi-entry JSON representation of the stats structure."""
     stats_entry = {
         "n": 1.0, "Cp": float("nan"), "Fmax": float("nan"), "p": float("nan"),
@@ -29,7 +31,7 @@ def multi_stats_json(matlab_engine):
 
     multi_stats = [[[stats_entry, stats_entry], [stats_entry, stats_entry]], 
                    [[stats_entry, stats_entry], [stats_entry, stats_entry]]]
-    return matlab_engine.jsonencode(multi_stats)
+    return json.dumps(multi_stats, indent = 4)
 
 @pytest.mark.parametrize(
     "field_name, expected",
@@ -38,10 +40,11 @@ def multi_stats_json(matlab_engine):
         ("Cp", [[np.nan]])
     ]
 )
-def test_fcReadFields_valid(matlab_engine, sample_stats_json, field_name, expected):
+def test_fcReadFields_valid(test_engine, sample_stats_json, field_name, expected):
     """Test fcReadFields with a single-entry JSON."""
-    result = matlab_engine.fcReadFields(sample_stats_json, field_name, 'jsondecode', 1)
-    assert np.allclose(result, expected, equal_nan=True), f"Expected {expected}, got {result}"
+    result = test_engine.fcReadFields(sample_stats_json, field_name, 'jsondecode', 1)
+    #assert np.allclose(result, expected, equal_nan=True), f"Expected {expected}, got {result}"
+    assert compare_matlab_arrays(result, expected)
 
 @pytest.mark.parametrize(
     "field_name, expected",
@@ -51,15 +54,17 @@ def test_fcReadFields_valid(matlab_engine, sample_stats_json, field_name, expect
                 [[np.nan, np.nan], [np.nan, np.nan]]]),
     ]
 )
-def test_fcReadFields_multi(matlab_engine, multi_stats_json, field_name, expected):
+def test_fcReadFields_multi(test_engine, multi_stats_json, field_name, expected):
     """Test fcReadFields with a multi-entry JSON."""
-    result = matlab_engine.fcReadFields(multi_stats_json, field_name, 'jsondecode', 1)
+    result = test_engine.fcReadFields(multi_stats_json, field_name, 'jsondecode', 1)
 
     # Convert MATLAB result
-    if isinstance(result, matlab.double):
+    """ #if isinstance(result, matlab.double):
         result_list = [[[float(cell) if not np.isnan(cell) else float("nan") 
                          for cell in row] for row in layer] for layer in result]
     else:
         pytest.fail(f"Unexpected MATLAB result type: {type(result)}")
 
-    assert np.allclose(result_list, expected, equal_nan=True), f"Expected {expected}, got {result_list}"
+    assert np.allclose(result_list, expected, equal_nan=True), f"Expected {expected}, got {result_list}" """
+
+    assert compare_matlab_arrays(result, expected)
