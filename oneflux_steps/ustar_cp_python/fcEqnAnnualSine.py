@@ -1,7 +1,7 @@
 import numpy as np
 from datetime import date
 
-def fc_eqn_annual_sine(b: np.ndarray, t: np.ndarray) -> np.ndarray:
+def fcEqnAnnualSine(b: np.ndarray, t: np.ndarray) -> np.ndarray:
     """
     Computes the annual sine wave equation.
 

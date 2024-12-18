@@ -1,8 +1,6 @@
 import pytest
 import matlab.engine
 import numpy as np
-from tests.conftest import to_matlab_type, compare_matlab_arrays, get_languages
-from oneflux_steps.ustar_cp_python.fcEqnAnnualSine import fc_eqn_annual_sine
 
 @pytest.mark.parametrize(
     "b, t, expected",
@@ -36,13 +34,11 @@ from oneflux_steps.ustar_cp_python.fcEqnAnnualSine import fc_eqn_annual_sine
         ([0, 1, 0], [], []),
     ],
 )
-@pytest.mark.parametrize("language", ["python", "matlab"])
-def test_fcEqnAnnualSine_edge_cases(language, b, t, expected, request):
+
+def test_fcEqnAnnualSine_edge_cases(test_engine, b, t, expected, request):
     """
     Test fcEqnAnnualSine function with various edge cases.
     """
-    # Use the correct engine
-    test_engine = request.getfixturevalue("test_engine")
     
     # Prepare inputs
     b_input = test_engine.convert(b)
