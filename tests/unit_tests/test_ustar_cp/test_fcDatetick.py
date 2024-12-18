@@ -48,7 +48,7 @@ import numpy as np
         }
         ])
 # Parameterised tests using the above fixtures
-def test_fcDatetick(matlab_engine, data):
+def test_fcDatetick(test_engine, data):
     """
     Test MATLAB's fcDatetick function with various edge cases.
     """
@@ -61,7 +61,7 @@ def test_fcDatetick(matlab_engine, data):
     # Call MATLAB function
     result = 0
     try:
-      result = matlab_engine.fcDatetick(t_matlab, sFrequency, iDateStr, fLimits, nargout=0)
+      result = test_engine.fcDatetick(t_matlab, sFrequency, iDateStr, fLimits, nargout=0)
     except:
       # Failure
       assert False
