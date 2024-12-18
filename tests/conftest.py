@@ -32,8 +32,8 @@ from matlab.engine.matlabengine import MatlabFunc
 from abc import ABC, abstractmethod
 import warnings
 
-# All modules need to be imported here
-from oneflux_steps.ustar_cp_python.fcEqnAnnualSine import *
+# Python version imported here
+from oneflux_steps.ustar_cp_python import *
 
 def pytest_addoption(parser):
     parser.addoption("--language", action="store", default="matlab")
@@ -54,7 +54,7 @@ class TestEngine(ABC):
     def convert(self, x):
         """Convert the input to a type compatible with this engine. Can just be identity
         if the runner is Python"""
-        return x
+        return np.array(x)
 
     @abstractmethod
     def equal(self, x, y) -> bool:
@@ -63,31 +63,6 @@ class TestEngine(ABC):
 
 # Python TestEngine
 class PythonEngine(TestEngine):
-    def _repr_pretty(self, p):
-        return "Python Test Engine"
-
-    def convert(self, x):
-        """Convert input to a compatible type."""
-        return np.asarray(x) if isinstance(x, list) else x
-
-    def equal(self, x, y) -> bool:
-        """Enhanced equality check for MATLAB arrays."""
-        if isinstance(x, float) or isinstance(y, float):
-            return np.isclose(x, y, equal_nan=True)
-        elif isinstance(x, np.ndarray) and isinstance(y, np.ndarray):
-            return np.allclose(x, y, equal_nan=True)
-        elif isinstance(x, list) or isinstance(y, list):
-            return all(self.equal(xi, yi) for xi, yi in zip(x, y))
-        else:
-            return x == y
-
-    import pytest
-import os
-import matlab.engine
-import numpy as np
-import warnings
-
-class PythonEngine:
     def _repr_pretty(self, p):
         return "Python Test Engine"
 
@@ -478,7 +453,7 @@ def to_matlab_type(data):
             return data.tolist()  # Convert non-numeric arrays to lists
     elif isinstance(data, list):
         # Convert Python list to MATLAB double array if all elements are numbers
-        if all(isinstance(elem, (int, float)) for elem in data):
+        if all(isinstance(elem, (int, float)) for elem in flatten(data)):
             return matlab.double(data)
         else:
             # Create a cell array for lists containing non-numeric data
@@ -486,20 +461,31 @@ def to_matlab_type(data):
     elif isinstance(data, (int, float)):
         return matlab.double([data])  # Convert single numbers
     else:
-        return data  # If the data type is already MATLAB-compatible
+      return data  # If the data type is already MATLAB-compatible
+
+def flatten(container):
+    """
+    Flatten a nested container into a single list.
+    """
+    for i in container:
+        if isinstance(i, (list,tuple)):
+            for j in flatten(i):
+                yield j
+        else:
+            yield i
 
 # Helper function to compare MATLAB double arrays element-wise, handling NaN comparisons
 def compare_matlab_arrays(result, expected):
+    if not hasattr(result, '__len__') or not hasattr(expected, '__len__'):
+        return np.allclose(result, expected, equal_nan=True)
+
     if isinstance(result, dict):
         if not isinstance(expected, dict):
             return False
         if set(result.keys()) != set(expected.keys()):
             return False
         return all(compare_matlab_arrays(result[k], expected[k]) for k in result.keys())
-    if not hasattr(result, '__len__') or not hasattr(expected, '__len__'):
-        if np.isnan(result) and np.isnan(expected):
-            return True  # NaNs are considered equal
-        return np.allclose(result, expected)
+
     if len(result) != len(expected):
         # Potentially we are in the situation where the MATLAB is wrapped in an extra layer of array
         if isinstance(result, matlab.double) and len(result) == 1:
@@ -507,6 +493,11 @@ def compare_matlab_arrays(result, expected):
             return all(compare_matlab_arrays(r, e) for r, e in zip(result, expected))
         else:
             return False
+
+    if isinstance(result, matlab.double):
+        return np.allclose(result, expected, equal_nan=True)
+
+    # Recursive case
     return all(compare_matlab_arrays(r, e) for r, e in zip(result, expected))
 
 def read_csv_with_csv_module(file_path):
