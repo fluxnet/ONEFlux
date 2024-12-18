@@ -25,9 +25,9 @@ def test_fcnaniqr_vector_cases(test_engine, vector, expected):
     """
     Test MATLAB's fcNaniqr function with different 1D vectors, including edge cases.
     """
-    test_engine.convert(vector)
+    
     # Call MATLAB function
-    result = test_engine.fcNaniqr(vector)
+    result = test_engine.fcNaniqr(test_engine.convert(vector))
 
     # Check for None result
     assert result is not None, "Expected non-None result from MATLAB function"
