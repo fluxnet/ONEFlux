@@ -465,7 +465,7 @@ def compare_matlab_arrays(result, expected):
             return False
         if set(result.keys()) != set(expected.keys()):
             return False
-        return all(objects_are_equal(result[k], expected[k]) for k in result.keys())
+        return all(compare_matlab_arrays((result[k], expected[k]) for k in result.keys())
     if min(map(np.ndim, (result, expected))) == 0:
         if np.isnan(result) and np.isnan(expected):
             return True  # NaNs are considered equal
