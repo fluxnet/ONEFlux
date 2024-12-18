@@ -1,6 +1,5 @@
 import pytest
 import matlab.engine
-import numpy as np
 from tests.conftest import to_matlab_type, compare_matlab_arrays
 
 @pytest.mark.parametrize(
@@ -34,10 +33,10 @@ from tests.conftest import to_matlab_type, compare_matlab_arrays
         ),
     ],
 )
-def test_fcx2colvec(matlab_engine, input_data, expected):
+def test_fcx2colvec(test_engine, input_data, expected):
     """
     Test MATLAB's fcx2colvec function with various inputs and expected results.
     """
     # Call MATLAB function
-    result = matlab_engine.fcx2colvec(input_data)
+    result = test_engine.fcx2colvec(input_data)
     assert compare_matlab_arrays(result, to_matlab_type(expected))

@@ -4,7 +4,7 @@ handle MATLAB engine interactions, and process text files for comparison in unit
 
 Contents:
     Fixtures:
-        ustar_cp
+        test_engine
         setup_folders
         find_text_file
         extract_section_between_keywords
@@ -28,10 +28,60 @@ import io
 import atexit
 import numpy as np
 from matlab.engine.matlabengine import MatlabFunc
-from oneflux_steps.ustar_cp_py.libsmop import matlabarray, struct
+# from oneflux_steps.ustar_cp_py.libsmop import matlabarray, struct
+from abc import ABC, abstractmethod
 
+# All modules need to be imported here
+from oneflux_steps.ustar_cp_python.utils import *
 
-class MFWrapper:
+def pytest_addoption(parser):
+    parser.addoption("--language", action="store", default="matlab")
+
+@pytest.fixture(scope="session")
+def language(pytestconfig):
+    return pytestconfig.getoption("language")
+
+# Specification of a `TestEngine`
+class TestEngine(ABC):
+    @abstractmethod
+    def _repr_pretty(self, p):
+        """This placeholder can stay as is; it enables Hypothesis to work with this
+        runner as a fixture"""
+        return "Test Engine"
+
+    @abstractmethod
+    def convert(self, x):
+        """Convert the input to a type compatible with this engine. Can just be identity
+        if the runner is Python"""
+        return x
+
+    @abstractmethod
+    def equal(self, x, y) -> bool:
+        """Compare two values for equality in the representation used by this engine"""
+        pass
+
+# Python TestEngine
+class PythonEngine(TestEngine):
+    def _repr_pretty(sel, p):
+        return "Python Test Engine"
+
+    def convert(self, x):
+        return x
+
+    def equal(self, x, y) -> bool:
+        return x == y
+
+    # Overload calling of methods and 'rethrow' to global context
+    def __getattribute__(self, name):
+      def newfunc(*args, **kwargs):
+          func = globals().get(name)  # Access global dictionary of defined functions
+          if callable(func):
+              return func(*args, **kwargs)
+          raise AttributeError(f"'{name}' is not callable")
+      return newfunc
+
+# MATLAB Engine wrapper
+class MatlabEngine:
     def __init__(self, func):
         self.func = func
         self.out = io.StringIO()
@@ -59,33 +109,57 @@ class MFWrapper:
         if self.func._name == '_repr_pretty_':
             # Overload attempts to pretty print matlab engines (e.g., by hypothesis)
             return 'MATLAB'
+      
+        # For `convert` and `equal` we need to handle these directly here since
+        # we have overriden `call`.
+        if (self.func._name == "convert") | (self.func._name == "equal"):
 
-        args = list(args)
-        if jsonencode:
-            args.append(['jsonencode'] + [i+1 for i in jsonencode])
-        if jsondecode:
-            for i in jsondecode:
-                args[i] = json.dumps(args[i])
-            args.append(['jsondecode'] + [i+1 for i in jsondecode])
-        out = kwargs.pop('stdout', self.out)
-        err = kwargs.pop('stderr', self.err)
-        ret = self.func(*args, **kwargs, stdout=out, stderr=err)
-        if jsonencode:
-            nargout = kwargs.get('nargout', 1)
-            if nargout <= 1:
-                ret = [ret]
-            else:
-                ret = list(ret)
-            for j in jsonencode:
-                ret[j] = json.loads(ret[j], object_hook=none2nan)
-                # Alternate technique 
-                # ret[j] = json.loads(ret[j], object_hook=lambda d: 
-                #     {k: np.nan if v is None else v for k, v in d.items()})
-                # ret[j] = matlabarray(ret[j])
-            if nargout <= 1:
-                ret = ret[0]
+          # Locally scoped definitions
+          def _convert(x):
+              return to_matlab_type(x)
 
-        # nargout = kwargs.get('nargout', 1)
+          def _equal(x, y):
+              if isinstance(x, float):
+                  # Floating point equality using numpy
+                  return np.isclose(x, y, equal_nan=True)
+              elif isinstance(x, matlab.double):
+                  # Compare matlab arrays
+                  return compare_matlab_arrays(x, y)
+              else:
+                  # Drop through to usual equality
+                  return x == y
+
+          # Choose which function to call
+          if self.func._name == "convert":
+              return _convert(*args)
+          elif self.func._name == "equal":
+              return _equal(*args)
+
+        else:
+          # Calls mostly going through to the MATLAB engine
+          args = list(args)
+          if jsonencode:
+              args.append(['jsonencode'] + [i+1 for i in jsonencode])
+          if jsondecode:
+              for i in jsondecode:
+                  args[i] = json.dumps(args[i])
+              args.append(['jsondecode'] + [i+1 for i in jsondecode])
+          out = kwargs.pop('stdout', self.out)
+          err = kwargs.pop('stderr', self.err)
+          ret = self.func(*args, **kwargs, stdout=out, stderr=err)
+          if jsonencode:
+              nargout = kwargs.get('nargout', 1)
+              if nargout <= 1:
+                  ret = [ret]
+              else:
+                  ret = list(ret)
+              for j in jsonencode:
+                  ret[j] = json.loads(ret[j], object_hook=none2nan)
+              if nargout <= 1:
+                  ret = ret[0]
+
+       # # Some alternate approach here
+       # nargout = kwargs.get('nargout', 1)
         # if nargout <= 1:
         #     ret = [ret]
         # else:
@@ -101,75 +175,75 @@ class MFWrapper:
         #     ret = ret[0]
         # return ret
 
-        return ret
+          return ret
 
 def mf_factory(cls, *args, **kwargs):
     f = object.__new__(MatlabFunc)
     f.__init__(*args, **kwargs)
-    return MFWrapper(f)
+    return MatlabEngine(f)
 MatlabFunc.__new__ = mf_factory
 
 
-@pytest.fixture(scope="session", params=[
-    "translated",
-    # "refactored",
-    # "original",
-])
-def ustar_cp(request):
+@pytest.fixture(scope="session")
+def test_engine(language, refactored=True):
     """
-    Pytest fixture to start a MATLAB engine session, add a specified directory
-    to the MATLAB path, and clean up after the tests.
-
-    This fixture initializes the MATLAB engine, adds the directory containing
-    MATLAB functions to the MATLAB path, and then yields the engine instance
-    for use in tests. After the tests are done, the MATLAB engine is properly
-    closed.
-
-    Args:
-        refactored (bool, optional): If True, use the refactored code path
-            'oneflux_steps/ustar_cp_refactor_wip/'. Defaults to True, using
-            the 'oneflux_steps/ustar_cp_refactor_wip/' path.
-
-    Yields:
-        matlab.engine.MatlabEngine: The MATLAB engine instance for running MATLAB
-            functions within tests.
-
-    After the tests complete, the MATLAB engine is closed automatically.
+    Pytest fixture to start a 'running engine' which allows multiple languages
+    to be targetted
     """
     # if request.param == "translated":  # return the translated python module
     #     import oneflux_steps.ustar_cp_python_auto as eng
     #     yield eng
     #     return
+    if language == 'python':
+      yield PythonEngine()
 
-    # Start MATLAB engine
-    eng = matlab.engine.start_matlab()
+    elif language == 'matlab':
+      """
+      Pytest fixture to start a MATLAB engine session, add a specified directory
+      to the MATLAB path, and clean up after the tests.
 
-    current_dir = os.getcwd()
+      This fixture initializes the MATLAB engine, adds the directory containing
+      MATLAB functions to the MATLAB path, and then yields the engine instance
+      for use in tests. After the tests are done, the MATLAB engine is properly
+      closed.
 
-    if request.param == "refactored":
-        code_path = 'oneflux_steps/ustar_cp_refactor_wip/'
-    else:
-        code_path = 'oneflux_steps/ustar_cp'
+      Args:
+          refactored (bool, optional): If True, use the refactored code path
+              'oneflux_steps/ustar_cp_refactor_wip/'. Defaults to True, using
+              the 'oneflux_steps/ustar_cp_refactor_wip/' path.
 
-    # Add the directory containing your MATLAB functions to the MATLAB path
-    matlab_function_path = os.path.join(current_dir, code_path)
-    eng.addpath(matlab_function_path, nargout=0)
+      Yields:
+          matlab.engine.MatlabEngine: The MATLAB engine instance for running MATLAB
+              functions within tests.
 
-    def _add_all_subdirs_to_matlab_path(path, ustar_cp):
-        # Recursively find all subdirectories
-        for root, dirs, files in os.walk(path):
-            # Add each directory to the MATLAB path
-            ustar_cp.addpath(root, nargout=0)  # nargout=0 suppresses output
+      After the tests complete, the MATLAB engine is closed automatically.
+      """
+      # Start MATLAB engine
+      eng = matlab.engine.start_matlab()
 
-        return
+      current_dir = os.getcwd()
+      code_path = 'oneflux_steps/ustar_cp_refactor_wip/' if refactored else 'oneflux_steps/ustar_cp'
 
-    # Add the base directory and all its subdirectories to MATLAB path
-    _add_all_subdirs_to_matlab_path(matlab_function_path, eng)
+      # Add the directory containing your MATLAB functions to the MATLAB path
+      matlab_function_path = os.path.join(current_dir, code_path)
+      eng.addpath(matlab_function_path, nargout=0)
 
-    yield eng
+      def _add_all_subdirs_to_matlab_path(path, test_engine):
+          # Recursively find all subdirectories
+          for root, dirs, files in os.walk(path):
+              # Add each directory to the MATLAB path
+              test_engine.addpath(root, nargout=0)  # nargout=0 suppresses output
 
-    # Close MATLAB engine after tests are done
-    eng.quit()
+          return
+
+      # Add the base directory and all its subdirectories to MATLAB path
+      _add_all_subdirs_to_matlab_path(matlab_function_path, eng)
+
+      yield eng
+
+      # Close MATLAB engine after tests are done
+      eng.quit()
+
 
 @pytest.fixture
 def setup_folders(tmp_path, request, testcase: str = "US_ARc"):
