@@ -30,9 +30,9 @@ import atexit
 import numpy as np
 from matlab.engine.matlabengine import MatlabFunc
 from abc import ABC, abstractmethod
+import warnings
 
-# All modules need to be imported here
-from oneflux_steps.ustar_cp_python.utils import *
+# Python version imported here
 from oneflux_steps.ustar_cp_python import *
 
 def pytest_addoption(parser):
@@ -63,23 +63,45 @@ class TestEngine(ABC):
 
 # Python TestEngine
 class PythonEngine(TestEngine):
-    def _repr_pretty(sel, p):
+    def _repr_pretty(self, p):
         return "Python Test Engine"
 
     def convert(self, x):
-        return np.asarray(x)
+        """Convert input to a compatible type."""
+        if x is None:
+            raise ValueError("Input cannot be None")
+        return np.asarray(x) if isinstance(x, list) else x
 
-    def equal(self, x, y):
-        return np.allclose(x, y, equal_nan=True)
+    def equal(self, x, y) -> bool:
+        """Enhanced equality check for MATLAB arrays."""
+        if x is None or y is None:
+            raise ValueError("Comparison values cannot be None")
+        if isinstance(x, float) or isinstance(y, float):
+            return np.isclose(x, y, equal_nan=True)
+        elif isinstance(x, np.ndarray) and isinstance(y, np.ndarray):
+            return np.allclose(x, y, equal_nan=True)
+        elif isinstance(x, list) or isinstance(y, list):
+            return all(self.equal(xi, yi) for xi, yi in zip(x, y))
+        else:
+            return x == y
 
-    # Overload calling of methods and 'rethrow' to global context
-    def __getattr__(self, name):
-      def newfunc(*args, **kwargs):
-        func = globals().get(name)  # Access global dictionary of defined functions
-        if callable(func):
-            return func(*args, **kwargs)
-        raise AttributeError(f"'{name}' is not callable")
-      return newfunc
+    def __getattribute__(self, name):
+        if name in ["convert", "equal"]:
+            return object.__getattribute__(self, name)
+        
+        def newfunc(*args, **kwargs):
+            try:
+                # Dynamically load modules based on the function name
+                mod_path = f"oneflux_steps.ustar_cp_python.{name}"
+                mod = __import__(mod_path, fromlist=[name])
+                func = getattr(mod, name, None)
+                if callable(func):
+                    return func(*args, **kwargs)
+                else: warnings.warn(f"'function {name}' cannot be found", UserWarning)
+            except ImportError:
+                pass
+            warnings.warn(f"'{name}' is not callable", UserWarning)
+        return newfunc
 
 # MATLAB Engine wrapper
 class MatlabEngine:
@@ -166,6 +188,10 @@ def mf_factory(cls, *args, **kwargs):
     return MatlabEngine(f)
 MatlabFunc.__new__ = mf_factory
 
+@pytest.fixture(scope = "session")
+def get_languages():
+
+    return ["python", "matlab"]
 
 @pytest.fixture(scope="session")
 def test_engine(language, refactored=True):
@@ -174,54 +200,54 @@ def test_engine(language, refactored=True):
     to be targetted
     """
     if language == 'python':
-      yield PythonEngine()
+        yield PythonEngine()  # Assuming a defined PythonEngine class elsewhere
+    else:
 
-    elif language == 'matlab':
-      """
-      Pytest fixture to start a MATLAB engine session, add a specified directory
-      to the MATLAB path, and clean up after the tests.
+        """
+        Pytest fixture to start a MATLAB engine session, add a specified directory
+        to the MATLAB path, and clean up after the tests.
 
-      This fixture initializes the MATLAB engine, adds the directory containing
-      MATLAB functions to the MATLAB path, and then yields the engine instance
-      for use in tests. After the tests are done, the MATLAB engine is properly
-      closed.
+        This fixture initializes the MATLAB engine, adds the directory containing
+        MATLAB functions to the MATLAB path, and then yields the engine instance
+        for use in tests. After the tests are done, the MATLAB engine is properly
+        closed.
 
-      Args:
+        Args:
           refactored (bool, optional): If True, use the refactored code path
               'oneflux_steps/ustar_cp_refactor_wip/'. Defaults to True, using
               the 'oneflux_steps/ustar_cp_refactor_wip/' path.
 
-      Yields:
+        Yields:
           matlab.engine.MatlabEngine: The MATLAB engine instance for running MATLAB
               functions within tests.
 
-      After the tests complete, the MATLAB engine is closed automatically.
-      """
-      # Start MATLAB engine
-      eng = matlab.engine.start_matlab()
+        After the tests complete, the MATLAB engine is closed automatically.
+        """
+        # Start MATLAB engine
+        eng = matlab.engine.start_matlab()
 
-      current_dir = os.getcwd()
-      code_path = 'oneflux_steps/ustar_cp_refactor_wip/' if refactored else 'oneflux_steps/ustar_cp'
+        current_dir = os.getcwd()
+        code_path = 'oneflux_steps/ustar_cp_refactor_wip/' if refactored else 'oneflux_steps/ustar_cp'
 
-      # Add the directory containing your MATLAB functions to the MATLAB path
-      matlab_function_path = os.path.join(current_dir, code_path)
-      eng.addpath(matlab_function_path, nargout=0)
+        # Add the directory containing your MATLAB functions to the MATLAB path
+        matlab_function_path = os.path.join(current_dir, code_path)
+        eng.addpath(matlab_function_path, nargout=0)
 
-      def _add_all_subdirs_to_matlab_path(path, test_engine):
-          # Recursively find all subdirectories
-          for root, dirs, files in os.walk(path):
-              # Add each directory to the MATLAB path
-              test_engine.addpath(root, nargout=0)  # nargout=0 suppresses output
+        def _add_all_subdirs_to_matlab_path(path, test_engine):
+            # Recursively find all subdirectories
+            for root, dirs, files in os.walk(path):
+                # Add each directory to the MATLAB path
+                test_engine.addpath(root, nargout=0)  # nargout=0 suppresses output
 
-          return
+            return
 
-      # Add the base directory and all its subdirectories to MATLAB path
-      _add_all_subdirs_to_matlab_path(matlab_function_path, eng)
+        # Add the base directory and all its subdirectories to MATLAB path
+        _add_all_subdirs_to_matlab_path(matlab_function_path, eng)
 
-      yield eng
+        yield eng
 
-      # Close MATLAB engine after tests are done
-      eng.quit()
+        #Close MATLAB engine after tests are done
+        eng.quit()
 
 
 @pytest.fixture
