@@ -11,6 +11,18 @@ The pipeline controlling code uses **Python version 2.7** (it should work with P
 **(THERE ARE CAVEATS AND KNOWN LIMITATIONS TO THIS CODE, PLEASE SEE [CAVEATS LIST](#caveats-and-known-limitations) BELOW.)** This iteration of the code is not fully in line with open source/free software development practices, but we intend to steadily move in that direction.
 
 
+## Required data and metadata variables
+
+To run ONEFlux, certain data variables and addtional information about the site and instrument configuration are needed. *Required* data variables must be available in the input data, otherwise the ONEFlux will not run. *Encouraged* data variables must be present for realated derived data products to be generated, and although ONEFlux will run if these are missing, not all products will be generated. *Suggested* data variables are supported by ONEFlux, but are not directly used for the generation of any derived data products.
+  - Required: CO2, FC, H, LE, WS, USTAR, TA, RH, PA, SW_IN (or PPFD_IN)
+  - Encouraged: SC (if applicable), G, NETRAD, PPFD_IN, LW_IN, P, SWC, TS
+  - Suggested: WD, PPFD_DIF, PPFD_OUT, SW_DIF, SW_OUT, LW_OUT
+
+Additional information information about data variables is [available](https://ameriflux.lbl.gov/data/aboutdata/data-variables/). Also note that multiple depths of soil temperature (TS) and soil water content (SWC) are supported by ONEFlux, using the numeric \_# suffix notation (e.g., TS_1).
+
+Information including site FLUXNET ID, latitude, longitude, timezone (adopted for timestamps in data file), complete history of the height for eddy covariance system (gas analyser and sonic anemometer), the temporal resoltion for the data files (usually 30 or 60 minuted), and how CO2 flux storage is handled at the site, are also all required information for ONEFlux runs.
+
+
 ## Implemented steps
 
 The steps implemented in the ONEFlux processing pipeline are detailed in the [data processing description page](http://fluxnet.fluxdata.org/data/fluxnet2015-dataset/data-processing/) of the [FLUXNET2015 dataset](http://fluxnet.fluxdata.org/data/fluxnet2015-dataset/data-processing/).
@@ -107,8 +119,10 @@ Run all steps in the pipeline:
 - *2005*: First year to be processed
 - *2006*: Last year to be processed
 - *-l partitioning_nt_US-ARc.log*: Uses file to store execution log
+- *--era-fy 1989*: first year of data for the ERA product
+- *--era-ly 2014*: last year of data for the ERA product
 ```
-python runoneflux.py all "../datadir/" US-ARc "US-ARc_sample_input" 2005 2006 -l fluxnet_pipeline_US-ARc.log --mcr ~/bin/matlab/v94/ --recint hh
+python runoneflux.py all "../datadir/" US-ARc "US-ARc_sample_input" 2005 2006 -l fluxnet_pipeline_US-ARc.log --mcr ~/bin/matlab/v94/ --recint hh --era-fy 1989 --era-ly 2014
 ```
 
 
@@ -233,4 +247,13 @@ research and innovation programme - grant agreement No 824068
 * Sebastien Biraud, scbiraud &lt;at&gt; lbl &lt;DOT&gt; gov
 
 
+## Citation
+
+When using ONEFlux or referring to data products generated with ONEFlux, please consider citing our reference paper:
+> Pastorello et al. The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data. Scientific Data 7:225 (2020). [10.1038/s41597-020-0534-3](https://doi.org/10.1038/s41597-020-0534-3)
+
+
+<br>
+
+---
 **(THERE ARE CAVEATS AND KNOWN LIMITATIONS TO THIS CODE, PLEASE SEE [CAVEATS LIST](#caveats-and-known-limitations) (ABOVE)**

@@ -41,8 +41,8 @@
 /* externs */
 extern char *input_path;
 extern char *output_path;
-const char *types_suffix[TYPES_SUFFIX];
-const char *authors_suffix[AUTHORS_SUFFIX];
+extern const char *types_suffix[TYPES_SUFFIX];
+extern const char *authors_suffix[AUTHORS_SUFFIX];
 
 /* constants */
 #define GPP_FILENAME_LEN	22		/* .ext included */
@@ -1549,7 +1549,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count, const in
 
 			exists = datasets[dataset].years[i].exist;
 			for ( row = 0; row < y; row++ ) {
-				t = timestamp_end_by_row(row*(datasets[dataset].hourly ? 24 : 48), datasets[dataset].years[i].year, datasets[dataset].hourly);
+				t = timestamp_end_by_row(row*(datasets[dataset].hourly ? 24 : 48), datasets[dataset].years[i].year, datasets[dataset].details->timeres);
 
 				fprintf(f, "%04d%02d%02d,%d,",			t->YYYY,
 														t->MM,
@@ -1841,10 +1841,10 @@ int compute_datasets(DATASET *const datasets, const int datasets_count, const in
 			exists = datasets[dataset].years[i].exist;
 			for ( row = 0; row < 52; row++ ) {
 				/* write timestamp_start */
-				p = timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].hourly, 1);
+				p = timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres, 1);
 				fprintf(f, "%s,", p);
 				/* write timestamp_end */
-				p = timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].hourly, 0);
+				p = timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres, 0);
 				fprintf(f, "%s,", p);
 				/* write week */
 				fprintf(f, "%d,", row+1);
@@ -2810,7 +2810,7 @@ int compute_sr_datasets(DATASET *const datasets, const int datasets_count, const
 			}
 			y /= rows_per_day;
 			for ( row = 0; row < y; row++ ) {
-				t = timestamp_end_by_row(row*(datasets[dataset].hourly ? 24 : 48), datasets[dataset].years[i].year, datasets[dataset].hourly);
+				t = timestamp_end_by_row(row*(datasets[dataset].hourly ? 24 : 48), datasets[dataset].years[i].year, datasets[dataset].details->timeres);
 				fprintf(f, "%04d%02d%02d,%d,%g,%g\n",	t->YYYY,
 														t->MM,
 														t->DD,
@@ -2934,10 +2934,10 @@ int compute_sr_datasets(DATASET *const datasets, const int datasets_count, const
 		for ( i = 0; i < datasets[dataset].years_count; i++ ) {
 			for ( row = 0; row < 52; row++ ) {
 				/* write timestamp_start */
-				p = timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].hourly, 1);
+				p = timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres, 1);
 				fprintf(f, "%s,", p);
 				/* write timestamp_end */
-				p = timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].hourly, 0);
+				p = timestamp_ww_get_by_row_s(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres, 0);
 				fprintf(f, "%s,", p);
 				fprintf(f, "%d,%g,%g\n",	row+1,
 											srs_temp[j+row].reco,
