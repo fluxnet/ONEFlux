@@ -1,5 +1,6 @@
 # Import single-function-per-file modules
 from .fcx2colvec import fcx2colvec
+from .fcx2rowvec import fcx2rowvec
 
 from os.path import dirname, basename, isfile, join
 import glob

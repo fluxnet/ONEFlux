@@ -44,4 +44,4 @@ def test_fcx2rowvec(test_engine, input_data, expected):
     Test fcx2rowvec function with various matrices and arrays, verifying reshaping.
     """
     result = test_engine.fcx2rowvec(test_engine.convert(input_data))
-    assert test_engine.equal(result, expected)
+    assert test_engine.equal(result, test_engine.convert(expected))
