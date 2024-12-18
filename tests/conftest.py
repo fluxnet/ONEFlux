@@ -54,7 +54,7 @@ class TestEngine(ABC):
     def convert(self, x):
         """Convert the input to a type compatible with this engine. Can just be identity
         if the runner is Python"""
-        return x
+        return np.array(x)
 
     @abstractmethod
     def equal(self, x, y) -> bool:
