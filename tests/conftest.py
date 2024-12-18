@@ -32,6 +32,16 @@ from matlab.engine.matlabengine import MatlabFunc
 from abc import ABC, abstractmethod
 import warnings
 
+# All modules need to be imported here
+from oneflux_steps.ustar_cp_python.utils import *
+
+def pytest_addoption(parser):
+    parser.addoption("--language", action="store", default="matlab")
+
+@pytest.fixture(scope="session")
+def language(pytestconfig):
+    return pytestconfig.getoption("language")
+
 # Specification of a `TestEngine`
 class TestEngine(ABC):
     @abstractmethod
@@ -129,8 +139,8 @@ class MatlabEngine:
         atexit.register(lambda: (s := self.out.getvalue()) and print(f"{name} stdout:\n{s}"))
         atexit.register(lambda: (s := self.err.getvalue()) and print(f"{name} stderr:\n{s}"))
 
-    def _repr_pretty(self, p):
-        return "MATLAB Test Engine"
+    def _repr_pretty_(self, p):
+        return "MATLAB"
 
     def __call__(self, *args, jsonencode=(), jsondecode=(), **kwargs):
         """
@@ -144,10 +154,14 @@ class MatlabEngine:
             The result of the wrapped function, with specified outputs JSON decoded if necessary.
         """
 
+        if self.func._name == '_repr_pretty_':
+            # Overload attempts to pretty print matlab engines (e.g., by hypothesis)
+            return 'MATLAB'
+      
         # For `convert` and `equal` we need to handle these directly here since
         # we have overriden `call`.
         if (self.func._name == "convert") | (self.func._name == "equal"):
-          
+
           # Locally scoped definitions
           def _convert(x):
               return to_matlab_type(x)
@@ -162,13 +176,13 @@ class MatlabEngine:
               else:
                   # Drop through to usual equality
                   return x == y
-          
+
           # Choose which function to call
           if self.func._name == "convert":
               return _convert(*args)
           elif self.func._name == "equal":
               return _equal(*args)
-        
+
         else:
           # Calls mostly going through to the MATLAB engine
           args = list(args)
@@ -204,17 +218,12 @@ def get_languages():
 
     return ["python", "matlab"]
 
-@pytest.fixture(scope="function")
-def test_engine(request, refactored=True):
+@pytest.fixture(scope="session")
+def test_engine(language, refactored=True):
     """
     Pytest fixture to start a 'running engine' which allows multiple languages
     to be targetted
     """
-
-    # If 'testcase' is provided by the test function, use its value
-    if 'language' in request.fixturenames:
-        language = request.getfixturevalue('language')
-
     if language == 'python':
         yield PythonEngine()  # Assuming a defined PythonEngine class elsewhere
     else:
@@ -264,7 +273,6 @@ def test_engine(request, refactored=True):
 
         #Close MATLAB engine after tests are done
         eng.quit()
-
 
 
 @pytest.fixture
