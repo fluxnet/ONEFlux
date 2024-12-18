@@ -12,7 +12,7 @@ def get_dims(X: np.ndarray) -> int:
 
     return len(unique_dims)
 
-def iqr_1d_eval(X: np.ndarray) -> Union[float, np.ndarray]:
+def iqr_1D_eval(X: np.ndarray) -> Union[float, np.ndarray]:
     """Evaluate IQR for a 1D array, ignoring NaNs."""
     valid_values = X[~np.isnan(X)]
     if len(valid_values) <= 3:
@@ -73,7 +73,7 @@ def iqr_3d_eval(X: np.ndarray) -> np.ndarray:
     return IQR
 
 
-def fc_nan_iqr(X: np.ndarray) -> Union[float, np.ndarray]:
+def fcNaniqr(X: np.ndarray) -> Union[float, np.ndarray]:
     """
     Compute the interquartile range (IQR) of the values in X, ignoring NaNs.
 
@@ -104,7 +104,7 @@ def fc_nan_iqr(X: np.ndarray) -> Union[float, np.ndarray]:
     nd = get_dims(X)
 
     return {
-        1: lambda: iqr_1d_eval(X),
+        1: lambda: iqr_1D_eval(X),
         2: lambda: iqr_2d_eval(X),
         3: lambda: iqr_3d_eval(X)
     }.get(nd, lambda: np.nan)()
