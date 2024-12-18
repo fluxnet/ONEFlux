@@ -69,16 +69,27 @@ class PythonEngine(TestEngine):
     def convert(self, x):
         return x
 
-    def equal(self, x, y) -> bool:
+    def equal(self, x, y):
         return x == y
 
     # Overload calling of methods and 'rethrow' to global context
     def __getattribute__(self, name):
       def newfunc(*args, **kwargs):
-          func = globals().get(name)  # Access global dictionary of defined functions
-          if callable(func):
-              return func(*args, **kwargs)
-          raise AttributeError(f"'{name}' is not callable")
+          if name == "convert":
+            def convert(x):
+              return x
+            return convert
+
+          elif name == "equal":
+            def equal(x, y) -> bool:
+              return x == y
+            return equal
+
+          else:
+            func = globals().get(name)  # Access global dictionary of defined functions
+            if callable(func):
+                return func(*args, **kwargs)
+            raise AttributeError(f"'{name}' is not callable")
       return newfunc
 
 # MATLAB Engine wrapper
