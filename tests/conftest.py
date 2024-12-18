@@ -450,14 +450,16 @@ def flatten(container):
 
 # Helper function to compare MATLAB double arrays element-wise, handling NaN comparisons
 def compare_matlab_arrays(result, expected):
+    if not hasattr(result, '__len__') or not hasattr(expected, '__len__'):
+        return np.allclose(result, expected, equal_nan=True)
+
     if isinstance(result, dict):
         if not isinstance(expected, dict):
             return False
         if set(result.keys()) != set(expected.keys()):
             return False
         return all(compare_matlab_arrays(result[k], expected[k]) for k in result.keys())
-    if not hasattr(result, '__len__') or not hasattr(expected, '__len__'):
-        return np.allclose(result, expected, equal_nan=True)
+
     if len(result) != len(expected):
         # Potentially we are in the situation where the MATLAB is wrapped in an extra layer of array
         if isinstance(result, matlab.double) and len(result) == 1:
@@ -465,6 +467,11 @@ def compare_matlab_arrays(result, expected):
             return all(compare_matlab_arrays(r, e) for r, e in zip(result, expected))
         else:
             return False
+
+    if isinstance(result, matlab.double):
+        return np.allclose(result, expected, equal_nan=True)
+
+    # Recursive case
     return all(compare_matlab_arrays(r, e) for r, e in zip(result, expected))
 
 def read_csv_with_csv_module(file_path):
