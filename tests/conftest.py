@@ -31,6 +31,17 @@ import numpy as np
 from matlab.engine.matlabengine import MatlabFunc
 from abc import ABC, abstractmethod
 
+# All modules need to be imported here
+from oneflux_steps.ustar_cp_python.utils import *
+from oneflux_steps.ustar_cp_python import *
+
+def pytest_addoption(parser):
+    parser.addoption("--language", action="store", default="matlab")
+
+@pytest.fixture(scope="session")
+def language(pytestconfig):
+    return pytestconfig.getoption("language")
+
 # Specification of a `TestEngine`
 class TestEngine(ABC):
     @abstractmethod
@@ -43,7 +54,7 @@ class TestEngine(ABC):
     def convert(self, x):
         """Convert the input to a type compatible with this engine. Can just be identity
         if the runner is Python"""
-        return x
+        return np.array(x)
 
     @abstractmethod
     def equal(self, x, y) -> bool:
@@ -56,18 +67,18 @@ class PythonEngine(TestEngine):
         return "Python Test Engine"
 
     def convert(self, x):
-        return x
+        return np.asarray(x)
 
-    def equal(self, x, y) -> bool:
-        return x == y
+    def equal(self, x, y):
+        return np.allclose(x, y, equal_nan=True)
 
     # Overload calling of methods and 'rethrow' to global context
-    def __getattribute__(self, name):
+    def __getattr__(self, name):
       def newfunc(*args, **kwargs):
-          func = globals().get(name)  # Access global dictionary of defined functions
-          if callable(func):
-              return func(*args, **kwargs)
-          raise AttributeError(f"'{name}' is not callable")
+        func = globals().get(name)  # Access global dictionary of defined functions
+        if callable(func):
+            return func(*args, **kwargs)
+        raise AttributeError(f"'{name}' is not callable")
       return newfunc
 
 # MATLAB Engine wrapper
@@ -81,12 +92,8 @@ class MatlabEngine:
         atexit.register(lambda: (s := self.out.getvalue()) and print(f"{name} stdout:\n{s}"))
         atexit.register(lambda: (s := self.err.getvalue()) and print(f"{name} stderr:\n{s}"))
 
-    def _repr_pretty(self, p):
-        return "MATLAB Test Engine"
-
-
-    def _repr_pretty(self, p):
-        return "MATLAB Test Engine"
+    def _repr_pretty_(self, p):
+        return "MATLAB"
 
     def __call__(self, *args, jsonencode=(), jsondecode=(), **kwargs):
         """
@@ -100,6 +107,10 @@ class MatlabEngine:
             The result of the wrapped function, with specified outputs JSON decoded if necessary.
         """
 
+        if self.func._name == '_repr_pretty_':
+            # Overload attempts to pretty print matlab engines (e.g., by hypothesis)
+            return 'MATLAB'
+      
         # For `convert` and `equal` we need to handle these directly here since
         # we have overriden `call`.
         if (self.func._name == "convert") | (self.func._name == "equal"):
@@ -157,12 +168,11 @@ MatlabFunc.__new__ = mf_factory
 
 
 @pytest.fixture(scope="session")
-def test_engine(refactored=True, language='matlab'):
+def test_engine(language, refactored=True):
     """
     Pytest fixture to start a 'running engine' which allows multiple languages
     to be targetted
     """
-
     if language == 'python':
       yield PythonEngine()
 
@@ -212,7 +222,6 @@ def test_engine(refactored=True, language='matlab'):
 
       # Close MATLAB engine after tests are done
       eng.quit()
-
 
 
 @pytest.fixture
@@ -418,7 +427,7 @@ def to_matlab_type(data):
             return data.tolist()  # Convert non-numeric arrays to lists
     elif isinstance(data, list):
         # Convert Python list to MATLAB double array if all elements are numbers
-        if all(isinstance(elem, (int, float)) for elem in data):
+        if all(isinstance(elem, (int, float)) for elem in flatten(data)):
             return matlab.double(data)
         else:
             # Create a cell array for lists containing non-numeric data
@@ -426,20 +435,31 @@ def to_matlab_type(data):
     elif isinstance(data, (int, float)):
         return matlab.double([data])  # Convert single numbers
     else:
-        return data  # If the data type is already MATLAB-compatible
+      return data  # If the data type is already MATLAB-compatible
+
+def flatten(container):
+    """
+    Flatten a nested container into a single list.
+    """
+    for i in container:
+        if isinstance(i, (list,tuple)):
+            for j in flatten(i):
+                yield j
+        else:
+            yield i
 
 # Helper function to compare MATLAB double arrays element-wise, handling NaN comparisons
 def compare_matlab_arrays(result, expected):
+    if not hasattr(result, '__len__') or not hasattr(expected, '__len__'):
+        return np.allclose(result, expected, equal_nan=True)
+
     if isinstance(result, dict):
         if not isinstance(expected, dict):
             return False
         if set(result.keys()) != set(expected.keys()):
             return False
         return all(compare_matlab_arrays(result[k], expected[k]) for k in result.keys())
-    if not hasattr(result, '__len__') or not hasattr(expected, '__len__'):
-        if np.isnan(result) and np.isnan(expected):
-            return True  # NaNs are considered equal
-        return np.allclose(result, expected)
+
     if len(result) != len(expected):
         # Potentially we are in the situation where the MATLAB is wrapped in an extra layer of array
         if isinstance(result, matlab.double) and len(result) == 1:
@@ -447,6 +467,11 @@ def compare_matlab_arrays(result, expected):
             return all(compare_matlab_arrays(r, e) for r, e in zip(result, expected))
         else:
             return False
+
+    if isinstance(result, matlab.double):
+        return np.allclose(result, expected, equal_nan=True)
+
+    # Recursive case
     return all(compare_matlab_arrays(r, e) for r, e in zip(result, expected))
 
 def read_csv_with_csv_module(file_path):

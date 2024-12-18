@@ -1,8 +1,6 @@
 import pytest
-import matlab
 import numpy as np
-from tests.conftest import to_matlab_type, compare_matlab_arrays
-from oneflux_steps.ustar_cp_python.fcx2rowvec import fcx2rowvec
+from tests.conftest import test_engine
 
 @pytest.mark.parametrize(
     "input_data, expected",
@@ -43,10 +41,7 @@ from oneflux_steps.ustar_cp_python.fcx2rowvec import fcx2rowvec
 )
 def test_fcx2rowvec(test_engine, input_data, expected):
     """
-    Testfcx2rowvec function with various matrices and arrays, verifying reshaping.
+    Test fcx2rowvec function with various matrices and arrays, verifying reshaping.
     """
-    # Call function
     result = test_engine.fcx2rowvec(test_engine.convert(input_data))
-
-    # Assess results
-    assert test_engine(result, test_engine.convert(expected))
+    assert test_engine.equal(result, test_engine.convert(expected))
