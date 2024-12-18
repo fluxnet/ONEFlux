@@ -68,7 +68,7 @@ def test_launch_missing_file(setup_test_environment, matlab_engine, setup_folder
     Args:
         setup_test_environment (fixture): A fixture that sets up input and output folders 
                                           with dummy data for the test.
-        ustar_cp (fixture): A fixture that initializes and manages the MATLAB engine session.
+        matlab_engine (fixture): A fixture that initializes and manages the MATLAB engine session.
         setup_folders (fixture): A fixture that sets up folders for input, reference output, 
                                  and test output.
 
@@ -106,14 +106,14 @@ def test_launch_invalid_data(setup_test_environment, matlab_engine):
     Args:
         setup_test_environment (fixture): A fixture that sets up input and output folders 
                                           with dummy data for the test.
-        ustar_cp (fixture): A fixture that initializes and manages the MATLAB engine session.
+        matlab_engine (fixture): A fixture that initializes and manages the MATLAB engine session.
 
     Asserts:
         The test asserts that the MATLAB function returns a non-zero exit code, indicating 
         that it identified and handled the invalid data correctly.
     """
     input_folder, output_folder = setup_test_environment
-    eng = ustar_cp
+    eng = matlab_engine
 
     # Overwrite the input file with invalid data
     invalid_data = """invalid content"""
@@ -137,7 +137,7 @@ def test_launch_empty_folder(setup_test_environment, matlab_engine):
     Args:
         setup_test_environment (fixture): A fixture that sets up input and output folders 
                                           with dummy data for the test.
-        ustar_cp (fixture): A fixture that initializes and manages the MATLAB engine session.
+        matlab_engine (fixture): A fixture that initializes and manages the MATLAB engine session.
 
     Asserts:
         The test asserts that the MATLAB function returns an exit code of 0, indicating 
@@ -163,7 +163,7 @@ def test_missing_keywords(setup_test_environment, matlab_engine):
     Args:
         setup_test_environment (fixture): A fixture that sets up input and output folders
                                           with dummy data for the test.
-        ustar_cp (fixture): A fixture that initializes and manages the MATLAB engine session.
+        matlab_engine (fixture): A fixture that initializes and manages the MATLAB engine session.
 
     Asserts:
         The test asserts that the MATLAB function returns an exit code of 1 with the appropriate

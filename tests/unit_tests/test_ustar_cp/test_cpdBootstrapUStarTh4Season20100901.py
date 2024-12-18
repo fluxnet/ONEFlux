@@ -52,7 +52,7 @@ def mock_data(nt=300, tspan=(0, 1), uStar_pars=(0.1, 3.5), T_pars=(-10, 30), fNi
         fNight = np.resize(fNight, nt)
     return t, NEE, uStar, T, fNight
 
-def test_cpdBootstrapUStarTh4Season20100901_basic(matlab_engine, mock_data):
+def test_cpdBootstrapUStarTh4Season20100901_basic(ustar_cp, mock_data):
     t, NEE, uStar, T, fNight = mock_data
     fPlot = 0
     cSiteYr = "Site_2024"
@@ -66,7 +66,7 @@ def test_cpdBootstrapUStarTh4Season20100901_basic(matlab_engine, mock_data):
     fNight_matlab = matlab.logical(fNight.tolist())
 
     # Call MATLAB function
-    Cp2, Stats2, Cp3, Stats3 = matlab_engine.cpdBootstrapUStarTh4Season20100901(
+    Cp2, Stats2, Cp3, Stats3 = ustar_cp.cpdBootstrapUStarTh4Season20100901(
         t_matlab, NEE_matlab, uStar_matlab, T_matlab, fNight_matlab, fPlot, cSiteYr, nBoot, jsonencode=[1,3], nargout=4
     )
 
@@ -90,7 +90,7 @@ def test_cpdBootstrapUStarTh4Season20100901_basic(matlab_engine, mock_data):
                 for k in ss:
                     assert k in (s2[i][j] and s3[i][j])
 
-def test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap(matlab_engine, mock_data):
+def test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap(ustar_cp, mock_data):
     # Test with a high number of bootstraps
     t, NEE, uStar, T, fNight = mock_data
     fPlot = 0
@@ -105,7 +105,7 @@ def test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap(matlab_engi
     fNight_matlab = matlab.logical(fNight.tolist())
 
     # Call MATLAB function
-    Cp2, Stats2, Cp3, Stats3 = matlab_engine.cpdBootstrapUStarTh4Season20100901(
+    Cp2, Stats2, Cp3, Stats3 = ustar_cp.cpdBootstrapUStarTh4Season20100901(
         t_matlab, NEE_matlab, uStar_matlab, T_matlab, fNight_matlab, fPlot, cSiteYr, nBoot, jsonencode=[1,3], nargout=4
     )
 
@@ -115,7 +115,7 @@ def test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap(matlab_engi
     assert len(Stats2[0][0]) == nBoot, "Stats2 should match the number of bootstraps."
     assert len(Stats3[0][0]) == nBoot, "Stats3 should match the number of bootstraps."
 
-def test_cpdBootstrap_against_testcases(matlab_engine):
+def test_cpdBootstrap_against_testcases(ustar_cp):
     """Test to compare function output to test cases."""
     path_to_artifacts = "tests/test_artifacts/cpdBootstrapUStarTh4Season20100901_artifacts/"
 
@@ -152,7 +152,7 @@ def test_cpdBootstrap_against_testcases(matlab_engine):
     ([0, 1, np.nan, 3, 4], 1),                    # Includes NaN, should ignore it
     ([0, 1.1, 2.2, 3.3, 4.4], 1),                 # Non-integer difference
 ])
-def test_get_nPerDay(matlab_engine, input_data, expected_result):
+def test_get_nPerDay(ustar_cp, input_data, expected_result):
     input_data = to_matlab_type(input_data)
     result = matlab_engine.get_nPerDay(input_data)
     assert np.all(result == expected_result), f"Expected {expected_result}, but got {result}"
@@ -191,9 +191,9 @@ def test_get_iNight(matlab_engine, input_data, expected_result):
     ([np.nan, 2, 3], matlabarray([np.nan, 2.0, 3.0])),                      # Input with NaN should remain NaN
     ([5, -2, 0, 3], matlabarray([np.nan, np.nan, 0.0, 3.0]))                # Multiple values out of bounds
 ])
-def test_update_uStar(matlab_engine, input_data, expected_result):
+def test_update_uStar(ustar_cp, input_data, expected_result):
     input_data = to_matlab_type(input_data)
-    result = matlab_engine.update_uStar(input_data)
+    result = ustar_cp.update_uStar(input_data)
     # Compare the MATLAB arrays, allowing for NaN equality
     assert objects_are_equal(result, expected_result), f"Expected {expected_result}, but got {result}"
 
@@ -203,9 +203,9 @@ expected_fields = ['n', 'Cp', 'Fmax', 'p', 'b0', 'b1', 'b2', 'c2', 'cib0', 'cib1
 ]
 
 # Test for the generate_statsMT function
-def test_generate_statsMT(matlab_engine):
+def test_generate_statsMT(ustar_cp):
     # Generate the StatsMT struct
-    StatsMT = matlab_engine.generate_statsMT()
+    StatsMT = ustar_cp.generate_statsMT()
 
     # Ensure all expected fields exist and are NaN
     for field in expected_fields:
@@ -250,7 +250,7 @@ def test_get_ntN(matlab_engine, t_input, nSeasons, expected_ntN):
         ([1, 2, 3], [1, 1, 1], [1, 1, 1], [1, 2, 3], matlabarray([1.0, 2.0, 3.0]))
     ]
 )
-def test_get_itNee(matlab_engine, NEE, uStar, T, iNight, expected_itNee):
+def test_get_itNee(ustar_cp, NEE, uStar, T, iNight, expected_itNee):
     # Convert input arrays to MATLAB-compatible types
     NEE_matlab = to_matlab_type(NEE)
     uStar_matlab = to_matlab_type(uStar)
@@ -258,7 +258,7 @@ def test_get_itNee(matlab_engine, NEE, uStar, T, iNight, expected_itNee):
     iNight_matlab = to_matlab_type(iNight)
     
     # Call the MATLAB function
-    itNee = matlab_engine.get_itNee(NEE_matlab, uStar_matlab, T_matlab, iNight_matlab)
+    itNee = ustar_cp.get_itNee(NEE_matlab, uStar_matlab, T_matlab, iNight_matlab)
     
     # Compare results
     if not isinstance(itNee, float):
@@ -287,9 +287,9 @@ def test_get_itNee(matlab_engine, NEE, uStar, T, iNight, expected_itNee):
         (1, 5, 4, (1, 5, 4)),
     ]
 )
-def test_setup_Cp(matlab_engine, nSeasons, nStrataX, nBoot, expected_shape):
+def test_setup_Cp(ustar_cp, nSeasons, nStrataX, nBoot, expected_shape):
     # Call the MATLAB function
-    Cp = matlab_engine.setup_Cp(nSeasons, nStrataX, nBoot)
+    Cp = ustar_cp.setup_Cp(nSeasons, nStrataX, nBoot)
 
     # Convert the MATLAB output to numpy arrays for comparison
     Cp_array = np.array(Cp)
@@ -315,7 +315,7 @@ stats_entry = {'n': nan, 'Cp': nan, 'Fmax': nan, 'p': nan, 'b0': nan, 'b1': nan,
         (0, 2, 3, stats_entry),
     ]
 )
-def test_setup_Stats(matlab_engine, nBoot, nSeasons, nStrataX, expected_shape):
+def test_setup_Stats(matlab_engine, nBoot, nSeasons, nStrataX, expected):
     # Call the MATLAB function
     Stats= matlab_engine.setup_Stats(nBoot, nSeasons, nStrataX, jsonencode=[0])
 

@@ -1,8 +1,14 @@
+<<<<<<< HEAD
 	function fcDatetick(t,sFrequency,iDateStr,fLimits); 
 	% In ONEFlux only ever gets called with `iDateStr = 4`
   % and `sFrequency = 'Mo'` and `fLimits = 1`
 
 	[y,m,d,h,mn,s]=mydatevec(t); 
+=======
+	function myDateTick(t,sFrequency,iDateStr,fLimits); 
+	
+	[y,m,d,h,mn,s]=fcDatevec(t); 
+>>>>>>> origin/smop-generated
 	iYrs=unique(y); 
 	iSerMos=(y-1)*12+m; 
 	iSerMo1=min(iSerMos); iSerMo2=max(iSerMos); 

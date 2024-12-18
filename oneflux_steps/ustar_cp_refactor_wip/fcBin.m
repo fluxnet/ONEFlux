@@ -15,10 +15,16 @@ function [nBins,mx,my] = fcBin(x,y,dx,nPerBin);
 
 %	-----------------------------------------------------------------------
 
+<<<<<<< HEAD
 	nBins=0; mx=[]; my=[];
   % TODO, should this be any(dx <= 0)?
 	if dx<=0; disp('Function cpdBin aborted. dx cannot be <=0. ');  return; end;
 
+=======
+	nBins=0; mx=[]; my=[]; 
+	if any(dx<=0); disp('Function cpdBin aborted. dx cannot be <=0. ');  return; end; 
+	
+>>>>>>> origin/smop-generated
 	switch length(dx);
 		case 0; % if dx is empty, use nPerBin to bin the data
 				% into bins with nPerBin points in each bin.

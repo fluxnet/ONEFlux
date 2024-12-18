@@ -99,6 +99,8 @@ class MFWrapper:
         #         ret[j] = matlabarray(y)
         # if nargout <= 1:
         #     ret = ret[0]
+        # return ret
+
         return ret
 
 def mf_factory(cls, *args, **kwargs):
@@ -134,10 +136,10 @@ def ustar_cp(request):
 
     After the tests complete, the MATLAB engine is closed automatically.
     """
-    if request.param == "translated":  # return the translated python module
-        import oneflux_steps.ustar_cp_python_auto as eng
-        yield eng
-        return
+    # if request.param == "translated":  # return the translated python module
+    #     import oneflux_steps.ustar_cp_python_auto as eng
+    #     yield eng
+    #     return
 
     # Start MATLAB engine
     eng = matlab.engine.start_matlab()
