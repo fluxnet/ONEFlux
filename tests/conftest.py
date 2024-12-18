@@ -461,32 +461,36 @@ def compare_text_blocks(text1, text2):
     """
     return text1.replace('\n', '').strip() == text2.replace('\n', '').strip()
 
-def to_matlab_type(data):
+def to_matlab_type(data: Any) -> Any:
     """
     Converts various Python data types to their MATLAB equivalents.
 
-    This function handles conversion of Python dictionaries, NumPy arrays, lists,
-    and numeric types to MATLAB-compatible types using the `matlab` library.
-
     Args:
-        data (any): The input data to be converted. Can be a dictionary, NumPy array,
-                    list, integer, float, or other types.
+        data (Any): The input data to be converted.
 
     Returns:
-        any: The converted data in a MATLAB-compatible format. The specific return type
-             depends on the input data type:
-             - dict: Converted to a MATLAB struct.
-             - np.ndarray: Converted to MATLAB logical, double, or list.
-             - list: Converted to MATLAB double array or cell array.
-             - int, float: Converted to MATLAB double.
-             - Other types: Returned as-is if already MATLAB-compatible.
-
+        Any: The converted data in a MATLAB-compatible format.
     """
+    if isinstance(data, (int, float)) or np.issubdtype(type(data), np.number):
+        return float(data)
+
+    if isinstance(data, list):
+        eng = matlab.engine.start_matlab()
+        if eng.isa(data, 'cell'):
+            try:
+                return matlab.double(data)
+            finally:
+                eng.quit()
+
+        if all(isinstance(elem, (int, float)) or np.isnan(elem) for elem in data):
+            return matlab.double([float(elem) if not np.isnan(elem) else np.nan for elem in data])
+        
+        return [to_matlab_type(elem) for elem in data]
+
     if isinstance(data, dict):
-        # Convert a Python dictionary to a MATLAB struct
         matlab_struct = matlab.struct()
         for key, value in data.items():
-            matlab_struct[key] = to_matlab_type(value)  # Recursively handle nested structures
+            matlab_struct[key] = to_matlab_type(value)
         return matlab_struct
     elif isinstance(data, np.ndarray):
         if data.dtype == bool:

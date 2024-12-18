@@ -25,22 +25,14 @@ def test_fcnaniqr_vector_cases(test_engine, vector, expected):
     """
     Test MATLAB's fcNaniqr function with different 1D vectors, including edge cases.
     """
+    test_engine.convert(vector)
     # Call MATLAB function
     result = test_engine.fcNaniqr(vector)
 
     # Check for None result
     assert result is not None, "Expected non-None result from MATLAB function"
 
-    # Check if result is correct (accounting for NaNs)
-    if np.isnan(expected):
-        assert np.isnan(result), f"Expected NaN, but got {result}"
-    else:
-        assert np.isclose(result, expected), f"Expected {expected}, got {result}"
-
-    # Call python function
-    result_python = fc_nan_iqr(np.asarray(vector))
-
-    assert np.allclose(result_python, expected, equal_nan=True)
+    assert test_engine.equal(result, test_engine.convert(expected))
 
 @pytest.mark.parametrize(
     "matrix, expected",
@@ -76,13 +68,6 @@ def test_fcnaniqr_2D_cases(test_engine, matrix, expected):
     assert result is not None, "Expected non-None result from MATLAB function"
 
     assert np.allclose(result, expected, equal_nan=True)
-
-    # Do python calc
-
-    result_python = fc_nan_iqr(np.asarray(matrix))
-
-    assert np.allclose(result_python, np.asarray(expected), equal_nan=True)
-
 
 @pytest.mark.parametrize(
     "matrix, expected",
@@ -137,20 +122,14 @@ TEST_CASES_dims = [
 ]
 
 @pytest.mark.parametrize("description, X, expected", TEST_CASES_dims)
-def test_get_dims(matlab_engine, description, X, expected):
+def test_get_dims(test_engine, description, X, expected):
     """Parameterized test for various inputs with MATLAB column-major consideration."""
     # Matlab calcs
     X = matlab.double(X)
 
-    result = matlab_engine.get_dims(X)
+    result = test_engine.get_dims(X)
 
     assert np.allclose(result, expected, equal_nan=True)
-
-    # Python calcs
-    result_python = get_dims(np.asarray(X))
-
-    # Compare integer values
-    assert np.allclose(result_python, expected, equal_nan=True)
 
 
 
@@ -168,10 +147,10 @@ TEST_CASES = [
 ]
 
 @pytest.mark.parametrize("description, X, expected", TEST_CASES)
-def test_iqr_1d_eval(matlab_engine, description, X, expected):
+def test_iqr_1d_eval(test_engine, description, X, expected):
     """Parameterized test for IQR evaluation in 1D arrays."""
     matlab_array = matlab.double([[x] for x in X])
-    result = matlab_engine.iqr_1D_eval(matlab_array)
+    result = test_engine.iqr_1D_eval(matlab_array)
     if isinstance(expected, float) and expected != expected:  # Check for NaN
         assert result != result, f"{description}: Expected NaN but got {result}"
     else:
@@ -190,10 +169,10 @@ TEST_CASES_2D = [
 ]
 
 @pytest.mark.parametrize("description, X, expected", TEST_CASES_2D)
-def test_iqr_2d_eval(matlab_engine, description, X, expected):
+def test_iqr_2d_eval(test_engine, description, X, expected):
     """Parameterized test for IQR evaluation in 2D arrays."""
     matlab_array = matlab.double(X)
-    result = matlab_engine.iqr_2d_eval(matlab_array)
+    result = test_engine.iqr_2d_eval(matlab_array)
     
     assert np.allclose(np.asarray(result), np.asarray(expected), equal_nan=True)
 
@@ -208,12 +187,12 @@ TEST_CASES_3D = [
 ]
 
 @pytest.mark.parametrize("description, X, expected", TEST_CASES_3D)
-def test_iqr_3d_eval(matlab_engine, description, X, expected):
+def test_iqr_3d_eval(test_engine, description, X, expected):
     """Parameterized test for IQR evaluation in 3D arrays."""
     # Evaluate matlab
     # Ensure MATLAB-compatible 3D array creation
     matlab_array = matlab.double([[[float(val) for val in row] for row in slice_] for slice_ in X])
-    result = matlab_engine.iqr_3d_eval(matlab_array)
+    result = test_engine.iqr_3d_eval(matlab_array)
     
     # Convert both to numpy arrays for consistent comparison
     result_np = np.asarray(result)
@@ -224,9 +203,4 @@ def test_iqr_3d_eval(matlab_engine, description, X, expected):
     assert np.allclose(result_np, expected_np, equal_nan=True), (
         f"{description}: Expected {expected_np} but got {result_np}"
     )
-
-    # Evaluate python
-    result = iqr_3d_eval(np.asarray(X))
-
-    assert np.allclose(result, np.asarray(expected), equal_nan=True)
 
