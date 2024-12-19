@@ -2,13 +2,10 @@
 # which computes an r^2 value for two datasets
 
 import pytest
-import numpy as np
-import pandas as pd
 from tests.conftest import test_engine
 
-from hypothesis import given, settings, HealthCheck
+from hypothesis import given, settings
 from hypothesis.strategies import floats, lists, composite
-import os
 
 @composite
 def float_list(draw, exclude_non_constant=True):
