@@ -95,6 +95,10 @@ class PythonEngine(TestEngine):
                 mod_path = f"oneflux_steps.ustar_cp_python.{name}"
                 mod = __import__(mod_path, fromlist=[name])
                 func = getattr(mod, name, None)
+                # if nargout is present in kwargs then remove it
+                if 'nargout' in kwargs:
+                    kwargs.pop('nargout')
+                  
                 if callable(func):
                     return func(*args, **kwargs)
                 else: warnings.warn(f"'function {name}' cannot be found", UserWarning)
