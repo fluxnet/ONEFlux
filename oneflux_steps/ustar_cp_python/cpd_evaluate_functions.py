@@ -53,7 +53,7 @@ def reorder_and_preprocess_data(
     f_night = f_night[it_reorder]
 
     # Find valid annual data indices and their count
-    it_annual = np.where((f_night == 1) & ~np.isnan(NEE + u_star + T))[0]
+    it_annual = np.nonzero((f_night == 1) & ~np.isnan(NEE + u_star + T))[0]
     nt_annual = len(it_annual)
 
     return t, T, u_star, NEE, f_night, it_annual, nt_annual
@@ -130,18 +130,18 @@ def addStatisticsFields(
 
     Notes
     -----
-    The `matlab_percentile` function should be defined externally and is used to reproduce the behavior
+    The `matlab_percentile` function is defined externally and is used to reproduce the behavior
     of MATLAB's percentile function, as it differs from NumPy's `np.percentile`.
     """
 
-    expected_mt = float(np.mean(t[itStrata]))
-    expected_ti = float(t[itStrata[0]])
-    expected_tf = float(t[itStrata[-1]])
-    expected_ruStarVsT = float(r[1][0])
-    expected_puStarVsT = float(p[1][0])
-    expected_mT = float(np.mean(T[itStrata]))
+    expected_mt = np.mean(t[itStrata])
+    expected_ti = t[itStrata[0]]
+    expected_tf = t[itStrata[-1]]
+    expected_ruStarVsT = r[1][0]
+    expected_puStarVsT = p[1][0]
+    expected_mT = np.mean(T[itStrata])
     ciT_vals = matlab_percentile(T[itStrata], [2.5, 97.5])
-    expected_ciT = 0.5 * float(np.diff(ciT_vals)[0])
+    expected_ciT = 0.5 * (np.diff(ciT_vals)[0])
 
     stats.update({
         "expected_mt": expected_mt,
@@ -196,7 +196,7 @@ def findStratumIndices(
     mask = (T >= TTh[iStrata]) & (T <= TTh[iStrata + 1])
 
     # Extract indices where the condition is true
-    itStrata_indices = mask.nonzero()
+    itStrata_indices = np.nonzero(mask)[0]
 
     # Intersect the selected indices with itSeason
     expected_itStrata = np.intersect1d(itStrata_indices, itSeason)
