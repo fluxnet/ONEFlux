@@ -4,7 +4,8 @@ handle MATLAB engine interactions, and process text files for comparison in unit
 
 Contents:
     Fixtures:
-        matlab_engine
+        test_engine
+        test_engine
         setup_folders
         find_text_file
         extract_section_between_keywords
@@ -28,9 +29,82 @@ import io
 import atexit
 import numpy as np
 from matlab.engine.matlabengine import MatlabFunc
+from abc import ABC, abstractmethod
+import warnings
 
+# Python version imported here
+from oneflux_steps.ustar_cp_python import *
 
-class MFWrapper:
+def pytest_addoption(parser):
+    parser.addoption("--language", action="store", default="matlab")
+
+@pytest.fixture(scope="session")
+def language(pytestconfig):
+    return pytestconfig.getoption("language")
+
+# Specification of a `TestEngine`
+class TestEngine(ABC):
+    @abstractmethod
+    def _repr_pretty(self, p):
+        """This placeholder can stay as is; it enables Hypothesis to work with this
+        runner as a fixture"""
+        return "Test Engine"
+
+    @abstractmethod
+    def convert(self, x):
+        """Convert the input to a type compatible with this engine. Can just be identity
+        if the runner is Python"""
+        return np.array(x)
+
+    @abstractmethod
+    def equal(self, x, y) -> bool:
+        """Compare two values for equality in the representation used by this engine"""
+        pass
+
+# Python TestEngine
+class PythonEngine(TestEngine):
+    def _repr_pretty(self, p):
+        return "Python Test Engine"
+
+    def convert(self, x):
+        """Convert input to a compatible type."""
+        if x is None:
+            raise ValueError("Input cannot be None")
+        return np.asarray(x) if isinstance(x, list) else x
+
+    def equal(self, x, y) -> bool:
+        """Enhanced equality check for MATLAB arrays."""
+        if x is None or y is None:
+            raise ValueError("Comparison values cannot be None")
+        if isinstance(x, float) or isinstance(y, float):
+            return np.isclose(x, y, equal_nan=True)
+        elif isinstance(x, np.ndarray) and isinstance(y, np.ndarray):
+            return np.allclose(x, y, equal_nan=True)
+        elif isinstance(x, list) or isinstance(y, list):
+            return all(self.equal(xi, yi) for xi, yi in zip(x, y))
+        else:
+            return x == y
+
+    def __getattribute__(self, name):
+        if name in ["convert", "equal"]:
+            return object.__getattribute__(self, name)
+        
+        def newfunc(*args, **kwargs):
+            try:
+                # Dynamically load modules based on the function name
+                mod_path = f"oneflux_steps.ustar_cp_python.{name}"
+                mod = __import__(mod_path, fromlist=[name])
+                func = getattr(mod, name, None)
+                if callable(func):
+                    return func(*args, **kwargs)
+                else: warnings.warn(f"'function {name}' cannot be found", UserWarning)
+            except ImportError:
+                pass
+            warnings.warn(f"'{name}' is not callable", UserWarning)
+        return newfunc
+
+# MATLAB Engine wrapper
+class MatlabEngine:
     def __init__(self, func):
         self.func = func
         self.out = io.StringIO()
@@ -39,7 +113,10 @@ class MFWrapper:
         # make matlab stdout and stderr printed at the end of pytest
         atexit.register(lambda: (s := self.out.getvalue()) and print(f"{name} stdout:\n{s}"))
         atexit.register(lambda: (s := self.err.getvalue()) and print(f"{name} stderr:\n{s}"))
-        
+
+    def _repr_pretty_(self, p):
+        return "MATLAB"
+
     def __call__(self, *args, jsonencode=(), jsondecode=(), **kwargs):
         """
         Call the wrapped function with optional JSON encoding/decoding to handle the issue that non-scalar structs (arrays of structs) cannot be returned from MATLAB functions to Python.
@@ -51,97 +128,142 @@ class MFWrapper:
         Returns:
             The result of the wrapped function, with specified outputs JSON decoded if necessary.
         """
-        args = list(args)
-        if jsonencode:
-            args.append(['jsonencode'] + [i+1 for i in jsonencode])
-        if jsondecode:
-            for i in jsondecode:
-                args[i] = json.dumps(args[i])
-            args.append(['jsondecode'] + [i+1 for i in jsondecode])
-        out = kwargs.pop('stdout', self.out)
-        err = kwargs.pop('stderr', self.err)
-        ret = self.func(*args, **kwargs, stdout=out, stderr=err)
-        if jsonencode:
-            nargout = kwargs.get('nargout', 1)
-            if nargout <= 1:
-                ret = [ret]
-            else:
-                ret = list(ret)
-            for j in jsonencode:
-                ret[j] = json.loads(ret[j], object_hook=none2nan)
-            if nargout <= 1:
-                ret = ret[0]
-        return ret
+
+        if self.func._name == '_repr_pretty_':
+            # Overload attempts to pretty print matlab engines (e.g., by hypothesis)
+            return 'MATLAB'
+      
+        # For `convert` and `equal` we need to handle these directly here since
+        # we have overriden `call`.
+        if (self.func._name == "convert") | (self.func._name == "equal"):
+
+          # Locally scoped definitions
+          def _convert(x):
+              return to_matlab_type(x)
+
+          def _equal(x, y):
+              if isinstance(x, float):
+                  # Floating point equality using numpy
+                  return np.isclose(x, y, equal_nan=True)
+              elif isinstance(x, matlab.double):
+                  # Compare matlab arrays
+                  return compare_matlab_arrays(x, y)
+              else:
+                  # Drop through to usual equality
+                  return x == y
+
+          # Choose which function to call
+          if self.func._name == "convert":
+              return _convert(*args)
+          elif self.func._name == "equal":
+              return _equal(*args)
+
+        else:
+          # Calls mostly going through to the MATLAB engine
+          args = list(args)
+          if jsonencode:
+              args.append(['jsonencode'] + [i+1 for i in jsonencode])
+          if jsondecode:
+              for i in jsondecode:
+                  args[i] = json.dumps(args[i])
+              args.append(['jsondecode'] + [i+1 for i in jsondecode])
+          out = kwargs.pop('stdout', self.out)
+          err = kwargs.pop('stderr', self.err)
+          ret = self.func(*args, **kwargs, stdout=out, stderr=err)
+          if jsonencode:
+              nargout = kwargs.get('nargout', 1)
+              if nargout <= 1:
+                  ret = [ret]
+              else:
+                  ret = list(ret)
+              for j in jsonencode:
+                  ret[j] = json.loads(ret[j], object_hook=none2nan)
+              if nargout <= 1:
+                  ret = ret[0]
+          return ret
 
 def mf_factory(cls, *args, **kwargs):
     f = object.__new__(MatlabFunc)
     f.__init__(*args, **kwargs)
-    return MFWrapper(f)
+    return MatlabEngine(f)
 MatlabFunc.__new__ = mf_factory
 
+@pytest.fixture(scope = "session")
+def get_languages():
+
+    return ["python", "matlab"]
 
 @pytest.fixture(scope="session")
-def matlab_engine(refactored=True):
+def test_engine(language, refactored=True):
     """
-    Pytest fixture to start a MATLAB engine session, add a specified directory 
-    to the MATLAB path, and clean up after the tests.
-
-    This fixture initializes the MATLAB engine, adds the directory containing 
-    MATLAB functions to the MATLAB path, and then yields the engine instance 
-    for use in tests. After the tests are done, the MATLAB engine is properly 
-    closed.
-
-    Args:
-        refactored (bool, optional): If True, use the refactored code path 
-            'oneflux_steps/ustar_cp_refactor_wip/'. Defaults to True, using 
-            the 'oneflux_steps/ustar_cp_refactor_wip/' path.
-
-    Yields:
-        matlab.engine.MatlabEngine: The MATLAB engine instance for running MATLAB 
-            functions within tests.
-
-    After the tests complete, the MATLAB engine is closed automatically.
+    Pytest fixture to start a 'running engine' which allows multiple languages
+    to be targetted
     """
-    # Start MATLAB engine
-    eng = matlab.engine.start_matlab()
+    if language == 'python':
+        yield PythonEngine()  # Assuming a defined PythonEngine class elsewhere
+    else:
 
-    current_dir = os.getcwd()
-    code_path = 'oneflux_steps/ustar_cp_refactor_wip/' if refactored else 'oneflux_steps/ustar_cp'
+        """
+        Pytest fixture to start a MATLAB engine session, add a specified directory
+        to the MATLAB path, and clean up after the tests.
 
-    # Add the directory containing your MATLAB functions to the MATLAB path
-    matlab_function_path = os.path.join(current_dir, code_path)
-    eng.addpath(matlab_function_path, nargout=0)
+        This fixture initializes the MATLAB engine, adds the directory containing
+        MATLAB functions to the MATLAB path, and then yields the engine instance
+        for use in tests. After the tests are done, the MATLAB engine is properly
+        closed.
 
-    def _add_all_subdirs_to_matlab_path(path, matlab_engine):
-        # Recursively find all subdirectories
-        for root, dirs, files in os.walk(path):
-            # Add each directory to the MATLAB path
-            matlab_engine.addpath(root, nargout=0)  # nargout=0 suppresses output
+        Args:
+          refactored (bool, optional): If True, use the refactored code path
+              'oneflux_steps/ustar_cp_refactor_wip/'. Defaults to True, using
+              the 'oneflux_steps/ustar_cp_refactor_wip/' path.
 
-        return
-    
-    # Add the base directory and all its subdirectories to MATLAB path
-    _add_all_subdirs_to_matlab_path(matlab_function_path, eng)
+        Yields:
+          matlab.engine.MatlabEngine: The MATLAB engine instance for running MATLAB
+              functions within tests.
 
-    yield eng
+        After the tests complete, the MATLAB engine is closed automatically.
+        """
+        # Start MATLAB engine
+        eng = matlab.engine.start_matlab()
 
-    # Close MATLAB engine after tests are done
-    eng.quit()
+        current_dir = os.getcwd()
+        code_path = 'oneflux_steps/ustar_cp_refactor_wip/' if refactored else 'oneflux_steps/ustar_cp'
+
+        # Add the directory containing your MATLAB functions to the MATLAB path
+        matlab_function_path = os.path.join(current_dir, code_path)
+        eng.addpath(matlab_function_path, nargout=0)
+
+        def _add_all_subdirs_to_matlab_path(path, test_engine):
+            # Recursively find all subdirectories
+            for root, dirs, files in os.walk(path):
+                # Add each directory to the MATLAB path
+                test_engine.addpath(root, nargout=0)  # nargout=0 suppresses output
+
+            return
+
+        # Add the base directory and all its subdirectories to MATLAB path
+        _add_all_subdirs_to_matlab_path(matlab_function_path, eng)
+
+        yield eng
+
+        #Close MATLAB engine after tests are done
+        eng.quit()
+
 
 @pytest.fixture
 def setup_folders(tmp_path, request, testcase: str = "US_ARc"):
     """
-    Fixture to set up input and output folders for tests by copying all files 
+    Fixture to set up input and output folders for tests by copying all files
     from a specified local directory.
 
     Args:
-        tmp_path: A pytest fixture that provides a temporary directory unique to 
+        tmp_path: A pytest fixture that provides a temporary directory unique to
                   the test invocation.
-        testcase (str): The name of the subdirectory under 'tests/test_artifacts/' 
+        testcase (str): The name of the subdirectory under 'tests/test_artifacts/'
                         that contains the test files.
 
     Returns:
-        tuple: A tuple containing the paths to the temporary input, the reference output, and 
+        tuple: A tuple containing the paths to the temporary input, the reference output, and
                the empty output directories as strings.
     """
 
@@ -201,11 +323,11 @@ def setup_folders(tmp_path, request, testcase: str = "US_ARc"):
 @pytest.fixture
 def find_text_file():
     """
-    Fixture to find the `report` file in the given folder, open it, 
+    Fixture to find the `report` file in the given folder, open it,
     extract its contents as a list of lines, and return the contents.
 
     Returns:
-        function: A function that takes a folder path and returns the contents 
+        function: A function that takes a folder path and returns the contents
                   of the first `.txt` file found in that folder as a list of lines.
     """
     def _find_text_file_in_folder(folder):
@@ -214,12 +336,12 @@ def find_text_file():
             if filename.startswith('report'):
                 # Construct the full file path
                 file_path = os.path.join(folder, filename)
-                
+
                 # Open the file and read its contents as lines
                 with open(file_path, 'r', encoding='utf-8') as file:
                     contents = file.readlines()  # Read the file as a list of lines
                 return contents
-        
+
         # If no .txt file is found, raise an error
         raise FileNotFoundError(f"No .txt file found in folder: {folder}")
 
@@ -233,12 +355,12 @@ def extract_section_between_keywords():
     Args:
         data (list): The contents of the file as a list of lines.
         start_keyword (str): The keyword to start extracting from.
-        end_keyword (str, optional): The keyword to stop extracting before. 
+        end_keyword (str, optional): The keyword to stop extracting before.
                                      Defaults to None, which means take all text onward from the start keyword.
 
     Returns:
-        function: A function that takes data (list of lines), start_keyword (str), 
-                  and end_keyword (str, optional), and returns the lines between the 
+        function: A function that takes data (list of lines), start_keyword (str),
+                  and end_keyword (str, optional), and returns the lines between the
                   start keyword and the end keyword, exclusive of the end keyword.
     """
     def _extract(data, start_keyword, end_keyword=None):
@@ -331,7 +453,7 @@ def to_matlab_type(data):
             return data.tolist()  # Convert non-numeric arrays to lists
     elif isinstance(data, list):
         # Convert Python list to MATLAB double array if all elements are numbers
-        if all(isinstance(elem, (int, float)) for elem in data):
+        if all(isinstance(elem, (int, float)) for elem in flatten(data)):
             return matlab.double(data)
         else:
             # Create a cell array for lists containing non-numeric data
@@ -339,24 +461,45 @@ def to_matlab_type(data):
     elif isinstance(data, (int, float)):
         return matlab.double([data])  # Convert single numbers
     else:
-        return data  # If the data type is already MATLAB-compatible
-    
+      return data  # If the data type is already MATLAB-compatible
+
+def flatten(container):
+    """
+    Flatten a nested container into a single list.
+    """
+    for i in container:
+        if isinstance(i, (list,tuple)):
+            for j in flatten(i):
+                yield j
+        else:
+            yield i
+
 # Helper function to compare MATLAB double arrays element-wise, handling NaN comparisons
 def compare_matlab_arrays(result, expected):
+    if not hasattr(result, '__len__') or not hasattr(expected, '__len__'):
+        return np.allclose(result, expected, equal_nan=True)
+
     if isinstance(result, dict):
         if not isinstance(expected, dict):
             return False
         if set(result.keys()) != set(expected.keys()):
             return False
         return all(compare_matlab_arrays(result[k], expected[k]) for k in result.keys())
-    if not hasattr(result, '__len__') or not hasattr(expected, '__len__'):
-        if np.isnan(result) and np.isnan(expected):
-            return True  # NaNs are considered equal
-        return np.allclose(result, expected)
+
     if len(result) != len(expected):
-        return False
+        # Potentially we are in the situation where the MATLAB is wrapped in an extra layer of array
+        if isinstance(result, matlab.double) and len(result) == 1:
+            result = result[0]
+            return all(compare_matlab_arrays(r, e) for r, e in zip(result, expected))
+        else:
+            return False
+
+    if isinstance(result, matlab.double):
+        return np.allclose(result, expected, equal_nan=True)
+
+    # Recursive case
     return all(compare_matlab_arrays(r, e) for r, e in zip(result, expected))
-    
+
 def read_csv_with_csv_module(file_path):
     """
     Reads a CSV file and returns its contents as a NumPy array.
@@ -377,7 +520,7 @@ def read_file(file_path):
         file_path (str): The path to the file to be read. The file can be either a CSV or a JSON file.
 
     Returns:
-        dict or list: The contents of the file. Returns a list of dictionaries if the file is a CSV, 
+        dict or list: The contents of the file. Returns a list of dictionaries if the file is a CSV,
                       or a dictionary if the file is a JSON.
 
     Raises:
@@ -391,7 +534,7 @@ def read_file(file_path):
             return none2nan(json.load(f))  # Load JSON file
     else:
         raise ValueError(f"Unsupported file type: {file_path}")
-    
+
 def none2nan(obj):
     if isinstance(obj, dict):
         return {k: none2nan(v) for k, v in obj.items()}
@@ -419,7 +562,7 @@ def parse_testcase(test_case: dict, path_to_artifacts: str):
     """
     inputs: dict = {}
     outputs: dict = {}
-    
+
     for io_type in ['input', 'expected_output']:
         for key, value in test_case[io_type].items():  # Use test_case here
             if isinstance(value, str):  # Check if the value is a string (likely a file path)
@@ -442,5 +585,5 @@ def parse_testcase(test_case: dict, path_to_artifacts: str):
                     inputs[key] = value
                 else:
                     outputs[key] = value
-    
+
     return inputs, outputs
