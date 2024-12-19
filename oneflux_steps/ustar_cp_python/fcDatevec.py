@@ -1,7 +1,7 @@
 import datetime
 import numpy
 
-def mydatevec(t):
+def fcDatevec(t):
     """
     function [y,m,d,h,mn,s]=mydatevec(t)
     was written by Alan Barr to return 2400 UTC rather than 0000 UTC.
