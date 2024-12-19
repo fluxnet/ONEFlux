@@ -132,7 +132,7 @@ class MatlabEngine:
         if self.func._name == '_repr_pretty_':
             # Overload attempts to pretty print matlab engines (e.g., by hypothesis)
             return 'MATLAB'
-      
+
         # For `convert` and `equal` we need to handle these directly here since
         # we have overriden `call`.
         if (self.func._name == "convert") | (self.func._name == "equal"):
