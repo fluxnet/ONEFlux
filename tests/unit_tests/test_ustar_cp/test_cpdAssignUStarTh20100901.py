@@ -63,7 +63,7 @@ def test_cpdAssignUStarTh20100901_basic(test_engine, mock_data):
     assert isinstance(CpW, matlab.double), "CpW should be a MATLAB double array"
     assert isinstance(cMode, str), "cMode should be a string"
     assert isinstance(cFailure, str), "cFailure should be a string"
-    assert isinstance(fSelect, matlab.double), "fSelect should be a MATLAB logical array"
+    assert isinstance(fSelect, matlab.logical), "fSelect should be a MATLAB logical array"
     assert isinstance(sSine, matlab.double), "sSine should be a MATLAB double array"
     assert isinstance(FracSig, float), "FracSig should be a float"
     assert isinstance(FracModeD, float), "FracModeD should be a float"

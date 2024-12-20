@@ -9,7 +9,7 @@ import matlab.engine
 import numpy as np
 import json
 # from oneflux_steps.ustar_cp_py.libsmop import struct, matlabarray
-from tests.conftest import to_matlab_type, read_file, parse_testcase
+from tests.conftest import to_matlab_type, read_file, parse_testcase, compare_matlab_arrays
 
 nan = np.nan
 
@@ -303,7 +303,7 @@ def test_setup_Cp(test_engine, nSeasons, nStrataX, nBoot, expected_shape):
 stats_entry = {'n': nan, 'Cp': nan, 'Fmax': nan, 'p': nan, 'b0': nan, 'b1': nan, 'b2': nan, 'c2': nan, 'cib0': nan, 'cib1': nan, 'cic2': nan, 'mt': nan, 'ti': nan, 'tf': nan, 'ruStarVsT': nan, 'puStarVsT': nan, 'mT': nan, 'ciT': nan}
 # Test for the setup_Stats function
 @pytest.mark.parametrize(
-    "nBoot, nSeasons, nStrataX, expected",
+    "nBoot, nSeasons, nStrataX, expected_shape",
     [
         # Case 1: Basic 2x2x2 array
         (2, 2, 2, ([[[stats_entry, stats_entry],[stats_entry,stats_entry]],[[stats_entry,stats_entry],[stats_entry,stats_entry]]])),
