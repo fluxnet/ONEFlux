@@ -466,12 +466,12 @@ def compare_matlab_arrays(result, expected):
         if set(result.keys()) != set(expected.keys()):
             return False
         return all(compare_matlab_arrays((result[k], expected[k]) for k in result.keys())
-    if min(map(np.ndim, (result, expected))) == 0:
+    if not hasattr(result, '__len__') or not hasattr(expected, '__len__'):    
         if np.isnan(result) and np.isnan(expected):
             return True  # NaNs are considered equal
         return np.allclose(result, expected)
 
-    if np.shape(result) != np.shape(expected):
+    if len(result) != len(expected):
         # Potentially we are in the situation where the MATLAB is wrapped in an extra layer of array
         if isinstance(result, matlab.double) and len(result) == 1:
             result = result[0]
@@ -480,7 +480,7 @@ def compare_matlab_arrays(result, expected):
             return False
     return all(compare_matlab_arrays(r, e) for r, e in zip(result, expected))
     # ALT:
-    return all(objects_are_equal(r, e) for r, e in zip(result, expected))
+    #return all(objects_are_equal(r, e) for r, e in zip(result, expected))
 
 def read_csv_with_csv_module(file_path):
     """
