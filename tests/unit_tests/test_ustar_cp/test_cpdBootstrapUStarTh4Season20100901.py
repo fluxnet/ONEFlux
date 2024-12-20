@@ -267,7 +267,6 @@ def test_get_itNee(test_engine, NEE, uStar, T, iNight, expected_itNee):
         assert np.allclose(itNee, expected_itNee)
 
 # Test for the setup_Cp function
-@pytest.mark.skip(reason="Too long")
 @pytest.mark.parametrize(
     "nSeasons, nStrataX, nBoot, expected_shape",
     [
