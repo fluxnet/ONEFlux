@@ -13,7 +13,7 @@
 
 %	Written by Alan Barr 2002.
 	
-	[y,m,d,h,mi,s]=mydatevec(t); 
+	[y,m,d,~,~,~]=fcDatevec(t); 
 	tt=datenum(y,m,d); 
 	d=floor(tt-datenum(y-1,12,31));  
 
