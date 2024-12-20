@@ -17,7 +17,7 @@ def test_fcDoy_specific(test_engine, t, expected):
     Test specific state vectors
     """
     # Call the function
-    result = test_engine.fcDoy.convert(t)
+    result = test_engine.fcDoy(test_engine.convert(t))
 
     # Check the result
     assert test_engine.equal(result, test_engine.convert(expected))
