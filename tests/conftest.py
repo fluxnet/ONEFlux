@@ -472,26 +472,11 @@ def to_matlab_type(data: Any) -> Any:
     Returns:
         Any: The converted data in a MATLAB-compatible format.
     """
-    if isinstance(data, (int, float)) or np.issubdtype(type(data), np.number):
-        return float(data)
-
-    if isinstance(data, list):
-        eng = matlab.engine.start_matlab()
-        if eng.isa(data, 'cell'):
-            try:
-                return matlab.double(data)
-            finally:
-                eng.quit()
-
-        if all(isinstance(elem, (int, float)) or np.isnan(elem) for elem in data):
-            return matlab.double([float(elem) if not np.isnan(elem) else np.nan for elem in data])
-        
-        return [to_matlab_type(elem) for elem in data]
-
     if isinstance(data, dict):
+        # Convert a Python dictionary to a MATLAB struct
         matlab_struct = matlab.struct()
         for key, value in data.items():
-            matlab_struct[key] = to_matlab_type(value)
+            matlab_struct[key] = to_matlab_type(value)  # Recursively handle nested structures
         return matlab_struct
     elif isinstance(data, np.ndarray):
         if data.dtype == bool:
