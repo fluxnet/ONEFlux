@@ -9,7 +9,7 @@ from hypothesis.strategies import floats, lists, composite
 
 import numpy as np
 
-# Property-based tests for fcDatevec
+# Property-based tests for fcDatevec
 # The size of the input `n` determines the size of the output as `n x 6`
 @given(data=lists(floats(allow_infinity=False, min_value=-10000, max_value=10000), min_size=1, max_size=100))
 @settings(deadline=1000)
@@ -37,7 +37,10 @@ def test_fcDatevec_shape(test_engine, data):
           part1 = chunk1[0]
           part2 = chunk2[0]
 
-          assert test_engine.equal(part1[::-1], part2)
+          if isinstance(part1, list):
+              assert test_engine.equal(part1, part2[::-1])
+          else:
+              assert test_engine.equal(part1, part2)
 
 # Specific state vectors
 # via a parameterized test fixture

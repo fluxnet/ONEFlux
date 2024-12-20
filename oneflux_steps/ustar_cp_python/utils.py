@@ -839,7 +839,7 @@ def datenum(a, *args):
     return matlabarray(t - datetime(2000, 1, 1)).astype("timedelta64[D]")
 
 
-def datevec(datenum, nargout=6):
+def datevec(datenum : np.ndarray, nargout=6):
     """
     Convert a MATLAB datenum to a date vector.
     """
