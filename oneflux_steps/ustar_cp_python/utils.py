@@ -847,7 +847,7 @@ def datevec(datenum : np.ndarray, nargout=6):
     return (
         dt.astype("datetime64[Y]").astype(int) + 1970,
         dt.astype("datetime64[M]").astype(int) % 12 + 1,
-        dt.astype("datetime64[D]").astype(int) % 31 + 1,
+        [(int(str(x)[-2::]) % 31) for x in dt],
         dt.astype("datetime64[h]").astype(int) % 24,
         dt.astype("datetime64[m]").astype(int) % 60,
         dt.astype("datetime64[s]").astype(int) % 60,

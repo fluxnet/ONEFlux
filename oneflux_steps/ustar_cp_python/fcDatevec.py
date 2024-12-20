@@ -36,23 +36,28 @@ def fcDatevec(t):
     mn = y.copy()
     s = y.copy()
     dt0 = datetime.datetime(yr0, 1, 1)
-    yy,mm,dd,hh,mmn,ss = u.datevec(t[iYaN]) # numpy.array([dt0 + datetime.timedelta(tt - 1) for tt in t[iYaN]])
-    y[iYaN] = yy # numpy.array([dt.year for dt in dt00]) - yr0
-    m[iYaN] = mm # numpy.array([dt.month for dt in dt00])
-    d[iYaN] = dd #  numpy.array([dt.day for dt in dt00])
-    h[iYaN] = hh # numpy.array([dt.hour for dt in dt00])
-    mn[iYaN] = mmn # numpy.array([dt.minute for dt in dt00])
-    s[iYaN] = ss # numpy.array([dt.second for dt in dt00])
+
+    dt00 = numpy.array([dt0 + datetime.timedelta(int(tt) - 1) for tt in t[iYaN]])
+    y[iYaN] = numpy.array([dt.year for dt in dt00]) - yr0
+    m[iYaN] = numpy.array([dt.month for dt in dt00])
+    d[iYaN] = numpy.array([dt.day for dt in dt00])
+    h[iYaN] = numpy.array([dt.hour for dt in dt00])
+    mn[iYaN] = numpy.array([dt.minute for dt in dt00])
+    s[iYaN] = numpy.array([dt.second for dt in dt00])
     # index of midnights
     idx = numpy.where((h == 0) & (mn == 0) & (s == 0))[0]
-    y2400,m2400,d2400,_,_,_ = u.datevec(t[idx]-1) # numpy.array([dt00[i] - datetime.timedelta(1) for i in idx])
-    y[idx] = y2400 # numpy.array([dt.year for dt in dt24]) - yr0
-    m[idx] = m2400 # numpy.array([dt.month for dt in dt24])
-    d[idx] = d2400 # numpy.array([dt.day for dt in dt24])
+    
+    #dt24 = numpy.array([dt00[i] - datetime.timedelta(1) for i in idx])
+    m[idx] = m[idx] - (1 + y[idx])
+    d[idx] = numpy.array([dt.day for dt in dt00]) - 1
+    # y[idx] = y2400 # numpy.array([dt.year for dt in dt24]) - yr0
+    # m[idx] = m2400 # numpy.array([dt.month for dt in dt24])
+    # d[idx] = d2400 # numpy.array([dt.day for dt in dt24])
+
     h[idx] = 24
     if scalar_input:
         # convert back to scalar
         return numpy.ndarray.item(y), numpy.ndarray.item(m), numpy.ndarray.item(d), \
-               numpy.ndarray.item(h), numpy.ndarray.item(mn), numpy.ndarray.item(s)
+                numpy.ndarray.item(h), numpy.ndarray.item(mn), numpy.ndarray.item(s)
     else:
         return y, m, d, h, mn, s

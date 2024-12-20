@@ -29,7 +29,7 @@ def test_fcDatevec_shape(test_engine, data):
         else:
             assert True
 
-    # Reveersing the input data reverses the components of the output data
+    # Reversing the input data reverses the components of the output data
     if n > 1:
       result2 = test_engine.fcDatevec(test_engine.convert(data[::-1]),nargout=6)
 
@@ -38,7 +38,7 @@ def test_fcDatevec_shape(test_engine, data):
           part2 = chunk2[0]
 
           if isinstance(part1, list):
-              assert test_engine.equal(part1, part2[::-1])
+              assert test_engine.equal(part1[::-1], part2)
           else:
               assert test_engine.equal(part1, part2)
 
