@@ -5,7 +5,6 @@ handle MATLAB engine interactions, and process text files for comparison in unit
 Contents:
     Fixtures:
         test_engine
-        test_engine
         setup_folders
         find_text_file
         extract_section_between_keywords
@@ -29,6 +28,7 @@ import io
 import atexit
 import numpy as np
 from matlab.engine.matlabengine import MatlabFunc
+# from oneflux_steps.ustar_cp_py.libsmop import matlabarray, struct
 from abc import ABC, abstractmethod
 import warnings
 
@@ -184,6 +184,24 @@ class MatlabEngine:
                   ret[j] = json.loads(ret[j], object_hook=none2nan)
               if nargout <= 1:
                   ret = ret[0]
+
+       # # Some alternate approach here
+       # nargout = kwargs.get('nargout', 1)
+        # if nargout <= 1:
+        #     ret = [ret]
+        # else:
+        #     ret = list(ret)
+        # for j, y in enumerate(ret):
+        #     if j in jsonencode:
+        #         y = json.loads(y, object_hook=lambda d: 
+        #             {k: np.nan if v is None else v for k, v in d.items()})
+        #         ret[j] = struct(y)
+        #     elif isinstance(y, np.ndarray):
+        #         ret[j] = matlabarray(y)
+        # if nargout <= 1:
+        #     ret = ret[0]
+        # return ret
+
           return ret
 
 def mf_factory(cls, *args, **kwargs):
@@ -203,6 +221,10 @@ def test_engine(language, refactored=True):
     Pytest fixture to start a 'running engine' which allows multiple languages
     to be targetted
     """
+    # if request.param == "translated":  # return the translated python module
+    #     import oneflux_steps.ustar_cp_python_auto as eng
+    #     yield eng
+    #     return
     if language == 'python':
         yield PythonEngine()  # Assuming a defined PythonEngine class elsewhere
     else:
@@ -503,6 +525,8 @@ def compare_matlab_arrays(result, expected):
 
     # Recursive case
     return all(compare_matlab_arrays(r, e) for r, e in zip(result, expected))
+    # ALT:
+    #return all(objects_are_equal(r, e) for r, e in zip(result, expected))
 
 def read_csv_with_csv_module(file_path):
     """
