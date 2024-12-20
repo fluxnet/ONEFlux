@@ -7,6 +7,9 @@ from tests.conftest import test_engine
 # via a parameterized test fixture
 @pytest.mark.parametrize('t, expected', [
       ([367], [366])
+    , ([0], [364])
+    , ([1], [0])
+    , ([365], [364])
     , ([0,365,500], [364,364,133])
     , ([0,365,500,1000], [364,364,133,268])
     , ([[0],[365],[500],[1000]], [[364],[364],[133],[268]])
