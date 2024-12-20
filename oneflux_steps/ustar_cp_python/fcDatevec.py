@@ -36,19 +36,19 @@ def fcDatevec(t):
     mn = y.copy()
     s = y.copy()
     dt0 = datetime.datetime(yr0, 1, 1)
-    dt00 = u.datevec(t[iYaN]) # numpy.array([dt0 + datetime.timedelta(tt - 1) for tt in t[iYaN]])
-    y[iYaN] = numpy.array([dt.year for dt in dt00]) - yr0
-    m[iYaN] = numpy.array([dt.month for dt in dt00])
-    d[iYaN] = numpy.array([dt.day for dt in dt00])
-    h[iYaN] = numpy.array([dt.hour for dt in dt00])
-    mn[iYaN] = numpy.array([dt.minute for dt in dt00])
-    s[iYaN] = numpy.array([dt.second for dt in dt00])
+    yy,mm,dd,hh,mmn,ss = u.datevec(t[iYaN]) # numpy.array([dt0 + datetime.timedelta(tt - 1) for tt in t[iYaN]])
+    y[iYaN] = yy # numpy.array([dt.year for dt in dt00]) - yr0
+    m[iYaN] = mm # numpy.array([dt.month for dt in dt00])
+    d[iYaN] = dd #  numpy.array([dt.day for dt in dt00])
+    h[iYaN] = hh # numpy.array([dt.hour for dt in dt00])
+    mn[iYaN] = mmn # numpy.array([dt.minute for dt in dt00])
+    s[iYaN] = ss # numpy.array([dt.second for dt in dt00])
     # index of midnights
     idx = numpy.where((h == 0) & (mn == 0) & (s == 0))[0]
-    dt24 = u.datevec(t[i2400]-1) # numpy.array([dt00[i] - datetime.timedelta(1) for i in idx])
-    y[idx] = numpy.array([dt.year for dt in dt24]) - yr0
-    m[idx] = numpy.array([dt.month for dt in dt24])
-    d[idx] = numpy.array([dt.day for dt in dt24])
+    y2400,m2400,d2400,_,_,_ = u.datevec(t[idx]-1) # numpy.array([dt00[i] - datetime.timedelta(1) for i in idx])
+    y[idx] = y2400 # numpy.array([dt.year for dt in dt24]) - yr0
+    m[idx] = m2400 # numpy.array([dt.month for dt in dt24])
+    d[idx] = d2400 # numpy.array([dt.day for dt in dt24])
     h[idx] = 24
     if scalar_input:
         # convert back to scalar
