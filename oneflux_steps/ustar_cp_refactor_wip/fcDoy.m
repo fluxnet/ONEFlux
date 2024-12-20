@@ -7,7 +7,7 @@
 %	See datenum for a definition of t.
 %
 %	doy differs from other formulations in that the last 
-%	period of each day (denoted as 2400 by mydatevec) 
+%	period of each day (denoted as 2400 by fcDatevec) 
 %	is attributed to the day ending 2400 
 %	rather than the day beginning 0000. 
 
