@@ -8,7 +8,6 @@ import pytest
 import numpy as np
 import pandas as pd
 from tests.conftest import compare_matlab_arrays, to_matlab_type, process_std_out, compare_text_blocks
-import matlab.engine
 
 from hypothesis import given, settings, HealthCheck
 from hypothesis.strategies import floats, lists, integers

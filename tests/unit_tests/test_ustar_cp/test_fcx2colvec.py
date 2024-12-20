@@ -1,5 +1,4 @@
 import pytest
-import matlab.engine
 from tests.conftest import to_matlab_type, compare_matlab_arrays
 from oneflux_steps.ustar_cp_python.fcx2colvec import fcx2colvec
 import numpy as np
