@@ -1,6 +1,8 @@
 import datetime
 import numpy
 
+import oneflux_steps.ustar_cp_python.utils as u
+
 def fcDatevec(t):
     """
     function [y,m,d,h,mn,s]=mydatevec(t)
@@ -34,7 +36,7 @@ def fcDatevec(t):
     mn = y.copy()
     s = y.copy()
     dt0 = datetime.datetime(yr0, 1, 1)
-    dt00 = numpy.array([dt0 + datetime.timedelta(tt - 1) for tt in t[iYaN]])
+    dt00 = u.datevec(t[iYaN]) # numpy.array([dt0 + datetime.timedelta(tt - 1) for tt in t[iYaN]])
     y[iYaN] = numpy.array([dt.year for dt in dt00]) - yr0
     m[iYaN] = numpy.array([dt.month for dt in dt00])
     d[iYaN] = numpy.array([dt.day for dt in dt00])
@@ -43,7 +45,7 @@ def fcDatevec(t):
     s[iYaN] = numpy.array([dt.second for dt in dt00])
     # index of midnights
     idx = numpy.where((h == 0) & (mn == 0) & (s == 0))[0]
-    dt24 = numpy.array([dt00[i] - datetime.timedelta(1) for i in idx])
+    dt24 = u.datevec(t[i2400]-1) # numpy.array([dt00[i] - datetime.timedelta(1) for i in idx])
     y[idx] = numpy.array([dt.year for dt in dt24]) - yr0
     m[idx] = numpy.array([dt.month for dt in dt24])
     d[idx] = numpy.array([dt.day for dt in dt24])
