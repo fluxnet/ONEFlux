@@ -70,7 +70,12 @@ class PythonEngine(TestEngine):
         """Convert input to a compatible type."""
         if x is None:
             raise ValueError("Input cannot be None")
-        return np.asarray(x) if isinstance(x, list) else x
+        if isinstance(x, list):
+            return np.asarray(x)
+        elif isinstance(x, tuple):
+            return tuple([self.convert(xi) for xi in x])
+        else:
+            return x
 
     def equal(self, x, y) -> bool:
         """Enhanced equality check for MATLAB arrays."""
@@ -80,7 +85,7 @@ class PythonEngine(TestEngine):
             return np.isclose(x, y, equal_nan=True)
         elif isinstance(x, np.ndarray) and isinstance(y, np.ndarray):
             return np.allclose(x, y, equal_nan=True)
-        elif isinstance(x, list) or isinstance(y, list):
+        elif (isinstance(x, list) and isinstance(y, list)) or (isinstance(x, tuple) and isinstance(y, tuple)):
             return all(self.equal(xi, yi) for xi, yi in zip(x, y))
         else:
             return x == y
