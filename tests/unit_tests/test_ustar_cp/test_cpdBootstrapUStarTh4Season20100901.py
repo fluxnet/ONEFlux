@@ -71,10 +71,10 @@ def test_cpdBootstrapUStarTh4Season20100901_basic(test_engine, mock_data):
     )
 
     # Assertions for output types
-    assert isinstance(Cp2, np.ndarray), "Cp2 should be a MATLAB double array."
-    assert isinstance(Stats2, struct), "Stats2 should be a list of MATLAB structs."
-    assert isinstance(Cp3, np.ndarray), "Cp3 should be a MATLAB double array."
-    assert isinstance(Stats3, struct), "Stats3 should be a list of MATLAB structs."
+    assert isinstance(Cp2, matlab.double), "Cp2 should be a MATLAB double array."
+    assert isinstance(Stats2, list), "Stats2 should be a list of MATLAB structs."
+    assert isinstance(Cp3, matlab.double), "Cp3 should be a MATLAB double array."
+    assert isinstance(Stats3, list), "Stats3 should be a list of MATLAB structs."
 
     # Validate dimensions of the output arrays
     assert len(Cp2) == 4, "Cp2 should have 4 seasons."

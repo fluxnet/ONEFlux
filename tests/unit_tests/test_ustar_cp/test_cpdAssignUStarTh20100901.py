@@ -57,14 +57,14 @@ def test_cpdAssignUStarTh20100901_basic(test_engine, mock_data):
     CpA, nA, tW, CpW, cMode, cFailure, fSelect, sSine, FracSig, FracModeD, FracSelect = test_engine.cpdAssignUStarTh20100901(stats, fPlot, cSiteYr, jsondecode=[0], nargout=11)
 
     # Assertions
-    assert isinstance(CpA, np.ndarray), "CpA should be a MATLAB double array"
-    assert isinstance(nA, np.ndarray), "nA should be a MATLAB double array"
-    assert isinstance(tW, np.ndarray), "tW should be a MATLAB double array"
-    assert isinstance(CpW, np.ndarray), "CpW should be a MATLAB double array"
+    assert isinstance(CpA, matlab.double), "CpA should be a MATLAB double array"
+    assert isinstance(nA, matlab.double), "nA should be a MATLAB double array"
+    assert isinstance(tW, matlab.double), "tW should be a MATLAB double array"
+    assert isinstance(CpW, matlab.double), "CpW should be a MATLAB double array"
     assert isinstance(cMode, str), "cMode should be a string"
     assert isinstance(cFailure, str), "cFailure should be a string"
-    assert isinstance(fSelect, np.ndarray), "fSelect should be a MATLAB logical array"
-    assert isinstance(sSine, np.ndarray), "sSine should be a MATLAB double array"
+    assert isinstance(fSelect, matlab.double), "fSelect should be a MATLAB logical array"
+    assert isinstance(sSine, matlab.double), "sSine should be a MATLAB double array"
     assert isinstance(FracSig, float), "FracSig should be a float"
     assert isinstance(FracModeD, float), "FracModeD should be a float"
     assert isinstance(FracSelect, float), "FracSelect should be a float"
@@ -78,13 +78,13 @@ def test_cpdAssignUStarTh20100901_edge_cases(test_engine, mock_data):
     edge_stats = mock_stats.copy()
 
     # Case 1: All significant change points
-    setattr(edge_stats, "p", 0)
+    set_attr(edge_stats, "p", 0)
     assert edge_stats[0][0][0]['p'] == 0
 
     results_all_sig = test_engine.cpdAssignUStarTh20100901(edge_stats, 0, "AllSig_2024", jsondecode=[0], nargout=11)
 
     # Case 2: No significant change points
-    setattr(edge_stats, "p", 1)
+    set_attr(edge_stats, "p", 1)
     assert edge_stats[0][0][0]['p'] == 1
 
     results_no_sig = test_engine.cpdAssignUStarTh20100901(edge_stats, 0, "NoSig_2024", jsondecode=[0], nargout=11)
