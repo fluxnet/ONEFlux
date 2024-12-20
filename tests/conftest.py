@@ -584,14 +584,23 @@ def compare_matlab_arrays(result, expected):
         if set(result.keys()) != set(expected.keys()):
             return False
         return all(compare_matlab_arrays(result[k], expected[k]) for k in result.keys())
-    if not hasattr(result, '__len__') or not hasattr(expected, '__len__'):
-        if np.isnan(result) and np.isnan(expected):
-            return True  # NaNs are considered equal
-        return np.allclose(result, expected)
+
     if len(result) != len(expected):
-        return False
+        # Potentially we are in the situation where the MATLAB is wrapped in an extra layer of array
+        if isinstance(result, matlab.double) and len(result) == 1:
+            result = result[0]
+            return all(compare_matlab_arrays(r, e) for r, e in zip(result, expected))
+        else:
+            return False
+
+    if isinstance(result, matlab.double):
+        return np.allclose(result, expected, equal_nan=True)
+
+    # Recursive case
     return all(compare_matlab_arrays(r, e) for r, e in zip(result, expected))
-    
+    # ALT:
+    #return all(objects_are_equal(r, e) for r, e in zip(result, expected))
+
 def read_csv_with_csv_module(file_path):
     """
     Reads a CSV file and returns its contents as a NumPy array.
@@ -624,10 +633,9 @@ def read_file(file_path):
     elif file_path.endswith('.json'):
         with open(file_path, 'r') as f:
             return none2nan(json.load(f))  # Load JSON file
-            return none2nan(json.load(f))  # Load JSON file
     else:
         raise ValueError(f"Unsupported file type: {file_path}")
-    
+
 def none2nan(obj):
     if isinstance(obj, dict):
         return {k: none2nan(v) for k, v in obj.items()}
