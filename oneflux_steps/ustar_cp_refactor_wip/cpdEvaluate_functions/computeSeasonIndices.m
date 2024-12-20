@@ -7,4 +7,5 @@ function jtSeason = computeSeasonIndices(iSeason, nSeasons, nPerSeason, ntAnnual
         otherwise
             jtSeason = ((iSeason - 1) * nPerSeason + 1):(iSeason * nPerSeason);
     end
+    jtSeason = double(jtSeason);
 end

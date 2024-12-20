@@ -4,7 +4,7 @@ import numpy as np
 
 
 
-def reorder_and_preprocess_data(
+def reorderAndPreprocessData(
     t: np.ndarray, 
     T: np.ndarray, 
     u_star: np.ndarray, 
@@ -37,6 +37,14 @@ def reorder_and_preprocess_data(
             - Indices of annual data.
             - Number of annual data points.
     """
+    # Make copies of input arrays
+    t = t.copy()
+    T = T.copy()
+    u_star = u_star.copy()
+    NEE = NEE.copy()
+    f_night = f_night.copy()
+    m = m.copy()
+
     # Find indices where month equals December (12)
     it_d = np.where(m == 12)[0]
 
@@ -59,7 +67,7 @@ def reorder_and_preprocess_data(
     return t, T, u_star, NEE, f_night, it_annual, nt_annual
 
 
-def filter_invalid_points(
+def filterInvalidPoints(
     u_star: np.ndarray,
     f_night: np.ndarray,
     nee: np.ndarray,
@@ -94,9 +102,9 @@ def filter_invalid_points(
 def addStatisticsFields(
     stats: Dict[str, float],
     t: np.ndarray, 
-    T: np.ndarray, 
     r: np.ndarray, 
     p: np.ndarray, 
+    T: np.ndarray, 
     itStrata: np.ndarray
 ) -> Dict[str, float]:
     """
@@ -144,14 +152,15 @@ def addStatisticsFields(
     expected_ciT = 0.5 * (np.diff(ciT_vals)[0])
 
     stats.update({
-        "expected_mt": expected_mt,
-        "expected_ti": expected_ti,
-        "expected_tf": expected_tf,
-        "expected_ruStarVsT": expected_ruStarVsT,
-        "expected_puStarVsT": expected_puStarVsT,
-        "expected_mT": expected_mT,
-        "expected_ciT": expected_ciT
+        "mt": expected_mt,
+        "ti": expected_ti,
+        "tf": expected_tf,
+        "ruStarVsT": expected_ruStarVsT,
+        "puStarVsT": expected_puStarVsT,
+        "mT": expected_mT,
+        "ciT": expected_ciT
     })
+
     return stats
 
 
@@ -316,7 +325,7 @@ def computeTemperatureThresholds(
     # Compute the required percentile values:
     # np.linspace(0, 100, n_strata + 1) creates an array of percentiles from 0 to 100.
     percentiles = np.linspace(0, 100, n_strata + 1)
-    
+    # print(it_season)
     # Extract the seasonal temperatures and compute their percentiles
     T_season = T[it_season]
     TTh = matlab_percentile(T_season, percentiles)

@@ -28,18 +28,25 @@ def json_to_numpy(data):
         all_arrays.append(np.array(group_arrays))  # Group into a 2D array for each group
     return np.array(all_arrays)
 
+# def test_test_engine(test_engine):
+#     """
+#     Test the test engine.
+#     """
+#     x = test_engine.prctile([1,2,3,4,5], 50)
+#     print(x)
 
-
+#     assert 1==0
 
 cpdEvaluateUStar_test_cases = ['2007', # Nomial case 
                                '2007_fnight_zero_0' # All nighttime data is zero
                                ]
 @pytest.mark.parametrize('year', cpdEvaluateUStar_test_cases)
-def test_cpdEvaluateUStarTh4Season20100901_logged_data(matlab_engine, year): # This test stores the logged data as row major instead of column major
+def test_cpdEvaluateUStarTh4Season20100901_logged_data(test_engine, year): # This test stores the logged data as row major instead of column major
     """
-    Test the cpdEvaluateUStarTh4Season20100901 function in MATLAB.
+    Test the cpdEvaluateUStarTh4Season20100901 function.
     """
-
+    if test_engine.cpdEvaluateUStarTh4Season20100901 is None:
+        pytest.skip("Test function not available")
     input_data = {}
     input_names = ['t_it_', 'NEE_it_', 'updated_uStar_it_', 'T_it_', 'fNight_it_']
     fplot = 0
@@ -48,9 +55,9 @@ def test_cpdEvaluateUStarTh4Season20100901_logged_data(matlab_engine, year): # T
     for name in input_names:
         path_to_artifacts = artifacts_dir + f'/CA-Cbo_qca_ustar_{year}/input_{name}.csv'
         column = pd.read_csv(path_to_artifacts, header=None).iloc[:,0].to_numpy()
-        input_data[name] = matlab.double(column.tolist())
+        input_data[name] = test_engine.convert(column)
 
-    [xCp2,xStats2, xCp3,xStats3] = matlab_engine.cpdEvaluateUStarTh4Season20100901(
+    [xCp2,xStats2, xCp3,xStats3] = test_engine.cpdEvaluateUStarTh4Season20100901(
         input_data['t_it_'], input_data['NEE_it_'], input_data['updated_uStar_it_'], 
         input_data['T_it_'], input_data['fNight_it_'], fplot, cSiteYr, 1, nargout=4)
     
@@ -71,34 +78,34 @@ def test_cpdEvaluateUStarTh4Season20100901_logged_data(matlab_engine, year): # T
     with open(expected_xStats3, 'r') as f:
         expected_xStats3 = json_to_numpy(json.load(f))
 
-    xCp2 = xCp2.tomemoryview().tolist()
-    xCp2 = np.array(xCp2)
-
-    assert np.allclose(xStats2, expected_xStats2, equal_nan=True)
-    assert np.allclose(xStats3, expected_xStats3, equal_nan=True)
-    assert np.allclose(xCp2, expected_xCp2, equal_nan=True)
-    assert np.allclose(xCp3, expected_xCp3, equal_nan=True)
+    assert test_engine.equal(test_engine.convert(xStats2), expected_xStats2)
+    assert test_engine.equal(test_engine.convert(xStats3), expected_xStats3)
+    assert test_engine.equal(test_engine.convert(xCp2), expected_xCp2)
+    assert test_engine.equal(test_engine.convert(xCp3), expected_xCp3)
 
 
-testcases = [ (matlab.double([1.0000, 1.0417, 1.0834]), 3, matlab.double([0,1,1]), 366, 3, 2400), #nPerDay = 24, nPerBin = 3
-                (matlab.double([1.083, 1.083, 1.125]), 3, matlab.double([1,1,1]), 366, 5, 4000) # nPerBin = 5
+testcases = [ ([1.0000, 1.0417, 1.0834], 3, [0,1,1], 366, 3, 2400), #nPerDay = 24, nPerBin = 3
+                ([1.083, 1.083, 1.125], 3, [1,1,1], 366, 5, 4000) # nPerBin = 5
                 ]
 @pytest.mark.parametrize('t, expected_nt, expected_m, expected_EndDOY, expected_nPerBin, expected_nN', testcases)
-def test_initializeParameters(matlab_engine, t, expected_nt, expected_m, expected_EndDOY, expected_nPerBin, expected_nN):
+def test_initializeParameters(test_engine, t, expected_nt, expected_m, expected_EndDOY, expected_nPerBin, expected_nN):
     """
-    Tests the initializeParameters function in MATLAB.
+    Tests the initializeParameters function.
     """
+    if test_engine.initializeParameters is None:
+        pytest.skip("Test function not available")
     nSeasons = 4
     nStrataN = 4
     nBins = 50
+    t = test_engine.convert(t)
 
-    nt, m, EndDOY, nPerBin, nN = matlab_engine.initializeParameters(t, nSeasons, nStrataN, nBins, nargout=5)
+    nt, m, EndDOY, nPerBin, nN = test_engine.initializeParameters(t, nSeasons, nStrataN, nBins, nargout=5)
     
-    assert nt == expected_nt
-    assert m == expected_m
-    assert EndDOY == expected_EndDOY
-    assert nPerBin == expected_nPerBin
-    assert nN == expected_nN
+    assert test_engine.equal(nt, expected_nt)
+    assert test_engine.equal(m, expected_m)
+    assert test_engine.equal(EndDOY, expected_EndDOY)
+    assert test_engine.equal(nPerBin, expected_nPerBin)
+    assert test_engine.equal(nN, expected_nN)
 
 
 uStar_some_nans = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, np.nan])
@@ -114,30 +121,30 @@ testcases = [
             ]
 
 @pytest.mark.parametrize('uStar, fNight, NEE, T', testcases)
-def test_filterInvalidPoints(matlab_engine, uStar, fNight, NEE, T):
+def test_filterInvalidPoints(test_engine, uStar, fNight, NEE, T):
     """
-    Test the filterInvalidPoints function in MATLAB.
+    Test the filterInvalidPoints function.
     """
     
-    expected_u_star, expected_valid_annual_indices, expected_num_valid_annual = filter_invalid_points(uStar, fNight, NEE, T)
+    expected_u_star, expected_valid_annual_indices, expected_num_valid_annual = filterInvalidPoints(uStar, fNight, NEE, T)
     expected_u_star, expected_valid_annual_indices, expected_num_valid_annual = \
-        matlab.double(expected_u_star.tolist()), matlab.double((expected_valid_annual_indices+1).tolist()), matlab.double(expected_num_valid_annual)
+        test_engine.convert(expected_u_star), test_engine.convert(expected_valid_annual_indices, 'to_matlab'), test_engine.convert(expected_num_valid_annual) # +1 to account for 1-based indexing in MATLAB
     
-    uStar = matlab.double(uStar.tolist())
-    fNight = matlab.double(fNight.tolist())
-    NEE = matlab.double(NEE.tolist())
-    T = matlab.double(T.tolist())
+    uStar = test_engine.convert(uStar)
+    fNight = test_engine.convert(fNight)
+    NEE = test_engine.convert(NEE)
+    T = test_engine.convert(T)
 
-    uStar, itAnnual, ntAnnual = matlab_engine.filterInvalidPoints(uStar, fNight, NEE, T, nargout=3)
+    uStar, itAnnual, ntAnnual = test_engine.filterInvalidPoints(uStar, fNight, NEE, T, nargout=3)
 
-    assert np.allclose(uStar, expected_u_star, equal_nan=True)
-    assert np.allclose(itAnnual, expected_valid_annual_indices, equal_nan=True)
-    assert np.allclose(ntAnnual, expected_num_valid_annual, equal_nan=True)
+    assert test_engine.equal(test_engine.convert(uStar), expected_u_star)
+    assert test_engine.equal(test_engine.convert(itAnnual), expected_valid_annual_indices)
+    assert test_engine.equal(test_engine.convert(ntAnnual), expected_num_valid_annual)
 
 
-def test_filterInvalidPoints_logged_data(matlab_engine):
+def test_filterInvalidPoints_logged_data(test_engine):
     """
-    Test the filterInvalidPoints function in MATLAB.
+    Test the filterInvalidPoints function.
     """
     artifacts_dir = 'tests/test_artifacts/filterInvalidPoints_artifacts'
     input_names = ['fNight', 'NEE', 'uStar', 'T']
@@ -145,31 +152,37 @@ def test_filterInvalidPoints_logged_data(matlab_engine):
     for name in input_names:
         path_to_artifacts = artifacts_dir + f'/CA-Cbo_qca_ustar_2007_0/input_{name}.csv'
         column = pd.read_csv(path_to_artifacts, header=None).iloc[:,0].to_numpy()
-        input_data[name] = matlab.double(column.tolist())
+        input_data[name] = test_engine.convert(column)
     
     expected_output_names = ['uStar', 'itAnnual', 'ntAnnual']
     expected_output_data = {}
     for name in expected_output_names:
         path_to_artifacts = artifacts_dir + f'/CA-Cbo_qca_ustar_2007_0/output_{name}.csv'
         column = pd.read_csv(path_to_artifacts, header=None).iloc[:,0].to_numpy()
-        expected_output_data[name] = matlab.double(column.tolist())
+        if name == 'itAnnual':
+            expected_output_data[name] = test_engine.convert(column, 'to_python')
+        else:
+            expected_output_data[name] = test_engine.convert(column)
 
-    uStar, itAnnual, ntAnnual = matlab_engine.filterInvalidPoints(input_data['uStar'], input_data['fNight'], input_data['NEE'], input_data['T'], nargout=3)
+    uStar, itAnnual, ntAnnual = test_engine.filterInvalidPoints(input_data['uStar'], input_data['fNight'], input_data['NEE'], input_data['T'], nargout=3)
+    print("output: ", itAnnual)
+    print("expected: ", expected_output_data['itAnnual'])
+    assert test_engine.equal(test_engine.convert(uStar), expected_output_data['uStar'])
+    assert test_engine.equal(test_engine.convert(itAnnual), expected_output_data['itAnnual'])
+    assert test_engine.equal(test_engine.convert(ntAnnual), expected_output_data['ntAnnual'])
 
-    assert np.allclose(uStar, expected_output_data['uStar'], equal_nan=True)
-    assert np.allclose(itAnnual, expected_output_data['itAnnual'], equal_nan=True)
-    assert np.allclose(ntAnnual, expected_output_data['ntAnnual'], equal_nan=True)
 
 
-
-def test_initializeStatistics(matlab_engine):
+def test_initializeStatistics(test_engine):
     """
-    Test the initializeStatistics function in MATLAB initiliazes the Stats2 and Stats3 structures with NaN values.
+    Test the initializeStatistics function initiliazes the Stats2 and Stats3 structures with NaN values.
     """
+    if test_engine.initializeStatistics is None:
+        pytest.skip("Test function not available")
     nSeasons = 4
     nStrataX = 8
 
-    Stats2, Stats3 = matlab_engine.initializeStatistics(nSeasons, nStrataX, 1, nargout=2)
+    Stats2, Stats3 = test_engine.initializeStatistics(nSeasons, nStrataX, 1, nargout=2)
     Stats2 = json.loads(Stats2)
     Stats3 = json.loads(Stats3)
     assert len(Stats2) == 4, "Stats2 should have 4 entries for each season."
@@ -198,32 +211,32 @@ testcases = [
                 (rng.uniform(0,5,size), rng.uniform(0,5,size), rng.uniform(0,5,size), rng.uniform(0,5,size), np.zeros(size), 366, np.repeat(np.arange(1, 13), occurrences), size) # All daytime data
              ]
 @pytest.mark.parametrize('t, T, uStar, NEE, fNight, EndDOY, m, nt', testcases)
-def test_reorderAndPreprocessData(matlab_engine, t, T, uStar, NEE, fNight, EndDOY, m, nt):
+def test_reorderAndPreprocessData(test_engine, t, T, uStar, NEE, fNight, EndDOY, m, nt):
     """
-    Test the reorderAndPreprocessData function in MATLAB.
+    Test the reorderAndPreprocessData function.
     """
     data = [t, T, uStar, NEE, fNight, EndDOY, m, nt]
     
-    matlab_data = [matlab.double(d) if not isinstance(d, np.ndarray) else matlab.double(d.tolist()) for d in data ]
-
-    t, T, uStar, NEE, fNight, itAnnual, ntAnnual = matlab_engine.reorderAndPreprocessData(*matlab_data, nargout=7)
-    # t = matlab_engine.reorderAndPreprocessData(*matlab_data, nargout=1)
-    expected_t, expected_T, expected_uStar, expected_NEE, expected_fNight, expected_itAnnual, expected_ntAnnual = reorder_and_preprocess_data(*data)
+    matlab_data = [test_engine.convert(d) for d in data]
+    t, T, uStar, NEE, fNight, itAnnual, ntAnnual = test_engine.reorderAndPreprocessData(*matlab_data, nargout=7)
+    # t = test_engine.reorderAndPreprocessData(*matlab_data, nargout=1)
+    expected_t, expected_T, expected_uStar, expected_NEE, expected_fNight, expected_itAnnual, expected_ntAnnual = reorderAndPreprocessData(*data)
     # result = reorder_and_preprocess_data(*data)
-    print(T)
+    # print(t[:10])
+    # print(expected_t[:10])
     # print(result)
-    assert np.allclose(t, expected_t, equal_nan=True)
-    assert np.allclose(T, expected_T, equal_nan=True)
-    assert np.allclose(uStar, expected_uStar, equal_nan=True)
-    assert np.allclose(NEE, expected_NEE, equal_nan=True)
-    assert np.allclose(fNight, expected_fNight, equal_nan=True)
-    assert np.allclose(itAnnual, expected_itAnnual+1, equal_nan=True) # +1 to match matlab indexings
-    assert ntAnnual == expected_ntAnnual
+    assert test_engine.equal(test_engine.convert(t), expected_t)
+    assert test_engine.equal(test_engine.convert(T), expected_T)
+    assert test_engine.equal(test_engine.convert(uStar), expected_uStar)
+    assert test_engine.equal(test_engine.convert(NEE), expected_NEE)
+    assert test_engine.equal(test_engine.convert(fNight), expected_fNight)
+    assert test_engine.equal(test_engine.convert(itAnnual), test_engine.convert(expected_itAnnual, 'to_matlab')) # +1 to match matlab indexings
+    assert test_engine.equal(ntAnnual, expected_ntAnnual)
 
 
-def test_reorderAndPreprocessData_logged_data(matlab_engine):
+def test_reorderAndPreprocessData_logged_data(test_engine):
     """
-    Test the reorderAndPreprocessData function in MATLAB.
+    Test the reorderAndPreprocessData function.
     """
     artifacts_dir = 'tests/test_artifacts/reorderAndPreprocessData_artifacts'
     input_names = ['t', 'T', 'uStar', 'NEE', 'fNight', 'EndDOY', 'm', 'nt']
@@ -232,29 +245,29 @@ def test_reorderAndPreprocessData_logged_data(matlab_engine):
         path_to_artifacts = artifacts_dir + f'/CA-Cbo_qca_ustar_2007_0/input_{name}.csv'
         column = pd.read_csv(path_to_artifacts, header=None).iloc[:,0].to_numpy()
         if name in {'EndDOY', 'nt'}:
-            input_data[name] = matlab.double(int(column[0]))
+            input_data[name] = test_engine.convert(int(column[0]))
         else:
-            input_data[name] = matlab.double(column.tolist())
+            input_data[name] = test_engine.convert(column)
 
     expected_output_names = ['t', 'T', 'uStar', 'NEE', 'fNight', 'itAnnual', 'ntAnnual']
     expected_output_data = {}
     for name in expected_output_names:
         path_to_artifacts = artifacts_dir + f'/CA-Cbo_qca_ustar_2007_0/output_{name}.csv'
         column = pd.read_csv(path_to_artifacts, header=None).iloc[:,0].to_numpy()
-        if name == 'ntAnnual':
-            expected_output_data[name] = matlab.double(int(column[0]))
+        if name == 'itAnnual':
+            expected_output_data[name] = test_engine.convert(column, 'to_python')
         else:
-            expected_output_data[name] = matlab.double(column.tolist())
+            expected_output_data[name] = test_engine.convert(column)
         
-    t, T, uStar, NEE, fNight, itAnnual, ntAnnual = matlab_engine.reorderAndPreprocessData(*[input_data[name] for name in input_names], nargout=7)
+    t, T, uStar, NEE, fNight, itAnnual, ntAnnual = test_engine.reorderAndPreprocessData(*[input_data[name] for name in input_names], nargout=7)
 
-    assert np.allclose(t, expected_output_data['t'], equal_nan=True)
-    assert np.allclose(T, expected_output_data['T'], equal_nan=True)
-    assert np.allclose(uStar, expected_output_data['uStar'], equal_nan=True)
-    assert np.allclose(NEE, expected_output_data['NEE'], equal_nan=True)
-    assert np.allclose(fNight, expected_output_data['fNight'], equal_nan=True)
-    assert np.allclose(itAnnual, expected_output_data['itAnnual'], equal_nan=True)
-    assert ntAnnual == expected_output_data['ntAnnual'].tomemoryview().tolist()[0][0]
+    assert test_engine.equal(test_engine.convert(t), expected_output_data['t'])
+    assert test_engine.equal(test_engine.convert(T), expected_output_data['T'])
+    assert test_engine.equal(test_engine.convert(uStar), expected_output_data['uStar'])
+    assert test_engine.equal(test_engine.convert(NEE), expected_output_data['NEE'])
+    assert test_engine.equal(test_engine.convert(fNight), expected_output_data['fNight'])
+    assert test_engine.equal(test_engine.convert(itAnnual), expected_output_data['itAnnual'])
+    assert test_engine.equal(ntAnnual, test_engine.convert(expected_output_data['ntAnnual']))
 
 
 testcases = [
@@ -268,19 +281,18 @@ testcases = [
     (4, 4, round(4999/4), 4999, range(3751, 4999+1)), # iSeasons = 4, ntAnnual is odd
 ]
 @pytest.mark.parametrize('iSeasons, nSeasons, nPerSeason, ntAnnual, expected_jtSeasons', testcases)
-def test_computeSeasonIndices(matlab_engine, iSeasons, nSeasons, nPerSeason, ntAnnual, expected_jtSeasons):
+def test_computeSeasonIndices(test_engine, iSeasons, nSeasons, nPerSeason, ntAnnual, expected_jtSeasons):
     """
-    Test the computeSeasonIndices function in MATLAB.
+    Test the computeSeasonIndices function.
     """
 
     python_jtSeasons = computeSeasonIndices(iSeasons, nSeasons, nPerSeason, ntAnnual)
 
-    jtSeasons = matlab_engine.computeSeasonIndices(iSeasons, nSeasons, nPerSeason, matlab.double(ntAnnual))
+    jtSeasons = test_engine.computeSeasonIndices(iSeasons, nSeasons, nPerSeason, test_engine.convert(ntAnnual))
 
-    jtSeasons = np.array(jtSeasons.tomemoryview().tolist()[0])
 
-    assert np.array_equal(jtSeasons, expected_jtSeasons)
-    assert np.array_equal(python_jtSeasons, expected_jtSeasons)
+    assert test_engine.equal(test_engine.convert(jtSeasons), test_engine.convert(expected_jtSeasons))
+    assert test_engine.equal(test_engine.convert(python_jtSeasons), expected_jtSeasons)
     
 
 testcases = [
@@ -294,25 +306,25 @@ testcases = [
              ]
 
 @pytest.mark.parametrize('ntSeason, nPerBin, expected_nStrata', testcases)
-def test_computeStrataCount(matlab_engine, ntSeason, nPerBin, expected_nStrata):
+def test_computeStrataCount(test_engine, ntSeason, nPerBin, expected_nStrata):
     """
-    Test the computeStrataCount function in MATLAB.
+    Test the computeStrataCount function.
     """
     nStrataX = 8
     nStrataN = 4
     nBins = 50
 
     python_nStrata = computeStrataCount(ntSeason, nBins, nPerBin, nStrataN, nStrataX)
-    nStrata = matlab_engine.computeStrataCount(ntSeason, nBins, nPerBin, nStrataN, nStrataX)
+    nStrata = test_engine.computeStrataCount(ntSeason, nBins, nPerBin, nStrataN, nStrataX)
 
-    assert nStrata == expected_nStrata
-    assert python_nStrata == expected_nStrata
+    assert test_engine.equal(test_engine.convert(nStrata), expected_nStrata)
+    assert test_engine.equal(test_engine.convert(python_nStrata), expected_nStrata)
 
 
-def test_computeTemperatureThresholds_logged_data(matlab_engine):
+def test_computeTemperatureThresholds_logged_data(test_engine):
     """
-    Test the computeTemperatureTresholds function in MATLAB.
-    Tests a single case, function is essentially a wrapper to the matlab percentile function but with a contrained statespace of inputs.
+    Test the computeTemperatureTresholds function.
+    Tests a single case, matlab function is essentially a wrapper to the matlab percentile function but with a contrained statespace of inputs.
     """
     nStrata = 5
     artifacts_dir = 'tests/test_artifacts/computeTemperatureThresholds_artifacts'
@@ -321,17 +333,18 @@ def test_computeTemperatureThresholds_logged_data(matlab_engine):
     for name in input_names:
         path_to_artifacts = artifacts_dir + f'/CA-Cbo_qca_ustar_2007_0/input_{name}.csv'
         column = pd.read_csv(path_to_artifacts, header=None).iloc[:,0].to_numpy()
-        input_data[name] = column.tolist()
+        input_data[name] = column#.tolist()
+    print(input_data['itSeason'])
+    print(test_engine.convert(input_data['itSeason'], 'to_python'))
+    TTh = test_engine.computeTemperatureThresholds(test_engine.convert(input_data['T']), test_engine.convert(input_data['itSeason'], 'to_python'), nStrata, nargout=1)
+    python_TTh = computeTemperatureThresholds(np.array(input_data['T']), input_data['itSeason']-1, nStrata) # -1 to account for 0-based indexing in python
 
-    TTh = matlab_engine.computeTemperatureThresholds(matlab.double(input_data['T']), matlab.double(input_data['itSeason']), nStrata, nargout=1)
-    python_TTh = computeTemperatureThresholds(np.array(input_data['T']), np.array(input_data['itSeason'])-1, nStrata) # -1 to account for 0-based indexing in python
-
-    TTh = np.array(TTh.tomemoryview().tolist()[0])
     expected_TTh = artifacts_dir + f'/CA-Cbo_qca_ustar_2007_0/output_TTh.csv'
     expected_TTh = pd.read_csv(expected_TTh, header=None).iloc[0,:].to_numpy()
-
-    assert np.allclose(TTh, expected_TTh)
-    assert np.allclose(python_TTh, expected_TTh)
+    print("test_engine output: ", TTh)
+    print("expected output: ", expected_TTh)
+    assert test_engine.equal(test_engine.convert(TTh), test_engine.convert(expected_TTh))
+    assert test_engine.equal(test_engine.convert(python_TTh), test_engine.convert(expected_TTh))
 
 tetcases = [
     (rng.uniform(-20,20,1000), np.array(rng.choice(1000, size=500, replace=False)), [-14.601,-5.22904,-2.095605,1.836835,5.136015,14.2835], 0), # Nominal case
@@ -343,31 +356,27 @@ tetcases = [
 
 ]
 @pytest.mark.parametrize('T, itSeason, TTh, iStrata', tetcases)
-def test_findStratumIndices(matlab_engine, T, itSeason, TTh, iStrata):
+def test_findStratumIndices(test_engine, T, itSeason, TTh, iStrata):
     """
-    Test the findStratumIndices function in MATLAB.
+    Test the findStratumIndices function.
     """
     expected_itStrata = findStratumIndices(T, itSeason, TTh, iStrata)
 
-    T = matlab.double(T)
-    itSeason = matlab.double(np.array(itSeason+1, dtype=float)) # +1 to account for 1-based indexing in MATLAB
-    TTh = matlab.double(TTh)
-    iStrata = iStrata + 1 # +1 to account for 1-based indexing in MATLAB
+    T = test_engine.convert(T)
+    itSeason = test_engine.convert(np.array(itSeason, dtype=float), 'to_matlab') # +1 to account for 1-based indexing in MATLAB
+    TTh = test_engine.convert(TTh)
+    iStrata = test_engine.convert(iStrata, 'to_matlab') # +1 to account for 1-based indexing in MATLAB
 
-    itStrata = matlab_engine.findStratumIndices(T, itSeason, TTh, iStrata, nargout=1)
-    
-    itStrata = np.array(itStrata.tomemoryview().tolist()[0], dtype=int)
-    print(itStrata)
+    itStrata = test_engine.findStratumIndices(T, itSeason, TTh, iStrata, nargout=1)
 
-    assert np.array_equal(itStrata-1, expected_itStrata)
-    # assert 1==0
+    assert test_engine.equal(itStrata, test_engine.convert(expected_itStrata, 'to_matlab')) # +1 to account for 1-based indexing in matlab
 
 
-def test_addStatisticsFields(matlab_engine):
+def test_addStatisticsFields(test_engine):
     """
-    Test the addStatistics function in MATLAB.
+    Test the addStatistics function.
     """
-
+    #print(test_engine.addStatisticsFields)
     # Generate input data
     rng = np.random.default_rng()
     xs_keys = ['n', 'Cp', 'Fmax', 'p', 'b0', 'b1', 'b2', 'c2', 'cib0', 'cib1', 'cic2', 'mt' , 'ti', 'tf', 'ruStarVsT', 'puStarVsT', 'mT', 'ciT']
@@ -378,11 +387,14 @@ def test_addStatisticsFields(matlab_engine):
     T = rng.uniform(-20,20,1000)
     itStrata = np.array(list(range(1,51)) + list(range(200,300)))
 
-    xs = matlab_engine.addStatisticsFields(xs, matlab.double(t.tolist()), matlab.double(r), matlab.double(p), matlab.double(T.tolist()), matlab.double((itStrata+1).tolist()), nargout=1)
+    xs = test_engine.addStatisticsFields(xs, test_engine.convert(t), test_engine.convert(r), \
+                                          test_engine.convert(p), test_engine.convert(T), test_engine.convert(itStrata, 'to_matlab'), nargout=1)
+    print("test_engine output: ",xs)
     expected_xs = {}
-    expected_xs = addStatisticsFields(expected_xs, t, T, r, p, itStrata)
+    expected_xs = addStatisticsFields(expected_xs, t, r, p, T, itStrata)
 
     output_xs = np.array([xs['mt'], xs['ti'], xs['tf'], xs['ruStarVsT'], xs['puStarVsT'], xs['mT'], xs['ciT']])
-    
-    assert np.allclose(list(expected_xs.values()), output_xs, equal_nan=True)
+    print(output_xs)
+    print(expected_xs)    
+    assert test_engine.equal(test_engine.convert(list(expected_xs.values())), output_xs)
 
