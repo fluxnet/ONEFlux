@@ -9,7 +9,7 @@ import matlab.engine
 import numpy as np
 import json
 from oneflux_steps.ustar_cp_py.libsmop import struct, matlabarray
-from tests.conftest import to_matlab_type, read_file, parse_testcase, objects_are_equal
+from tests.conftest import to_matlab_type, read_file, parse_testcase, compare_matlab_arrays
 
 nan = np.nan
 
@@ -139,10 +139,10 @@ def test_cpdBootstrap_against_testcases(test_engine):
         outputs_list = [outputs[str(i)] for i in range(len(outputs))]
 
         # Assertions to compare MATLAB results to expected outputs
-        assert objects_are_equal(Cp2, outputs_list[0])
-        assert objects_are_equal(Stats2, outputs_list[1])
-        assert objects_are_equal(Cp3, outputs_list[2])
-        assert objects_are_equal(Stats3, outputs_list[3])
+        assert compare_matlab_arrays(Cp2, outputs_list[0])
+        assert compare_matlab_arrays(Stats2, outputs_list[1])
+        assert compare_matlab_arrays(Cp3, outputs_list[2])
+        assert compare_matlab_arrays(Stats3, outputs_list[3])
 
 # Parameterized test for the get_nPerDay function
 @pytest.mark.parametrize("input_data, expected_result", [
@@ -195,7 +195,7 @@ def test_update_uStar(test_engine, input_data, expected_result):
     input_data = to_matlab_type(input_data)
     result = test_engine.update_uStar(input_data)
     # Compare the MATLAB arrays, allowing for NaN equality
-    assert objects_are_equal(result, expected_result), f"Expected {expected_result}, but got {result}"
+    assert compare_matlab_arrays(result, expected_result), f"Expected {expected_result}, but got {result}"
 
 # Define the expected field names for StatsMT
 expected_fields = ['n', 'Cp', 'Fmax', 'p', 'b0', 'b1', 'b2', 'c2', 'cib0', 'cib1', 'cic2',
@@ -262,7 +262,7 @@ def test_get_itNee(test_engine, NEE, uStar, T, iNight, expected_itNee):
 
     # Compare results
     if not isinstance(itNee, float):
-        assert objects_are_equal(itNee, expected_itNee), f"Expected {expected_itNee}, but got {itNee}"
+        assert compare_matlab_arrays(itNee, expected_itNee), f"Expected {expected_itNee}, but got {itNee}"
     else:
         assert np.allclose(itNee, expected_itNee)
 

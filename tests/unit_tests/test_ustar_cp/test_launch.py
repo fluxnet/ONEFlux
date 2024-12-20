@@ -113,15 +113,14 @@ def test_launch_invalid_data(setup_test_environment, test_engine):
         that it identified and handled the invalid data correctly.
     """
     input_folder, output_folder = setup_test_environment
-    eng = test_engine
-
+    
     # Overwrite the input file with invalid data
     invalid_data = """invalid content"""
     with open(Path(input_folder) / "US-ARc_qca_ustar_2023.csv", "w") as f:
         f.write(invalid_data)
 
     # Run the MATLAB function
-    exitcode = eng.launch(input_folder, output_folder)
+    exitcode = test_engine.launch(input_folder, output_folder)
 
     # Check that the exitcode indicates an error
     assert exitcode == 1, "Expected non-zero exitcode for invalid data."

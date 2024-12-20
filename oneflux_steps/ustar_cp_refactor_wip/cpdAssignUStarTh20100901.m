@@ -62,7 +62,7 @@
 
 %	=======================================================================
 %	=======================================================================
-	
+
 	for i = 1:length(varargin)
 		a = varargin{i};
 		if iscell(a) && strcmp(a{1}, 'jsondecode')
@@ -96,12 +96,10 @@
 
 	cVars={'mt','Cp','b1','c2','cib1','cic2','p'}; nVars=length(cVars); 
 	for i=1:nVars; 
-		cv=char(cVars(i));
-		eval([cv '=fcReadFields(Stats,''' cv ''')']); 
+		cv=char(cVars(i)); eval([cv '=fcReadFields(Stats,''' cv ''');']); 
 		switch cv; 
 			case 'mt'; xmt=mt; 
 			case 'Cp'; xCp=Cp; 
-			case 'c2'; xc2=c2;
 			otherwise; 
 		end; 
 		eval([cv '=fcx2colvec(' cv ');']); 
@@ -112,7 +110,7 @@
 %	or diagnostic 3-parameter change-point model
 %	and set c2 and cic2 to zero if 2-parameter 
 
-	nPar=3; if sum(~isnan(xc2))==0; nPar=2; xc2=0*b1; cic2=xc2; end; 
+	nPar=3; if sum(~isnan(c2))==0; nPar=2; c2=0*b1; cic2=c2; end; 
 
 %	Classify Cp regressions by slopes of b1 and c2 regression coeff: 
 %	- NS: not sig, mfP=NaN, p>0.05
@@ -120,11 +118,11 @@
 %	- ModeD: typical significant Cp (b1>=c2) 
 
 	iTry=find(~isnan(mt)); nTry=length(iTry); 
-	iCp=find(~isnan(b1+xc2+Cp)); nCp=length(iCp); 
-	iNS=find(fP==0 & ~isnan(b1+xc2+Cp)); nNS=length(iNS); 
-	iSig=find(fP==1 & ~isnan(b1+xc2+Cp)); nSig=length(iSig); 
-	iModeE=find(fP==1 & b1<xc2); nModeE=length(iModeE); 
-	iModeD=find(fP==1 & b1>=xc2); nModeD=length(iModeD); 
+	iCp=find(~isnan(b1+c2+Cp)); nCp=length(iCp); 
+	iNS=find(fP==0 & ~isnan(b1+c2+Cp)); nNS=length(iNS); 
+	iSig=find(fP==1 & ~isnan(b1+c2+Cp)); nSig=length(iSig); 
+	iModeE=find(fP==1 & b1<c2); nModeE=length(iModeE); 
+	iModeD=find(fP==1 & b1>=c2); nModeD=length(iModeD); 
 	
 %	Evaluate and accept primary mode of significant Cps
 				
@@ -143,7 +141,7 @@
 
 	switch nPar; 
 		case 2; x=[Cp b1 cib1]; nx=3; 
-		case 3; x=[Cp b1 xc2 cib1 cic2]; nx=5; 
+		case 3; x=[Cp b1 c2 cib1 cic2]; nx=5; 
 	end; 
 	
 	mx=nanmedian(x); sx=fcNaniqr(x); 
@@ -221,7 +219,7 @@
 		subplot('position',[0.08 0.06 0.60 0.38]); hold on; box on; 
 		switch cMode; case 'G'; c='g'; case 'L'; c='b'; otherwise; c='k'; end; 
 		plot(mt(iSelect),Cp(iSelect),[c '.'],mtHat,CpHat,'r-','LineWidth',3); 
-		plot(tW,CpW,'ro','MarkerFaceColor','y','MarkerSize',9,'LineWidth',2); 
+		plot(tW,CpW,'ro','MarkerFaceColor','y','MarkerSize',9','LineWidth',2); 
 		fcDatetick(mt(iSelect),'Mo',4,1); 
 		ylabel('Select Cp'); ylim([0 prctile(Cp(iSelect),99)]);
 		title(sprintf('Cp = %5.3f + %5.3f sin(wt - %3.0f) (r^2 = %5.3f) ',bSine,r2 )); 

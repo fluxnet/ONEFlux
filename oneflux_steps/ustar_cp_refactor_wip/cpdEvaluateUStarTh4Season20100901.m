@@ -93,6 +93,7 @@
 	StatsMT.ruStarVsT=NaN; StatsMT.puStarVsT=NaN; 
 	StatsMT.mT=NaN; StatsMT.ciT=NaN; % these elements added by this program.  
 						
+	Stats2=StatsMT; Stats3=StatsMT; 					
 	for iSeason=1:nSeasons;
 		for iStrata=1:nStrataX;
 			Stats2(iSeason,iStrata)=StatsMT;
