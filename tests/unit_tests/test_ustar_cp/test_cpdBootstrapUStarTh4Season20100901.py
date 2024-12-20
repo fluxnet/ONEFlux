@@ -8,10 +8,6 @@ import pytest
 import matlab.engine
 import numpy as np
 import json
-import os
-from tests.conftest import to_matlab_type, read_file, parse_testcase, compare_matlab_arrays
-
-nan = np.nan
 # from oneflux_steps.ustar_cp_py.libsmop import struct, matlabarray
 from tests.conftest import to_matlab_type, read_file, parse_testcase, compare_matlab_arrays
 
@@ -20,8 +16,8 @@ nan = np.nan
 @pytest.fixture(scope="module")
 def mock_data(nt=300, tspan=(0, 1), uStar_pars=(0.1, 3.5), T_pars=(-10, 30), fNight=None):
     """
-    Fixture to generate mock time series data for testing purposes. This fixture 
-    creates a set of synthetic data corresponding to cpdBootstap* function arguments, 
+    Fixture to generate mock time series data for testing purposes. This fixture
+    creates a set of synthetic data corresponding to cpdBootstap* function arguments,
     such as Net Ecosystem Exchange (NEE), uStar values, temperature, and day/night flags.
 
     Args:
@@ -70,7 +66,7 @@ def test_cpdBootstrapUStarTh4Season20100901_basic(test_engine, mock_data):
     fNight_matlab = matlab.logical(fNight.tolist())
 
     # Call MATLAB function
-    Cp2, Stats2, Cp3, Stats3 = matlab_engine.cpdBootstrapUStarTh4Season20100901(
+    Cp2, Stats2, Cp3, Stats3 = test_engine.cpdBootstrapUStarTh4Season20100901(
         t_matlab, NEE_matlab, uStar_matlab, T_matlab, fNight_matlab, fPlot, cSiteYr, nBoot, jsonencode=[1,3], nargout=4
     )
 
@@ -109,7 +105,7 @@ def test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap(test_engine
     fNight_matlab = matlab.logical(fNight.tolist())
 
     # Call MATLAB function
-    Cp2, Stats2, Cp3, Stats3 = matlab_engine.cpdBootstrapUStarTh4Season20100901(
+    Cp2, Stats2, Cp3, Stats3 = test_engine.cpdBootstrapUStarTh4Season20100901(
         t_matlab, NEE_matlab, uStar_matlab, T_matlab, fNight_matlab, fPlot, cSiteYr, nBoot, jsonencode=[1,3], nargout=4
     )
 
@@ -137,16 +133,12 @@ def test_cpdBootstrap_against_testcases(test_engine):
         matlab_args = to_matlab_type(inputs_list)
 
         # Call the MATLAB function and capture its output
-        Cp2, Stats2, Cp3, Stats3 = matlab_engine.cpdBootstrapUStarTh4Season20100901(*matlab_args, jsonencode=[1,3], nargout=4)
+        Cp2, Stats2, Cp3, Stats3 = test_engine.cpdBootstrapUStarTh4Season20100901(*matlab_args, jsonencode=[1,3], nargout=4)
 
         # Extract the expected outputs for comparison
         outputs_list = [outputs[str(i)] for i in range(len(outputs))]
 
         # Assertions to compare MATLAB results to expected outputs
-        assert compare_matlab_arrays(Cp2, outputs_list[0])
-        assert compare_matlab_arrays(Stats2, outputs_list[1])
-        assert compare_matlab_arrays(Cp3, outputs_list[2])
-        assert compare_matlab_arrays(Stats3, outputs_list[3])
         assert compare_matlab_arrays(Cp2, outputs_list[0])
         assert compare_matlab_arrays(Stats2, outputs_list[1])
         assert compare_matlab_arrays(Cp3, outputs_list[2])
@@ -324,8 +316,6 @@ stats_entry = {'n': nan, 'Cp': nan, 'Fmax': nan, 'p': nan, 'b0': nan, 'b1': nan,
 )
 def test_setup_Stats(test_engine, nBoot, nSeasons, nStrataX, expected_shape):
     # Call the MATLAB function
-    Stats= matlab_engine.setup_Stats(nBoot, nSeasons, nStrataX, jsonencode=[0])
     Stats= test_engine.setup_Stats(nBoot, nSeasons, nStrataX, jsonencode=[0])
 
-    assert compare_matlab_arrays(Stats, expected_shape)
     assert compare_matlab_arrays(Stats, expected_shape)
