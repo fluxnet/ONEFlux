@@ -47,7 +47,7 @@ def language(pytestconfig):
 # Specification of a `TestEngine`
 class TestEngine(ABC):
     @abstractmethod
-    def _repr_pretty(self, p):
+    def _repr_pretty_(self, *args):
         """This placeholder can stay as is; it enables Hypothesis to work with this
         runner as a fixture"""
         return "Test Engine"
@@ -65,7 +65,7 @@ class TestEngine(ABC):
 
 # Python TestEngine
 class PythonEngine(TestEngine):
-    def _repr_pretty(self, p):
+    def _repr_pretty_(self, *args):
         return "Python Test Engine"
 
     def convert(self, x):
@@ -88,7 +88,7 @@ class PythonEngine(TestEngine):
             return x == y
 
     def __getattribute__(self, name):
-        if name in ["convert", "equal"]:
+        if name in ["convert", "equal", "_repr_pretty_"]:
             return object.__getattribute__(self, name)
         
         def newfunc(*args, **kwargs):
@@ -120,7 +120,7 @@ class MatlabEngine:
         atexit.register(lambda: (s := self.out.getvalue()) and print(f"{name} stdout:\n{s}"))
         atexit.register(lambda: (s := self.err.getvalue()) and print(f"{name} stderr:\n{s}"))
 
-    def _repr_pretty_(self, p):
+    def _repr_pretty_(self, *args):
         return "MATLAB"
 
     def __call__(self, *args, jsonencode=(), jsondecode=(), **kwargs):
@@ -148,15 +148,7 @@ class MatlabEngine:
               return to_matlab_type(x)
 
           def _equal(x, y):
-              if isinstance(x, float):
-                  # Floating point equality using numpy
-                  return np.isclose(x, y, equal_nan=True)
-              elif isinstance(x, matlab.double):
-                  # Compare matlab arrays
-                  return compare_matlab_arrays(x, y)
-              else:
-                  # Drop through to usual equality
-                  return x == y
+              return compare_matlab_arrays(x, y)
 
           # Choose which function to call
           if self.func._name == "convert":
@@ -504,6 +496,10 @@ def flatten(container):
 
 # Helper function to compare MATLAB double arrays element-wise, handling NaN comparisons
 def compare_matlab_arrays(result, expected):
+    if isinstance(result, float):
+      # Floating point equality using numpy
+      return np.isclose(result, expected, equal_nan=True)
+
     if not hasattr(result, '__len__') or not hasattr(expected, '__len__'):
         return np.allclose(result, expected, equal_nan=True)
 
