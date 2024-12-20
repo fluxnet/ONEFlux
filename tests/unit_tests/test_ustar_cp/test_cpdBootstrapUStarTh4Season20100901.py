@@ -8,8 +8,8 @@ import pytest
 import matlab.engine
 import numpy as np
 import json
-from oneflux_steps.ustar_cp_py.libsmop import struct, matlabarray
-from tests.conftest import to_matlab_type, read_file, parse_testcase, compare_matlab_arrays
+# from oneflux_steps.ustar_cp_py.libsmop import struct, matlabarray
+from tests.conftest import to_matlab_type, read_file, parse_testcase
 
 nan = np.nan
 
@@ -172,11 +172,11 @@ def test_get_nPerBin(test_engine, input_data, expected_result):
 
 # Parameterized test for the get_iNight function
 @pytest.mark.parametrize("input_data, expected_result", [
-    ([0, 1, 0, 1, 0], matlabarray([2.0, 4.0])),                # Two true values at indices 2 and 4 (MATLAB uses 1-based indexing)
-    ([1, 1, 1, 1], matlabarray([1.0, 2.0, 3.0, 4.0])),             # All true values, expect all indices
-    ([0, 0, 0, 0], matlabarray([[]])),                       # No true values, expect empty array
-    #([0, 1, np.nan, 1, 0], matlabarray([2.0, 4.0])),           # NaN should be ignored, expect indices 2 and 4
-    ([1, 0, 0, 1, 1, 0], matlabarray([1.0, 4.0, 5.0]))           # True values at indices 1, 4, and 5
+    ([0, 1, 0, 1, 0], matlab.double([2.0, 4.0])),                # Two true values at indices 2 and 4 (MATLAB uses 1-based indexing)
+    ([1, 1, 1, 1], matlab.double([1.0, 2.0, 3.0, 4.0])),             # All true values, expect all indices
+    ([0, 0, 0, 0], matlab.double([[]])),                       # No true values, expect empty array
+    #([0, 1, np.nan, 1, 0], matlab.double([2.0, 4.0])),           # NaN should be ignored, expect indices 2 and 4
+    ([1, 0, 0, 1, 1, 0], matlab.double([1.0, 4.0, 5.0]))           # True values at indices 1, 4, and 5
 ])
 def test_get_iNight(test_engine, input_data, expected_result):
     input_data = to_matlab_type(input_data)
@@ -185,11 +185,11 @@ def test_get_iNight(test_engine, input_data, expected_result):
 
 # Parameterized test for the update_ustar function
 @pytest.mark.parametrize("input_data, expected_result", [
-    ([1, 2, 3, 4], matlabarray([1.0, 2.0, 3.0, 4.0])),                     # No values out of bounds
-    ([-1, 2, 3, 5], matlabarray([np.nan, 2.0, 3.0, np.nan])),               # Values < 0 or > 4 should be NaN
-    ([0, 4, 4.1], matlabarray([0.0, 4.0, np.nan])),                         # Edge cases with 0, 4, and out-of-bound 4.1
-    ([np.nan, 2, 3], matlabarray([np.nan, 2.0, 3.0])),                      # Input with NaN should remain NaN
-    ([5, -2, 0, 3], matlabarray([np.nan, np.nan, 0.0, 3.0]))                # Multiple values out of bounds
+    ([1, 2, 3, 4], matlab.double([1.0, 2.0, 3.0, 4.0])),                     # No values out of bounds
+    ([-1, 2, 3, 5], matlab.double([np.nan, 2.0, 3.0, np.nan])),               # Values < 0 or > 4 should be NaN
+    ([0, 4, 4.1], matlab.double([0.0, 4.0, np.nan])),                         # Edge cases with 0, 4, and out-of-bound 4.1
+    ([np.nan, 2, 3], matlab.double([np.nan, 2.0, 3.0])),                      # Input with NaN should remain NaN
+    ([5, -2, 0, 3], matlab.double([np.nan, np.nan, 0.0, 3.0]))                # Multiple values out of bounds
 ])
 def test_update_uStar(test_engine, input_data, expected_result):
     input_data = to_matlab_type(input_data)
@@ -247,7 +247,7 @@ def test_get_ntN(test_engine, t_input, nSeasons, expected_ntN):
         ([1, 2, 3, 4], [1, 1, 1, 1], [1, 1, 1, 1], [], []),
 
         # Case 6: All valid values and full intersection with iNight
-        ([1, 2, 3], [1, 1, 1], [1, 1, 1], [1, 2, 3], matlabarray([1.0, 2.0, 3.0]))
+        ([1, 2, 3], [1, 1, 1], [1, 1, 1], [1, 2, 3], matlab.double([1.0, 2.0, 3.0]))
     ]
 )
 def test_get_itNee(test_engine, NEE, uStar, T, iNight, expected_itNee):

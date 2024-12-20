@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import matlab.engine
 from oneflux_steps.ustar_cp_python.cpdFmax2pCp3 import cpdFmax2pCp3, calculate_p_high, calculate_p_low, interpolate_FmaxCritical
-from tests.conftest import objects_are_equal
+from tests.conftest import compare_matlab_arrays
 
 testcases = [
         # Fmax = NaN
@@ -63,7 +63,7 @@ def test_cpdFmax2pCp3_return_numeric(ustar_cp, Fmax, n, expected):
     result = ustar_cp.cpdFmax2pCp3(Fmax_matlab, n_matlab)
 
     assert type(result) == type(expected), f"Result should be a {type(expected)}, got {type(result)}"
-    assert objects_are_equal(np.array(result), np.array(expected))
+    assert compare_matlab_arrays(np.array(result), np.array(expected))
 
 @pytest.mark.parametrize(
 "Fmax, FmaxCritical_high, n, expected_p",
