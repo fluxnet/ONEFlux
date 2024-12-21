@@ -57,7 +57,7 @@ def fcDatevec(t : numpy.ndarray) -> tuple:
     d[iYaN] = numpy.array([dt.day for dt in dt00])
     h[iYaN] = numpy.array([dt.hour for dt in dt00])
     mn[iYaN] = numpy.array([dt.minute for dt in dt00])
-    s[iYaN] = numpy.array([dt.second for dt in dt00])
+    s[iYaN] = numpy.array([dt.second + dt.microsecond/1e6 for dt in dt00])
 
     # Handle midnights
 
