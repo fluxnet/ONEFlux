@@ -27,7 +27,7 @@ def fcDatevec(t : numpy.ndarray) -> tuple:
     # mimic MATLAB's ability to handle scalar or vector inputs
     t = numpy.asarray(t)
     scalar_input = False
-    if t.ndim == 0:
+    if t.ndim == 0 | t.ndim == 1:
         t = t[None]  # Makes x 1D
         scalar_input = True
 

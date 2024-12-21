@@ -9,6 +9,21 @@ from hypothesis.strategies import floats, lists, composite
 
 import numpy as np
 
+from oneflux_steps.ustar_cp_python.fcDatevec import fcDatevec
+
+# Property-based tests for fcDatevec
+# The size of the input `n` determines the size of the output as `n x 6`
+@given(data=lists(floats(allow_infinity=False, min_value=-10000, max_value=10000), min_size=1, max_size=100))
+@settings(deadline=1000)
+def test_differential(test_engine, data):
+    # Call the function
+    result = test_engine.fcDatevec(test_engine.convert(data),nargout=6)
+
+    # Compare matlab and python
+    py_result = fcDatevec(data)
+    assert test_engine.equal(result, test_engine.convert(py_result))
+
+
 # Property-based tests for fcDatevec
 # The size of the input `n` determines the size of the output as `n x 6`
 @given(data=lists(floats(allow_infinity=False, min_value=-10000, max_value=10000), min_size=1, max_size=100))
@@ -40,6 +55,7 @@ def test_fcDatevec_shape(test_engine, data):
               assert test_engine.equal(part1[::-1], part2)
           else:
               assert test_engine.equal(part1, part2)
+
 
 # Specific state vectors
 # via a parameterized test fixture
