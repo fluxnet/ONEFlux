@@ -211,7 +211,7 @@ class MatlabEngine:
         #     ret = list(ret)
         # for j, y in enumerate(ret):
         #     if j in jsonencode:
-        #         y = json.loads(y, object_hook=lambda d: 
+        #         y = json.loads(y, object_hook=lambda d:
         #             {k: np.nan if v is None else v for k, v in d.items()})
         #         ret[j] = struct(y)
         #     elif isinstance(y, np.ndarray):
