@@ -34,10 +34,9 @@ def test_fcDatevec_shape(test_engine, data):
       result2 = test_engine.fcDatevec(test_engine.convert(data[::-1]),nargout=6)
 
       for chunk1, chunk2 in zip(list(result), list(result2)):
-          part1 = chunk1[0]
-          part2 = chunk2[0]
-
-          if isinstance(part1, list):
+          part1 = test_engine.unconvert(chunk1)
+          part2 = test_engine.unconvert(chunk2)
+          if hasattr(part1, '__len__'):
               assert test_engine.equal(part1[::-1], part2)
           else:
               assert test_engine.equal(part1, part2)
