@@ -28,14 +28,6 @@ def json_to_numpy(data):
         all_arrays.append(np.array(group_arrays))  # Group into a 2D array for each group
     return np.array(all_arrays)
 
-# def test_test_engine(test_engine):
-#     """
-#     Test the test engine.
-#     """
-#     x = test_engine.prctile([1,2,3,4,5], 50)
-#     print(x)
-
-#     assert 1==0
 
 cpdEvaluateUStar_test_cases = ['2007', # Nomial case 
                                '2007_fnight_zero_0' # All nighttime data is zero
@@ -94,6 +86,7 @@ def test_initializeParameters(test_engine, t, expected_nt, expected_m, expected_
     """
     if test_engine.initializeParameters is None:
         pytest.skip("Test function not available")
+
     nSeasons = 4
     nStrataN = 4
     nBins = 50
@@ -121,14 +114,15 @@ testcases = [
             ]
 
 @pytest.mark.parametrize('uStar, fNight, NEE, T', testcases)
-def test_filterInvalidPoints(test_engine, uStar, fNight, NEE, T):
+def test_filterInvalidPoints_differential(test_engine, uStar, fNight, NEE, T):
     """
     Test the filterInvalidPoints function.
     """
     
     expected_u_star, expected_valid_annual_indices, expected_num_valid_annual = filterInvalidPoints(uStar, fNight, NEE, T)
+    # 'to_matlab' optional argument to account for 1-based indexing in MATLAB
     expected_u_star, expected_valid_annual_indices, expected_num_valid_annual = \
-        test_engine.convert(expected_u_star), test_engine.convert(expected_valid_annual_indices, 'to_matlab'), test_engine.convert(expected_num_valid_annual) # +1 to account for 1-based indexing in MATLAB
+        test_engine.convert(expected_u_star), test_engine.convert(expected_valid_annual_indices, 'to_matlab'), test_engine.convert(expected_num_valid_annual) 
     
     uStar = test_engine.convert(uStar)
     fNight = test_engine.convert(fNight)
@@ -160,6 +154,7 @@ def test_filterInvalidPoints_logged_data(test_engine):
         path_to_artifacts = artifacts_dir + f'/CA-Cbo_qca_ustar_2007_0/output_{name}.csv'
         column = pd.read_csv(path_to_artifacts, header=None).iloc[:,0].to_numpy()
         if name == 'itAnnual':
+            # index='to_python' optional argument to account for 0-based indexing in Python
             expected_output_data[name] = test_engine.convert(column, 'to_python')
         else:
             expected_output_data[name] = test_engine.convert(column)
@@ -211,7 +206,7 @@ testcases = [
                 (rng.uniform(0,5,size), rng.uniform(0,5,size), rng.uniform(0,5,size), rng.uniform(0,5,size), np.zeros(size), 366, np.repeat(np.arange(1, 13), occurrences), size) # All daytime data
              ]
 @pytest.mark.parametrize('t, T, uStar, NEE, fNight, EndDOY, m, nt', testcases)
-def test_reorderAndPreprocessData(test_engine, t, T, uStar, NEE, fNight, EndDOY, m, nt):
+def test_reorderAndPreprocessData_differential(test_engine, t, T, uStar, NEE, fNight, EndDOY, m, nt):
     """
     Test the reorderAndPreprocessData function.
     """
@@ -230,6 +225,7 @@ def test_reorderAndPreprocessData(test_engine, t, T, uStar, NEE, fNight, EndDOY,
     assert test_engine.equal(test_engine.convert(uStar), expected_uStar)
     assert test_engine.equal(test_engine.convert(NEE), expected_NEE)
     assert test_engine.equal(test_engine.convert(fNight), expected_fNight)
+    # 'to_matlab' optional argument to account for 1-based indexing in MATLAB
     assert test_engine.equal(test_engine.convert(itAnnual), test_engine.convert(expected_itAnnual, 'to_matlab')) # +1 to match matlab indexings
     assert test_engine.equal(ntAnnual, expected_ntAnnual)
 
@@ -255,6 +251,7 @@ def test_reorderAndPreprocessData_logged_data(test_engine):
         path_to_artifacts = artifacts_dir + f'/CA-Cbo_qca_ustar_2007_0/output_{name}.csv'
         column = pd.read_csv(path_to_artifacts, header=None).iloc[:,0].to_numpy()
         if name == 'itAnnual':
+            # index='to_python' optional argument to account for 0-based indexing in Python
             expected_output_data[name] = test_engine.convert(column, 'to_python')
         else:
             expected_output_data[name] = test_engine.convert(column)
@@ -281,7 +278,7 @@ testcases = [
     (4, 4, round(4999/4), 4999, range(3751, 4999+1)), # iSeasons = 4, ntAnnual is odd
 ]
 @pytest.mark.parametrize('iSeasons, nSeasons, nPerSeason, ntAnnual, expected_jtSeasons', testcases)
-def test_computeSeasonIndices(test_engine, iSeasons, nSeasons, nPerSeason, ntAnnual, expected_jtSeasons):
+def test_computeSeasonIndices_differential(test_engine, iSeasons, nSeasons, nPerSeason, ntAnnual, expected_jtSeasons):
     """
     Test the computeSeasonIndices function.
     """
@@ -314,11 +311,9 @@ def test_computeStrataCount(test_engine, ntSeason, nPerBin, expected_nStrata):
     nStrataN = 4
     nBins = 50
 
-    python_nStrata = computeStrataCount(ntSeason, nBins, nPerBin, nStrataN, nStrataX)
     nStrata = test_engine.computeStrataCount(ntSeason, nBins, nPerBin, nStrataN, nStrataX)
 
     assert test_engine.equal(test_engine.convert(nStrata), expected_nStrata)
-    assert test_engine.equal(test_engine.convert(python_nStrata), expected_nStrata)
 
 
 def test_computeTemperatureThresholds_logged_data(test_engine):
@@ -335,7 +330,9 @@ def test_computeTemperatureThresholds_logged_data(test_engine):
         column = pd.read_csv(path_to_artifacts, header=None).iloc[:,0].to_numpy()
         input_data[name] = column#.tolist()
     print(input_data['itSeason'])
+    # index='to_python' optional argument to account for 0-based indexing in Python
     print(test_engine.convert(input_data['itSeason'], 'to_python'))
+    # index='to_python' optional argument to account for 0-based indexing in Python
     TTh = test_engine.computeTemperatureThresholds(test_engine.convert(input_data['T']), test_engine.convert(input_data['itSeason'], 'to_python'), nStrata, nargout=1)
     python_TTh = computeTemperatureThresholds(np.array(input_data['T']), input_data['itSeason']-1, nStrata) # -1 to account for 0-based indexing in python
 
@@ -356,23 +353,23 @@ tetcases = [
 
 ]
 @pytest.mark.parametrize('T, itSeason, TTh, iStrata', tetcases)
-def test_findStratumIndices(test_engine, T, itSeason, TTh, iStrata):
+def test_findStratumIndices_differential(test_engine, T, itSeason, TTh, iStrata):
     """
     Test the findStratumIndices function.
     """
     expected_itStrata = findStratumIndices(T, itSeason, TTh, iStrata)
 
     T = test_engine.convert(T)
+    # 'to_matlab' optional argument to account for 1-based indexing in MATLAB
     itSeason = test_engine.convert(np.array(itSeason, dtype=float), 'to_matlab') # +1 to account for 1-based indexing in MATLAB
     TTh = test_engine.convert(TTh)
     iStrata = test_engine.convert(iStrata, 'to_matlab') # +1 to account for 1-based indexing in MATLAB
 
     itStrata = test_engine.findStratumIndices(T, itSeason, TTh, iStrata, nargout=1)
-
     assert test_engine.equal(itStrata, test_engine.convert(expected_itStrata, 'to_matlab')) # +1 to account for 1-based indexing in matlab
 
 
-def test_addStatisticsFields(test_engine):
+def test_addStatisticsFields_differential(test_engine):
     """
     Test the addStatistics function.
     """
@@ -386,7 +383,7 @@ def test_addStatisticsFields(test_engine):
     p = [[1, 0.00120739842384987], [0.00120739842384987, 1]]
     T = rng.uniform(-20,20,1000)
     itStrata = np.array(list(range(1,51)) + list(range(200,300)))
-
+    # 'to_matlab' optional argument to account for 1-based indexing in MATLAB
     xs = test_engine.addStatisticsFields(xs, test_engine.convert(t), test_engine.convert(r), \
                                           test_engine.convert(p), test_engine.convert(T), test_engine.convert(itStrata, 'to_matlab'), nargout=1)
     print("test_engine output: ",xs)

@@ -68,11 +68,11 @@ class PythonEngine(TestEngine):
     def _repr_pretty(self, p):
         return "Python Test Engine"
 
-    def convert(self, x, is_index=False):
+    def convert(self, x, index=False):
         """Convert input to a compatible type."""
         if x is None:
             raise ValueError("Input cannot be None")
-        if is_index == 'to_python':
+        if index == 'to_python':
             if isinstance(x, (int, float, np.ndarray)):
                 x = x-1
             elif isinstance(x, list):
@@ -149,9 +149,9 @@ class MatlabEngine:
         if (self.func._name == "convert") | (self.func._name == "equal"):
 
           # Locally scoped definitions
-          def _convert(x, is_index=None):
-                if is_index == 'to_matlab': # Add 1 for index conversion to MATLAB, types: int, ndarray, list
-                    print(is_index)
+          def _convert(x, index=None):
+                if index == 'to_matlab': # Add 1 for index conversion to MATLAB, types: int, ndarray, list
+                    print(index)
                     print("Before conversion: ", x)
                     if isinstance(x, (int, float, np.ndarray)):
                         x = x+1
