@@ -1,7 +1,6 @@
 import pytest
 import numpy as np
 import matlab.engine
-from oneflux_steps.ustar_cp_python.cpdFmax2pCp3 import cpdFmax2pCp3, calculate_p_high, calculate_p_low, interpolate_FmaxCritical
 
 testcases = [
         # Input values are NaN
