@@ -87,7 +87,7 @@ import oneflux_steps.ustar_cp_python.utils
 
 # Python version imported here
 from oneflux_steps.ustar_cp_python import *
-from oneflux_steps.ustar_cp_python.cpdFmax2pCp3 import interpolate_FmaxCritical
+from oneflux_steps.ustar_cp_python.cpdFmax2pCp3 import *
 
 def pytest_addoption(parser):
     parser.addoption("--language", action="store", default="matlab")
@@ -152,7 +152,7 @@ class PythonEngine(TestEngine):
             return all(self.equal(xi, yi) for xi, yi in zip(x, y))
         else:
             return x == y
-
+    
     def __getattribute__(self, name):
         if name in ["convert", "unconvert", "equal", "_repr_pretty_"]:
             return object.__getattribute__(self, name)
@@ -160,20 +160,20 @@ class PythonEngine(TestEngine):
         def newfunc(*args, **kwargs):
             try:
                 # Dynamically load modules based on the function name
-                mod_path = f"oneflux_steps.ustar_cp_python.{name}"
-                mod = __import__(mod_path, fromlist=[name])
-                func = getattr(mod, name, None)
-                # if nargout is present in kwargs then remove it
+                # mod_path = f"oneflux_steps.ustar_cp_python.{name}"
+                # mod = __import__(mod_path, fromlist=[name])
+                # func = getattr(mod, name, None)
                 if 'nargout' in kwargs:
                     kwargs.pop('nargout')
-
+                func = globals().get(name)
                 if callable(func):
                     return func(*args, **kwargs)
-                else: warnings.warn(f"'function {name}' cannot be found", UserWarning)
+                else: 
+                    warnings.warn(f"'function {name}' cannot be found", UserWarning)
             except ImportError:
                 pass
             warnings.warn(f"'{name}' is not callable", UserWarning)
-        return newfunc
+        return newfunc if globals().get(name) else None
 
 # MATLAB Engine wrapper
 class MatlabEngine:
@@ -641,7 +641,7 @@ def none2nan(obj):
     if isinstance(obj, dict):
         return {k: none2nan(v) for k, v in obj.items()}
     elif hasattr(obj, 'size'):
-        return np.where(obj == None, np.nan, obj).tolist()
+        return np.where(obj is None, np.nan, obj).tolist()
     elif isinstance(obj, list):
         return [none2nan(v) for v in obj]
     elif obj is None:
