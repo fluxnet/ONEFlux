@@ -32,6 +32,8 @@ from matlab.engine.matlabengine import MatlabFunc
 from abc import ABC, abstractmethod
 import warnings
 
+import oneflux_steps.ustar_cp_python.utils
+
 # Python version imported here
 from oneflux_steps.ustar_cp_python import *
 
@@ -57,6 +59,11 @@ class TestEngine(ABC):
         return np.array(x)
 
     @abstractmethod
+    def unconvert(self, x):
+        """Convert input back from the type compatible with this engine."""
+        return np
+
+    @abstractmethod
     def equal(self, x, y) -> bool:
         """Compare two values for equality in the representation used by this engine"""
         pass
@@ -77,6 +84,10 @@ class PythonEngine(TestEngine):
         else:
             return x
 
+    def unconvert(self, x):
+        """Convert input back to the original type."""
+        return x
+
     def equal(self, x, y) -> bool:
         """Enhanced equality check for MATLAB arrays."""
         if x is None or y is None:
@@ -91,15 +102,19 @@ class PythonEngine(TestEngine):
             return x == y
 
     def __getattribute__(self, name):
-        if name in ["convert", "equal", "_repr_pretty_"]:
+        if name in ["convert", "unconvert", "equal", "_repr_pretty_"]:
             return object.__getattribute__(self, name)
-        
+
         def newfunc(*args, **kwargs):
             try:
                 # Dynamically load modules based on the function name
                 mod_path = f"oneflux_steps.ustar_cp_python.{name}"
                 mod = __import__(mod_path, fromlist=[name])
                 func = getattr(mod, name, None)
+                # if nargout is present in kwargs then remove it
+                if 'nargout' in kwargs:
+                    kwargs.pop('nargout')
+
                 if callable(func):
                     return func(*args, **kwargs)
                 else: warnings.warn(f"'function {name}' cannot be found", UserWarning)
@@ -137,14 +152,22 @@ class MatlabEngine:
         if self.func._name == '_repr_pretty_':
             # Overload attempts to pretty print matlab engines (e.g., by hypothesis)
             return 'MATLAB'
-      
+
         # For `convert` and `equal` we need to handle these directly here since
         # we have overriden `call`.
-        if (self.func._name == "convert") | (self.func._name == "equal"):
+        if (self.func._name == "convert") | (self.func._name == "unconvert") | (self.func._name == "equal"):
 
           # Locally scoped definitions
           def _convert(x):
               return to_matlab_type(x)
+
+          def _unconvert(x):
+              if isinstance(x, matlab.double):
+                x = np.array(x)
+              if len(x) == 1:
+                  return np.array(x[0])
+              else:
+                  return x
 
           def _equal(x, y):
               return compare_matlab_arrays(x, y)
@@ -154,6 +177,8 @@ class MatlabEngine:
               return _convert(*args)
           elif self.func._name == "equal":
               return _equal(*args)
+          elif self.func._name == "unconvert":
+              return _unconvert(*args)
 
         else:
           # Calls mostly going through to the MATLAB engine
@@ -186,7 +211,7 @@ class MatlabEngine:
         #     ret = list(ret)
         # for j, y in enumerate(ret):
         #     if j in jsonencode:
-        #         y = json.loads(y, object_hook=lambda d: 
+        #         y = json.loads(y, object_hook=lambda d:
         #             {k: np.nan if v is None else v for k, v in d.items()})
         #         ret[j] = struct(y)
         #     elif isinstance(y, np.ndarray):
