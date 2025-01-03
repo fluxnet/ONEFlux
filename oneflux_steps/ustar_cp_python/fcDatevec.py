@@ -17,11 +17,7 @@ def fcDatevec(t : numpy.ndarray) -> tuple:
     was written by Alan Barr to return 2400 UTC rather than 0000 UTC.
     NOTE:
      This function has been rewritten to preserve the intent of
-     the original code (as received from Carlo Trotti).  Under Octave,
-     the original code did not work as expected.  For a 30 minute time
-     step, the Octave "datevec" routine returned minutes as 29 or 59
-     with seconds as 60!  This meant that 00:00 was never converted t0
-     24:00 the previous day as intended.
+     the original code (as received from Carlo Trotti).
      This function converts times of 00:00 to 24:00 the previous day.
     """
     # mimic MATLAB's ability to handle scalar or vector inputs
