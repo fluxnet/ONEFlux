@@ -7,6 +7,11 @@ def cpdFmax2pCp3(Fmax: float, n: int) -> Optional[float]:
     """
     Calculates the probability `p` that the 3-parameter diagnostic change-point model fit is significant.
 
+    Based on the method implemented by Alan Barr in 2010 in Matlab.
+
+    It interpolates within a Table pTable, generated 
+%	for the 3-parameter model by Wang (2003).
+
     Args:
         Fmax: The Fmax value to be evaluated.
         n: Sample size or degrees of freedom.
