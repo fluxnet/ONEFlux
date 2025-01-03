@@ -1,5 +1,5 @@
 function p = cpdFmax2pCp3(Fmax, n)
-    assigns the probability p that the 3-parameter, 
+    %   assigns the probability p that the 3-parameter, 
     %	diagnostic change-point model fit is significant. 
     %
     %	It interpolates within a Table pTable, generated 
