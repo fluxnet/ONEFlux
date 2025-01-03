@@ -1,4 +1,4 @@
-	function d=mydoy(t);
+	function d=fcDoy(t);
 	
 %	d=doy(t);
 %

@@ -113,15 +113,14 @@ def test_launch_invalid_data(setup_test_environment, test_engine):
         that it identified and handled the invalid data correctly.
     """
     input_folder, output_folder = setup_test_environment
-    eng = test_engine
-
+    
     # Overwrite the input file with invalid data
     invalid_data = """invalid content"""
     with open(Path(input_folder) / "US-ARc_qca_ustar_2023.csv", "w") as f:
         f.write(invalid_data)
 
     # Run the MATLAB function
-    exitcode = eng.launch(input_folder, output_folder)
+    exitcode = test_engine.launch(input_folder, output_folder)
 
     # Check that the exitcode indicates an error
     assert exitcode == 1, "Expected non-zero exitcode for invalid data."
@@ -144,14 +143,13 @@ def test_launch_empty_folder(setup_test_environment, test_engine):
         that it correctly identified the empty input folder.
     """
     input_folder, output_folder = setup_test_environment
-    eng = test_engine
 
     # Remove all files from the input folder to simulate an empty folder
     for file in Path(input_folder).glob("*"):
         os.remove(file)
 
     # Run the MATLAB function
-    exitcode = eng.launch(input_folder, output_folder)
+    exitcode = test_engine.launch(input_folder, output_folder)
 
     # Check that the exitcode indicates an error
     assert exitcode == 0, "Expected zero exitcode for empty input folder."

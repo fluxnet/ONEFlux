@@ -1,5 +1,4 @@
 import pytest
-import matlab.engine
 import numpy as np
 
 @pytest.fixture

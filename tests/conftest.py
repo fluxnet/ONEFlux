@@ -5,7 +5,6 @@ handle MATLAB engine interactions, and process text files for comparison in unit
 Contents:
     Fixtures:
         test_engine
-        test_engine
         setup_folders
         find_text_file
         extract_section_between_keywords
@@ -29,6 +28,7 @@ import io
 import atexit
 import numpy as np
 from matlab.engine.matlabengine import MatlabFunc
+# from oneflux_steps.ustar_cp_py.libsmop import matlabarray, struct
 from abc import ABC, abstractmethod
 import warnings
 
@@ -45,7 +45,7 @@ def language(pytestconfig):
 # Specification of a `TestEngine`
 class TestEngine(ABC):
     @abstractmethod
-    def _repr_pretty(self, p):
+    def _repr_pretty_(self, *args):
         """This placeholder can stay as is; it enables Hypothesis to work with this
         runner as a fixture"""
         return "Test Engine"
@@ -63,14 +63,19 @@ class TestEngine(ABC):
 
 # Python TestEngine
 class PythonEngine(TestEngine):
-    def _repr_pretty(self, p):
+    def _repr_pretty_(self, *args):
         return "Python Test Engine"
 
     def convert(self, x):
         """Convert input to a compatible type."""
         if x is None:
             raise ValueError("Input cannot be None")
-        return np.asarray(x) if isinstance(x, list) else x
+        if isinstance(x, list):
+            return np.asarray(x)
+        elif isinstance(x, tuple):
+            return tuple([self.convert(xi) for xi in x])
+        else:
+            return x
 
     def equal(self, x, y) -> bool:
         """Enhanced equality check for MATLAB arrays."""
@@ -80,13 +85,13 @@ class PythonEngine(TestEngine):
             return np.isclose(x, y, equal_nan=True)
         elif isinstance(x, np.ndarray) and isinstance(y, np.ndarray):
             return np.allclose(x, y, equal_nan=True)
-        elif isinstance(x, list) or isinstance(y, list):
+        elif (isinstance(x, list) and isinstance(y, list)) or (isinstance(x, tuple) and isinstance(y, tuple)):
             return all(self.equal(xi, yi) for xi, yi in zip(x, y))
         else:
             return x == y
 
     def __getattribute__(self, name):
-        if name in ["convert", "equal"]:
+        if name in ["convert", "equal", "_repr_pretty_"]:
             return object.__getattribute__(self, name)
         
         def newfunc(*args, **kwargs):
@@ -114,7 +119,7 @@ class MatlabEngine:
         atexit.register(lambda: (s := self.out.getvalue()) and print(f"{name} stdout:\n{s}"))
         atexit.register(lambda: (s := self.err.getvalue()) and print(f"{name} stderr:\n{s}"))
 
-    def _repr_pretty_(self, p):
+    def _repr_pretty_(self, *args):
         return "MATLAB"
 
     def __call__(self, *args, jsonencode=(), jsondecode=(), **kwargs):
@@ -142,15 +147,7 @@ class MatlabEngine:
               return to_matlab_type(x)
 
           def _equal(x, y):
-              if isinstance(x, float):
-                  # Floating point equality using numpy
-                  return np.isclose(x, y, equal_nan=True)
-              elif isinstance(x, matlab.double):
-                  # Compare matlab arrays
-                  return compare_matlab_arrays(x, y)
-              else:
-                  # Drop through to usual equality
-                  return x == y
+              return compare_matlab_arrays(x, y)
 
           # Choose which function to call
           if self.func._name == "convert":
@@ -180,6 +177,24 @@ class MatlabEngine:
                   ret[j] = json.loads(ret[j], object_hook=none2nan)
               if nargout <= 1:
                   ret = ret[0]
+
+       # # Some alternate approach here
+       # nargout = kwargs.get('nargout', 1)
+        # if nargout <= 1:
+        #     ret = [ret]
+        # else:
+        #     ret = list(ret)
+        # for j, y in enumerate(ret):
+        #     if j in jsonencode:
+        #         y = json.loads(y, object_hook=lambda d: 
+        #             {k: np.nan if v is None else v for k, v in d.items()})
+        #         ret[j] = struct(y)
+        #     elif isinstance(y, np.ndarray):
+        #         ret[j] = matlabarray(y)
+        # if nargout <= 1:
+        #     ret = ret[0]
+        # return ret
+
           return ret
 
 def mf_factory(cls, *args, **kwargs):
@@ -199,6 +214,10 @@ def test_engine(language, refactored=True):
     Pytest fixture to start a 'running engine' which allows multiple languages
     to be targetted
     """
+    # if request.param == "translated":  # return the translated python module
+    #     import oneflux_steps.ustar_cp_python_auto as eng
+    #     yield eng
+    #     return
     if language == 'python':
         yield PythonEngine()  # Assuming a defined PythonEngine class elsewhere
     else:
@@ -476,6 +495,10 @@ def flatten(container):
 
 # Helper function to compare MATLAB double arrays element-wise, handling NaN comparisons
 def compare_matlab_arrays(result, expected):
+    if isinstance(result, float):
+      # Floating point equality using numpy
+      return np.isclose(result, expected, equal_nan=True)
+
     if not hasattr(result, '__len__') or not hasattr(expected, '__len__'):
         return np.allclose(result, expected, equal_nan=True)
 
@@ -499,6 +522,8 @@ def compare_matlab_arrays(result, expected):
 
     # Recursive case
     return all(compare_matlab_arrays(r, e) for r, e in zip(result, expected))
+    # ALT:
+    #return all(objects_are_equal(r, e) for r, e in zip(result, expected))
 
 def read_csv_with_csv_module(file_path):
     """

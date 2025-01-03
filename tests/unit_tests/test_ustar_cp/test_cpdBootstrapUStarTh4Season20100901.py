@@ -8,7 +8,7 @@ import pytest
 import matlab.engine
 import numpy as np
 import json
-import os
+# from oneflux_steps.ustar_cp_py.libsmop import struct, matlabarray
 from tests.conftest import to_matlab_type, read_file, parse_testcase, compare_matlab_arrays
 
 nan = np.nan
@@ -83,11 +83,11 @@ def test_cpdBootstrapUStarTh4Season20100901_basic(test_engine, mock_data):
     assert len(Stats3) == 4, "Stats3 should have 4 entries for each season."
 
     # Check the structure of Stats2 and Stats3
-    struct = ['n', 'Cp', 'Fmax', 'p', 'b0', 'b1', 'b2', 'c2', 'cib0', 'cib1', 'cic2', 'mt' , 'ti', 'tf', 'ruStarVsT', 'puStarVsT', 'mT', 'ciT']
+    ss = ['n', 'Cp', 'Fmax', 'p', 'b0', 'b1', 'b2', 'c2', 'cib0', 'cib1', 'cic2', 'mt' , 'ti', 'tf', 'ruStarVsT', 'puStarVsT', 'mT', 'ciT']
     for s2, s3 in zip(Stats2, Stats3):
         for i in range(8):  # Assuming nStrataX = 8
             for j in range(nBoot):
-                for k in struct:
+                for k in ss:
                     assert k in (s2[i][j] and s3[i][j])
 
 def test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap(test_engine, mock_data):
@@ -261,10 +261,10 @@ def test_get_itNee(test_engine, NEE, uStar, T, iNight, expected_itNee):
     itNee = test_engine.get_itNee(NEE_matlab, uStar_matlab, T_matlab, iNight_matlab)
 
     # Compare results
-    if type(itNee) != float:
+    if not isinstance(itNee, float):
         assert compare_matlab_arrays(itNee, expected_itNee), f"Expected {expected_itNee}, but got {itNee}"
     else:
-        assert itNee==expected_itNee
+        assert np.allclose(itNee, expected_itNee)
 
 # Test for the setup_Cp function
 @pytest.mark.parametrize(
