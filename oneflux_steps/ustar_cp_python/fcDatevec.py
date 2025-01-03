@@ -26,13 +26,12 @@ def fcDatevec(t : numpy.ndarray) -> tuple:
     """
     # mimic MATLAB's ability to handle scalar or vector inputs
     t = numpy.asarray(t)
-    # convert all float values to float32 in order to avoid issues with datetime.timedelta
-    t = t.astype(numpy.float32)
-    # Quantise the input to 1.1574074074074074e-09 - i.e., 0.0001 seconds in days
-    t = numpy.round(t / 1.1574074074074074e-09) * 1.1574074074074074e-09
+    # Quantise the input to the granularity of 0.0001 seconds in a day
+    hundredmicrosecond_days = 1.1574074074074074e-09
+    t = numpy.round(t / hundredmicrosecond_days) * hundredmicrosecond_days
 
     scalar_input = False
-    if t.ndim == 0 | t.ndim == 1:
+    if t.ndim == 0: # | t.ndim == 1:
         t = t[None]  # Makes x 1D
         scalar_input = True
 

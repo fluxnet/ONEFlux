@@ -72,7 +72,6 @@ def test_fcDatevec_shape(test_engine, data):
     , ([5.0446049250313e-10], (-1, 12, 30, 24, 0, 0))
     , ([6.0446049250313e-10], (0, 0, 0, 0, 0, 0.0001))
     , ([10+6.0446049250313e-10], (0, 1, 10, 0, 0, 0.0001))
-
 ])
 def test_fcDatevec_specific(test_engine, t, expected):
     """
