@@ -66,7 +66,7 @@ def calculate_p_high(Fmax: float, FmaxCritical_high: float, n: float) -> float:
 
 def calculate_p_interpolate(Fmax: float, FmaxCritical: np.ndarray, pTable: np.ndarray) -> float:
     """
-    Calculate p using piecewise cubic Hermite interpolation (PCHIP).
+    Calculate p using piecewise cubic Hermite interpolation (PCHIP). Extrapolation is set to `True`.
     
     Parameters:
         Fmax: The Fmax value.
