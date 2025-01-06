@@ -30,7 +30,6 @@
 	% find non-singleton dimensions of length d
 
 	nd = get_dims(X);
-    disp(nd)
 	
 	switch nd; 
 		case 1; 
