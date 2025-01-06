@@ -1,12 +1,12 @@
 # Generated with SMOP  0.41-beta
-from oneflux_steps.ustar_cp_python.libsmop import *
+from oneflux_steps.ustar_cp_python.libsmop import datenum
+from oneflux_steps.ustar_cp_python.fcDatevec import fcDatevec
+from oneflux_steps.ustar_cp_python.fcDatenum import mydatenum
 # oneflux_steps/ustar_cp_refactor_wip/fcDoy.m
+import numpy as np
+from datetime import datetime, timedelta
 
-
-@function
 def fcDoy(t=None):
-    globals().update(load_all_vars())
-
     # d=doy(t);
 
     # doy is a day-of-year function
@@ -20,10 +20,16 @@ def fcDoy(t=None):
 
     # Written by Alan Barr 2002.
 
-    y, m, d, h, mi, s = fcDatevec(t, nargout=6)
+    y, m, d, h, mi, s = fcDatevec(t)
     # oneflux_steps/ustar_cp_refactor_wip/fcDoy.m:16
-    tt = datenum(y, m, d)
-    # oneflux_steps/ustar_cp_refactor_wip/fcDoy.m:17
-    d = floor(tt - datenum(y - 1, 12, 31))
-    # oneflux_steps/ustar_cp_refactor_wip/fcDoy.m:18
+    # apply the following to every element of y, m, d pointwise
+
+    def convert(y, m, d):
+      tt = mydatenum(int(y), int(m), int(d), 0, 0, 0) # datenum(y, m, d)
+      # oneflux_steps/ustar_cp_refactor_wip/fcDoy.m:17
+      d = np.floor(tt - mydatenum(int(y - 1), 12, 31, 0, 0, 0))
+      #oneflux_steps/ustar_cp_refactor_wip/fcDoy.m:18
+      return d
+    
+    d = np.vectorize(convert)(y, m, d)
     return d
