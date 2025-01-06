@@ -40,7 +40,7 @@ def test_cpdEvaluateUStarTh4Season20100901_logged_data(test_engine, year): # Thi
     if test_engine.cpdEvaluateUStarTh4Season20100901 is None:
         pytest.skip("Test function not available")
     input_data = {}
-    input_names = ['t_it_', 'NEE_it_', 'updated_uStar_it_', 'T_it_', 'fNight_it_']
+    input_names = ['time_it_', 'NEE_it_', 'updated_uStar_it_', 'Temperature_it_', 'fNight_it_']
     fplot = 0
     cSiteYr = f'CA-Cbo_qca_ustar_{year}.csv' 
     artifacts_dir = 'tests/test_artifacts/cpdEvaluateUStarTh4Season20100901_artifacts' 
@@ -50,8 +50,8 @@ def test_cpdEvaluateUStarTh4Season20100901_logged_data(test_engine, year): # Thi
         input_data[name] = test_engine.convert(column)
 
     [xCp2,xStats2, xCp3,xStats3] = test_engine.cpdEvaluateUStarTh4Season20100901(
-        input_data['t_it_'], input_data['NEE_it_'], input_data['updated_uStar_it_'], 
-        input_data['T_it_'], input_data['fNight_it_'], fplot, cSiteYr, 1, nargout=4)
+        input_data['time_it_'], input_data['NEE_it_'], input_data['updated_uStar_it_'], 
+        input_data['Temperature_it_'], input_data['fNight_it_'], fplot, cSiteYr, 1, nargout=4)
     
     expected_xCp2 = artifacts_dir + f"/CA-Cbo_qca_ustar_{year}/output_xCp2.csv"
     expected_xCp2 = pd.read_csv(expected_xCp2, header=None).iloc[:,:].to_numpy()
