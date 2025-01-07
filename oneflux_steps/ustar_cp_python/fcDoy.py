@@ -1,10 +1,6 @@
-# Generated with SMOP  0.41-beta
-from oneflux_steps.ustar_cp_python.libsmop import datenum
 from oneflux_steps.ustar_cp_python.fcDatevec import fcDatevec
 from oneflux_steps.ustar_cp_python.fcDatenum import mydatenum
-# oneflux_steps/ustar_cp_refactor_wip/fcDoy.m
 import numpy as np
-from datetime import datetime, timedelta
 
 def fcDoy(t=None):
     # d=doy(t);

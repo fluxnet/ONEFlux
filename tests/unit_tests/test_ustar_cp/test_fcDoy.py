@@ -6,7 +6,8 @@ from tests.conftest import test_engine
 # Specific state vectors
 # via a parameterized test fixture
 @pytest.mark.parametrize('t, expected', [
-      ([367], [366])
+      (367, 366)
+    , ([367], [366])
     , ([0], [364])
     #, ([5.0446049250313e-10], [364])
     , ([1], [0])
