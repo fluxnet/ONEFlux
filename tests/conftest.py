@@ -36,8 +36,6 @@ import oneflux_steps.ustar_cp_python.utils
 
 # Python version imported here
 from oneflux_steps.ustar_cp_python import *
-from oneflux_steps.ustar_cp_python.utilities import *
-from oneflux_steps.ustar_cp_python.cpd_evaluate_functions import *
 
 def pytest_addoption(parser):
     parser.addoption("--language", action="store", default="matlab")
@@ -75,11 +73,20 @@ class PythonEngine(TestEngine):
     def _repr_pretty_(self, *args):
         return "Python Test Engine"
 
-    def convert(self, x, index=False):
+    def convert(self, x):
         """Convert input to a compatible type."""
         if x is None:
             raise ValueError("Input cannot be None")
-        return np.asarray(x) if isinstance(x, list) else x
+        if isinstance(x, list):
+            return np.asarray(x)
+        elif isinstance(x, tuple):
+            return tuple([self.convert(xi) for xi in x])
+        else:
+            return x
+
+    def unconvert(self, x):
+        """Convert input back to the original type."""
+        return x
 
     def equal(self, x, y) -> bool:
         """Enhanced equality check for MATLAB arrays."""
@@ -101,19 +108,22 @@ class PythonEngine(TestEngine):
         def newfunc(*args, **kwargs):
             try:
                 # Dynamically load modules based on the function name
+                mod_path = f"oneflux_steps.ustar_cp_python.{name}"
+                mod = __import__(mod_path, fromlist=[name])
+                func = getattr(mod, name, None)
+                # if nargout is present in kwargs then remove it
                 if 'nargout' in kwargs:
                     kwargs.pop('nargout')
-                func = globals().get(name)
+
                 if callable(func):
                     return func(*args, **kwargs)
-                else: 
-                    warnings.warn(f"'function {name}' cannot be found", UserWarning)
+                else: warnings.warn(f"'function {name}' cannot be found", UserWarning)
             except ImportError:
                 pass
             warnings.warn(f"'{name}' is not callable", UserWarning)
-        return newfunc if globals().get(name) else None
+        return newfunc
 
-# MATLAB Engine wrapper 
+# MATLAB Engine wrapper
 class MatlabEngine:
     def __init__(self, func):
         self.func = func
@@ -148,16 +158,8 @@ class MatlabEngine:
         if (self.func._name == "convert") | (self.func._name == "unconvert") | (self.func._name == "equal"):
 
           # Locally scoped definitions
-          def _convert(x, index=None):
-                if index == 'to_matlab': # Add 1 for index conversion to MATLAB, types: int, ndarray, list
-                    print(index)
-                    print("Before conversion: ", x)
-                    if isinstance(x, (int, float, np.ndarray)):
-                        x = x+1
-                    elif isinstance(x, list):
-                        x = np.asarray(x)+1
-                    print("After conversion: ", x)
-                return to_matlab_type(x)
+          def _convert(x):
+              return to_matlab_type(x)
 
           def _unconvert(x):
               if isinstance(x, matlab.double):
@@ -172,7 +174,6 @@ class MatlabEngine:
 
           # Choose which function to call
           if self.func._name == "convert":
-            #   print(*args)
               return _convert(*args)
           elif self.func._name == "equal":
               return _equal(*args)

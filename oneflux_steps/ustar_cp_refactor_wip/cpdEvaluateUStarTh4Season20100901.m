@@ -61,40 +61,63 @@
 %	========================================================================
 %	========================================================================
 
-	nSeasons = 4; nStrataN = 4; 
-	nStrataX = 8; nBins = 50;
+%	Initializations
 
+	nt=length(t); [y,m,d]=fcDatevec(t); 
+	iYr=median(y); EndDOY=fcDoy(datenum(iYr,12,31.5)); 
+	
+	nPerDay=round(1/nanmedian(diff(t))); 
 
-	[nt, m, EndDOY, nPerBin, nN] = initializeParameters(t, nSeasons, nStrataN, nBins);
-
-	[uStar, itAnnual, ntAnnual] = filterInvalidPoints(uStar, fNight, NEE, T);
+	nSeasons=4; nStrataN=4; nStrataX=8; nBins=50; nPerBin = 5;
+	switch nPerDay;
+		case 24; nPerBin=3; 
+		case 48; nPerBin=5; 
+	end;
+	nPerSeasonN=nStrataN*nBins*nPerBin; 
+	nN=nSeasons*nPerSeasonN;
+	
+	itOut=find(uStar<0 | uStar>3); uStar(itOut)=NaN; % reduced to 3 on 15 Jan 2010
+	
+	itAnnual=find(fNight==1 & ~isnan(NEE+uStar+T)); ntAnnual=length(itAnnual); 
+	
+%	Initialize outputs. 	
 
 	Cp2=NaN*ones(nSeasons,nStrataX); 
 	Cp3=NaN*ones(nSeasons,nStrataX); 
 		
-	[Stats2, Stats3] = initializeStatistics(nSeasons, nStrataX);
+	StatsMT=[]; 
+	StatsMT.n=NaN; StatsMT.Cp=NaN; StatsMT.Fmax=NaN; StatsMT.p=NaN; 
+	StatsMT.b0=NaN; StatsMT.b1=NaN; StatsMT.b2=NaN; StatsMT.c2=NaN; 
+	StatsMT.cib0=NaN; StatsMT.cib1=NaN; StatsMT.cic2=NaN; % preceding elements output by changepoint function
+	StatsMT.mt=NaN; StatsMT.ti=NaN; StatsMT.tf=NaN; 
+	StatsMT.ruStarVsT=NaN; StatsMT.puStarVsT=NaN; 
+	StatsMT.mT=NaN; StatsMT.ciT=NaN; % these elements added by this program.  
+						
+	Stats2=StatsMT; Stats3=StatsMT; 					
+	for iSeason=1:nSeasons;
+		for iStrata=1:nStrataX;
+			Stats2(iSeason,iStrata)=StatsMT;
+			Stats3(iSeason,iStrata)=StatsMT;
+		end; 
+	end;
 	
+	if ntAnnual<nN; return; end; 
 	
-
-	if ntAnnual<nN; 
-		% disp('case1');
-		if length(varargin) > 0
-			Stats2 = jsonencode(Stats2);
-			Stats3 = jsonencode(Stats3);
-		end
-		return; 
-	end; 
-	
+	nPerSeason=round(ntAnnual/nSeasons); 
 	
 %	Move Dec to beginning of year and date as previous year.
 
-	[t, T, uStar, NEE, fNight, itAnnual, ntAnnual] = ...
-		reorderAndPreprocessData(t, T, uStar, NEE, fNight, EndDOY, m, nt);
+	itD=find(m==12); 
+	itReOrder=[min(itD):nt 1:(min(itD)-1)]; 
+	t(itD)=t(itD)-EndDOY; t=t(itReOrder); 
+	T=T(itReOrder); uStar=uStar(itReOrder); 
+	NEE=NEE(itReOrder); fNight=fNight(itReOrder); 
+	
+	itAnnual=find(fNight==1 & ~isnan(NEE+uStar+T)); ntAnnual=length(itAnnual); 
 	
 %	Reset nPerSeason and nInc based on actual number of good data. 
 %	nSeasons is a temporary variable. 
-
-	nPerSeason=round(ntAnnual/nSeasons); 
+	
 	nSeasons=round(ntAnnual/nPerSeason); nPerSeason=ntAnnual/nSeasons; 
 	nPerSeason=round(nPerSeason); 
 	
@@ -102,27 +125,35 @@
 %	1. by time using moving windows
 %	2. by temperature class
 %	Then estimate change points Cp2 and Cp3 for each stratum. 
-	iPlot = 0;
+
 	if fPlot==1; fcFigLoc(1,0.9,0.9,'MC'); iPlot=0; end; 
 	
 	for iSeason=1:nSeasons; 
 		
-		jtSeason = computeSeasonIndices(iSeason, nSeasons, nPerSeason, ntAnnual);
-
+		switch iSeason; 
+			case 1; jtSeason=1:nPerSeason; 
+			case nSeasons; jtSeason=((nSeasons-1)*nPerSeason+1):ntAnnual; 
+			otherwise; jtSeason=((iSeason-1)*nPerSeason+1):(iSeason*nPerSeason); 
+		end; 
 		itSeason=itAnnual(jtSeason); ntSeason=length(itSeason); 
+		nStrata=floor(ntSeason/(nBins*nPerBin)); 
+		if nStrata<nStrataN; nStrata=nStrataN; end; 
+		if nStrata>nStrataX; nStrata=nStrataX; end; 
 		
-		nStrata = computeStrataCount(ntSeason, nBins, nPerBin, nStrataN, nStrataX);
-		
-		TTh = computeTemperatureThresholds(T, itSeason, nStrata);
-		
+		TTh=prctile(T(itSeason),0:(100/nStrata):100);
 		for iStrata=1:nStrata;
-           
-			[cPlot, iPlot ]= plotStratum(fPlot, nSeasons, nStrata, iPlot, iSeason, iStrata, cSiteYr);
 			
-			itStrata = findStratumIndices(T, itSeason, TTh, iStrata);
+			cPlot=''; 
+			if fPlot==1; 
+				iPlot=iPlot+1; subplot(nSeasons,nStrata,iPlot); 
+				if iSeason==1 & iStrata==1; cPlot=cSiteYr; end; 
+			end; 
+			
+			itStrata=find(T>=TTh(iStrata) & T<=TTh(iStrata+1));
+			itStrata=intersect(itStrata,itSeason); 
 			
 			[n,muStar,mNEE] = fcBin(uStar(itStrata),NEE(itStrata),[],nPerBin);
-	 
+
 			[xCp2,xs2,xCp3,xs3] = cpdFindChangePoint20100901(muStar,mNEE,fPlot,cPlot); 
 			
 			%	add fields not assigned by cpdFindChangePoint function
@@ -130,8 +161,13 @@
 			[n,muStar,mT] = fcBin(uStar(itStrata),T(itStrata),[],nPerBin);
 			[r,p]=corrcoef(muStar,mT); 
 			
-			xs2 = addStatisticsFields(xs2, t, r, p, T, itStrata);
-			xs3 = addStatisticsFields(xs3, t, r, p, T, itStrata);
+			xs2.mt=mean(t(itStrata)); xs2.ti=t(itStrata(1)); xs2.tf=t(itStrata(end)); 
+			xs2.ruStarVsT=r(2,1); xs2.puStarVsT=p(2,1); 
+			xs2.mT=mean(T(itStrata)); xs2.ciT=0.5*diff(prctile(T(itStrata),[2.5 97.5])); 
+			
+			xs3.mt=xs2.mt; xs3.ti=xs2.ti; xs3.tf=xs2.tf; 
+			xs3.ruStarVsT=xs2.ruStarVsT; xs3.puStarVsT=xs2.puStarVsT; 
+			xs3.mT=xs2.mT; xs3.ciT=xs2.ciT; 
 			
 			Cp2(iSeason,iStrata)=xCp2; 
 			Stats2(iSeason,iStrata)=xs2; 
@@ -139,14 +175,22 @@
 			Cp3(iSeason,iStrata)=xCp3; 
 			Stats3(iSeason,iStrata)=xs3; 
 			
-		end;
-	% for iStrata
+		end; % for iStrata
 		
 	end; % for iSeason
 
-	if length(varargin) > 0
-		Stats2 = jsonencode(Stats2);
-		Stats3 = jsonencode(Stats3);
+	for i = 1:length(varargin)
+		a = varargin{i};
+		if iscell(a) && strcmp(a{1}, 'jsonencode')
+			for j = 2:length(a)
+				switch a{j}
+					case 2
+						Stats2 = jsonencode(Stats2);
+					case 4
+						Stats3 = jsonencode(Stats3);
+				end
+			end
+		end
 	end
-
-end
+	
+	

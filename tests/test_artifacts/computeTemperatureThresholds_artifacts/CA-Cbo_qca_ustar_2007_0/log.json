@@ -1,1 +1,0 @@
-{"computeTemperatureThresholds":{"siteFile":"CA-Cbo_qca_ustar_2007","description":"computeTemperatureThresholds","input":{"T":"tests/test_artifacts/input_T.csv","itSeason":"tests/test_artifacts/input_itSeason.csv","nStrata":"tests/test_artifacts/input_nStrata.csv"},"output":{"TTh":"tests/test_artifacts/output_TTh.csv"}}}
