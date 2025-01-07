@@ -20,16 +20,20 @@ def fcDoy(t=None):
 
     # Written by Alan Barr 2002.
 
+    t = np.ceil(t)
     y, m, d, h, mi, s = fcDatevec(t)
-    # oneflux_steps/ustar_cp_refactor_wip/fcDoy.m:16
-    # apply the following to every element of y, m, d pointwise
 
+    # apply the following to every element of y, m, d pointwise
     def convert(y, m, d):
-      tt = mydatenum(int(y), int(m), int(d), 0, 0, 0) # datenum(y, m, d)
-      # oneflux_steps/ustar_cp_refactor_wip/fcDoy.m:17
-      d = np.floor(tt - mydatenum(int(y - 1), 12, 31, 0, 0, 0))
-      #oneflux_steps/ustar_cp_refactor_wip/fcDoy.m:18
-      return d
-    
+      # if y is a list or vector of some kind, apply the function to each element
+      if hasattr(y, "__len__"):
+        return np.vectorize(convert)(y, m, d)
+      else:
+        # Convert the date to a datetime object
+        tt = mydatenum(int(y), int(m), int(d)) # datenum(y, m, d)
+        # Subtract the last day of the previous year
+        d = np.floor(tt - mydatenum(int(y - 1), 12, 31))
+        return d
+
     d = np.vectorize(convert)(y, m, d)
     return d
