@@ -79,7 +79,16 @@ class PythonEngine(TestEngine):
         """Convert input to a compatible type."""
         if x is None:
             raise ValueError("Input cannot be None")
-        return np.asarray(x) if isinstance(x, list) else x
+        if isinstance(x, list):
+            return np.asarray(x)
+        elif isinstance(x, tuple):
+            return tuple([self.convert(xi) for xi in x])
+        else:
+            return x
+        
+    def unconvert(self, x):
+        """Convert input back to the original type."""
+        return x
 
     def equal(self, x, y) -> bool:
         """Enhanced equality check for MATLAB arrays."""
@@ -101,6 +110,7 @@ class PythonEngine(TestEngine):
         def newfunc(*args, **kwargs):
             try:
                 # Dynamically load modules based on the function name
+                # if nargout is present in kwargs then remove it
                 if 'nargout' in kwargs:
                     kwargs.pop('nargout')
                 func = globals().get(name)
