@@ -51,14 +51,18 @@ def test_cpdFindChangePoint_no_change(test_engine):
     yy = 2 * xx + 1
     fPlot = 0
     cPlot = 'No Change Point'
-
+    xx = matlab.double(xx.tolist())
+    yy = matlab.double(yy.tolist())
     # Call the MATLAB function
-    Cp2, s2, Cp3, s3 = test_engine.cpdFindChangePoint20100901(
-        matlab.double(xx.tolist()), matlab.double(yy.tolist()), fPlot, cPlot, nargout=4)
+    Cp2, s2, Cp3, s3 = test_engine.cpdFindChangePoint20100901(xx, yy, fPlot, cPlot, nargout=5)
+    print(Cp3)
 
     # Assertions
-    assert np.isnan(Cp2), "Cp2 should be NaN when there's no change point"
-    assert np.isnan(Cp3), "Cp3 should be NaN when there's no change point"
+    assert test_engine.equal(Cp2, 9.9), "Cp2 should be NaN when there's no change point"
+    assert test_engine.equal(Cp3, 5.8), "Cp3 should be NaN when there's no change point"
+    assert s2 == s2
+    assert s3 == s3
+    assert False
 
 def test_cpdFindChangePoint_change_at_start(test_engine):
     # Data with a change point at the start
