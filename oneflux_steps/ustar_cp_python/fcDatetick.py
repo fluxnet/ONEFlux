@@ -20,7 +20,7 @@ def fcDateTick(t=None, sFrequency=None, iDateStr=None, fLimits=None):
     xDates = matlabarray([])
     # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:9
     if "Dy" == sFrequency:
-        xDates = t[1 : 48 : end()]
+        xDates = t[::48]
     # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:12
     else:
         if "2Dy" == sFrequency:
