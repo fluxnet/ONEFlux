@@ -1,13 +1,11 @@
 # Generated with SMOP  0.41-beta
-from libsmop import *
+from oneflux_steps.ustar_cp_python.utils import *
+from oneflux_steps.ustar_cp_python.fcDatevec import *
 # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m
 
+def fcDateTick(t=None, sFrequency=None, iDateStr=None, fLimits=None):
 
-@function
-def myDateTick(t=None, sFrequency=None, iDateStr=None, fLimits=None):
-    globals().update(load_all_vars())
-
-    y, m, d, h, mn, s = fcDatevec(t, nargout=6)
+    y, m, d, h, mn, s = fcDatevec(t)
     # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:3
     iYrs = unique(y)
     # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:4
