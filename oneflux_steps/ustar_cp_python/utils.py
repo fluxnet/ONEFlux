@@ -200,11 +200,8 @@ def arange(start, stop, step=1, **kwargs):
     matlabarray([[ 1, 10]])
     """
     expand_value = 1 if step > 0 else -1
-    return matlabarray(
-        np.arange(start, stop + expand_value, step, **kwargs).reshape(1, -1),
-        **kwargs,
-    )
-
+    return np.arange(start, stop + expand_value, step, **kwargs).reshape(1, -1),
+       
 
 def concat(args, axis=1):
     """
@@ -777,7 +774,7 @@ def unique(a):
     """
     Return the unique elements of an array.
     """
-    return matlabarray(np.unique(np.asarray(a)))
+    return np.unique(np.asarray(a))
 
 
 def interp1(x, v, xq, method):

@@ -3,7 +3,7 @@ from oneflux_steps.ustar_cp_python.utils import *
 from oneflux_steps.ustar_cp_python.fcDatevec import *
 # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m
 
-def fcDateTick(t=None, sFrequency=None, iDateStr=None, fLimits=None):
+def fcDatetick(t=None, sFrequency=None, iDateStr=None, fLimits=None):
 
     y, m, d, h, mn, s = fcDatevec(t)
     # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:3
