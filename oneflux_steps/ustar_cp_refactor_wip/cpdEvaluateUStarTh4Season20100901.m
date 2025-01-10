@@ -60,6 +60,11 @@
 
 %	========================================================================
 %	========================================================================
+	metadata = struct();
+	metadata.siteFile = 'CA-Cbo_qca_ustar_2007';
+	metadata.oneFluxDir = '/home/ia/iccs_repos/ONEFlux/';
+	metadata.relArtifactsDir = 'tests/test_artifacts';
+	metadata.frequency = 50;  %frequncy_to_log_input/ouput, defualt is 10 if not specified
 
 	nSeasons = 4; nStrataN = 4; 
 	nStrataX = 8; nBins = 50;
@@ -123,7 +128,11 @@
 			
 			[n,muStar,mNEE] = fcBin(uStar(itStrata),NEE(itStrata),[],nPerBin);
 	 
-			[xCp2,xs2,xCp3,xs3] = cpdFindChangePoint20100901(muStar,mNEE,fPlot,cPlot); 
+
+			metadata.inputNames = {'muStar', 'mNEE', 'fPlot', 'cPlot'};
+			metadata.outputNames = {'xCp2', 'xs2', 'xCp3', 'xs3'};
+			[xCp2,xs2,xCp3,xs3] = logFuncResult('log.json', @cpdFindChangePoint20100901, metadata, muStar, mNEE, fPlot, cPlot);
+			% [xCp2,xs2,xCp3,xs3] = cpdFindChangePoint20100901(muStar,mNEE,fPlot,cPlot); 
 			
 			%	add fields not assigned by cpdFindChangePoint function
 			
