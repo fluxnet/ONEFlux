@@ -3,6 +3,35 @@ from datetime import timedelta as td
 from math import ceil
 
 def mydatenum(Y, M, D):
+    """
+    Convert date to serial date number.
+
+    This function converts a given date specified by year (Y), month (M), and day (D)
+    into a serial date number. The serial date number is the number of days since a 
+    fixed starting point: January 1st 1 AD.
+
+    Parameters:
+    Y (int): Year of the date. Can be negative for years BC.
+    M (int): Month of the date. If 0, it is interpreted as January.
+    D (int): Day of the date. If 0, it is interpreted as the last day of the previous month.
+
+    Returns:
+    int: Serial date number corresponding to the input date.
+
+    Notes:
+    - Year 0 is treated as a leap year.
+    - If the day (D) is 0, it is adjusted to the last day of the previous month.
+    - If the month (M) is 0, it is adjusted to January.
+    - Negative years are treated as if they are in the year 1 AD, with adjustments for leap years.
+
+    Examples:
+    >>> mydatenum(2023, 10, 5)
+    739164
+    >>> mydatenum(0, 3, 1)
+    61
+    >>> mydatenum(-1, 12, 31)
+    0
+    """
 
     adjustment = td()
     # A zero day means we need to subtract one day
