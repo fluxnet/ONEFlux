@@ -1,6 +1,6 @@
 from oneflux_steps.ustar_cp_python.utils import *
 from oneflux_steps.ustar_cp_python.fcDatevec import *
-#from oneflux_steps.ustar_cp_python.fcDatenum import mydatenum
+from oneflux_steps.ustar_cp_python.fcDatenum import mydatenum
 
 import matplotlib.pyplot as plt
 import datetime
@@ -33,7 +33,7 @@ def fcDatetick(t, sFrequency, iDateStr, fLimits):
             iYr1 = iYr1 - 1
       
         for iDy in arange(1, 29, 2).reshape(-1):
-            xDates = [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
+            xDates = [xDates, mydatenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
 
       case "3Dy":
         iYr1 = floor(iSerMo1 / 12) + 1
@@ -42,7 +42,7 @@ def fcDatetick(t, sFrequency, iDateStr, fLimits):
             iMo1 = 12
             iYr1 = iYr1 - 1
         for iDy in arange(1, 28, 3).reshape(-1):
-            xDates = [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
+            xDates = [xDates, mydatenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
           
       case "5Dy":
         iYr1 = floor(iSerMo1 / 12) + 1
@@ -51,7 +51,7 @@ def fcDatetick(t, sFrequency, iDateStr, fLimits):
             iMo1 = 12
             iYr1 = iYr1 - 1
         for iDy in arange(1, 26, 5).reshape(-1):
-            xDates = [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
+            xDates = [xDates, mydatenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
 
       case "7Dy":
         iYr1 = floor(iSerMo1 / 12) + 1                   
@@ -60,7 +60,7 @@ def fcDatetick(t, sFrequency, iDateStr, fLimits):
             iMo1 = 12
             iYr1 = iYr1 - 1
         for iDy in arange(1, 22, 7).reshape(-1):
-            xDates = [ xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
+            xDates = [ xDates, mydatenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
 
       case "10Dy":
         iYr1 = floor(iSerMo1 / 12) + 1
@@ -69,7 +69,7 @@ def fcDatetick(t, sFrequency, iDateStr, fLimits):
             iMo1 = 12
             iYr1 = iYr1 - 1
         for iDy in arange(1, 21, 10).reshape(-1):
-            xDates = [ xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
+            xDates = [ xDates, mydatenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
           
         
       case "14Dy":
@@ -79,7 +79,7 @@ def fcDatetick(t, sFrequency, iDateStr, fLimits):
             iMo1 = 12
             iYr1 = iYr1 - 1
         for iDy in arange(1, 15, 14).reshape(-1):
-            xDates = [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]                                    
+            xDates = [xDates, mydatenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]                                    
 
 
       case "15Dy":
@@ -89,7 +89,7 @@ def fcDatetick(t, sFrequency, iDateStr, fLimits):
             iMo1 = 12
             iYr1 = iYr1 - 1
         for iDy in arange(1, 16, 15).reshape(-1):
-            xDates = [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
+            xDates = [xDates, mydatenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
 
       case "Mo":
         iYr1 = floor(iSerMo1 / 12) + 1
@@ -97,7 +97,7 @@ def fcDatetick(t, sFrequency, iDateStr, fLimits):
         if iMo1 == 0:
             iMo1 = 12
             iYr1 = iYr1 - 1
-        xDates = datenum(
+        xDates = mydatenum(
             iYr1, arange(iMo1, (iMo1 + nSerMos)), 1
         )
         # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:36
@@ -111,7 +111,7 @@ def fcDatetick(t, sFrequency, iDateStr, fLimits):
         if iMo1 == 0:
             iMo1 = 12
             iYr1 = iYr1 - 1
-        xDates = datenum(iYr1, arange(iMo1, (iMo1 + nSerMos), 2), 1)
+        xDates = mydatenum(iYr1, arange(iMo1, (iMo1 + nSerMos), 2), 1)
 
       case "3Mo":
         iYr1 = floor(iSerMo1 / 12) + 1
@@ -119,7 +119,7 @@ def fcDatetick(t, sFrequency, iDateStr, fLimits):
         if iMo1 == 0:
             iMo1 = 12
             iYr1 = iYr1 - 1
-        xDates = datenum(iYr1, arange(iMo1, (iMo1 + nSerMos), 3), 1)
+        xDates = mydatenum(iYr1, arange(iMo1, (iMo1 + nSerMos), 3), 1)
 
 
       case "4Mo":
@@ -128,7 +128,7 @@ def fcDatetick(t, sFrequency, iDateStr, fLimits):
         if iMo1 == 0:
             iMo1 = 12
             iYr1 = iYr1 - 1
-        xDates = datenum(iYr1, arange(iMo1, (iMo1 + nSerMos), 4), 1)
+        xDates = mydatenum(iYr1, arange(iMo1, (iMo1 + nSerMos), 4), 1)
         
       case "6Mo":                                              
         iYr1 = floor(iSerMo1 / 12) + 1
@@ -136,12 +136,12 @@ def fcDatetick(t, sFrequency, iDateStr, fLimits):
         if iMo1 == 0:
             iMo1 = 12
             iYr1 = iYr1 - 1
-        xDates = datenum(iYr1, arange(iMo1, (iMo1 + nSerMos), 6), 1)
+        xDates = mydatenum(iYr1, arange(iMo1, (iMo1 + nSerMos), 6), 1)
 
       case "Yr":
         iYr1 = min(iYrs)
         iYr2 = max(iYrs)
-        xDates = datenum(arange(iYr1, iYr2 + 1), 1, 1)
+        xDates = mydatenum(arange(iYr1, iYr2 + 1), 1, 1)
 
     xDates = unique(xDates)
 
