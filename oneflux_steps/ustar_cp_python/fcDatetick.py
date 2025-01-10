@@ -1,278 +1,168 @@
-# Generated with SMOP  0.41-beta
 from oneflux_steps.ustar_cp_python.utils import *
 from oneflux_steps.ustar_cp_python.fcDatevec import *
-# oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m
 
-def fcDatetick(t=None, sFrequency=None, iDateStr=None, fLimits=None):
+import matplotlib.pyplot as plt
+import datetime
 
+def fcDatetick(t, sFrequency, iDateStr, fLimits):
+    
+    # # mimic MATLAB's ability to handle scalar or vector inputs
+    # if (hasattr(t, "__len__") and len(t) > 0 and hasattr(t[0], "__len__")):
+    #     # Input is 2-Dimensional, so vectorise ourselves
+    #     return numpy.vectorize(fcDatetick)(t, sFrequency, iDateStr, fLimits)
+    
     y, m, d, h, mn, s = fcDatevec(t)
-    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:3
     iYrs = unique(y)
-    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:4
     iSerMos = dot((y - 1), 12) + m
-    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:5
     iSerMo1 = min(iSerMos)
-    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:6
     iSerMo2 = max(iSerMos)
-    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:6
     nSerMos = iSerMo2 - iSerMo1 + 1
-    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:7
     xDates = matlabarray([])
-    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:9
-    if "Dy" == sFrequency:
+
+    match (sFrequency):
+      case "Dy":
         xDates = t[::48]
-    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:12
-    else:
-        if "2Dy" == sFrequency:
-            iYr1 = floor(iSerMo1 / 12) + 1
-            # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:14
-            iMo1 = mod(iSerMo1, 12)
-            # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:14
-            if iMo1 == 0:
-                iMo1 = 12
-                # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:14
-                iYr1 = iYr1 - 1
-            # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:14
-            for iDy in arange(1, 29, 2).reshape(-1):
-                xDates = matlabarray(
-                    [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
-                )
-        # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:15
-        else:
-            if "3Dy" == sFrequency:
-                iYr1 = floor(iSerMo1 / 12) + 1
-                # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:17
-                iMo1 = mod(iSerMo1, 12)
-                # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:17
-                if iMo1 == 0:
-                    iMo1 = 12
-                    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:17
-                    iYr1 = iYr1 - 1
-                # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:17
-                for iDy in arange(1, 28, 3).reshape(-1):
-                    xDates = matlabarray(
-                        [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
-                    )
-            # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:18
-            else:
-                if "5Dy" == sFrequency:
-                    iYr1 = floor(iSerMo1 / 12) + 1
-                    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:20
-                    iMo1 = mod(iSerMo1, 12)
-                    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:20
-                    if iMo1 == 0:
-                        iMo1 = 12
-                        # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:20
-                        iYr1 = iYr1 - 1
-                    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:20
-                    for iDy in arange(1, 26, 5).reshape(-1):
-                        xDates = matlabarray(
-                            [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
-                        )
-                # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:21
-                else:
-                    if "7Dy" == sFrequency:
-                        iYr1 = floor(iSerMo1 / 12) + 1
-                        # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:23
-                        iMo1 = mod(iSerMo1, 12)
-                        # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:23
-                        if iMo1 == 0:
-                            iMo1 = 12
-                            # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:23
-                            iYr1 = iYr1 - 1
-                        # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:23
-                        for iDy in arange(1, 22, 7).reshape(-1):
-                            xDates = matlabarray(
-                                [
-                                    xDates,
-                                    datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy),
-                                ]
-                            )
-                    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:24
-                    else:
-                        if "10Dy" == sFrequency:
-                            iYr1 = floor(iSerMo1 / 12) + 1
-                            # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:26
-                            iMo1 = mod(iSerMo1, 12)
-                            # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:26
-                            if iMo1 == 0:
-                                iMo1 = 12
-                                # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:26
-                                iYr1 = iYr1 - 1
-                            # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:26
-                            for iDy in arange(1, 21, 10).reshape(-1):
-                                xDates = matlabarray(
-                                    [
-                                        xDates,
-                                        datenum(
-                                            iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy
-                                        ),
-                                    ]
-                                )
-                        # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:27
-                        else:
-                            if "14Dy" == sFrequency:
-                                iYr1 = floor(iSerMo1 / 12) + 1
-                                # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:29
-                                iMo1 = mod(iSerMo1, 12)
-                                # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:29
-                                if iMo1 == 0:
-                                    iMo1 = 12
-                                    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:29
-                                    iYr1 = iYr1 - 1
-                                # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:29
-                                for iDy in arange(1, 15, 14).reshape(-1):
-                                    xDates = matlabarray(
-                                        [
-                                            xDates,
-                                            datenum(
-                                                iYr1,
-                                                arange(iMo1, (iMo1 + nSerMos)),
-                                                iDy,
-                                            ),
-                                        ]
-                                    )
-                            # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:30
-                            else:
-                                if "15Dy" == sFrequency:
-                                    iYr1 = floor(iSerMo1 / 12) + 1
-                                    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:32
-                                    iMo1 = mod(iSerMo1, 12)
-                                    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:32
-                                    if iMo1 == 0:
-                                        iMo1 = 12
-                                        # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:32
-                                        iYr1 = iYr1 - 1
-                                    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:32
-                                    for iDy in arange(1, 16, 15).reshape(-1):
-                                        xDates = matlabarray(
-                                            [
-                                                xDates,
-                                                datenum(
-                                                    iYr1,
-                                                    arange(iMo1, (iMo1 + nSerMos)),
-                                                    iDy,
-                                                ),
-                                            ]
-                                        )
-                                # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:33
-                                else:
-                                    if "Mo" == sFrequency:
-                                        iYr1 = floor(iSerMo1 / 12) + 1
-                                        # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:35
-                                        iMo1 = mod(iSerMo1, 12)
-                                        # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:35
-                                        if iMo1 == 0:
-                                            iMo1 = 12
-                                            # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:35
-                                            iYr1 = iYr1 - 1
-                                        # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:35
-                                        xDates = datenum(
-                                            iYr1, arange(iMo1, (iMo1 + nSerMos)), 1
-                                        )
-                                    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:36
-                                    # # # 			datestr(xDates)
-                                    # # # 			datestr([min(t) max(t)])
-                                    # # # 			pause;
-                                    else:
-                                        if "2Mo" == sFrequency:
-                                            iYr1 = floor(iSerMo1 / 12) + 1
-                                            # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:41
-                                            iMo1 = mod(iSerMo1, 12)
-                                            # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:41
-                                            if iMo1 == 0:
-                                                iMo1 = 12
-                                                # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:41
-                                                iYr1 = iYr1 - 1
-                                            # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:41
-                                            xDates = datenum(
-                                                iYr1,
-                                                arange(iMo1, (iMo1 + nSerMos), 2),
-                                                1,
-                                            )
-                                        # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:42
-                                        else:
-                                            if "3Mo" == sFrequency:
-                                                iYr1 = floor(iSerMo1 / 12) + 1
-                                                # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:44
-                                                iMo1 = mod(iSerMo1, 12)
-                                                # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:44
-                                                if iMo1 == 0:
-                                                    iMo1 = 12
-                                                    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:44
-                                                    iYr1 = iYr1 - 1
-                                                # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:44
-                                                xDates = datenum(
-                                                    iYr1,
-                                                    arange(iMo1, (iMo1 + nSerMos), 3),
-                                                    1,
-                                                )
-                                            # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:45
-                                            else:
-                                                if "4Mo" == sFrequency:
-                                                    iYr1 = floor(iSerMo1 / 12) + 1
-                                                    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:47
-                                                    iMo1 = mod(iSerMo1, 12)
-                                                    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:47
-                                                    if iMo1 == 0:
-                                                        iMo1 = 12
-                                                        # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:47
-                                                        iYr1 = iYr1 - 1
-                                                    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:47
-                                                    xDates = datenum(
-                                                        iYr1,
-                                                        arange(
-                                                            iMo1, (iMo1 + nSerMos), 4
-                                                        ),
-                                                        1,
-                                                    )
-                                                # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:48
-                                                else:
-                                                    if "6Mo" == sFrequency:
-                                                        iYr1 = floor(iSerMo1 / 12) + 1
-                                                        # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:50
-                                                        iMo1 = mod(iSerMo1, 12)
-                                                        # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:50
-                                                        if iMo1 == 0:
-                                                            iMo1 = 12
-                                                            # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:50
-                                                            iYr1 = iYr1 - 1
-                                                        # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:50
-                                                        xDates = datenum(
-                                                            iYr1,
-                                                            arange(
-                                                                iMo1,
-                                                                (iMo1 + nSerMos),
-                                                                6,
-                                                            ),
-                                                            1,
-                                                        )
-                                                    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:51
-                                                    else:
-                                                        if "Yr" == sFrequency:
-                                                            iYr1 = min(iYrs)
-                                                            # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:53
-                                                            iYr2 = max(iYrs)
-                                                            # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:53
-                                                            xDates = datenum(
-                                                                arange(iYr1, iYr2 + 1),
-                                                                1,
-                                                                1,
-                                                            )
-    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:54
+
+      case "2Dy":
+        iYr1 = floor(iSerMo1 / 12) + 1
+        iMo1 = mod(iSerMo1, 12)
+        
+        if iMo1 == 0:
+            iMo1 = 12        
+            iYr1 = iYr1 - 1
+      
+        for iDy in arange(1, 29, 2).reshape(-1):
+            xDates = [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
+
+      case "3Dy":
+        iYr1 = floor(iSerMo1 / 12) + 1
+        iMo1 = mod(iSerMo1, 12)
+        if iMo1 == 0:
+            iMo1 = 12
+            iYr1 = iYr1 - 1
+        for iDy in arange(1, 28, 3).reshape(-1):
+            xDates = [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
+          
+      case "5Dy":
+        iYr1 = floor(iSerMo1 / 12) + 1
+        iMo1 = mod(iSerMo1, 12)
+        if iMo1 == 0:
+            iMo1 = 12
+            iYr1 = iYr1 - 1
+        for iDy in arange(1, 26, 5).reshape(-1):
+            xDates = [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
+
+      case "7Dy":
+        iYr1 = floor(iSerMo1 / 12) + 1                   
+        iMo1 = mod(iSerMo1, 12)
+        if iMo1 == 0:
+            iMo1 = 12
+            iYr1 = iYr1 - 1
+        for iDy in arange(1, 22, 7).reshape(-1):
+            xDates = [ xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
+
+      case "10Dy":
+        iYr1 = floor(iSerMo1 / 12) + 1
+        iMo1 = mod(iSerMo1, 12)
+        if iMo1 == 0:
+            iMo1 = 12
+            iYr1 = iYr1 - 1
+        for iDy in arange(1, 21, 10).reshape(-1):
+            xDates = [ xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
+          
+        
+      case "14Dy":
+        iYr1 = floor(iSerMo1 / 12) + 1
+        iMo1 = mod(iSerMo1, 12)
+        if iMo1 == 0:
+            iMo1 = 12
+            iYr1 = iYr1 - 1
+        for iDy in arange(1, 15, 14).reshape(-1):
+            xDates = [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]                                    
+
+
+      case "15Dy":
+        iYr1 = floor(iSerMo1 / 12) + 1
+        iMo1 = mod(iSerMo1, 12)
+        if iMo1 == 0:
+            iMo1 = 12
+            iYr1 = iYr1 - 1
+        for iDy in arange(1, 16, 15).reshape(-1):
+            xDates = [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
+
+      case "Mo":
+        iYr1 = floor(iSerMo1 / 12) + 1
+        iMo1 = mod(iSerMo1, 12)
+        if iMo1 == 0:
+            iMo1 = 12
+            iYr1 = iYr1 - 1
+        xDates = datenum(
+            iYr1, arange(iMo1, (iMo1 + nSerMos)), 1
+        )
+        # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:36
+        # # # 			datestr(xDates)
+        # # # 			datestr([min(t) max(t)])
+        # # # 			pause;
+                                  
+      case "2Mo":
+        iYr1 = floor(iSerMo1 / 12) + 1
+        iMo1 = mod(iSerMo1, 12)
+        if iMo1 == 0:
+            iMo1 = 12
+            iYr1 = iYr1 - 1
+        xDates = datenum(iYr1, arange(iMo1, (iMo1 + nSerMos), 2), 1)
+
+      case "3Mo":
+        iYr1 = floor(iSerMo1 / 12) + 1
+        iMo1 = mod(iSerMo1, 12)
+        if iMo1 == 0:
+            iMo1 = 12
+            iYr1 = iYr1 - 1
+        xDates = datenum(iYr1, arange(iMo1, (iMo1 + nSerMos), 3), 1)
+
+
+      case "4Mo":
+        iYr1 = floor(iSerMo1 / 12) + 1
+        iMo1 = mod(iSerMo1, 12)
+        if iMo1 == 0:
+            iMo1 = 12
+            iYr1 = iYr1 - 1
+        xDates = datenum(iYr1, arange(iMo1, (iMo1 + nSerMos), 4), 1)
+        
+      case "6Mo":                                              
+        iYr1 = floor(iSerMo1 / 12) + 1
+        iMo1 = mod(iSerMo1, 12)
+        if iMo1 == 0:
+            iMo1 = 12
+            iYr1 = iYr1 - 1
+        xDates = datenum(iYr1, arange(iMo1, (iMo1 + nSerMos), 6), 1)
+
+      case "Yr":
+        iYr1 = min(iYrs)
+        iYr2 = max(iYrs)
+        xDates = datenum(arange(iYr1, iYr2 + 1), 1, 1)
 
     xDates = unique(xDates)
-    # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:56
-    set(gca, "xTick", xDates)
-    set(gca, "xTickLabel", matlabarray([]))
+
+    # Set current `x` access to have values given by xDates
+    plt.gca().set_xticks(xDates)
+    # set label to empty
+    plt.gca().set_xticklabels([])
     if iDateStr > 0:
-        cDates = datestr(xDates, iDateStr)
-        # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:59
-        set(gca, "xTickLabel", cDates)
+        # compute a datestring for each xDates based on iDateStr
+        # TODO: this is different to the original MATLAB code which was
+        # cDates = datestr(xDates, iDateStr)
+
+        # convert from a date floating-point
+        # ordinal to a datetime object
+        cDates = [datetime.datetime.fromordinal(floor(t) + 1).strftime("%Y-%m-%d") for t in xDates]
+
+        plt.gca().set_xticklabels(cDates)
 
     if fLimits == 1:
         xlim(matlabarray([floor(min(xDates)), ceil(max(xDates))]))
-        grid("on")
-        box("on")
+        # Turn on the grid and box using matplotlib
+        plt.grid("on")
+        plt.box("on")
 
-    return
+    return None

@@ -48,6 +48,7 @@ import numpy as np
         }
         ])
 # Parameterised tests using the above fixtures
+# At the moment this is largely a smoke test: did it run without failing?
 def test_fcDatetick(test_engine, data):
     """
     Test MATLAB's fcDatetick function with various edge cases.
