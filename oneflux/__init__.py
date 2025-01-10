@@ -1,7 +1,7 @@
 '''
 ONEFlux
 
-    Copyright (c) 2014-2024, The Regents of the University of California,
+    Copyright (c) 2014-2025, The Regents of the University of California,
     through Lawrence Berkeley National Laboratory (subject to receipt
     of any required approvals from the U.S. Dept. of Energy).
     All rights reserved.
@@ -48,12 +48,12 @@ Open Network-Enabled Flux Processing Pipeline (ONEFlux)
 @date: 2017-01-31
 '''
 
-VERSION_PROCESSING = 5
+VERSION_PROCESSING = 6
 VERSION_METADATA = 'beta'
-VERSION = "0.5.0{m}".format(m='-rc')
+VERSION = "0.6.0{m}".format(m='-rc')
 
 __author__ = "Gilberto Pastorello"
-__copyright__ = "Copyright 2017, The Regents of the University of California, through Lawrence Berkeley National Laboratory"
+__copyright__ = "Copyright 2014-2025, The Regents of the University of California, through Lawrence Berkeley National Laboratory"
 __credits__ = ["Gilberto Pastorello <gzpastorello@lbl.gov>",
                "Carlo Trotta <trottacarlo@unitus.it>",
                "Alessio Ribeca <a.ribeca@unitus.it>",
