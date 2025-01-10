@@ -26,6 +26,7 @@ def fcDatevec(t : numpy.ndarray) -> tuple:
         return numpy.vectorize(fcDatevec)(t)
     
     t = numpy.asarray(t)
+
     # Quantise the input to the granularity of 0.0001 seconds in a day
     hundredmicrosecond_days = 1.1574074074074074e-09
     t = numpy.round(t / hundredmicrosecond_days) * hundredmicrosecond_days

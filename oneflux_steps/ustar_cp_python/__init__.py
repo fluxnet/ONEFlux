@@ -2,6 +2,7 @@
 from .fcx2colvec import fcx2colvec
 from .fcx2rowvec import fcx2rowvec
 from .fcDatetick import fcDatetick
+from .cpdFmax2pCp3 import interpolate_FmaxCritical, cpdFmax2pCp3
 
 from os.path import dirname, basename, isfile, join
 import glob
