@@ -7,6 +7,11 @@ def cpdFmax2pCp3(Fmax: float, n: int) -> Optional[float]:
     """
     Calculates the probability `p` that the 3-parameter diagnostic change-point model fit is significant.
 
+    Based on the method implemented by Alan Barr in 2010 in Matlab.
+
+    It interpolates within a Table pTable, generated 
+%	for the 3-parameter model by Wang (2003).
+
     Args:
         Fmax: The Fmax value to be evaluated.
         n: Sample size or degrees of freedom.
@@ -51,9 +56,9 @@ def calculate_p_high(Fmax: float, FmaxCritical_high: float, n: float) -> float:
     # Handle invalid inputs
     if (
         np.isnan(Fmax) or np.isnan(FmaxCritical_high) or np.isnan(n) or
-        FmaxCritical_high <= 0 or n <= 0 or Fmax <= 0
+        n <= 0
     ):
-        return np.nan
+        return 0
 
     # Compute the adjusted F statistic
     fAdj = f.ppf(0.995, 3, n) * Fmax / FmaxCritical_high
@@ -66,7 +71,7 @@ def calculate_p_high(Fmax: float, FmaxCritical_high: float, n: float) -> float:
 
 def calculate_p_interpolate(Fmax: float, FmaxCritical: np.ndarray, pTable: np.ndarray) -> float:
     """
-    Calculate p using piecewise cubic Hermite interpolation (PCHIP).
+    Calculate p using piecewise cubic Hermite interpolation (PCHIP). Extrapolation is set to `True`.
     
     Parameters:
         Fmax: The Fmax value.
@@ -74,11 +79,13 @@ def calculate_p_interpolate(Fmax: float, FmaxCritical: np.ndarray, pTable: np.nd
         pTable: Array of probabilities corresponding to FmaxCritical.
     
     Returns:
-        The interpolated p-value or NaN if Fmax is out of bounds.
+        The interpolated p-value or NaN if invalid inputs are provided.
     """
+
+
     try:
-        interpolator = PchipInterpolator(FmaxCritical, 1 - pTable)
-        return interpolator(Fmax) if FmaxCritical[0] <= Fmax <= FmaxCritical[-1] else np.nan
+        interpolator = PchipInterpolator(FmaxCritical, 1 - pTable, extrapolate=True)
+        return interpolator(Fmax)
     except ValueError:
         return np.nan
     
