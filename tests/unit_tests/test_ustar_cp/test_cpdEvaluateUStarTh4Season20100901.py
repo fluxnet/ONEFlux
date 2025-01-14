@@ -168,7 +168,7 @@ def test_reorderAndPreprocessData_logged_data(test_engine):
     Test the reorderAndPreprocessData function.
     """
     artifacts_dir = 'tests/test_artifacts/reorderAndPreprocessData_artifacts'
-    input_names = ['t', 'T', 'uStar', 'NEE', 'fNight', 'EndDOY', 'm', 'nt']
+    input_names = ['time', 'Temperature', 'uStar', 'NEE', 'fNight', 'EndDOY', 'm', 'nt']
     input_data = {}
     for name in input_names:
         path_to_artifacts = artifacts_dir + f'/CA-Cbo_qca_ustar_2007_0/input_{name}.csv'
@@ -178,7 +178,7 @@ def test_reorderAndPreprocessData_logged_data(test_engine):
         else:
             input_data[name] = test_engine.convert(column)
 
-    expected_output_names = ['t', 'T', 'uStar', 'NEE', 'fNight', 'itAnnual', 'ntAnnual']
+    expected_output_names = ['time', 'Temperature', 'uStar', 'NEE', 'fNight', 'itAnnual', 'ntAnnual']
     expected_output_data = {}
     for name in expected_output_names:
         path_to_artifacts = artifacts_dir + f'/CA-Cbo_qca_ustar_2007_0/output_{name}.csv'
@@ -191,8 +191,8 @@ def test_reorderAndPreprocessData_logged_data(test_engine):
         
     t, T, uStar, NEE, fNight, itAnnual, ntAnnual = test_engine.reorderAndPreprocessData(*[input_data[name] for name in input_names], nargout=7)
 
-    assert test_engine.equal(test_engine.convert(t), expected_output_data['t'])
-    assert test_engine.equal(test_engine.convert(T), expected_output_data['T'])
+    assert test_engine.equal(test_engine.convert(t), expected_output_data['time'])
+    assert test_engine.equal(test_engine.convert(T), expected_output_data['Temperature'])
     assert test_engine.equal(test_engine.convert(uStar), expected_output_data['uStar'])
     assert test_engine.equal(test_engine.convert(NEE), expected_output_data['NEE'])
     assert test_engine.equal(test_engine.convert(fNight), expected_output_data['fNight'])
@@ -213,7 +213,7 @@ testcases = [
 @pytest.mark.parametrize('ntSeason, nPerBin, expected_nStrata', testcases)
 def test_computeStrataCount(test_engine, ntSeason, nPerBin, expected_nStrata):
     """
-    Test the computeStrataCount function.
+    Temperatureest the computeStrataCount function.
     """
     nStrataX = 8
     nStrataN = 4
