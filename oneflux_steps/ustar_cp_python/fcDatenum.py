@@ -50,12 +50,13 @@ def datenum(Y, M, D):
     # A zero month is interpreted as 1
     if M == 0:
       M = 1
-
-    # Treat year 0 (Y = 0) as a leap year, so we must
-    # add the leap day from Y = 0 if we are after the
-    # first leap day (Feb 29th of Year 0)
-    if (Y >= 1) | (Y == 0) & (M > 2):
-      adjustment = adjustment + td(1)
+    elif M > 12:
+      # If the month is greater than 12, we need to add the
+      # number of years to the year and adjust the month
+      Y = Y + (floor((M - 1) / 12))
+      M = ((M - 1) % 12) + 1
+      if M == 0:
+        M = 1
 
     if Y < 0:
         # If the year is negative, treat it as if we are in
@@ -67,8 +68,11 @@ def datenum(Y, M, D):
         # plus leap year corrections
         dn = dn + ceil(Y / 4)
     else:
-        d = dt(Y + 1, M, D, 0, 0, 0)
-        dn = d.toordinal()
+        # Adjust the year forwards by 1 to AD
+        # then by 3 to get the correct leap year calculate
+        # later compenating back by subtracting 3 years of non-leap years
+        d = dt(Y + 4, M, D, 0, 0, 0)
+        dn = d.toordinal() - (365*3)
 
     # turn adjustment (timedelta) in a number of days
     return dn + adjustment.days
