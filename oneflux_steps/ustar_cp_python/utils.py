@@ -815,7 +815,7 @@ def prctile(a, q):
     if np.size(a) == 0:
         return np.full_like(q, np.nan)
     a = np.percentile(np.asarray(a), q)
-    return matlabarray(a)
+    return a
 
 
 def dot(a, b):

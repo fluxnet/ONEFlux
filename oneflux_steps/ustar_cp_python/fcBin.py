@@ -1,5 +1,6 @@
 import numpy
-from oneflux_steps.ustar_cp_python.myprctile import myprctile
+#from oneflux_steps.ustar_cp_python.myprctile import myprctile
+from oneflux_steps.ustar_cp_python.utils import prctile
 
 def fcBin(x, y, dx, nPerBin):
     """
@@ -28,11 +29,15 @@ def fcBin(x, y, dx, nPerBin):
         nBins = int(numpy.floor(nYaN / nPerBin))
         mx = numpy.full(nBins, numpy.nan)
         my = numpy.full(nBins, numpy.nan)
-        iprctile = numpy.arange(0, 101, (100. / float(nBins)))
+        if nBins == 0:
+          # Avoid divide-by-zero
+          iprctile = numpy.array([0])
+        else:
+          iprctile = numpy.arange(0, 101, (100. / float(nBins)))
         # PRI - October 2019
         # replace numpy.percentile() with Python translation of MATLAB/Octave
         # prctile() and quantile() functions.
-        dx = myprctile(x[iYaN], iprctile)
+        dx = prctile(x[iYaN], iprctile)
         xL = dx[:-1]
         xU = dx[1:]
         jx = 0
