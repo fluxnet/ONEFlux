@@ -3,6 +3,7 @@ from .fcx2colvec import fcx2colvec
 from .fcx2rowvec import fcx2rowvec
 from .fcDatetick import fcDatetick
 from .fcDoy import fcDoy
+from .fcr2Calc import fcr2Calc
 from .cpdFmax2pCp3 import interpolate_FmaxCritical, cpdFmax2pCp3
 from .fcDatenum import datenum
 
