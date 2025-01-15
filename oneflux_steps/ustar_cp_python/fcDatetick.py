@@ -6,12 +6,34 @@ import matplotlib.pyplot as plt
 import datetime
 
 def fcDatetick(t, sFrequency, iDateStr, fLimits):
-    
-    # # mimic MATLAB's ability to handle scalar or vector inputs
-    # if (hasattr(t, "__len__") and len(t) > 0 and hasattr(t[0], "__len__")):
-    #     # Input is 2-Dimensional, so vectorise ourselves
-    #     return numpy.vectorize(fcDatetick)(t, sFrequency, iDateStr, fLimits)
-    
+    """
+    Generate date ticks for a plot based on the given time vector and frequency.
+
+    This function generates date ticks for a plot based on the provided time vector `t`,
+    the frequency `sFrequency`, the date string format `iDateStr`, and the plot limits `fLimits`.
+    It replicates some minimal behavior from the previous codebase for plotting purposes.
+
+    Parameters:
+    t (array-like): Time vector.
+    sFrequency (str): Frequency of the ticks. Possible values are "Dy", "14Dy", "Mo".
+    iDateStr (int): Date string format.
+    fLimits (float): Limits of the plot.
+
+    Returns:
+    None
+
+    Notes:
+    - This function is *not* used in the rest of the Python code.
+    - It is *not* thoroughly tested and only replicates some minimal behavior from the previous codebase for plotting.
+
+    Examples:
+    >>> t = list(range(0, 49))
+    >>> sFrequency = "Mo"
+    >>> iDateStr = 4
+    >>> fLimits = 1
+    >>> fcDatetick(t, sFrequency, iDateStr, fLimits)
+    """
+
     y, m, d, h, mn, s = fcDatevec(t)
     iYrs = unique(y)
     iSerMos = dot((y - 1), 12) + m
@@ -24,54 +46,6 @@ def fcDatetick(t, sFrequency, iDateStr, fLimits):
       case "Dy":
         xDates = t[::48]
 
-      case "2Dy":
-        iYr1 = floor(iSerMo1 / 12) + 1
-        iMo1 = mod(iSerMo1, 12)
-        
-        if iMo1 == 0:
-            iMo1 = 12        
-            iYr1 = iYr1 - 1
-      
-        for iDy in arange(1, 29, 2).reshape(-1):
-            xDates = [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
-
-      case "3Dy":
-        iYr1 = floor(iSerMo1 / 12) + 1
-        iMo1 = mod(iSerMo1, 12)
-        if iMo1 == 0:
-            iMo1 = 12
-            iYr1 = iYr1 - 1
-        for iDy in arange(1, 28, 3).reshape(-1):
-            xDates = [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
-          
-      case "5Dy":
-        iYr1 = floor(iSerMo1 / 12) + 1
-        iMo1 = mod(iSerMo1, 12)
-        if iMo1 == 0:
-            iMo1 = 12
-            iYr1 = iYr1 - 1
-        for iDy in arange(1, 26, 5).reshape(-1):
-            xDates = [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
-
-      case "7Dy":
-        iYr1 = floor(iSerMo1 / 12) + 1                   
-        iMo1 = mod(iSerMo1, 12)
-        if iMo1 == 0:
-            iMo1 = 12
-            iYr1 = iYr1 - 1
-        for iDy in arange(1, 22, 7).reshape(-1):
-            xDates = [ xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
-
-      case "10Dy":
-        iYr1 = floor(iSerMo1 / 12) + 1
-        iMo1 = mod(iSerMo1, 12)
-        if iMo1 == 0:
-            iMo1 = 12
-            iYr1 = iYr1 - 1
-        for iDy in arange(1, 21, 10).reshape(-1):
-            xDates = [ xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
-          
-        
       case "14Dy":
         iYr1 = floor(iSerMo1 / 12) + 1
         iMo1 = mod(iSerMo1, 12)
@@ -79,17 +53,7 @@ def fcDatetick(t, sFrequency, iDateStr, fLimits):
             iMo1 = 12
             iYr1 = iYr1 - 1
         for iDy in arange(1, 15, 14).reshape(-1):
-            xDates = [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]                                    
-
-
-      case "15Dy":
-        iYr1 = floor(iSerMo1 / 12) + 1
-        iMo1 = mod(iSerMo1, 12)
-        if iMo1 == 0:
-            iMo1 = 12
-            iYr1 = iYr1 - 1
-        for iDy in arange(1, 16, 15).reshape(-1):
-            xDates = [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
+            xDates = [datenum(iYr1, int(month), iDy) for month in arange(iMo1, (iMo1 + nSerMos))]
 
       case "Mo":
         iYr1 = floor(iSerMo1 / 12) + 1
@@ -106,44 +70,6 @@ def fcDatetick(t, sFrequency, iDateStr, fLimits):
         # # # 			datestr([min(t) max(t)])
         # # # 			pause;
                                   
-      case "2Mo":
-        iYr1 = floor(iSerMo1 / 12) + 1
-        iMo1 = mod(iSerMo1, 12)
-        if iMo1 == 0:
-            iMo1 = 12
-            iYr1 = iYr1 - 1
-        xDates = datenum(iYr1, arange(iMo1, (iMo1 + nSerMos), 2), 1)
-
-      case "3Mo":
-        iYr1 = floor(iSerMo1 / 12) + 1
-        iMo1 = mod(iSerMo1, 12)
-        if iMo1 == 0:
-            iMo1 = 12
-            iYr1 = iYr1 - 1
-        xDates = datenum(iYr1, arange(iMo1, (iMo1 + nSerMos), 3), 1)
-
-
-      case "4Mo":
-        iYr1 = floor(iSerMo1 / 12) + 1
-        iMo1 = mod(iSerMo1, 12)
-        if iMo1 == 0:
-            iMo1 = 12
-            iYr1 = iYr1 - 1
-        xDates = datenum(iYr1, arange(iMo1, (iMo1 + nSerMos), 4), 1)
-        
-      case "6Mo":                                              
-        iYr1 = floor(iSerMo1 / 12) + 1
-        iMo1 = mod(iSerMo1, 12)
-        if iMo1 == 0:
-            iMo1 = 12
-            iYr1 = iYr1 - 1
-        xDates = datenum(iYr1, arange(iMo1, (iMo1 + nSerMos), 6), 1)
-
-      case "Yr":
-        iYr1 = min(iYrs)
-        iYr2 = max(iYrs)
-        xDates = datenum(arange(iYr1, iYr2 + 1), 1, 1)
-
     xDates = unique(xDates)
 
     # Set current `x` access to have values given by xDates
@@ -162,7 +88,7 @@ def fcDatetick(t, sFrequency, iDateStr, fLimits):
         plt.gca().set_xticklabels(cDates)
 
     if fLimits == 1:
-        xlim(matlabarray([floor(min(xDates)), ceil(max(xDates))]))
+        xlim([floor(min(xDates)), ceil(max(xDates))])
         # Turn on the grid and box using matplotlib
         plt.grid("on")
         plt.box("on")
