@@ -28,6 +28,57 @@ import io
 import atexit
 import numpy as np
 from matlab.engine.matlabengine import MatlabFunc
+
+
+class MFWrapper:
+    def __init__(self, func):
+        self.func = func
+        self.out = io.StringIO()
+        self.err = io.StringIO()
+        name = func._name
+        # make matlab stdout and stderr printed at the end of pytest
+        atexit.register(lambda: (s := self.out.getvalue()) and print(f"{name} stdout:\n{s}"))
+        atexit.register(lambda: (s := self.err.getvalue()) and print(f"{name} stderr:\n{s}"))
+        
+    def __call__(self, *args, jsonencode=(), jsondecode=(), **kwargs):
+        """
+        Call the wrapped function with optional JSON encoding/decoding to handle the issue that non-scalar structs (arrays of structs) cannot be returned from MATLAB functions to Python.
+        Args:
+            *args: Positional arguments to pass to the wrapped function.
+            jsonencode (tuple, optional): Indices of output arguments to JSON encode (into string) before the matlab function returns.
+            jsondecode (tuple, optional): Indices of input arguments to JSON decode (from string) at the beginning of the matlab function.
+            **kwargs: Keyword arguments to pass to the wrapped function.
+        Returns:
+            The result of the wrapped function, with specified outputs JSON decoded if necessary.
+        """
+        args = list(args)
+        if jsonencode:
+            args.append(['jsonencode'] + [i+1 for i in jsonencode])
+        if jsondecode:
+            for i in jsondecode:
+                args[i] = json.dumps(args[i])
+            args.append(['jsondecode'] + [i+1 for i in jsondecode])
+        out = kwargs.pop('stdout', self.out)
+        err = kwargs.pop('stderr', self.err)
+        ret = self.func(*args, **kwargs, stdout=out, stderr=err)
+        if jsonencode:
+            nargout = kwargs.get('nargout', 1)
+            if nargout <= 1:
+                ret = [ret]
+            else:
+                ret = list(ret)
+            for j in jsonencode:
+                ret[j] = json.loads(ret[j], object_hook=none2nan)
+            if nargout <= 1:
+                ret = ret[0]
+        return ret
+
+def mf_factory(cls, *args, **kwargs):
+    f = object.__new__(MatlabFunc)
+    f.__init__(*args, **kwargs)
+    return MFWrapper(f)
+MatlabFunc.__new__ = mf_factory
+
 # from oneflux_steps.ustar_cp_py.libsmop import matlabarray, struct
 from abc import ABC, abstractmethod
 import warnings
@@ -36,6 +87,7 @@ import oneflux_steps.ustar_cp_python.utils
 
 # Python version imported here
 from oneflux_steps.ustar_cp_python import *
+from oneflux_steps.ustar_cp_python.cpdFmax2pCp3 import *
 from oneflux_steps.ustar_cp_python.utilities import *
 from oneflux_steps.ustar_cp_python.cpd_evaluate_functions import *
 
@@ -102,7 +154,7 @@ class PythonEngine(TestEngine):
             return all(self.equal(xi, yi) for xi, yi in zip(x, y))
         else:
             return x == y
-
+    
     def __getattribute__(self, name):
         if name in ["convert", "unconvert", "equal", "_repr_pretty_"]:
             return object.__getattribute__(self, name)
@@ -110,6 +162,9 @@ class PythonEngine(TestEngine):
         def newfunc(*args, **kwargs):
             try:
                 # Dynamically load modules based on the function name
+                # mod_path = f"oneflux_steps.ustar_cp_python.{name}"
+                # mod = __import__(mod_path, fromlist=[name])
+                # func = getattr(mod, name, None)
                 # if nargout is present in kwargs then remove it
                 if 'nargout' in kwargs:
                     kwargs.pop('nargout')
@@ -598,7 +653,7 @@ def none2nan(obj):
     if isinstance(obj, dict):
         return {k: none2nan(v) for k, v in obj.items()}
     elif hasattr(obj, 'size'):
-        return np.where(obj == None, np.nan, obj).tolist()
+        return np.where(obj is None, np.nan, obj).tolist()
     elif isinstance(obj, list):
         return [none2nan(v) for v in obj]
     elif obj is None:
