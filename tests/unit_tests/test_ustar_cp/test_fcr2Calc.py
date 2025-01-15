@@ -90,6 +90,7 @@ def test_r2_measure_properties_more(test_engine, data1):
   ([1, 2, 3], [1, 2, 4], 2.5),
   ([1, 2, 3], [1, 2, 5], 5.0),
   ([1, 2, 3], [1, 2, 6], 8.5),
+  ([3,-0.5,2,7], [2.5,0.0,2,8], 1.214132762312634),
   ([0.0,-10.0,20.0,2.0], [0.0,-10.0,22.0,0.0], 1.170940170940171),
 ])
 def test_r2_measure_properties(test_engine, data1, data2, expected):
