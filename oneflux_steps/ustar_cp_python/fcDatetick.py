@@ -18,7 +18,7 @@ def fcDatetick(t, sFrequency, iDateStr, fLimits):
     iSerMo1 = min(iSerMos)
     iSerMo2 = max(iSerMos)
     nSerMos = iSerMo2 - iSerMo1 + 1
-    xDates = matlabarray([])
+    xDates = np.array([])
 
     match (sFrequency):
       case "Dy":
@@ -89,17 +89,18 @@ def fcDatetick(t, sFrequency, iDateStr, fLimits):
             iMo1 = 12
             iYr1 = iYr1 - 1
         for iDy in arange(1, 16, 15).reshape(-1):
-            xDates = [xDates, mydatenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
+            xDates = [xDates, datenum(iYr1, arange(iMo1, (iMo1 + nSerMos)), iDy)]
 
       case "Mo":
         iYr1 = floor(iSerMo1 / 12) + 1
-        iMo1 = mod(iSerMo1, 12)
+        iMo1 = iSerMo1 % 12
         if iMo1 == 0:
             iMo1 = 12
             iYr1 = iYr1 - 1
-        xDates = mydatenum(
-            iYr1, arange(iMo1, (iMo1 + nSerMos)), 1
-        )
+        # define xDates as the array given my mapping over
+        # every month in arange(iMo1, (iMo1 + nSerMos)) 
+        # and applying `datenum(iYr1, month, 1)` to it
+        xDates = [datenum(iYr1, int(month), 1) for month in arange(iMo1, (iMo1 + nSerMos))]
         # oneflux_steps/ustar_cp_refactor_wip/fcDatetick.m:36
         # # # 			datestr(xDates)
         # # # 			datestr([min(t) max(t)])
