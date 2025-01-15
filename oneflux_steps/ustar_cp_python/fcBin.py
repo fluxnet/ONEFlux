@@ -1,7 +1,7 @@
 import numpy
-from myprctile import myprctile
+from oneflux_steps.ustar_cp_python.myprctile import myprctile
 
-def cpdBin(x, y, dx, nPerBin):
+def fcBin(x, y, dx, nPerBin):
     """
     cpdBin
     calculates binned mean values of vectors x and y
@@ -18,14 +18,14 @@ def cpdBin(x, y, dx, nPerBin):
     mx = []
     my = []
     if numpy.any(numpy.array(dx) <= 0):
-        print 'Function cpdBin aborted. dx cannot be <=0. '
+        print('Function cpdBin aborted. dx cannot be <=0. ')
         return nBins, mx, my
 
     if len(dx) == 0:
         # into bins with nPerBin points in each bin.
         iYaN = numpy.where(~numpy.isnan(x + y) == True)[0]
         nYaN = len(iYaN)
-        nBins = numpy.floor(nYaN / nPerBin).astype(numpy.int)
+        nBins = int(numpy.floor(nYaN / nPerBin))
         mx = numpy.full(nBins, numpy.nan)
         my = numpy.full(nBins, numpy.nan)
         iprctile = numpy.arange(0, 101, (100. / float(nBins)))
@@ -45,8 +45,8 @@ def cpdBin(x, y, dx, nPerBin):
     elif len(dx) == 1:
         nx = numpy.min(x)
         xx = numpy.max(x)
-        nx = dx*numpy.floor(nx / dx).astype(numpy.int)
-        xx = dx*numpy.ceil(xx / dx).astype(numpy.int)
+        nx = dx*int(numpy.floor(nx / dx))
+        xx = dx*int(numpy.ceil(xx / dx))
         mx = numpy.full(len(numpy.arange(nx, xx, dx)), numpy.nan)
         my = numpy.full(len(numpy.arange(nx, xx, dx)), numpy.nan)
         for jx in numpy.arange(nx, xx, dx):

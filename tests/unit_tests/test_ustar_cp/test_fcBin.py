@@ -209,8 +209,8 @@ def test_cpdBin_dx_sclar(test_engine, data):
                                          to_matlab_type(data["dx"]), data["nPerBin"],
                                         nargout=3)
     # Check the results
-    assert compare_matlab_arrays(mx, to_matlab_type(data["mx"]))
-    assert compare_matlab_arrays(my, to_matlab_type(data["my"]))
+    assert test_engine.equal(mx, test_engine.convert(data["mx"]))
+    assert test_engine.equal(my, test_engine.convert(data["my"]))
     assert nBins == data["nBins"]
 
 # Lastly test against site-specific data
@@ -246,6 +246,6 @@ def test_cpdBin_sitedata(test_engine):
                                       input_data["dx"], input_data["nPerBin"],
                                       nargout=3)
 
-        assert compare_matlab_arrays(mx, output_data["mx"])
-        assert compare_matlab_arrays(my, output_data["my"])
-        assert compare_matlab_arrays(nBins, output_data["nBins"])
+        assert test_engine.equal(mx, test_engine.convert(output_data["mx"]))
+        assert test_engine.equal(my, test_engine.convert(output_data["my"]))
+        assert test_engine.equal(nBins, test_engine.convert(output_data["nBins"]))
