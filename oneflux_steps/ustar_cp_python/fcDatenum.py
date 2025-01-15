@@ -1,8 +1,9 @@
 from datetime import datetime as dt
 from datetime import timedelta as td
-from math import ceil
+from math import ceil, floor
+from numpy import vectorize
 
-def mydatenum(Y, M, D):
+def datenum(Y, M, D):
     """
     Convert date to serial date number.
 
@@ -25,13 +26,21 @@ def mydatenum(Y, M, D):
     - Negative years are treated as if they are in the year 1 AD, with adjustments for leap years.
 
     Examples:
-    >>> mydatenum(2023, 10, 5)
+    >>> datenum(2023, 10, 5)
     739164
-    >>> mydatenum(0, 3, 1)
+    >>> datenum(0, 3, 1)
     61
-    >>> mydatenum(-1, 12, 31)
+    >>> datenum(-1, 12, 31)
     0
+    >>> datenum(0,24,31)
+    731
+    >>> datenum(1,24,31)
+    1096
     """
+    # mimic MATLAB's ability to handle scalar or vector inputs
+    if (hasattr(Y, "__len__") and len(Y) > 0 and hasattr(Y[0], "__len__")):
+        # Input is 2-Dimensional, so vectorise ourselves
+        return vectorize(datenum)(Y,M,D)
 
     adjustment = td()
     # A zero day means we need to subtract one day

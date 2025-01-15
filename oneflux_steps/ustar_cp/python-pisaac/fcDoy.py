@@ -1,6 +1,6 @@
 import numpy
 from fcDatevec import mydatevec
-from fcDatenum import mydatenum
+from fcDatenum import datenum
 
 def mydoy(t):
     """
@@ -21,6 +21,6 @@ def mydoy(t):
     yr0 = 2000
     Y, M, D, h, m, s = mydatevec(t)
     Y = Y + yr0
-    tt = mydatenum(int(Y), int(M), int(D), 0, 0, 0)
-    d = numpy.floor(tt - mydatenum(int(Y) - 1, 12, 31, 0, 0, 0))
+    tt = datenum(int(Y), int(M), int(D), 0, 0, 0)
+    d = numpy.floor(tt - datenum(int(Y) - 1, 12, 31, 0, 0, 0))
     return d

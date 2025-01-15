@@ -87,6 +87,7 @@ import oneflux_steps.ustar_cp_python.utils
 
 # Python version imported here
 from oneflux_steps.ustar_cp_python import *
+from oneflux_steps.ustar_cp_python.fcDatenum import *
 from oneflux_steps.ustar_cp_python.cpdFmax2pCp3 import *
 from oneflux_steps.ustar_cp_python.utilities import *
 from oneflux_steps.ustar_cp_python.cpd_evaluate_functions import *
