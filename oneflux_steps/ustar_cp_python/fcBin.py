@@ -22,7 +22,8 @@ def fcBin(x, y, dx, nPerBin):
         print('Function cpdBin aborted. dx cannot be <=0. ')
         return nBins, mx, my
 
-    if len(dx) == 0:
+    # dx is an empty vector
+    if hasattr(dx, "__len__") and (len(dx) == 0):
         # into bins with nPerBin points in each bin.
         iYaN = numpy.where(~numpy.isnan(x + y) == True)[0]
         nYaN = len(iYaN)
@@ -47,7 +48,9 @@ def fcBin(x, y, dx, nPerBin):
                 mx[jx] = numpy.mean(x[ix])
                 my[jx] = numpy.mean(y[ix])
                 jx = jx + 1
-    elif len(dx) == 1:
+
+    # dx is a scalar (or single element vector)
+    elif (not(hasattr(dx, "__len__"))) or (hasattr(dx, "__len__") and (len(dx) == 1)):
         nx = numpy.min(x)
         xx = numpy.max(x)
         nx = dx*int(numpy.floor(nx / dx))
@@ -60,6 +63,8 @@ def fcBin(x, y, dx, nPerBin):
                 mx[nBins] = numpy.mean(x[ix])
                 my[nBins] = numpy.mean(y[ix])
                 nBins = nBins + 1
+    
+    # dx is a vector (with more than one element)
     else:
         xL = dx[:-1]
         xU = dx[1:]
@@ -71,4 +76,4 @@ def fcBin(x, y, dx, nPerBin):
                 mx[nBins] = numpy.mean(x[ix])
                 my[nBins] = numpy.mean(y[ix])
                 nBins = nBins + 1
-    return nBins, mx, my
+    return nBins, mx.reshape(-1, 1), my.reshape(-1, 1)
