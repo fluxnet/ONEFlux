@@ -30,8 +30,8 @@ def test_singleton_bins_1D_data(data, scale, translate, test_engine):
     data2 = [scale * item + translate for item in data]
 
     # Use `fcBin`
-    nBins, mx, my  = test_engine.fcBin(to_matlab_type(data1), to_matlab_type(data2),
-                                         to_matlab_type([]), 1.0, nargout=3)
+    nBins, mx, my  = test_engine.fcBin(test_engine.convert(data1), test_engine.convert(data2),
+                                         test_engine.convert([]), 1.0, nargout=3)
 
     # Number of bins is the length of the data
     # minus the number of NaNs in combined data
