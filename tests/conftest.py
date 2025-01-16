@@ -132,7 +132,8 @@ class PythonEngine(TestEngine):
         if x is None:
             raise ValueError("Input cannot be None")
         if isinstance(x, list):
-            return np.asarray(x)
+            # Transpose to capture MATLAB data structure
+            return np.asarray(x).transpose()
         elif isinstance(x, tuple):
             return tuple([self.convert(xi) for xi in x])
         else:
