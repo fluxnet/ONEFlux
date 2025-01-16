@@ -88,6 +88,7 @@ import oneflux_steps.ustar_cp_python.utils
 
 # Python version imported here
 from oneflux_steps.ustar_cp_python import *
+from oneflux_steps.ustar_cp_python.fcNaniqr import *
 
 def pytest_addoption(parser):
     parser.addoption("--language", action="store", default="matlab")
