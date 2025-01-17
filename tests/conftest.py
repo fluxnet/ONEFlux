@@ -29,6 +29,7 @@ import atexit
 import numpy as np
 from matlab.engine.matlabengine import MatlabFunc
 
+from oneflux_steps.ustar_cp_python.utils import transpose
 
 class MFWrapper:
     def __init__(self, func):
@@ -132,11 +133,14 @@ class PythonEngine(TestEngine):
         if x is None:
             raise ValueError("Input cannot be None")
         if isinstance(x, list):
-            # Transpose to capture MATLAB data structure
+            # Transpose to capture MATLAB data layout
+            # when the data has been serialised from MATLAB
+            # to a file
             if fromFile:
-                return np.array(x).T
+              return transpose(np.array(x))
             else:
-                return np.asarray(x)
+              return np.array(x)
+              
         elif isinstance(x, tuple):
             return tuple([self.convert(xi) for xi in x])
         else:

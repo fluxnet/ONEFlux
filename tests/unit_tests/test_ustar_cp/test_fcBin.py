@@ -269,7 +269,7 @@ def test_cpdBin_sitedata(test_engine):
           # check if the file is zero bytes or not
           if os.path.getsize(path_to_data) != 0:
             column = pd.read_csv(path_to_data, header=None).iloc[:,:].to_numpy()
-            output_data[name] = test_engine.convert(column.tolist(), fromFile=True)
+            output_data[name] = test_engine.convert(column.tolist())
           else:
             output_data[name] = test_engine.convert([])
 
@@ -279,6 +279,6 @@ def test_cpdBin_sitedata(test_engine):
                                         , input_data["dx"]
                                         , input_data["nPerBin"], nargout=3)
 
-        assert test_engine.equal(mx, test_engine.convert(output_data["mx"]))
-        assert test_engine.equal(my, test_engine.convert(output_data["my"]))
-        assert test_engine.equal(nBins, test_engine.convert(output_data["nBins"]))
+        assert test_engine.equal(mx, output_data["mx"]), f"mx for {site_year}"
+        assert test_engine.equal(my, output_data["my"]), f"my for {site_year}"
+        assert test_engine.equal(nBins, output_data["nBins"]), f"nBins for {site_year}"

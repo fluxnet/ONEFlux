@@ -77,7 +77,7 @@ def transpose(a):
 
     """
     if np.ndim(a) == 2:
-        return a.T
+        return a.transpose()
     elif np.ndim(a) == 1:
         return a.reshape(-1, 1)
     else:

@@ -148,4 +148,4 @@ def fcBin(x, y, dx, nPerBin):
       mx = mx[:-shrinkFactor]
       my = my[:-shrinkFactor]
 
-    return nBins, transpose(mx), transpose(my) # mx.reshape(-1, 1), my.reshape(-1, 1)
+    return nBins, transpose(mx), transpose(my)
