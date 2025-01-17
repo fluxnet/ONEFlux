@@ -7,13 +7,21 @@
 import pytest
 import numpy as np
 import pandas as pd
-import matlab.engine
 from tests.conftest import compare_matlab_arrays, to_matlab_type, process_std_out, compare_text_blocks
 
 from hypothesis import given, settings, HealthCheck
 from hypothesis.strategies import floats, lists, integers
+
 import os
 
+maxFloatSize = 1e6
+
+def avoidOverflows(data):
+  if (np.max(data) > maxFloatSize) or (np.min(data) < -maxFloatSize):
+    return [item / maxFloatSize for item in data]
+  else:
+    return data
+  
 # Hypothesis tests for fcBin
 @given(data=lists(floats(allow_nan=True, allow_infinity=False), min_size=2),
        scale=floats(allow_infinity=False),
@@ -29,10 +37,9 @@ def test_singleton_bins_1D_data(data, scale, translate, test_engine):
     data1 = data
     data2 = [scale * item + translate for item in data]
 
-    if np.max(data1) > 1e5:
-      data1 = [item / 1e5 for item in data1]
-    if np.max(data2) > 1e5:
-      data2 = [item / 1e5 for item in data2]
+    # If data is very big, scale it down to avoid overflows in the tests
+    data1 = avoidOverflows(data1)
+    data2 = avoidOverflows(data2)
 
     # Use `fcBin`
     nBins, mx, my  = test_engine.fcBin(test_engine.convert(data1), test_engine.convert(data2),
@@ -75,15 +82,15 @@ def test_singleton_bins_2D_data(data, scale, row, translate, test_engine):
     # Turn data into a 2D array with row length given by `row`
     data = np.array(data).reshape(-1, row)
 
-    # If data is very big scale it down
-    if np.max(data) > 1e10:
-      scale = scale / 1e10
-      translate = translate / 1e10
 
     # Use the initial data to generate two vectors worth of data
     # based on some scaling and translation to get data2
     data1 = data
     data2 = [[scale * item + translate for item in row] for row in data]
+
+    # If data is very big, scale it down to avoid overflows in the tests
+    data1 = avoidOverflows(data1)
+    data2 = avoidOverflows(data2)
 
     # Use `fcBin`
     print("data1 = " + str(data1))
@@ -252,7 +259,7 @@ def test_cpdBin_sitedata(test_engine):
           # check if the file is zero bytes or not
           if os.path.getsize(path_to_data) != 0:
             column = pd.read_csv(path_to_data, header=None).iloc[:,:].to_numpy()
-            input_data[name] = test_engine.convert(column.tolist())
+            input_data[name] = test_engine.convert(column.tolist(), fromFile=True)
           else:
             input_data[name] = test_engine.convert([])
 
@@ -262,7 +269,7 @@ def test_cpdBin_sitedata(test_engine):
           # check if the file is zero bytes or not
           if os.path.getsize(path_to_data) != 0:
             column = pd.read_csv(path_to_data, header=None).iloc[:,:].to_numpy()
-            output_data[name] = test_engine.convert(column.tolist())
+            output_data[name] = test_engine.convert(column.tolist(), fromFile=True)
           else:
             output_data[name] = test_engine.convert([])
 

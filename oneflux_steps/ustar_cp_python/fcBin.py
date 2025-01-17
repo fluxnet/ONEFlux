@@ -1,7 +1,6 @@
 import numpy as np
 #from oneflux_steps.ustar_cp_python.myprctile import myprctile
-from oneflux_steps.ustar_cp_python.utils import prctile
-
+from oneflux_steps.ustar_cp_python.utils import prctile, transpose
 
 def allNonPositive(dx):
     """
@@ -88,8 +87,8 @@ def fcBin(x, y, dx, nPerBin):
             else:
                 shrinkFactor += 1
 
-    # dx is a scalar (or single element vector)
-    elif (not(hasattr(dx, "__len__"))) or (hasattr(dx, "__len__") and (len(dx) == 1)):
+    # dx is a scalar (or single element vector, and not a 2D matrix)
+    elif (not(hasattr(dx, "__len__"))) or (hasattr(dx, "__len__") and (len(dx) == 1) and not(hasattr(dx[0], "__len__"))):
 
         # Find the lower and upper bounds with x
         nx = np.min(x, 0)
@@ -149,4 +148,4 @@ def fcBin(x, y, dx, nPerBin):
       mx = mx[:-shrinkFactor]
       my = my[:-shrinkFactor]
 
-    return nBins, mx.reshape(-1, 1), my.reshape(-1, 1)
+    return nBins, transpose(mx), transpose(my) # mx.reshape(-1, 1), my.reshape(-1, 1)
