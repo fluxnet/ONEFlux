@@ -30,8 +30,8 @@ CC := gcc -O3
 # create directory command
 MKDIR = mkdir -p
 
-# copy file command (verbose, keep file metadata)
-COPY = cp -av
+# copy file command (verbose)
+COPY = cp -v
 
 SRCDIR := $(shell pwd)/
 TGTDIR := ${HOME}/bin/oneflux/
