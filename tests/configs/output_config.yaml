@@ -1,0 +1,12 @@
+01_qc_visual: {}
+run:
+  configfile: ./tests/configs/config.yaml
+  era_fy: 1989
+  era_ly: 2021
+  mcr: dummy_mcrdir/MATLAB_Runtime/v94
+  sitedir: dummy_sitedir
+  siteid: dummy_siteid
+  ts: 20221207T101625
+  versiond: beta
+  versionp: 5
+steps: {}

@@ -1,0 +1,185 @@
+run:
+  command:
+    metavar: COMMAND
+    help: ONEFlux command to be run
+    type: str
+    choices: ['partition_nt', 'partition_dt', 'all']
+  datadir:
+    metavar: DATA-DIR
+    help: Absolute path to general data directory
+    type: str
+  siteid:
+    metavar: SITE-ID
+    help: Site Flux ID in the form CC-XXX
+    type: str
+  sitedir:
+    metavar: SITE-DIR
+    help: Relative path to site data directory (within data-dir)
+    type: str
+  firstyear:
+    metavar: FIRST-YEAR
+    help: First year of data to be processed
+    type: int
+  lastyear:
+    metavar: LAST-YEAR
+    help: Last year of data to be processed
+    type: int
+  perc:
+    metavar: PERC
+    help: List of percentiles to be processed
+    dest: perc
+    type: str
+    choices: oneflux.tools.partition_nt:PERC_TO_COMPARE
+    action: append
+    nargs: '*'
+  prod:
+    metavar: PROD
+    help: List of products to be processed
+    dest: prod
+    type: str
+    choices: oneflux.tools.partition_nt:PROD_TO_COMPARE
+    action: append
+    nargs: '*'
+  logfile:
+    help: Logging file path
+    type: str
+    dest: logfile
+  force_py:
+    help: Force execution of PY partitioning (saves original output, generates new)
+    action: store_true
+    dest: forcepy
+  mcr:
+    help: Path to MCR directory
+    type: str
+    dest: mcr_directory
+  ts:
+    help: Timestamp to be used in processing IDs
+    type: str
+    dest: timestamp
+  recint:
+    help: Record interval for site
+    type: str
+    choices: ['hh', 'hr']
+    dest: recint
+  versionp:
+    help: Version of processing (hardcoded default)
+    type: str
+    dest: versionp
+  versiond:
+    help: Version of data (hardcoded default)
+    type: str
+    dest: versiond
+  era_fy:
+    help: ERA first year of data
+    type: int
+    dest: erafy
+  era_ly:
+    help: ERA last year of data
+    type: int
+    dest: eraly
+  configfile:
+    help: Path to config file
+    type: str
+    dest: configfile
+
+steps:
+  qc_auto_execute:
+    help: enable qc auto execution
+    type: bool
+  ustar_mp_execute:
+    help: enable ustar mp execution
+    type: bool
+  ustar_cp_execute:
+    help: enable ustar cp execution
+    type: bool
+  meteo_proc_execute:
+    help: enable meteo proc execution
+    type: bool
+  nee_proc_execute:
+    help: enable nee proc execution
+    type: bool
+  energy_proc_execute:
+    help: enable energy proc execution
+    type: bool
+  nee_partition_nt_execute:
+    help: enable nee partition nt execution
+    type: bool
+  nee_partition_dt_execute:
+    help: enable nee partition dt execution
+    type: bool
+  prepare_ure_execute:
+    help: enable prepare ure execution
+    type: bool
+  ure_execute:
+    help: enable ure execution
+    type: bool
+  fluxnet2015_execute:
+    help: enable qc auto execution
+    type: bool
+  fluxnet2015_site_plots:
+    help: enable fluxnet2015 site plots
+    type: bool
+  simulation:
+    help: enable simulation
+    type: bool
+
+01_qc_visual:
+  dummy-step-1:
+    help: dummy-step-1
+    type: str
+
+02_qc_auto:
+  dummy-step-2:
+    help: dummy-step-2
+    type: str
+
+04_ustar_mp:
+  dummy-step-4:
+    help: dummy-step-4
+    type: str
+
+05_ustar_cp:
+  dummy-step-5:
+    help: dummy-step-5
+    type: str
+
+06_meteo_era:
+  dummy-step-6:
+    help: dummy-step-6
+    type: str
+
+07_meteo_proc:
+  dummy-step-7:
+    help: dummy-step-7
+    type: str
+
+08_nee_proc:
+  dummy-step-8:
+    help: dummy-step-8
+    type: str
+
+09_energy_proc:
+  dummy-step-9:
+    help: dummy-step-9
+    type: str
+
+10_nee_partition_nt:
+  dummy-step-10:
+    help: dummy-step-10
+    type: str
+
+11_nee_partition_dt:
+  dummy-step-11:
+    help: dummy-step-11
+    type: str
+
+12_ure:
+  dummy-step-12:
+    help: dummy-step-12
+    type: str
+
+99_fluxnet2015:
+  dummy-step-99:
+    help: dummy-step-99
+    type: str
+
