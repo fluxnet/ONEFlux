@@ -4,8 +4,14 @@ def myprctile(Y, q):
     """
     Stripped down version of Octave prctile.m
     """
-    Q = myquantile(Y, q/float(100))
-    return Q
+    # If Y is empty, return NaNs for size of q
+    if numpy.size(Y) == 0:
+      return numpy.full_like(q, numpy.nan)
+    else:        
+      Q = myquantile(Y, q/float(100))
+      # Finally round all the results to 6 dp
+      Q = numpy.round(Q, 7)
+      return Q
 
 def myquantile(x, p, method=5):
     """

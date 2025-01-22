@@ -65,7 +65,7 @@ def transpose(a):
      transpose gives us back a row-vector (but as a matrix), thus
      this operation is not an involution.
 
-     >>> transpose(np.array([[1,2],[3,4]]))
+    >>> transpose(np.array([[1,2],[3,4]]))
     array([[1, 3],
           [2, 4]])
     >>> transpose(np.array([1,2,3]))
@@ -77,11 +77,19 @@ def transpose(a):
 
     """
     if np.ndim(a) == 2:
+        # if we have a tuple then
+        # we have to convert it to a list
+        # because tuples are immutable
+        if isinstance(a, tuple):
+            a = np.asarray(list(a))
+
         return a.transpose()
     elif np.ndim(a) == 1:
         return a.reshape(-1, 1)
+    elif np.ndim(a) == 0:
+        return a
     else:
-        error("Transpose is not defined for arrays of dimension greater than 2.")
+        error("Transpose is not defined for arrays of dimension greater than 2, but given data of dimension " + str(np.ndim(a)))
     
 
 def function(f):

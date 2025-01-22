@@ -1,6 +1,6 @@
 import numpy as np
-#from oneflux_steps.ustar_cp_python.myprctile import myprctile
-from oneflux_steps.ustar_cp_python.utils import prctile, transpose
+from oneflux_steps.ustar_cp_python.myprctile import myprctile
+from oneflux_steps.ustar_cp_python.utils import transpose
 
 def allNonPositive(dx):
     """
@@ -30,8 +30,8 @@ def fcBin(x, y, dx, nPerBin):
     into bins with nPerBin points in each bin.
     """
     nBins = 0
-    mx = []
-    my = []
+    mx = np.array([])
+    my = np.array([])
 
     shrinkFactor = 0 # Used to resize the bins at the end
 
@@ -45,8 +45,9 @@ def fcBin(x, y, dx, nPerBin):
 
         # Positions of `x` and `y` where neither is NaN
         # and the number of such positions
-        iYaN = np.where(~np.isnan(x + y) == True)[0]
-        nYaN = len(iYaN)
+        iYaN = np.where(~np.isnan(x + y))
+        nYaN = len(x[iYaN])
+        
 
         # Number of bins we need is then the non-values / number of points per bin
         nBins = int(np.floor(nYaN / nPerBin))
@@ -66,7 +67,8 @@ def fcBin(x, y, dx, nPerBin):
           iprctile = np.clip(iprctile, 0, 100)
 
         # Calculate the `x` value at the top of percentile per bin
-        dx = prctile(x[iYaN], iprctile)
+        dx = myprctile(x[iYaN], iprctile)
+
 
         # xL has all but last point
         # xU has all but first point

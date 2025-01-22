@@ -137,9 +137,9 @@ class PythonEngine(TestEngine):
             # when the data has been serialised from MATLAB
             # to a file
             if fromFile:
-              return transpose(np.array(x))
+              return transpose(np.array(x).astype(np.float64))
             else:
-              return np.array(x)
+              return np.array(x).astype(np.float64)
               
         elif isinstance(x, tuple):
             return tuple([self.convert(xi) for xi in x])
@@ -162,7 +162,7 @@ class PythonEngine(TestEngine):
             return all(self.equal(xi, yi) for xi, yi in zip(x, y))
         else:
             return x == y
-    
+
     def __getattribute__(self, name):
         if name in ["convert", "unconvert", "equal", "_repr_pretty_"]:
             return object.__getattribute__(self, name)
