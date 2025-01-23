@@ -1475,6 +1475,11 @@ ROW_NIGHT *compute_nights(DATASET *const dataset,
 	for ( row = 0; row < dataset->rows_count; row += rows_per_day ) {
 		/* loop on each var to compute */
 		for ( y = 0; y < NIGHT_RAND_VALUES; y++ ) {
+			/* do not compute _y if it was skipped */
+			if ( ! nee_matrix_y &&
+					((NEE_REF_Y == y) || (NEE_UST50_Y == y) || (NEE_REF_Y_RAND == y) || (NEE_UST50_Y_RAND)) ) {
+				continue;
+			}
 			/* do not compute _c if years count is less than 3 */
 			if ( (dataset->years_count < 3) &&
 					((NEE_REF_C == y) || (NEE_UST50_C == y) || (NEE_REF_C_RAND == y) || (NEE_UST50_C_RAND == y)) ) {
@@ -1931,7 +1936,7 @@ static int compute_night_rand(const DATASET *const dataset, ROW_NIGHT *const row
 }
 
 /* */
-static void rand_unc_dd(RAND_UNC_ROW *const unc_rows, RAND_UNC_ROW *const unc_rows_aggr, const int rows_count, const int years_count, const int hourly) {
+static void rand_unc_dd(RAND_UNC_ROW *const unc_rows, RAND_UNC_ROW *const unc_rows_aggr, const int rows_count, const int years_count, const int hourly, const int skip_y) {
 	int i;
 	int j;
 	int day;
@@ -1944,10 +1949,12 @@ static void rand_unc_dd(RAND_UNC_ROW *const unc_rows, RAND_UNC_ROW *const unc_ro
 	/* loop on each row */
 	day = 0;
 	for ( i = 0; i < rows_count; i += rows_per_day ) {
-		unc_rows_aggr[day].rand[NEE_REF_Y_UNC] = 0.0;
-		unc_rows_aggr[day].rand[NEE_UST50_Y_UNC] = 0.0;
-		unc_rows_aggr[day].samples_count[NEE_REF_Y_UNC] = 0;
-		unc_rows_aggr[day].samples_count[NEE_UST50_Y_UNC] = 0;
+		if ( ! skip_y ) {
+			unc_rows_aggr[day].rand[NEE_REF_Y_UNC] = 0.0;
+			unc_rows_aggr[day].rand[NEE_UST50_Y_UNC] = 0.0;
+			unc_rows_aggr[day].samples_count[NEE_REF_Y_UNC] = 0;
+			unc_rows_aggr[day].samples_count[NEE_UST50_Y_UNC] = 0;
+		}
 		if ( years_count > 2 ) {
 			unc_rows_aggr[day].rand[NEE_REF_C_UNC] = 0.0;
 			unc_rows_aggr[day].rand[NEE_UST50_C_UNC] = 0.0;
@@ -1955,13 +1962,15 @@ static void rand_unc_dd(RAND_UNC_ROW *const unc_rows, RAND_UNC_ROW *const unc_ro
 			unc_rows_aggr[day].samples_count[NEE_UST50_C_UNC] = 0;
 		}
 		for ( j = 0; j < rows_per_day; j++ ) {
-			if ( !IS_INVALID_VALUE(unc_rows[i+j].rand[NEE_REF_Y_UNC]) ) {
-				unc_rows_aggr[day].rand[NEE_REF_Y_UNC] += (unc_rows[i+j].rand[NEE_REF_Y_UNC] * unc_rows[i+j].rand[NEE_REF_Y_UNC]);
-				++unc_rows_aggr[day].samples_count[NEE_REF_Y_UNC];
-			}
-			if ( !IS_INVALID_VALUE(unc_rows[i+j].rand[NEE_UST50_Y_UNC]) ) {
-				unc_rows_aggr[day].rand[NEE_UST50_Y_UNC] += (unc_rows[i+j].rand[NEE_UST50_Y_UNC] * unc_rows[i+j].rand[NEE_UST50_Y_UNC]);
-				++unc_rows_aggr[day].samples_count[NEE_UST50_Y_UNC];
+			if ( ! skip_y ) {
+				if ( !IS_INVALID_VALUE(unc_rows[i+j].rand[NEE_REF_Y_UNC]) ) {
+					unc_rows_aggr[day].rand[NEE_REF_Y_UNC] += (unc_rows[i+j].rand[NEE_REF_Y_UNC] * unc_rows[i+j].rand[NEE_REF_Y_UNC]);
+					++unc_rows_aggr[day].samples_count[NEE_REF_Y_UNC];
+				}
+				if ( !IS_INVALID_VALUE(unc_rows[i+j].rand[NEE_UST50_Y_UNC]) ) {
+					unc_rows_aggr[day].rand[NEE_UST50_Y_UNC] += (unc_rows[i+j].rand[NEE_UST50_Y_UNC] * unc_rows[i+j].rand[NEE_UST50_Y_UNC]);
+					++unc_rows_aggr[day].samples_count[NEE_UST50_Y_UNC];
+				}
 			}
 			if ( years_count > 2 ) {
 				if ( !IS_INVALID_VALUE(unc_rows[i+j].rand[NEE_REF_C_UNC]) ) {
@@ -1974,20 +1983,21 @@ static void rand_unc_dd(RAND_UNC_ROW *const unc_rows, RAND_UNC_ROW *const unc_ro
 				}
 			}
 		}
-		if ( unc_rows_aggr[day].samples_count[NEE_REF_Y_UNC] ) {
-			unc_rows_aggr[day].rand[NEE_REF_Y_UNC] = SQRT(unc_rows_aggr[day].rand[NEE_REF_Y_UNC]) / unc_rows_aggr[day].samples_count[NEE_REF_Y_UNC];
-			unc_rows_aggr[day].rand[NEE_REF_Y_UNC] *= CO2TOC;
-		} else {
-			unc_rows_aggr[day].rand[NEE_REF_Y_UNC] = INVALID_VALUE;
-		}
+		if ( ! skip_y ) {
+			if ( unc_rows_aggr[day].samples_count[NEE_REF_Y_UNC] ) {
+				unc_rows_aggr[day].rand[NEE_REF_Y_UNC] = SQRT(unc_rows_aggr[day].rand[NEE_REF_Y_UNC]) / unc_rows_aggr[day].samples_count[NEE_REF_Y_UNC];
+				unc_rows_aggr[day].rand[NEE_REF_Y_UNC] *= CO2TOC;
+			} else {
+				unc_rows_aggr[day].rand[NEE_REF_Y_UNC] = INVALID_VALUE;
+			}
 
-		if ( unc_rows_aggr[day].samples_count[NEE_UST50_Y_UNC] ) {
-			unc_rows_aggr[day].rand[NEE_UST50_Y_UNC] = SQRT(unc_rows_aggr[day].rand[NEE_UST50_Y_UNC]) / unc_rows_aggr[day].samples_count[NEE_UST50_Y_UNC];
-			unc_rows_aggr[day].rand[NEE_UST50_Y_UNC] *= CO2TOC;
-		} else {
-			unc_rows_aggr[day].rand[NEE_UST50_Y_UNC] = INVALID_VALUE;
+			if ( unc_rows_aggr[day].samples_count[NEE_UST50_Y_UNC] ) {
+				unc_rows_aggr[day].rand[NEE_UST50_Y_UNC] = SQRT(unc_rows_aggr[day].rand[NEE_UST50_Y_UNC]) / unc_rows_aggr[day].samples_count[NEE_UST50_Y_UNC];
+				unc_rows_aggr[day].rand[NEE_UST50_Y_UNC] *= CO2TOC;
+			} else {
+				unc_rows_aggr[day].rand[NEE_UST50_Y_UNC] = INVALID_VALUE;
+			}
 		}
-
 		if ( years_count > 2 ) {
 			if ( unc_rows_aggr[day].samples_count[NEE_REF_C_UNC] ) {
 				unc_rows_aggr[day].rand[NEE_REF_C_UNC] = SQRT(unc_rows_aggr[day].rand[NEE_REF_C_UNC]) / unc_rows_aggr[day].samples_count[NEE_REF_C_UNC];
@@ -2360,16 +2370,20 @@ int save_info(const DATASET *const dataset, const char *const path, const eTimeR
 	if ( dataset->years_count >= 3 ) {
 		/* u* threshold used */
 		fprintf(f, ustar_threshold_c, percentiles_c[PERCENTILES_COUNT_2-1]);
-		for ( i = 0; i < dataset->years_count; i++ ) {
-			fprintf(f, ustar_threshold_y, dataset->years[i].year, percentiles_y[i].value[PERCENTILES_COUNT_2-1]);
+		if ( percentiles_y ) {
+			for ( i = 0; i < dataset->years_count; i++ ) {
+				fprintf(f, ustar_threshold_y, dataset->years[i].year, percentiles_y[i].value[PERCENTILES_COUNT_2-1]);
+			}
 		}
 		/* model efficiency */
 		fputs(info_model_efficiency, f);
 		fprintf(f, model_efficiency_c, percentiles_test_2[ref_c], percentiles_c[ref_c]);
-		for ( i = 0; i < dataset->years_count; i++ ) {
-			fprintf(f, model_efficiency_y, dataset->years[i].year, percentiles_test_2[ref_y], percentiles_y[i].value[ref_y]);
+		if ( percentiles_y ) {
+			for ( i = 0; i < dataset->years_count; i++ ) {
+				fprintf(f, model_efficiency_y, dataset->years[i].year, percentiles_test_2[ref_y], percentiles_y[i].value[ref_y]);
+			}
 		}
-	} else {
+	} else if ( percentiles_y ) {
 		/* u* threshold used */
 		fprintf(f, ustar_threshold_y_one_year, percentiles_y[0].value[PERCENTILES_COUNT_2-1]);
 		/* model efficiency */
@@ -3117,11 +3131,13 @@ static int compute_rand_unc(const DATASET *const dataset
 		unc_rows[i].rand[NEE_REF_C_UNC] = INVALID_VALUE;
 		unc_rows[i].rand[NEE_UST50_C_UNC] = INVALID_VALUE;
 
-		unc_rows[i].value[NEE_REF_Y_UNC] = nee_matrix_y[i].nee[ref_y];
-		unc_rows[i].qc[NEE_REF_Y_UNC] = nee_matrix_y[i].qc[ref_y];
+		if ( nee_matrix_y ) {
+			unc_rows[i].value[NEE_REF_Y_UNC] = nee_matrix_y[i].nee[ref_y];
+			unc_rows[i].qc[NEE_REF_Y_UNC] = nee_matrix_y[i].qc[ref_y];
 
-		unc_rows[i].value[NEE_UST50_Y_UNC] = nee_matrix_y[i].nee[PERCENTILES_COUNT_2-1];
-		unc_rows[i].qc[NEE_UST50_Y_UNC] = nee_matrix_y[i].qc[PERCENTILES_COUNT_2-1];
+			unc_rows[i].value[NEE_UST50_Y_UNC] = nee_matrix_y[i].nee[PERCENTILES_COUNT_2-1];
+			unc_rows[i].qc[NEE_UST50_Y_UNC] = nee_matrix_y[i].qc[PERCENTILES_COUNT_2-1];
+		}
 
 		if ( dataset->years_count >= 3 ) {
 			unc_rows[i].value[NEE_REF_C_UNC] = nee_matrix_c[i].nee[ref_c];
@@ -3132,8 +3148,10 @@ static int compute_rand_unc(const DATASET *const dataset
 		}
 
 		/* update mask */
-		if ( !IS_INVALID_VALUE(unc_rows[i].value[NEE_REF_Y_UNC]) ) {
-			unc_rows[i].mask |= GF_TOFILL_VALID;
+		if ( nee_matrix_y ) {
+			if ( !IS_INVALID_VALUE(unc_rows[i].value[NEE_REF_Y_UNC]) ) {
+				unc_rows[i].mask |= GF_TOFILL_VALID;
+			}
 		}
 
 		unc_rows[i].value[SWIN_UNC] = dataset->rows[i].value[SWIN_VALUE];
@@ -3150,14 +3168,16 @@ static int compute_rand_unc(const DATASET *const dataset
 		}
 
 		/* set methods */
-		unc_rows[i].method[NEE_REF_Y_UNC] = 1;
-		if ( unc_rows[i].qc[NEE_REF_Y_UNC] ) {
-			unc_rows[i].method[NEE_REF_Y_UNC] = 2;
-		}
+		if ( nee_matrix_y ) {
+			unc_rows[i].method[NEE_REF_Y_UNC] = 1;
+			if ( unc_rows[i].qc[NEE_REF_Y_UNC] ) {
+				unc_rows[i].method[NEE_REF_Y_UNC] = 2;
+			}
 
-		unc_rows[i].method[NEE_UST50_Y_UNC] = 1;
-		if ( unc_rows[i].qc[NEE_UST50_Y_UNC] ) {
-			unc_rows[i].method[NEE_UST50_Y_UNC] = 2;
+			unc_rows[i].method[NEE_UST50_Y_UNC] = 1;
+			if ( unc_rows[i].qc[NEE_UST50_Y_UNC] ) {
+				unc_rows[i].method[NEE_UST50_Y_UNC] = 2;
+			}
 		}
 
 		if ( dataset->years_count >= 3 ) {
@@ -3174,24 +3194,26 @@ static int compute_rand_unc(const DATASET *const dataset
 	}
 	
 	/* compute random uncertainty */
-	random_method_1(unc_rows, dataset->rows_count, NEE_REF_Y_UNC, HOURLY_TIMERES == dataset->details->timeres);
-	if ( ! random_method_2(unc_rows, dataset->rows_count, NEE_REF_Y_UNC, HOURLY_TIMERES == dataset->details->timeres) ) {
-		return 0;
-	}
-
-	/* update mask */
-	for ( i = 0; i < dataset->rows_count; i++ ) {
-		/* clear bit */
-		unc_rows[i].mask &= ~(GF_TOFILL_VALID);
-		/* set */
-		if ( ! IS_INVALID_VALUE(unc_rows[i].value[NEE_UST50_Y_UNC]) ) {
-			unc_rows[i].mask |= GF_TOFILL_VALID;
+	if ( nee_matrix_y ) {
+		random_method_1(unc_rows, dataset->rows_count, NEE_REF_Y_UNC, HOURLY_TIMERES == dataset->details->timeres);
+		if ( ! random_method_2(unc_rows, dataset->rows_count, NEE_REF_Y_UNC, HOURLY_TIMERES == dataset->details->timeres) ) {
+			return 0;
 		}
-	}
 
-	random_method_1(unc_rows, dataset->rows_count, NEE_UST50_Y_UNC, HOURLY_TIMERES == dataset->details->timeres);
-	if ( ! random_method_2(unc_rows, dataset->rows_count, NEE_UST50_Y_UNC, HOURLY_TIMERES == dataset->details->timeres) ) {
-		return 0;
+		/* update mask */
+		for ( i = 0; i < dataset->rows_count; i++ ) {
+			/* clear bit */
+			unc_rows[i].mask &= ~(GF_TOFILL_VALID);
+			/* set */
+			if ( ! IS_INVALID_VALUE(unc_rows[i].value[NEE_UST50_Y_UNC]) ) {
+				unc_rows[i].mask |= GF_TOFILL_VALID;
+			}
+		}
+
+		random_method_1(unc_rows, dataset->rows_count, NEE_UST50_Y_UNC, HOURLY_TIMERES == dataset->details->timeres);
+		if ( ! random_method_2(unc_rows, dataset->rows_count, NEE_UST50_Y_UNC, HOURLY_TIMERES == dataset->details->timeres) ) {
+			return 0;
+		}
 	}
 
 	if ( dataset->years_count >= 3 ) {
@@ -3344,6 +3366,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 	int on_error;
 	int valid_values_count_night;
 	int valid_values_count_day;
+	int skip_y;
 	char buffer[BUFFER_SIZE];
 	char buffer2[BUFFER_SIZE];
 	char *p;
@@ -4035,6 +4058,8 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 		*
 		*/
 
+		skip_y = 0;
+
 		/* loop for each percentile */
 		for ( percentile = 0; percentile < PERCENTILES_COUNT_2; percentile++ ) {
 			/* reset */
@@ -4055,23 +4080,8 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 					percentiles_y[year].value[percentile] = get_percentile(uts, uts_count, percentiles_test_2[percentile], &error);
 					if ( error ) {
 						printf("unable to get percentile for %d in y method.\n", datasets[dataset].years[year].year);
-						if ( compute_nee_flags ) {
-							if ( datasets[dataset].years_count >= 3 ) {
-								free(nee_flags_c);
-							}
-							free(nee_flags_y);
-						}
-						free(unc_rows_temp);
-						free(unc_rows_aggr);
-						free(unc_rows);
-						free(nee_matrix_y);
-						if ( datasets[dataset].years_count >= 3 ) {
-							free(nee_matrix_c);
-						}
-						free(percentiles_y);
-						free(uts);
-						free(rows_copy);
 						on_error = 1;
+						skip_y = 1;
 						break;
 					}
 					printf("%d -> filtering for %g (%g%%)...", datasets[dataset].years[year].year, percentiles_y[year].value[percentile], percentiles_test_2[percentile]);
@@ -4216,54 +4226,73 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			datasets[dataset].gf_rows = NULL;
 		}
 
-		if ( on_error ) {
-			continue;
+		if ( skip_y ) {
+			free(nee_matrix_y);
+			free(percentiles_y);
+			nee_matrix_y = NULL;
+			percentiles_y = NULL;
+			if ( datasets[dataset].years_count < 3 ) {
+				if ( compute_nee_flags ) {
+					free(nee_flags_y);
+				}
+				free(unc_rows_temp);
+				free(unc_rows_aggr);
+				free(unc_rows);
+				free(uts);
+				free(rows_copy);
+				continue;
+			}
 		}
 
-		/* save _y percentiles */
-		printf("saving y u* percentiles...");
-		sprintf(buffer, "%s%s_USTAR_percentiles_y.csv", output_files_path, datasets[dataset].details->site);
-		f = fopen(buffer, "w");
-		if ( !f ) {
-			puts("unable to create file!\n");
-			if ( compute_nee_flags ) {
-				if ( datasets[dataset].years_count >= 3 ) {
-					free(nee_flags_c);
+		if ( ! on_error ) {
+			/* save _y percentiles */
+			printf("saving y u* percentiles...");
+			sprintf(buffer, "%s%s_USTAR_percentiles_y.csv", output_files_path, datasets[dataset].details->site);
+			f = fopen(buffer, "w");
+			if ( !f ) {
+				puts("unable to create file!\n");
+				if ( compute_nee_flags ) {
+					if ( datasets[dataset].years_count >= 3 ) {
+						free(nee_flags_c);
+					}
+					free(nee_flags_y);
 				}
-				free(nee_flags_y);
+				free(unc_rows_temp);
+				free(unc_rows_aggr);
+				free(unc_rows);
+				free(nee_matrix_y);
+				if ( datasets[dataset].years_count >= 3 ) {
+					free(nee_matrix_c);
+				}
+				free(percentiles_y);
+				free(uts);
+				free(rows_copy);
+				continue;
 			}
-			free(unc_rows_temp);
-			free(unc_rows_aggr);
-			free(unc_rows);
-			free(nee_matrix_y);
-			if ( datasets[dataset].years_count >= 3 ) {
-				free(nee_matrix_c);
-			}
-			free(percentiles_y);
-			free(uts);
-			free(rows_copy);
-			continue;
-		}
-		fprintf(f, "%s,", TIMESTAMP_STRING);
-		for ( percentile = 0; percentile < PERCENTILES_COUNT_2; percentile++ ) {
-			fprintf(f, "%g", percentiles_test_2[percentile]);
-			if ( percentile < PERCENTILES_COUNT_2-1 ) {
-				fputs(",", f);
-			}
-		}
-		fputs("\n", f);
-		for ( year = 0; year < datasets[dataset].years_count; year++ ) {
-			fprintf(f, "%d,", datasets[dataset].years[year].year);
+			fprintf(f, "%s,", TIMESTAMP_STRING);
 			for ( percentile = 0; percentile < PERCENTILES_COUNT_2; percentile++ ) {
-				fprintf(f, "%g", percentiles_y[year].value[percentile]);
+				fprintf(f, "%g", percentiles_test_2[percentile]);
 				if ( percentile < PERCENTILES_COUNT_2-1 ) {
 					fputs(",", f);
 				}
 			}
 			fputs("\n", f);
+			for ( year = 0; year < datasets[dataset].years_count; year++ ) {
+				fprintf(f, "%d,", datasets[dataset].years[year].year);
+				for ( percentile = 0; percentile < PERCENTILES_COUNT_2; percentile++ ) {
+					fprintf(f, "%g", percentiles_y[year].value[percentile]);
+					if ( percentile < PERCENTILES_COUNT_2-1 ) {
+						fputs(",", f);
+					}
+				}
+				fputs("\n", f);
+			}
+			fclose(f);
+			puts("ok");
 		}
-		fclose(f);
-		puts("ok");
+
+		/* reset error state */
+		on_error = 0;
 
 		/*
 		*
@@ -4515,16 +4544,18 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 		}
 
 		/* saving y nee matrix */
-		if ( ! save_nee_matrix(nee_matrix_y, &datasets[dataset], HH_Y) ) {
-			free(unc_rows_temp);
-			free(unc_rows_aggr);
-			free(unc_rows);
-			free(nee_matrix_y);
-			free(percentiles_y);
-			if ( datasets[dataset].years_count >= 3 ) {
-				free(nee_matrix_c);
+		if ( ! skip_y ) {
+			if ( ! save_nee_matrix(nee_matrix_y, &datasets[dataset], HH_Y) ) {
+				free(unc_rows_temp);
+				free(unc_rows_aggr);
+				free(unc_rows);
+				free(nee_matrix_y);
+				free(percentiles_y);
+				if ( datasets[dataset].years_count >= 3 ) {
+					free(nee_matrix_c);
+				}
+				continue;
 			}
-			continue;
 		}
 
 		/* saving c nee matrix */
@@ -4541,18 +4572,20 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 		}
 
 		/* process nee_matrix y */
-		p_matrix_y = process_nee_matrix(&datasets[dataset], nee_matrix_y, datasets[dataset].rows_count, &ref_y, HH_Y);
-		ref_y_old = ref_y;
-		if ( ! p_matrix_y ) {
-			free(unc_rows_temp);
-			free(unc_rows_aggr);
-			free(unc_rows);
-			free(percentiles_y);
-			free(nee_matrix_y);
-			if ( datasets[dataset].years_count >= 3 ) {
-				free(nee_matrix_c);
+		if ( ! skip_y ) {
+			p_matrix_y = process_nee_matrix(&datasets[dataset], nee_matrix_y, datasets[dataset].rows_count, &ref_y, HH_Y);
+			ref_y_old = ref_y;
+			if ( ! p_matrix_y ) {
+				free(unc_rows_temp);
+				free(unc_rows_aggr);
+				free(unc_rows);
+				free(percentiles_y);
+				free(nee_matrix_y);
+				if ( datasets[dataset].years_count >= 3 ) {
+					free(nee_matrix_c);
+				}
+				continue;
 			}
-			continue;
 		}
 
 		/* process nee_matrix c */
@@ -4595,10 +4628,14 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			}
 
 			/* write header */
-			if ( datasets[dataset].years_count >= 3 ) {
-				fprintf(f, "%s,NEE_FLAG_Y_REF,NEE_FLAG_Y_UST50,NEE_FLAG_C_REF,NEE_FLAG_C_UST50\n", TIMESTAMP_HEADER);
+			if ( ! skip_y ) {
+				if ( datasets[dataset].years_count >= 3 ) {
+					fprintf(f, "%s,NEE_FLAG_Y_REF,NEE_FLAG_Y_UST50,NEE_FLAG_C_REF,NEE_FLAG_C_UST50\n", TIMESTAMP_HEADER);
+				} else {
+					fprintf(f, "%s,NEE_FLAG_Y_REF,NEE_FLAG_Y_UST50\n", TIMESTAMP_HEADER);
+				}
 			} else {
-				fprintf(f, "%s,NEE_FLAG_Y_REF,NEE_FLAG_Y_UST50\n", TIMESTAMP_HEADER);
+				fprintf(f, "%s,NEE_FLAG_C_REF,NEE_FLAG_C_UST50\n", TIMESTAMP_HEADER);
 			}
 
 			j = 0;
@@ -4614,7 +4651,9 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 					fprintf(f, "%04d%02d%02d%02d%02d,", t->YYYY, t->MM, t->DD, t->hh, t->mm);
 					t = timestamp_end_by_row(row, datasets[dataset].years[i].year, datasets[dataset].details->timeres);
 					fprintf(f, "%04d%02d%02d%02d%02d,", t->YYYY, t->MM, t->DD, t->hh, t->mm);
-					fprintf(f, "%d,%d", nee_flags_y[j+row].value[ref_y], nee_flags_y[j+row].value[PERCENTILES_COUNT_2-1]);
+					if ( ! skip_y ) {
+						fprintf(f, "%d,%d", nee_flags_y[j+row].value[ref_y], nee_flags_y[j+row].value[PERCENTILES_COUNT_2-1]);
+					}
 					if ( datasets[dataset].years_count >= 3 ) {
 						fprintf(f, ",%d,%d", nee_flags_c[j+row].value[ref_c], nee_flags_c[j+row].value[PERCENTILES_COUNT_2-1]);
 					}
@@ -4685,12 +4724,16 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 		} else {
 			fputs(output_var_1_rand_unc_hh, f);
 		}
-		for ( percentile = 0; percentile < PERCENTILES_COUNT_1; percentile++ ) {
-			fprintf(f, "NEE_%02g_y,NEE_%02g_qc_y", percentiles_test_1[percentile],percentiles_test_1[percentile]);
-			if ( percentile < PERCENTILES_COUNT_1-1 ) {
-				fputs(",", f);
+
+		if ( ! skip_y ) {
+			for ( percentile = 0; percentile < PERCENTILES_COUNT_1; percentile++ ) {
+				fprintf(f, "NEE_%02g_y,NEE_%02g_qc_y", percentiles_test_1[percentile],percentiles_test_1[percentile]);
+				if ( percentile < PERCENTILES_COUNT_1-1 ) {
+					fputs(",", f);
+				}
 			}
 		}
+
 		if ( datasets[dataset].years_count >= 3 ) {
 			if ( no_rand_unc ) {
 				fputs(output_var_2, f);
@@ -4728,79 +4771,81 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				fprintf(f, "%g,", get_dtime_by_row(row, (HOURLY_TIMERES == datasets[dataset].details->timeres)));
 				/* rpot */
 				fprintf(f, "%d,", ARE_FLOATS_EQUAL(datasets[dataset].rows[j+row].value[RPOT_VALUE], 0.0) ? 1 : 0);
-				/* */
-				if ( no_rand_unc ) {
-					if ( exists ) {
-						fprintf(f, "%g,%g,%g,%g,%g,%g,%g,",
-																nee_matrix_y[j+row].nee[ref_y],
-																nee_matrix_y[j+row].qc[ref_y],
-																nee_matrix_y[j+row].nee[PERCENTILES_COUNT_2-1],
-																nee_matrix_y[j+row].qc[PERCENTILES_COUNT_2-1],
-																p_matrix_y[j+row].mean,
-																p_matrix_y[j+row].mean_qc,
-																p_matrix_y[j+row].std_err
-						);
+				if ( ! skip_y ) {
+					if ( no_rand_unc ) {
+						if ( exists ) {
+							fprintf(f, "%g,%g,%g,%g,%g,%g,%g,",
+																	nee_matrix_y[j+row].nee[ref_y],
+																	nee_matrix_y[j+row].qc[ref_y],
+																	nee_matrix_y[j+row].nee[PERCENTILES_COUNT_2-1],
+																	nee_matrix_y[j+row].qc[PERCENTILES_COUNT_2-1],
+																	p_matrix_y[j+row].mean,
+																	p_matrix_y[j+row].mean_qc,
+																	p_matrix_y[j+row].std_err
+							);
+						} else {
+							fprintf(f, "%g,%g,%g,%g,%g,%g,%g,",		(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE
+							);
+						}
 					} else {
-						fprintf(f, "%g,%g,%g,%g,%g,%g,%g,",		(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE
-						);
+						if ( exists ) {
+							nee_ref_joinUnc_y = compute_join(unc_rows[j+row].rand[NEE_REF_Y_UNC], p_matrix_y[j+row].value[1], p_matrix_y[j+row].value[5]);
+							nee_ust50_joinUnc_y = compute_join(unc_rows[j+row].rand[NEE_UST50_Y_UNC], p_matrix_y[j+row].value[1], p_matrix_y[j+row].value[5]);
+							fprintf(f, "%g,%g,%g,%d,%d,%g,%g,%g,%g,%d,%d,%g,%g,%g,%g,",
+																	nee_matrix_y[j+row].nee[ref_y],
+																	nee_matrix_y[j+row].qc[ref_y],
+																	unc_rows[j+row].rand[NEE_REF_Y_UNC],
+																	unc_rows[j+row].method[NEE_REF_Y_UNC],
+																	unc_rows[j+row].samples_count[NEE_REF_Y_UNC],
+																	nee_ref_joinUnc_y,
+																	nee_matrix_y[j+row].nee[PERCENTILES_COUNT_2-1],
+																	nee_matrix_y[j+row].qc[PERCENTILES_COUNT_2-1],
+																	unc_rows[j+row].rand[NEE_UST50_Y_UNC],
+																	unc_rows[j+row].method[NEE_UST50_Y_UNC],
+																	unc_rows[j+row].samples_count[NEE_UST50_Y_UNC],
+																	nee_ust50_joinUnc_y,
+																	p_matrix_y[j+row].mean,
+																	p_matrix_y[j+row].mean_qc,
+																	p_matrix_y[j+row].std_err
+							);
+						} else {
+							fprintf(f, "%g,%g,%g,%d,%d,%g,%g,%g,%g,%d,%d,%g,%g,%g,%g,",
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	INVALID_VALUE,
+																	INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	INVALID_VALUE,
+																	INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE
+							);
+						}
 					}
-				} else {
-					if ( exists ) {
-						nee_ref_joinUnc_y = compute_join(unc_rows[j+row].rand[NEE_REF_Y_UNC], p_matrix_y[j+row].value[1], p_matrix_y[j+row].value[5]);
-						nee_ust50_joinUnc_y = compute_join(unc_rows[j+row].rand[NEE_UST50_Y_UNC], p_matrix_y[j+row].value[1], p_matrix_y[j+row].value[5]);
-						fprintf(f, "%g,%g,%g,%d,%d,%g,%g,%g,%g,%d,%d,%g,%g,%g,%g,",
-																nee_matrix_y[j+row].nee[ref_y],
-																nee_matrix_y[j+row].qc[ref_y],
-																unc_rows[j+row].rand[NEE_REF_Y_UNC],
-																unc_rows[j+row].method[NEE_REF_Y_UNC],
-																unc_rows[j+row].samples_count[NEE_REF_Y_UNC],
-																nee_ref_joinUnc_y,
-																nee_matrix_y[j+row].nee[PERCENTILES_COUNT_2-1],
-																nee_matrix_y[j+row].qc[PERCENTILES_COUNT_2-1],
-																unc_rows[j+row].rand[NEE_UST50_Y_UNC],
-																unc_rows[j+row].method[NEE_UST50_Y_UNC],
-																unc_rows[j+row].samples_count[NEE_UST50_Y_UNC],
-																nee_ust50_joinUnc_y,
-																p_matrix_y[j+row].mean,
-																p_matrix_y[j+row].mean_qc,
-																p_matrix_y[j+row].std_err
-						);
-					} else {
-						fprintf(f, "%g,%g,%g,%d,%d,%g,%g,%g,%g,%d,%d,%g,%g,%g,%g,",
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																INVALID_VALUE,
-																INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																INVALID_VALUE,
-																INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE
-						);
+					for ( z = 0; z < PERCENTILES_COUNT_1; z++ ) {
+						if ( exists ) {
+							fprintf(f, "%g,%g", p_matrix_y[j+row].value[z], p_matrix_y[j+row].qc[z]);
+						} else {
+							fprintf(f, "%g,%g", (PREC)INVALID_VALUE, (PREC)INVALID_VALUE);
+						}
+						if ( z < PERCENTILES_COUNT_1-1 ) {
+							fputs(",", f);
+						}
 					}
 				}
-				for ( z = 0; z < PERCENTILES_COUNT_1; z++ ) {
-					if ( exists ) {
-						fprintf(f, "%g,%g", p_matrix_y[j+row].value[z], p_matrix_y[j+row].qc[z]);
-					} else {
-						fprintf(f, "%g,%g", (PREC)INVALID_VALUE, (PREC)INVALID_VALUE);
-					}
-					if ( z < PERCENTILES_COUNT_1-1 ) {
-						fputs(",", f);
-					}
-				}
+
 				if ( datasets[dataset].years_count >= 3 ) {
 					if ( no_rand_unc ) {
 						if ( exists ) {
@@ -4922,20 +4967,24 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 		daily_rows_count = datasets[dataset].rows_count / rows_per_day;
 
 		/* alloc memory for daily */
-		nee_matrix_y_daily = malloc(daily_rows_count*sizeof*nee_matrix_y_daily);
-		if ( !nee_matrix_y_daily ) {
-			puts(err_out_of_memory);
-			free(unc_rows_temp);
-			free(unc_rows_aggr);
-			free(unc_rows);
-			free(percentiles_y);
-			free(p_matrix_y);
-			free(nee_matrix_y);
-			if ( datasets[dataset].years_count >= 3 ) {
-				free(p_matrix_c);
-				free(nee_matrix_c);
+		if ( ! skip_y ) {
+			nee_matrix_y_daily = malloc(daily_rows_count*sizeof*nee_matrix_y_daily);
+			if ( !nee_matrix_y_daily ) {
+				puts(err_out_of_memory);
+				free(unc_rows_temp);
+				free(unc_rows_aggr);
+				free(unc_rows);
+				free(percentiles_y);
+				free(p_matrix_y);
+				free(nee_matrix_y);
+				if ( datasets[dataset].years_count >= 3 ) {
+					free(p_matrix_c);
+					free(nee_matrix_c);
+				}
+				continue;
 			}
-			continue;
+		} else {
+			nee_matrix_y_daily = NULL;
 		}
 		if ( datasets[dataset].years_count >= 3 ) {
 			nee_matrix_c_daily = malloc(daily_rows_count*sizeof*nee_matrix_c_daily);
@@ -4954,7 +5003,9 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			}
 		}
 		/* change qc for y and c */
-		change_qcs(nee_matrix_y, datasets[dataset].rows_count);
+		if ( ! skip_y ) {
+			change_qcs(nee_matrix_y, datasets[dataset].rows_count);
+		}
 		if ( datasets[dataset].years_count >= 3 ) {
 			change_qcs(nee_matrix_c, datasets[dataset].rows_count);
 		}
@@ -4963,23 +5014,29 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 		index = 0;
 		for ( row = 0; row < datasets[dataset].rows_count; row += rows_per_day ) {
 			for ( percentile = 0; percentile < PERCENTILES_COUNT_2; percentile++ ) {
-				nee_matrix_y_daily[index].nee[percentile] = 0.0;
-				nee_matrix_y_daily[index].qc[percentile] = 0.0;
+				if ( ! skip_y ) {
+					nee_matrix_y_daily[index].nee[percentile] = 0.0;
+					nee_matrix_y_daily[index].qc[percentile] = 0.0;
+				}
 				if ( datasets[dataset].years_count >= 3 ) {
 					nee_matrix_c_daily[index].nee[percentile] = 0.0;
 					nee_matrix_c_daily[index].qc[percentile] = 0.0;
 				}
 				for ( i = 0; i < rows_per_day; i++ ) {
-					nee_matrix_y_daily[index].nee[percentile] += nee_matrix_y[row+i].nee[percentile];
-					nee_matrix_y_daily[index].qc[percentile] += nee_matrix_y[row+i].qc[percentile];
+					if ( ! skip_y ) {
+						nee_matrix_y_daily[index].nee[percentile] += nee_matrix_y[row+i].nee[percentile];
+						nee_matrix_y_daily[index].qc[percentile] += nee_matrix_y[row+i].qc[percentile];
+					}
 					if ( datasets[dataset].years_count >= 3 ) {
 						nee_matrix_c_daily[index].nee[percentile] += nee_matrix_c[row+i].nee[percentile];
 						nee_matrix_c_daily[index].qc[percentile] += nee_matrix_c[row+i].qc[percentile];
 					}
 				}
-				nee_matrix_y_daily[index].nee[percentile] /= rows_per_day;
-				nee_matrix_y_daily[index].nee[percentile] *= CO2TOC;
-				nee_matrix_y_daily[index].qc[percentile] /= rows_per_day;
+				if ( ! skip_y ) {
+					nee_matrix_y_daily[index].nee[percentile] /= rows_per_day;
+					nee_matrix_y_daily[index].nee[percentile] *= CO2TOC;
+					nee_matrix_y_daily[index].qc[percentile] /= rows_per_day;
+				}
 				if ( datasets[dataset].years_count >= 3 ) {
 					nee_matrix_c_daily[index].nee[percentile] /= rows_per_day;
 					nee_matrix_c_daily[index].nee[percentile] *= CO2TOC;
@@ -5009,27 +5066,29 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 		if ( datasets[dataset].years_count >= 3 ) {
 			free(p_matrix_c);
 		}
-		free(p_matrix_y);
+		if ( ! skip_y ) {
+			free(p_matrix_y);
+		}
 		
 		/* update */
 		rows_count = daily_rows_count;
 
-		/* saving y nee dd matrix */
+		/* saving nee dd matrix */
 		if ( percentiles_save ) {
-			if ( ! save_nee_matrix(nee_matrix_y_daily, &datasets[dataset], DD_Y) ) {
-				free(unc_rows_temp);
-				free(unc_rows_aggr);
-				free(unc_rows);
-				free(nee_matrix_y);
-				free(nee_matrix_y_daily);
-				free(percentiles_y);
-				if ( datasets[dataset].years_count >= 3 ) {
-					free(nee_matrix_c);
+			if ( ! skip_y ) {
+				if ( ! save_nee_matrix(nee_matrix_y_daily, &datasets[dataset], DD_Y) ) {
+					free(unc_rows_temp);
+					free(unc_rows_aggr);
+					free(unc_rows);
+					free(nee_matrix_y);
+					free(nee_matrix_y_daily);
+					free(percentiles_y);
+					if ( datasets[dataset].years_count >= 3 ) {
+						free(nee_matrix_c);
+					}
+					continue;
 				}
-				continue;
 			}
-
-			/* saving c nee dd matrix */
 			if ( datasets[dataset].years_count >= 3 ) {
 				if ( ! save_nee_matrix(nee_matrix_c_daily, &datasets[dataset], DD_C) ) {
 					free(unc_rows_temp);
@@ -5046,20 +5105,24 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 		}
 
 		/* get p_matrix */
-		p_matrix_y = process_nee_matrix(&datasets[dataset], nee_matrix_y_daily, rows_count, &ref_y, DD_Y);
-		if ( !p_matrix_y ) {
-			puts("unable to get p_matrix for daily y");
-			free(unc_rows_temp);
-			free(unc_rows_aggr);
-			free(unc_rows);
-			free(percentiles_y);
-			free(nee_matrix_y);
-			free(nee_matrix_y_daily);
-			if ( datasets[dataset].years_count >= 3 ) {
-				free(nee_matrix_c);
-				free(nee_matrix_c_daily);
+		if ( ! skip_y ) {
+			p_matrix_y = process_nee_matrix(&datasets[dataset], nee_matrix_y_daily, rows_count, &ref_y, DD_Y);
+			if ( !p_matrix_y ) {
+				puts("unable to get p_matrix for daily y");
+				free(unc_rows_temp);
+				free(unc_rows_aggr);
+				free(unc_rows);
+				free(percentiles_y);
+				free(nee_matrix_y);
+				free(nee_matrix_y_daily);
+				if ( datasets[dataset].years_count >= 3 ) {
+					free(nee_matrix_c);
+					free(nee_matrix_c_daily);
+				}
+				continue;
 			}
-			continue;
+		} else {
+			p_matrix_y = NULL;
 		}
 		if ( datasets[dataset].years_count >= 3 ) {
 			p_matrix_c = process_nee_matrix(&datasets[dataset], nee_matrix_c_daily, rows_count, &ref_c, DD_C);
@@ -5081,7 +5144,9 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 		/* ref changed ? */
 		if ( (ref_y_old != ref_y) || (ref_c_old != ref_c) ) {
 			/* revert back qcs */
-			revert_qcs(nee_matrix_y, datasets[dataset].rows_count);
+			if ( ! skip_y ) {
+				revert_qcs(nee_matrix_y, datasets[dataset].rows_count);
+			}
 			if ( datasets[dataset].years_count >= 3 ) {
 				revert_qcs(nee_matrix_c, datasets[dataset].rows_count);
 			}
@@ -5102,7 +5167,9 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			}
 
 			/* change qcs */
-			change_qcs(nee_matrix_y, datasets[dataset].rows_count);
+			if ( ! skip_y ) {
+				change_qcs(nee_matrix_y, datasets[dataset].rows_count);
+			}
 			if ( datasets[dataset].years_count >= 3 ) {
 				change_qcs(nee_matrix_c, datasets[dataset].rows_count);
 			}
@@ -5128,7 +5195,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 
 		/* rand unc dd */
 		if ( ! no_rand_unc ) {
-			rand_unc_dd(unc_rows, unc_rows_aggr, datasets[dataset].rows_count, datasets[dataset].years_count, (HOURLY_TIMERES == datasets[dataset].details->timeres));
+			rand_unc_dd(unc_rows, unc_rows_aggr, datasets[dataset].rows_count, datasets[dataset].years_count, (HOURLY_TIMERES == datasets[dataset].details->timeres), skip_y);
 		}
 
 		/* save output dd */
@@ -5157,10 +5224,13 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 		} else {
 			fputs(output_var_1_rand_unc, f);
 		}
-		for ( percentile = 0; percentile < PERCENTILES_COUNT_1; percentile++ ) {
-			fprintf(f, "NEE_%02g_y,NEE_%02g_qc_y", percentiles_test_1[percentile],percentiles_test_1[percentile]);
-			if ( percentile < PERCENTILES_COUNT_1-1 ) {
-				fputs(",", f);
+		if ( ! skip_y ) {
+			for ( percentile = 0; percentile < PERCENTILES_COUNT_1; percentile++ ) {		
+					fprintf(f, "NEE_%02g_y,NEE_%02g_qc_y", percentiles_test_1[percentile],percentiles_test_1[percentile]);
+					if ( percentile < PERCENTILES_COUNT_1-1 ) {
+						fputs(",", f);
+					}
+				}
 			}
 		}
 		if ( datasets[dataset].years_count >= 3 ) {
@@ -5178,10 +5248,14 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 		}
 		if ( no_rand_unc ) {
 			fputs(header_file_night_no_rand_unc, f);
-			fputs(header_file_night_y_no_rand_unc, f);
+			if ( ! skip_y ) {
+				fputs(header_file_night_y_no_rand_unc, f);
+			}
 		} else {
 			fputs(header_file_night, f);
-			fputs(header_file_night_y, f);
+			if ( ! skip_y ) {
+				fputs(header_file_night_y, f);
+			}
 		}
 		if ( datasets[dataset].years_count >= 3 ) {
 			if ( no_rand_unc ) {
@@ -5215,67 +5289,68 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 													t->DD,
 													row+1			
 				);
-
-				if ( no_rand_unc ) {
-					if ( exists ) {
-						fprintf(f, "%g,%g,%g,%g,%g,%g,%g,",
-															nee_matrix_y_daily[j+row].nee[ref_y],
-															nee_matrix_y_daily[j+row].qc[ref_y],
-															nee_matrix_y_daily[j+row].nee[PERCENTILES_COUNT_2-1],
-															nee_matrix_y_daily[j+row].qc[PERCENTILES_COUNT_2-1],
-															p_matrix_y[j+row].mean,
-															p_matrix_y[j+row].mean_qc,
-															p_matrix_y[j+row].std_err
-						);
+				if ( ! skip_y ) {
+					if ( no_rand_unc ) {
+						if ( exists ) {
+							fprintf(f, "%g,%g,%g,%g,%g,%g,%g,",
+																nee_matrix_y_daily[j+row].nee[ref_y],
+																nee_matrix_y_daily[j+row].qc[ref_y],
+																nee_matrix_y_daily[j+row].nee[PERCENTILES_COUNT_2-1],
+																nee_matrix_y_daily[j+row].qc[PERCENTILES_COUNT_2-1],
+																p_matrix_y[j+row].mean,
+																p_matrix_y[j+row].mean_qc,
+																p_matrix_y[j+row].std_err
+							);
+						} else {
+							fprintf(f, "%g,%g,%g,%g,%g,%g,%g,",
+																(PREC)INVALID_VALUE,
+																(PREC)INVALID_VALUE,
+																(PREC)INVALID_VALUE,
+																(PREC)INVALID_VALUE,
+																(PREC)INVALID_VALUE,
+																(PREC)INVALID_VALUE,
+																(PREC)INVALID_VALUE
+							);
+						}
 					} else {
-						fprintf(f, "%g,%g,%g,%g,%g,%g,%g,",
-															(PREC)INVALID_VALUE,
-															(PREC)INVALID_VALUE,
-															(PREC)INVALID_VALUE,
-															(PREC)INVALID_VALUE,
-															(PREC)INVALID_VALUE,
-															(PREC)INVALID_VALUE,
-															(PREC)INVALID_VALUE
-						);
+						if ( exists ) {
+							nee_ref_joinUnc_y = compute_join(unc_rows_aggr[j+row].rand[NEE_REF_Y_UNC], p_matrix_y[j+row].value[1], p_matrix_y[j+row].value[5]);
+							nee_ust50_joinUnc_y = compute_join(unc_rows_aggr[j+row].rand[NEE_UST50_Y_UNC], p_matrix_y[j+row].value[1], p_matrix_y[j+row].value[5]);
+							fprintf(f, "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",
+																			nee_matrix_y_daily[j+row].nee[ref_y],
+																			nee_matrix_y_daily[j+row].qc[ref_y],
+																			unc_rows_aggr[j+row].rand[NEE_REF_Y_UNC],
+																			nee_ref_joinUnc_y,
+																			nee_matrix_y_daily[j+row].nee[PERCENTILES_COUNT_2-1],
+																			nee_matrix_y_daily[j+row].qc[PERCENTILES_COUNT_2-1],
+																			unc_rows_aggr[j+row].rand[NEE_UST50_Y_UNC],
+																			nee_ust50_joinUnc_y,
+																			p_matrix_y[j+row].mean,
+																			p_matrix_y[j+row].mean_qc,
+																			p_matrix_y[j+row].std_err
+							);
+						} else {
+							fprintf(f, "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",
+																			(PREC)INVALID_VALUE,
+																			(PREC)INVALID_VALUE,
+																			(PREC)INVALID_VALUE,
+																			(PREC)INVALID_VALUE,
+																			(PREC)INVALID_VALUE,
+																			(PREC)INVALID_VALUE,
+																			(PREC)INVALID_VALUE,
+																			(PREC)INVALID_VALUE,
+																			(PREC)INVALID_VALUE,
+																			(PREC)INVALID_VALUE,
+																			(PREC)INVALID_VALUE
+							);
+						}
 					}
-				} else {
-					if ( exists ) {
-						nee_ref_joinUnc_y = compute_join(unc_rows_aggr[j+row].rand[NEE_REF_Y_UNC], p_matrix_y[j+row].value[1], p_matrix_y[j+row].value[5]);
-						nee_ust50_joinUnc_y = compute_join(unc_rows_aggr[j+row].rand[NEE_UST50_Y_UNC], p_matrix_y[j+row].value[1], p_matrix_y[j+row].value[5]);
-						fprintf(f, "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",
-																		nee_matrix_y_daily[j+row].nee[ref_y],
-																		nee_matrix_y_daily[j+row].qc[ref_y],
-																		unc_rows_aggr[j+row].rand[NEE_REF_Y_UNC],
-																		nee_ref_joinUnc_y,
-																		nee_matrix_y_daily[j+row].nee[PERCENTILES_COUNT_2-1],
-																		nee_matrix_y_daily[j+row].qc[PERCENTILES_COUNT_2-1],
-																		unc_rows_aggr[j+row].rand[NEE_UST50_Y_UNC],
-																		nee_ust50_joinUnc_y,
-																		p_matrix_y[j+row].mean,
-																		p_matrix_y[j+row].mean_qc,
-																		p_matrix_y[j+row].std_err
-						);
-					} else {
-						fprintf(f, "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",
-																		(PREC)INVALID_VALUE,
-																		(PREC)INVALID_VALUE,
-																		(PREC)INVALID_VALUE,
-																		(PREC)INVALID_VALUE,
-																		(PREC)INVALID_VALUE,
-																		(PREC)INVALID_VALUE,
-																		(PREC)INVALID_VALUE,
-																		(PREC)INVALID_VALUE,
-																		(PREC)INVALID_VALUE,
-																		(PREC)INVALID_VALUE,
-																		(PREC)INVALID_VALUE
-						);
-					}
-				}
-				for ( z = 0; z < PERCENTILES_COUNT_1; z++ ) {
-					if ( exists ) {
-						fprintf(f, "%g,%g,", p_matrix_y[j+row].value[z], p_matrix_y[j+row].qc[z]);
-					} else {
-						fprintf(f, "%g,%g,", (PREC)INVALID_VALUE, (PREC)INVALID_VALUE);
+					for ( z = 0; z < PERCENTILES_COUNT_1; z++ ) {
+						if ( exists ) {
+							fprintf(f, "%g,%g,", p_matrix_y[j+row].value[z], p_matrix_y[j+row].qc[z]);
+						} else {
+							fprintf(f, "%g,%g,", (PREC)INVALID_VALUE, (PREC)INVALID_VALUE);
+						}
 					}
 				}
 
@@ -5372,204 +5447,205 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 						);
 					}
 				}
-				if ( no_rand_unc ) {
-					if ( exists ) {
-						fprintf(f, "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g",
-																rows_night_daily[j+row].night[NEE_REF_Y],
-																rows_night_daily[j+row].night_std[NEE_REF_Y],
-																rows_night_daily[j+row].night_qc[NEE_REF_Y],
-																rows_night_daily[j+row].day[NEE_REF_Y],
-																rows_night_daily[j+row].day_std[NEE_REF_Y],
-																rows_night_daily[j+row].day_qc[NEE_REF_Y],
-																rows_night_daily[j+row].night[NEE_UST50_Y],
-																rows_night_daily[j+row].night_std[NEE_UST50_Y],
-																rows_night_daily[j+row].night_qc[NEE_UST50_Y],
-																rows_night_daily[j+row].day[NEE_UST50_Y],
-																rows_night_daily[j+row].day_std[NEE_UST50_Y],
-																rows_night_daily[j+row].day_qc[NEE_UST50_Y],
-																rows_night_daily[j+row].night[NEE_05_Y],
-																rows_night_daily[j+row].night[NEE_05_QC_Y],
-																rows_night_daily[j+row].night[NEE_16_Y],
-																rows_night_daily[j+row].night[NEE_16_QC_Y],
-																rows_night_daily[j+row].night[NEE_25_Y],
-																rows_night_daily[j+row].night[NEE_25_QC_Y],
-																rows_night_daily[j+row].night[NEE_50_Y],
-																rows_night_daily[j+row].night[NEE_50_QC_Y],
-																rows_night_daily[j+row].night[NEE_75_Y],
-																rows_night_daily[j+row].night[NEE_75_QC_Y],
-																rows_night_daily[j+row].night[NEE_84_Y],
-																rows_night_daily[j+row].night[NEE_84_QC_Y],
-																rows_night_daily[j+row].night[NEE_95_Y],
-																rows_night_daily[j+row].night[NEE_95_QC_Y],
-																rows_night_daily[j+row].day[NEE_05_Y],
-																rows_night_daily[j+row].day[NEE_05_QC_Y],
-																rows_night_daily[j+row].day[NEE_16_Y],
-																rows_night_daily[j+row].day[NEE_16_QC_Y],
-																rows_night_daily[j+row].day[NEE_25_Y],
-																rows_night_daily[j+row].day[NEE_25_QC_Y],
-																rows_night_daily[j+row].day[NEE_50_Y],
-																rows_night_daily[j+row].day[NEE_50_QC_Y],
-																rows_night_daily[j+row].day[NEE_75_Y],
-																rows_night_daily[j+row].day[NEE_75_QC_Y],
-																rows_night_daily[j+row].day[NEE_84_Y],
-																rows_night_daily[j+row].day[NEE_84_QC_Y],
-																rows_night_daily[j+row].day[NEE_95_Y],
-																rows_night_daily[j+row].day[NEE_95_QC_Y]
-						);
+				if ( ! skip_y ) {
+					if ( no_rand_unc ) {
+						if ( exists ) {
+							fprintf(f, "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g",
+																	rows_night_daily[j+row].night[NEE_REF_Y],
+																	rows_night_daily[j+row].night_std[NEE_REF_Y],
+																	rows_night_daily[j+row].night_qc[NEE_REF_Y],
+																	rows_night_daily[j+row].day[NEE_REF_Y],
+																	rows_night_daily[j+row].day_std[NEE_REF_Y],
+																	rows_night_daily[j+row].day_qc[NEE_REF_Y],
+																	rows_night_daily[j+row].night[NEE_UST50_Y],
+																	rows_night_daily[j+row].night_std[NEE_UST50_Y],
+																	rows_night_daily[j+row].night_qc[NEE_UST50_Y],
+																	rows_night_daily[j+row].day[NEE_UST50_Y],
+																	rows_night_daily[j+row].day_std[NEE_UST50_Y],
+																	rows_night_daily[j+row].day_qc[NEE_UST50_Y],
+																	rows_night_daily[j+row].night[NEE_05_Y],
+																	rows_night_daily[j+row].night[NEE_05_QC_Y],
+																	rows_night_daily[j+row].night[NEE_16_Y],
+																	rows_night_daily[j+row].night[NEE_16_QC_Y],
+																	rows_night_daily[j+row].night[NEE_25_Y],
+																	rows_night_daily[j+row].night[NEE_25_QC_Y],
+																	rows_night_daily[j+row].night[NEE_50_Y],
+																	rows_night_daily[j+row].night[NEE_50_QC_Y],
+																	rows_night_daily[j+row].night[NEE_75_Y],
+																	rows_night_daily[j+row].night[NEE_75_QC_Y],
+																	rows_night_daily[j+row].night[NEE_84_Y],
+																	rows_night_daily[j+row].night[NEE_84_QC_Y],
+																	rows_night_daily[j+row].night[NEE_95_Y],
+																	rows_night_daily[j+row].night[NEE_95_QC_Y],
+																	rows_night_daily[j+row].day[NEE_05_Y],
+																	rows_night_daily[j+row].day[NEE_05_QC_Y],
+																	rows_night_daily[j+row].day[NEE_16_Y],
+																	rows_night_daily[j+row].day[NEE_16_QC_Y],
+																	rows_night_daily[j+row].day[NEE_25_Y],
+																	rows_night_daily[j+row].day[NEE_25_QC_Y],
+																	rows_night_daily[j+row].day[NEE_50_Y],
+																	rows_night_daily[j+row].day[NEE_50_QC_Y],
+																	rows_night_daily[j+row].day[NEE_75_Y],
+																	rows_night_daily[j+row].day[NEE_75_QC_Y],
+																	rows_night_daily[j+row].day[NEE_84_Y],
+																	rows_night_daily[j+row].day[NEE_84_QC_Y],
+																	rows_night_daily[j+row].day[NEE_95_Y],
+																	rows_night_daily[j+row].day[NEE_95_QC_Y]
+							);
+						} else {
+							fprintf(f, "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g",
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE,
+																	(PREC)INVALID_VALUE
+							);
+						}
 					} else {
-						fprintf(f, "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g",
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE,
-																(PREC)INVALID_VALUE
-						);
-					}
-				} else {
-					if ( exists ) {
-						nee_ref_night_joinUnc_y = compute_join(rows_night_daily[j+row].night[NEE_REF_Y_RAND],rows_night_daily[j+row].night[NEE_16_Y],rows_night_daily[j+row].night[NEE_84_Y]);
-						nee_ref_day_joinUnc_y = compute_join(rows_night_daily[j+row].day[NEE_REF_Y_RAND],rows_night_daily[j+row].day[NEE_16_Y],rows_night_daily[j+row].day[NEE_84_Y]);
-						nee_ust50_night_joinUnc_y = compute_join(rows_night_daily[j+row].night[NEE_UST50_Y_RAND],rows_night_daily[j+row].night[NEE_16_Y],rows_night_daily[j+row].night[NEE_84_Y]);
-						nee_ust50_day_joinUnc_y = compute_join(rows_night_daily[j+row].day[NEE_UST50_Y_RAND],rows_night_daily[j+row].day[NEE_16_Y],rows_night_daily[j+row].day[NEE_84_Y]);
-						fprintf(f, "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g",
-														rows_night_daily[j+row].night[NEE_REF_Y],
-														rows_night_daily[j+row].night_std[NEE_REF_Y],
-														rows_night_daily[j+row].night_qc[NEE_REF_Y],
-														rows_night_daily[j+row].night[NEE_REF_Y_RAND],
-														nee_ref_night_joinUnc_y,
-														rows_night_daily[j+row].day[NEE_REF_Y],
-														rows_night_daily[j+row].day_std[NEE_REF_Y],
-														rows_night_daily[j+row].day_qc[NEE_REF_Y],
-														rows_night_daily[j+row].day[NEE_REF_Y_RAND],
-														nee_ref_day_joinUnc_y,
-														rows_night_daily[j+row].night[NEE_UST50_Y],
-														rows_night_daily[j+row].night_std[NEE_UST50_Y],
-														rows_night_daily[j+row].night_qc[NEE_UST50_Y],
-														rows_night_daily[j+row].night[NEE_UST50_Y_RAND],
-														nee_ust50_night_joinUnc_y,
-														rows_night_daily[j+row].day[NEE_UST50_Y],
-														rows_night_daily[j+row].day_std[NEE_UST50_Y],
-														rows_night_daily[j+row].day_qc[NEE_UST50_Y],
-														rows_night_daily[j+row].day[NEE_UST50_Y_RAND],
-														nee_ust50_day_joinUnc_y,
-														rows_night_daily[j+row].night[NEE_05_Y],
-														rows_night_daily[j+row].night[NEE_05_QC_Y],
-														rows_night_daily[j+row].night[NEE_16_Y],
-														rows_night_daily[j+row].night[NEE_16_QC_Y],
-														rows_night_daily[j+row].night[NEE_25_Y],
-														rows_night_daily[j+row].night[NEE_25_QC_Y],
-														rows_night_daily[j+row].night[NEE_50_Y],
-														rows_night_daily[j+row].night[NEE_50_QC_Y],
-														rows_night_daily[j+row].night[NEE_75_Y],
-														rows_night_daily[j+row].night[NEE_75_QC_Y],
-														rows_night_daily[j+row].night[NEE_84_Y],
-														rows_night_daily[j+row].night[NEE_84_QC_Y],
-														rows_night_daily[j+row].night[NEE_95_Y],
-														rows_night_daily[j+row].night[NEE_95_QC_Y],
-														rows_night_daily[j+row].day[NEE_05_Y],
-														rows_night_daily[j+row].day[NEE_05_QC_Y],
-														rows_night_daily[j+row].day[NEE_16_Y],
-														rows_night_daily[j+row].day[NEE_16_QC_Y],
-														rows_night_daily[j+row].day[NEE_25_Y],
-														rows_night_daily[j+row].day[NEE_25_QC_Y],
-														rows_night_daily[j+row].day[NEE_50_Y],
-														rows_night_daily[j+row].day[NEE_50_QC_Y],
-														rows_night_daily[j+row].day[NEE_75_Y],
-														rows_night_daily[j+row].day[NEE_75_QC_Y],
-														rows_night_daily[j+row].day[NEE_84_Y],
-														rows_night_daily[j+row].day[NEE_84_QC_Y],
-														rows_night_daily[j+row].day[NEE_95_Y],
-														rows_night_daily[j+row].day[NEE_95_QC_Y]
-						);
-					} else {
-						fprintf(f, "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g",
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE,
-														(PREC)INVALID_VALUE
-						);
+						if ( exists ) {
+							nee_ref_night_joinUnc_y = compute_join(rows_night_daily[j+row].night[NEE_REF_Y_RAND],rows_night_daily[j+row].night[NEE_16_Y],rows_night_daily[j+row].night[NEE_84_Y]);
+							nee_ref_day_joinUnc_y = compute_join(rows_night_daily[j+row].day[NEE_REF_Y_RAND],rows_night_daily[j+row].day[NEE_16_Y],rows_night_daily[j+row].day[NEE_84_Y]);
+							nee_ust50_night_joinUnc_y = compute_join(rows_night_daily[j+row].night[NEE_UST50_Y_RAND],rows_night_daily[j+row].night[NEE_16_Y],rows_night_daily[j+row].night[NEE_84_Y]);
+							nee_ust50_day_joinUnc_y = compute_join(rows_night_daily[j+row].day[NEE_UST50_Y_RAND],rows_night_daily[j+row].day[NEE_16_Y],rows_night_daily[j+row].day[NEE_84_Y]);
+							fprintf(f, "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g",
+															rows_night_daily[j+row].night[NEE_REF_Y],
+															rows_night_daily[j+row].night_std[NEE_REF_Y],
+															rows_night_daily[j+row].night_qc[NEE_REF_Y],
+															rows_night_daily[j+row].night[NEE_REF_Y_RAND],
+															nee_ref_night_joinUnc_y,
+															rows_night_daily[j+row].day[NEE_REF_Y],
+															rows_night_daily[j+row].day_std[NEE_REF_Y],
+															rows_night_daily[j+row].day_qc[NEE_REF_Y],
+															rows_night_daily[j+row].day[NEE_REF_Y_RAND],
+															nee_ref_day_joinUnc_y,
+															rows_night_daily[j+row].night[NEE_UST50_Y],
+															rows_night_daily[j+row].night_std[NEE_UST50_Y],
+															rows_night_daily[j+row].night_qc[NEE_UST50_Y],
+															rows_night_daily[j+row].night[NEE_UST50_Y_RAND],
+															nee_ust50_night_joinUnc_y,
+															rows_night_daily[j+row].day[NEE_UST50_Y],
+															rows_night_daily[j+row].day_std[NEE_UST50_Y],
+															rows_night_daily[j+row].day_qc[NEE_UST50_Y],
+															rows_night_daily[j+row].day[NEE_UST50_Y_RAND],
+															nee_ust50_day_joinUnc_y,
+															rows_night_daily[j+row].night[NEE_05_Y],
+															rows_night_daily[j+row].night[NEE_05_QC_Y],
+															rows_night_daily[j+row].night[NEE_16_Y],
+															rows_night_daily[j+row].night[NEE_16_QC_Y],
+															rows_night_daily[j+row].night[NEE_25_Y],
+															rows_night_daily[j+row].night[NEE_25_QC_Y],
+															rows_night_daily[j+row].night[NEE_50_Y],
+															rows_night_daily[j+row].night[NEE_50_QC_Y],
+															rows_night_daily[j+row].night[NEE_75_Y],
+															rows_night_daily[j+row].night[NEE_75_QC_Y],
+															rows_night_daily[j+row].night[NEE_84_Y],
+															rows_night_daily[j+row].night[NEE_84_QC_Y],
+															rows_night_daily[j+row].night[NEE_95_Y],
+															rows_night_daily[j+row].night[NEE_95_QC_Y],
+															rows_night_daily[j+row].day[NEE_05_Y],
+															rows_night_daily[j+row].day[NEE_05_QC_Y],
+															rows_night_daily[j+row].day[NEE_16_Y],
+															rows_night_daily[j+row].day[NEE_16_QC_Y],
+															rows_night_daily[j+row].day[NEE_25_Y],
+															rows_night_daily[j+row].day[NEE_25_QC_Y],
+															rows_night_daily[j+row].day[NEE_50_Y],
+															rows_night_daily[j+row].day[NEE_50_QC_Y],
+															rows_night_daily[j+row].day[NEE_75_Y],
+															rows_night_daily[j+row].day[NEE_75_QC_Y],
+															rows_night_daily[j+row].day[NEE_84_Y],
+															rows_night_daily[j+row].day[NEE_84_QC_Y],
+															rows_night_daily[j+row].day[NEE_95_Y],
+															rows_night_daily[j+row].day[NEE_95_QC_Y]
+							);
+						} else {
+							fprintf(f, "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g",
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE,
+															(PREC)INVALID_VALUE
+							);
+						}
 					}
 				}
-
 				if ( datasets[dataset].years_count >= 3 ) {
 					if ( no_rand_unc ) {
 						if ( exists ) {
@@ -6230,7 +6306,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				}
 				continue;
 			}
-			rand_unc_dd(unc_rows, unc_rows_aggr, datasets[dataset].rows_count, datasets[dataset].years_count, (HOURLY_TIMERES == datasets[dataset].details->timeres));
+			rand_unc_dd(unc_rows, unc_rows_aggr, datasets[dataset].rows_count, datasets[dataset].years_count, (HOURLY_TIMERES == datasets[dataset].details->timeres), skip_y);
 			ref_y_old = ref_y;
 			ref_c_old = ref_c;
 		}
@@ -7539,7 +7615,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				change_qcs(nee_matrix_c, datasets[dataset].rows_count);
 			}
 
-			rand_unc_dd(unc_rows, unc_rows_aggr, datasets[dataset].rows_count, datasets[dataset].years_count, (HOURLY_TIMERES == datasets[dataset].details->timeres));
+			rand_unc_dd(unc_rows, unc_rows_aggr, datasets[dataset].rows_count, datasets[dataset].years_count, (HOURLY_TIMERES == datasets[dataset].details->timeres), skip_y);
 			ref_y_old = ref_y;
 			ref_c_old = ref_c;
 		}
@@ -8578,7 +8654,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				}
 				continue;
 			}
-			rand_unc_dd(unc_rows, unc_rows_aggr, datasets[dataset].rows_count, datasets[dataset].years_count, (HOURLY_TIMERES == datasets[dataset].details->timeres));
+			rand_unc_dd(unc_rows, unc_rows_aggr, datasets[dataset].rows_count, datasets[dataset].years_count, (HOURLY_TIMERES == datasets[dataset].details->timeres), skip_y);
 			ref_y_old = ref_y;
 			ref_c_old = ref_c;
 		}
