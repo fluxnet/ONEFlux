@@ -38,6 +38,7 @@ import oneflux_steps.ustar_cp_python.utils
 from oneflux_steps.ustar_cp_python import *
 from oneflux_steps.ustar_cp_python.utilities import *
 from oneflux_steps.ustar_cp_python.cpd_evaluate_functions import *
+from oneflux_steps.ustar_cp_python.cpdFindChangePoint_functions import *
 
 def pytest_addoption(parser):
     parser.addoption("--language", action="store", default="matlab")

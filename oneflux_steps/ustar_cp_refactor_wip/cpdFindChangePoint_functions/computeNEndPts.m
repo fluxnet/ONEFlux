@@ -8,7 +8,6 @@ function [nEndPts] = computeNEndPts(n)
     %   n          - Number of elements in the dataset
     %
     % OUTPUTS:
-    %   nEndPtsN   - Base minimum number of endpoints (hard-coded as 3)
     %   nEndPts    - Computed number of endpoints, floored at 5% of n,
     %                not falling below nEndPtsN
     

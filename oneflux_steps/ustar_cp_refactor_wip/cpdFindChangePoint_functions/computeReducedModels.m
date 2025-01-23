@@ -9,15 +9,10 @@ function [SSERed2, SSERed3] = computeReducedModels(x, y, n)
 %   n - number of data points
 %
 % OUTPUTS:
-%   yHat2   - mean(y), predicted value for the reduced model with only an intercept
 %   SSERed2 - sum of squared errors for reduced model (only intercept)
 %   a       - linear regression coefficients [intercept; slope]
 %   yHat3   - predicted values from the linear model a(1) + a(2)*x
 %   SSERed3 - sum of squared errors for the reduced model with intercept & slope
-%   nRed2   - number of parameters in the reduced model 2 (1)
-%   nFull2  - number of parameters in the full model 2 (2)
-%   nRed3   - number of parameters in the reduced model 3 (2)
-%   nFull3  - number of parameters in the full model 3 (3)
 %
 
 % 1) Reduced model with only mean (intercept)

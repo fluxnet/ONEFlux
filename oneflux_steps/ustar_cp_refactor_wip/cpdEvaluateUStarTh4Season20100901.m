@@ -131,8 +131,8 @@
 
 			metadata.inputNames = {'muStar', 'mNEE', 'fPlot', 'cPlot'};
 			metadata.outputNames = {'xCp2', 'xs2', 'xCp3', 'xs3'};
-			[xCp2,xs2,xCp3,xs3] = logFuncResult('log.json', @cpdFindChangePoint20100901, metadata, muStar, mNEE, fPlot, cPlot);
-			% [xCp2,xs2,xCp3,xs3] = cpdFindChangePoint20100901(muStar,mNEE,fPlot,cPlot); 
+			% [xCp2,xs2,xCp3,xs3] = logFuncResult('log.json', @cpdFindChangePoint20100901, metadata, muStar, mNEE, fPlot, cPlot);
+			[xCp2,xs2,xCp3,xs3] = cpdFindChangePoint20100901(muStar,mNEE,fPlot,cPlot); 
 			
 			%	add fields not assigned by cpdFindChangePoint function
 			
