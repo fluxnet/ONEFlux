@@ -1,6 +1,5 @@
 import numpy as np
-from oneflux_steps.ustar_cp_python.myprctile import myprctile
-from oneflux_steps.ustar_cp_python.utils import transpose
+from oneflux_steps.ustar_cp_python.utils import transpose, prctile
 
 def allNonPositive(dx):
     """
@@ -15,7 +14,6 @@ def allNonPositive(dx):
         return True
     else:
         return False
-
 
 def fcBin(x, y, dx, nPerBin):
     """
@@ -47,7 +45,6 @@ def fcBin(x, y, dx, nPerBin):
         # and the number of such positions
         iYaN = np.where(~np.isnan(x + y))
         nYaN = len(x[iYaN])
-        
 
         # Number of bins we need is then the non-values / number of points per bin
         nBins = int(np.floor(nYaN / nPerBin))
@@ -67,8 +64,7 @@ def fcBin(x, y, dx, nPerBin):
           iprctile = np.clip(iprctile, 0, 100)
 
         # Calculate the `x` value at the top of percentile per bin
-        dx = myprctile(x[iYaN], iprctile)
-
+        dx = prctile(x[iYaN], iprctile)
 
         # xL has all but last point
         # xU has all but first point
@@ -89,12 +85,18 @@ def fcBin(x, y, dx, nPerBin):
             else:
                 shrinkFactor += 1
 
-    # dx is a scalar (or single element vector, and not a 2D matrix)
-    elif (not(hasattr(dx, "__len__"))) or (hasattr(dx, "__len__") and (len(dx) == 1) and not(hasattr(dx[0], "__len__"))):
-
+    # dx is a scalar (or single element vector, or singleton 2D matrix)
+    elif (not(hasattr(dx, "__len__")) or (hasattr(dx, "__len__") and (len(dx) == 1) and (hasattr(dx[0], "__len__")) and (len(dx[0]) == 1))):
         # Find the lower and upper bounds with x
-        nx = np.min(x, 0)
-        xx = np.max(x, 0)
+
+        # For non-column vectors, take column-wise min and max
+        if x.ndim == 2 and len(x) > 1 and len(x[0]) > 1:
+            nx = np.min(x, 0)
+            xx = np.max(x, 0)
+        else:
+          # Otherwise take the min / max over the whole column
+          nx = np.min(x)
+          xx = np.max(x)
 
         # Turn these into the integer values of the bounds
         nx = dx*np.floor(nx / dx)
@@ -127,17 +129,20 @@ def fcBin(x, y, dx, nPerBin):
             else:
                 shrinkFactor += 1
 
-
     # dx is a vector (with more than one element)
     else:
+        # Lower and upper bounds of the bins
         xL = dx[:-1]
         xU = dx[1:]
+
+        # Initialize the output vectors with NaNs
         mx = np.full(len(xL), np.nan)
         my = np.full(len(xL), np.nan)
-        shrinkFactor = 0
 
+        # Iterate through the bins and fill them with the mean values
         for i in np.arange(0, len(xL)):
             ix = np.where((~np.isnan(x+y)) & (x >= xL[i]) & (x <= xU[i]))
+
             if len(x[ix]) >= nPerBin:
                 mx[nBins] = np.mean(x[ix])
                 my[nBins] = np.mean(y[ix])

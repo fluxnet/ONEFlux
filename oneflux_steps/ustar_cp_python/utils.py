@@ -853,7 +853,7 @@ def prctile(a, q):
     q = np.asarray(q)
     if np.size(a) == 0:
         return np.full_like(q, np.nan)
-    a = np.percentile(np.asarray(a), q)
+    a = np.percentile(np.asarray(a), q, method="hazen")
     return a
 
 

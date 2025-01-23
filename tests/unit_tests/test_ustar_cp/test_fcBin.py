@@ -14,11 +14,12 @@ from hypothesis.strategies import floats, lists, integers
 
 import os
 
+# Set the maximum float size for the tests to avoid overflows
 maxFloatSize = 1e6
 
 def avoidOverflows(data):
   if (np.max(data) > maxFloatSize) or (np.min(data) < -maxFloatSize):
-    return [item / maxFloatSize for item in data]
+    return avoidOverflows([item / maxFloatSize for item in data])
   else:
     return data
   
@@ -34,6 +35,7 @@ def test_singleton_bins_1D_data(data, scale, translate, test_engine):
 
     # Use the initial data to generate two vectors worth of data
     # based on some scaling and translation to get data2
+    data = avoidOverflows(data)
     data1 = data
     data2 = [scale * item + translate for item in data]
 
@@ -81,7 +83,7 @@ def test_singleton_bins_2D_data(data, scale, row, translate, test_engine):
     data = data + [np.nan] * (row - len(data) % row)
     # Turn data into a 2D array with row length given by `row`
     data = np.array(data).reshape(-1, row)
-
+    data = avoidOverflows(data)
 
     # Use the initial data to generate two vectors worth of data
     # based on some scaling and translation to get data2
@@ -93,8 +95,6 @@ def test_singleton_bins_2D_data(data, scale, row, translate, test_engine):
     data2 = avoidOverflows(data2)
 
     # Use `fcBin`
-    print("data1 = " + str(data1))
-    print("data2 = " + str(data2))
     nBins, mx, my  = test_engine.fcBin(test_engine.convert(data1), test_engine.convert(data2),
                                          test_engine.convert([]), 1.0, nargout=3)
 
@@ -157,7 +157,17 @@ test_data_dx_length_eq_zero = [
   , "mx": [[2.0], [4.0], [6.0], [8.0], [10.0]]
   , "my": [[8.0], [6.0], [4.0], [2.0], [0.0]]
   , "nBins": 5
-  }
+  },
+
+  {"x": np.array([[5.0,1.3],[10.0,2.0]])
+  , "y": np.array([[1.0,10.0],[2.0,200.0]])
+  , "dx": []
+  , "nPerBin": 1.0
+  , "mx": [[1.3],[2.0],[5.0],[10.0]]
+  , "my": [[10],[200],[1],[2]]
+  , "nBins": 4
+   },
+
   ]
 
 # Test fixtures for scalar dx
@@ -252,6 +262,7 @@ def test_cpdBin_sitedata(test_engine):
     artifacts_dir = 'tests/test_artifacts/fcBin_artifacts'
     # Get all directories within artifacts_dir
     for site_year in os.listdir(artifacts_dir):
+      #print(site_year)
       if os.path.isdir(f'{artifacts_dir}/{site_year}'):
         input_data = {}
         for name in input_names:
