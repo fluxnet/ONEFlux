@@ -1,0 +1,1 @@
+{"findStratumIndices":{"siteFile":"CA-Cbo_qca_ustar_2007","description":"findStratumIndices","input":{"T":"tests/test_artifacts/input_T.csv","itSeason":"tests/test_artifacts/input_itSeason.csv","TTh":"tests/test_artifacts/input_TTh.csv","iStrata":"tests/test_artifacts/input_iStrata.csv"},"output":{"itStrata":"tests/test_artifacts/output_itStrata.csv"}}}
