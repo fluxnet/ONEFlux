@@ -4,7 +4,7 @@ from scipy.stats import f
 from scipy.interpolate import PchipInterpolator
 
 # This module provides the core of the change-point model
-# but abstracted for both 2-parameter and 3-parameter diagnostics
+# abstracted for both 2-parameter and 3-parameter diagnostics
 
 def cpdFmax2pCore(Fmax : float, n: int, k : int
                 , pTable : np.ndarray , nTable : np.ndarray

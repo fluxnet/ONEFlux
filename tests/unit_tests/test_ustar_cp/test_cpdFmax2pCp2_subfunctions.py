@@ -2,7 +2,6 @@
 import pytest
 from tests.conftest import test_engine
 
-
 def test_cpdFmax2pCp2_with_valid_data(test_engine):
     """
     Test cpdFmax2pCp2 with typical valid data.
