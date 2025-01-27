@@ -31,6 +31,7 @@ from sys import stdin, stdout, stderr
 from scipy.io import loadmat
 from scipy.special import gamma
 
+# TODO: remove
 import matlab
 
 
@@ -39,6 +40,7 @@ eps = np.finfo(float).eps
 NaN = np.nan
 
 
+# TODO: remove
 ALL_MATLAB_TYPES = (
     matlab.double,
     matlab.logical,
@@ -52,6 +54,43 @@ ALL_MATLAB_TYPES = (
     matlab.uint64,
 )
 
+
+def transpose(a):
+    """
+    A multi-purpose transpose function that
+    - on 2-dimensions, does the usual matrix transpotision
+    - on 1-dimensional data, converts a row vector to a column vector
+     
+    Note that a column vector already looks 2-dimensional, and so its
+     transpose gives us back a row-vector (but as a matrix), thus
+     this operation is not an involution.
+
+    >>> transpose(np.array([[1,2],[3,4]]))
+    array([[1, 3],
+          [2, 4]])
+    >>> transpose(np.array([1,2,3]))
+    array([[1],
+          [2],
+          [3]])
+    >>> transpose(transpose(np.array([1,2,3])))
+    array([[1, 2, 3]])
+
+    """
+    if np.ndim(a) == 2:
+        # if we have a tuple then
+        # we have to convert it to a list
+        # because tuples are immutable
+        if isinstance(a, tuple):
+            a = np.asarray(list(a))
+
+        return a.transpose()
+    elif np.ndim(a) == 1:
+        return a.reshape(-1, 1)
+    elif np.ndim(a) == 0:
+        return a
+    else:
+        error("Transpose is not defined for arrays of dimension greater than 2, but given data of dimension " + str(np.ndim(a)))
+    
 
 def function(f):
     from contextlib import redirect_stdout, redirect_stderr
@@ -820,8 +859,8 @@ def prctile(a, q):
     q = np.asarray(q)
     if np.size(a) == 0:
         return np.full_like(q, np.nan)
-    a = np.percentile(np.asarray(a), q)
-    return matlabarray(a)
+    a = np.percentile(np.asarray(a), q, method="hazen")
+    return a
 
 
 def dot(a, b):

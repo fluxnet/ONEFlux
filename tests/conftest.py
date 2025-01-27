@@ -29,6 +29,7 @@ import atexit
 import numpy as np
 from matlab.engine.matlabengine import MatlabFunc
 
+from oneflux_steps.ustar_cp_python.utils import transpose
 
 class MFWrapper:
     def __init__(self, func):
@@ -108,7 +109,7 @@ class TestEngine(ABC):
         return "Test Engine"
 
     @abstractmethod
-    def convert(self, x):
+    def convert(self, x, fromFile=False):
         """Convert the input to a type compatible with this engine. Can just be identity
         if the runner is Python"""
         return np.array(x)
@@ -128,12 +129,19 @@ class PythonEngine(TestEngine):
     def _repr_pretty_(self, *args):
         return "Python Test Engine"
 
-    def convert(self, x, index=False):
+    def convert(self, x, index=False, fromFile=False):
         """Convert input to a compatible type."""
         if x is None:
             raise ValueError("Input cannot be None")
         if isinstance(x, list):
-            return np.asarray(x)
+            # Transpose to capture MATLAB data layout
+            # when the data has been serialised from MATLAB
+            # to a file
+            if fromFile:
+              return transpose(np.array(x).astype(np.float64))
+            else:
+              return np.array(x).astype(np.float64)
+              
         elif isinstance(x, tuple):
             return tuple([self.convert(xi) for xi in x])
         else:
@@ -155,7 +163,7 @@ class PythonEngine(TestEngine):
             return all(self.equal(xi, yi) for xi, yi in zip(x, y))
         else:
             return x == y
-    
+
     def __getattribute__(self, name):
         if name in ["convert", "unconvert", "equal", "_repr_pretty_"]:
             return object.__getattribute__(self, name)
