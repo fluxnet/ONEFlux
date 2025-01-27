@@ -14,7 +14,7 @@ from hypothesis.strategies import floats, lists, integers
 
 import os
 
-def avoidOverflows(data, maxFloatSize=1e6, depth=0, max_depth=10):
+def avoidOverflows(data, maxFloatSize=1e6, depth=0, max_depth=20):
     if depth > max_depth: # Just in case there is too much recursion
         return data
     if np.all((np.abs(item) <= maxFloatSize or np.isnan(item)) for item in data):
@@ -40,7 +40,6 @@ def test_singleton_bins_1D_data(data, scale, translate, test_engine):
     data2 = [scale * item + translate for item in data]
 
     # If data is very big, scale it down to avoid overflows in the tests
-    data1 = avoidOverflows(data1)
     data2 = avoidOverflows(data2)
 
     # Use `fcBin`
@@ -80,6 +79,7 @@ def test_singleton_bins_2D_data(data, scale, row, translate, test_engine):
     for two-dimesional data"""
 
     # Pad data to be a multiple of `row`
+    data = avoidOverflows(data)
     data = data + [np.nan] * (row - len(data) % row)
     # Turn data into a 2D array with row length given by `row`
     data = np.array(data).reshape(-1, row)
@@ -91,7 +91,6 @@ def test_singleton_bins_2D_data(data, scale, row, translate, test_engine):
     data2 = [[scale * item + translate for item in row] for row in data]
 
     # If data is very big, scale it down to avoid overflows in the tests
-    data1 = avoidOverflows(data1)
     data2 = avoidOverflows(data2)
 
     # Use `fcBin`
