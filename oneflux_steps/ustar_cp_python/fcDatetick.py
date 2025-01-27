@@ -1,4 +1,4 @@
-from oneflux_steps.ustar_cp_python.utils import arange, dot, unique, xlim
+from oneflux_steps.ustar_cp_python.utils import floor, ceil, dot, arange, xlim, unique
 from oneflux_steps.ustar_cp_python.fcDatevec import fcDatevec
 from oneflux_steps.ustar_cp_python.fcDatenum import datenum
 import numpy as np
