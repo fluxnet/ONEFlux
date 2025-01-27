@@ -3,7 +3,7 @@ from datetime import timedelta as td
 from math import ceil, floor
 from numpy import vectorize
 
-def datenum(Y, M, D):
+def datenum(Y : int, M : int, D : int) -> int:
     """
     Convert date to serial date number.
 
