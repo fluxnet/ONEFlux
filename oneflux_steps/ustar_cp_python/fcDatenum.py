@@ -2,8 +2,9 @@ from datetime import datetime as dt
 from datetime import timedelta as td
 from math import ceil, floor
 from numpy import vectorize
+import numpy as np
 
-def datenum(Y : int, M : int, D : int) -> int:
+def datenum(Y : int | np.ndarray, M : int | np.ndarray, D : int| np.ndarray) -> int | np.ndarray:
     """
     Convert date to serial date number.
 
@@ -18,6 +19,8 @@ def datenum(Y : int, M : int, D : int) -> int:
 
     Returns:
     int: Serial date number corresponding to the input date.
+
+    Or all of these could be NumPy arrays of integers
 
     Notes:
     - Year 0 is treated as a leap year.
