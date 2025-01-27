@@ -47,8 +47,8 @@ def fcDatetick(t : float | np.ndarray, sFrequency : str, iDateStr : int, fLimits
         xDates = t[::48]
 
       case "14Dy":
-        iYr1 = np.floor(iSerMo1 / 12) + 1
-        iMo1 = np.mod(iSerMo1, 12)
+        iYr1 = floor(iSerMo1 / 12) + 1
+        iMo1 = iSerMo1 % 12
         if iMo1 == 0:
             iMo1 = 12
             iYr1 = iYr1 - 1
@@ -56,7 +56,7 @@ def fcDatetick(t : float | np.ndarray, sFrequency : str, iDateStr : int, fLimits
             xDates = [datenum(iYr1, int(month), iDy) for month in arange(iMo1, (iMo1 + nSerMos))]
 
       case "Mo":
-        iYr1 = np.floor(iSerMo1 / 12) + 1
+        iYr1 = floor(iSerMo1 / 12) + 1
         iMo1 = iSerMo1 % 12
         if iMo1 == 0:
             iMo1 = 12
@@ -83,12 +83,12 @@ def fcDatetick(t : float | np.ndarray, sFrequency : str, iDateStr : int, fLimits
 
         # convert from a date floating-point
         # ordinal to a datetime object
-        cDates = [datetime.datetime.fromordinal(np.floor(t) + 1).strftime("%Y-%m-%d") for t in xDates]
+        cDates = [datetime.datetime.fromordinal(floor(t) + 1).strftime("%Y-%m-%d") for t in xDates]
 
         plt.gca().set_xticklabels(cDates)
 
     if fLimits == 1:
-        xlim([np.floor(min(xDates)), np.ceil(max(xDates))])
+        xlim([floor(min(xDates)), ceil(max(xDates))])
         # Turn on the grid and box using matplotlib
         plt.grid("on")
         plt.box("on")
