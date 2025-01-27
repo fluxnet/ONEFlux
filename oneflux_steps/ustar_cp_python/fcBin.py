@@ -1,21 +1,21 @@
 import numpy as np
 from oneflux_steps.ustar_cp_python.utils import transpose, prctile
 
-def allNonPositive(dx : np.ndarray):
+def allNonPositive(dx : int | float | np.ndarray):
     """
     Helper function that determines whether the input is all zero or negative
 
     For a scalar this is checking <= 0 for a vector
     it is checking whether all are <= 0
     """
-    if hasattr(dx, "__len__") and len(dx) > 0:
+    if isinstance(dx, np.ndarray) and len(dx) > 0:
         return np.all(dx.flatten() <= 0)
     elif dx <= 0:
         return True
     else:
         return False
 
-def fcBin(x : np.ndarray, y : np.ndarry, dx : int | float | np.ndarray, nPerBin : int):
+def fcBin(x : np.ndarray, y : np.ndarray, dx : int | float | np.ndarray, nPerBin : int):
     """
     fcBin calculates binned mean values of vectors x and y
     for use in change-point (uStarTh) detection
@@ -38,7 +38,7 @@ def fcBin(x : np.ndarray, y : np.ndarry, dx : int | float | np.ndarray, nPerBin 
         return nBins, mx, my
 
     # dx is an empty vector
-    if hasattr(dx, "__len__") and (len(dx) == 0):
+    if isinstance(dx, np.ndarray) and (len(dx) == 0):
         # bin the data into bins with nPerBin points in each bin.
 
         # Positions of `x` and `y` where neither is NaN
