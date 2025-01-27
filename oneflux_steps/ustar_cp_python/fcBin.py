@@ -15,7 +15,7 @@ def allNonPositive(dx : np.ndarray):
     else:
         return False
 
-def fcBin(x : np.ndarray, y : np.ndarry, dx : int | np.ndarray, nPerBin : int):
+def fcBin(x : np.ndarray, y : np.ndarry, dx : int | float | np.ndarray, nPerBin : int):
     """
     fcBin calculates binned mean values of vectors x and y
     for use in change-point (uStarTh) detection
