@@ -5,6 +5,7 @@ from .fcr2Calc import fcr2Calc
 from .cpdFmax2pCp2 import cpdFmax2pCp2
 from .cpdFmax2pCp3 import cpdFmax2pCp3
 from .cpdFmax2pCore import interpolate_FmaxCritical, calculate_p_low, calculate_p_interpolate
+from .fcBin import fcBin
 
 from os.path import dirname, basename, isfile, join
 import glob
