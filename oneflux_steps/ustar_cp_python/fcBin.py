@@ -1,7 +1,7 @@
 import numpy as np
 from oneflux_steps.ustar_cp_python.utils import transpose, prctile
 
-def allNonPositive(dx):
+def allNonPositive(dx : np.ndarray):
     """
     Helper function that determines whether the input is all zero or negative
 
@@ -15,7 +15,7 @@ def allNonPositive(dx):
     else:
         return False
 
-def fcBin(x, y, dx, nPerBin):
+def fcBin(x : np.ndarray, y : np.ndarry, dx : int | np.ndarray, nPerBin : int):
     """
     fcBin calculates binned mean values of vectors x and y
     for use in change-point (uStarTh) detection
