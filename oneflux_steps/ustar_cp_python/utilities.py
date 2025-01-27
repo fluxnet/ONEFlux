@@ -22,10 +22,10 @@ def prctile(A: np.ndarray, p: float) -> float|np.ndarray:
     percentiles = 100 * (np.arange(0.5, n) / n)
     
     # Handle bounds explicitly
-    if p <= percentiles[0]:
-        return A_sorted[0]
-    elif p >= percentiles[-1]:
-        return A_sorted[-1]
+    #if p <= percentiles[0]:
+        #return A_sorted[0]
+    #elif p >= percentiles[-1]:
+        #return A_sorted[-1]
     
     # Linear interpolation
     return np.interp(p, percentiles, A_sorted)
