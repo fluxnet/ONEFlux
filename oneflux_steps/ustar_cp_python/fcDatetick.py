@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import datetime
 
-def fcDatetick(t : np.ndarray, sFrequency : str, iDateStr : int, fLimits : float):
+def fcDatetick(t : float | np.ndarray, sFrequency : str, iDateStr : int, fLimits : float):
     """
     Generate date ticks for a plot based on the given time vector and frequency.
 
