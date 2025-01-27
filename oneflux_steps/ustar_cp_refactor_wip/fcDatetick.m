@@ -1,4 +1,4 @@
-	function fcDatetick(t,sFrequency,iDateStr,fLimits); 
+function fcDatetick(t,sFrequency,iDateStr,fLimits); 
 	% In ONEFlux only ever gets called with `iDateStr = 4`
   % and `sFrequency = 'Mo'` and `fLimits = 1`
 
