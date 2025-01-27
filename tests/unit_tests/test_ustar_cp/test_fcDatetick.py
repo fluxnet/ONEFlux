@@ -1,5 +1,4 @@
 import pytest
-import matlab.engine
 import numpy as np
 
 # Parameterised test fixtures for fcDatetick (myDateTick)
@@ -47,10 +46,10 @@ def test_fcDatetick(test_engine, data):
     Test MATLAB's fcDatetick function with various edge cases.
     """
     # Prepare MATLAB inputs
-    t_matlab = matlab.double(data["t"])
+    t_matlab = test_engine.convert(data["t"])
     sFrequency = data["sFrequency"]
     iDateStr = data["iDateStr"]
-    fLimits = matlab.double(data["fLimits"])
+    fLimits = test_engine.convert(data["fLimits"])
 
     # Call MATLAB function
     result = 0
