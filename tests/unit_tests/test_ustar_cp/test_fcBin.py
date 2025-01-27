@@ -14,14 +14,14 @@ from hypothesis.strategies import floats, lists, integers
 
 import os
 
-# Set the maximum float size for the tests to avoid overflows
-maxFloatSize = 1e6
-
-def avoidOverflows(data):
-  if (np.max(data) > maxFloatSize) or (np.min(data) < -maxFloatSize):
-    return avoidOverflows([item / maxFloatSize for item in data])
-  else:
-    return data
+def avoidOverflows(data, maxFloatSize=1e6, depth=0, max_depth=10):
+    if depth > max_depth: # Just in case there is too much recursion
+        return data
+    if np.all((np.abs(item) <= maxFloatSize or np.isnan(item)) for item in data):
+        return data
+    # Scale down and increment recursion depth
+    scaled_data = [item / maxFloatSize if not np.isnan(item) else item for item in data]
+    return avoidOverflows(scaled_data, maxFloatSize, depth + 1, max_depth)
   
 # Hypothesis tests for fcBin
 @given(data=lists(floats(allow_nan=True, allow_infinity=False), min_size=2),
