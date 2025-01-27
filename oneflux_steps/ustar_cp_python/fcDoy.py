@@ -1,5 +1,5 @@
 from oneflux_steps.ustar_cp_python.fcDatevec import fcDatevec
-from oneflux_steps.ustar_cp_python.fcDatenum import mydatenum
+from oneflux_steps.ustar_cp_python.fcDatenum import datenum
 import numpy as np
 
 def fcDoy(t=None):
@@ -43,9 +43,9 @@ def fcDoy(t=None):
         return np.vectorize(convert)(y, m, d)
       else:
         # Convert the date to a datetime object
-        tt = mydatenum(int(y), int(m), int(d)) # datenum(y, m, d)
+        tt = datenum(int(y), int(m), int(d)) # datenum(y, m, d)
         # Subtract the last day of the previous year
-        d = np.floor(tt - mydatenum(int(y - 1), 12, 31))
+        d = np.floor(tt - datenum(int(y - 1), 12, 31))
         return d
 
     d = np.vectorize(convert)(y, m, d)
