@@ -7,7 +7,7 @@ import pytest
 import numpy as np
 import pandas as pd
 import matlab
-from oneflux_steps.ustar_cp_python.cpdFindChangePoint_functions import computeReducedModels
+from oneflux_steps.ustar_cp_python.cpdFindChangePoint_functions import computeReducedModels, removeOutliers, fitOperational3ParamModel
 
 
 def read_csv_file(artifacts_dir, year, iteration, name, site, kind):
@@ -17,6 +17,9 @@ def read_csv_file(artifacts_dir, year, iteration, name, site, kind):
     """
     path_to_csv = f"{artifacts_dir}/{site}_{year}_{iteration}/{kind}_{name}.csv"
     data = pd.read_csv(path_to_csv, header=None).values.tolist()
+    if len(data) == 1 and len(data[0]) == 1:
+        data = data[0][0]  # Unpack single values
+    #if data is a single interger, return the integer, not a list
     return data
 
 
@@ -34,6 +37,8 @@ def load_data(test_engine, artifacts_dir, year, iteration, input_names, site, ki
         if name in other_dtypes:
             # We assume the structure is two rows that map keys to values
             io_data[name] = dict(zip(data[0], data[1]))
+        elif name in ['i', 'iAbv', 'iCp3', 'iCp2']:
+            io_data[name] = test_engine.convert(data, 'to_python')
         else:
             io_data[name] = test_engine.convert(data)
     return io_data
@@ -174,6 +179,9 @@ def test_removeNans(test_engine, xx, yy, expected_xx, expected_yy):
     xx, yy = test_engine.removeNans(test_engine.convert(xx), test_engine.convert(yy), nargout=2)
 
     # Perform assertions
+    # x = 1.1111111111111111111
+    # test.convert(x)
+    # print(x)
     print(xx, yy)
     print(expected_xx, expected_yy)
     assert test_engine.equal(xx, test_engine.convert(expected_xx))
@@ -209,12 +217,15 @@ def test_removeOutliers(test_engine, xx, yy, expected_x, expected_y):
     n = len(xx)
 
     # Call the MATLAB function
+    test_x, test_y = removeOutliers(xx, yy, n)
     x, y = test_engine.removeOutliers(test_engine.convert(xx), test_engine.convert(yy), n, nargout=2)
 
     # Perform assertions
-    print(x[:10].shape, y[:10].shape)
-    print(expected_x[:10].shape, expected_y[:10].shape)
+    # print(x[:10].shape, y[:10].shape)
+    # print(expected_x[:10].shape, expected_y[:10].shape)
     # assert False
+    print(x, y)
+    print(test_x, test_y)
     assert test_engine.equal(test_engine.convert(x), test_engine.convert(expected_x))
     assert test_engine.equal(test_engine.convert(y), test_engine.convert(expected_y))
 
@@ -269,6 +280,7 @@ def test_updateS2(test_engine, year, iteration):
     expected_s2 = pd.read_csv(path_to_artifacts, header=None)
     expected_s2 = np.asarray(expected_s2.values.tolist()[1], dtype=float)
 
+    print(s2)
     s2_values = np.asarray(list(s2.values()), dtype=float)
 
     assert test_engine.equal(test_engine.convert(s2_values), test_engine.convert(expected_s2))
@@ -334,16 +346,19 @@ def test_fitOperational3ParamModel(test_engine, year, iteration):
 
     input_names = ['i', 'iAbv', 'n', 'x', 'y', 'SSERed3', 'Fc3']
     artifacts_dir = 'tests/test_artifacts/fitOperational3ParamModel_artifacts' 
-
+ 
     input_data = load_data(test_engine, artifacts_dir, year, iteration, input_names, 'CA-Cbo_qca_ustar', 'input')
-
+    # python_fc3 = fitOperational3ParamModel(*input_data.values())
 
     Fc3 = test_engine.fitOperational3ParamModel(*input_data.values(), nargout=1)
 
     output_names = ['Fc3']
-
     output_data = load_data(test_engine, artifacts_dir, year, iteration, output_names, 'CA-Cbo_qca_ustar', 'output')
 
+    print("FC£: ",Fc3)
+    # print(python_fc3)
+    #print(output_data['Fc3'])
+    # assert False
     assert test_engine.equal(Fc3, output_data['Fc3'])
 
 
@@ -376,12 +391,12 @@ def test_fitThreeParameterModel(test_engine, year, iteration):
     assert test_engine.equal(Cp3, output_data['Cp3'])
 
 
-testcase_fitThreeParameterModel = [('2007', 0),
+testcase_fitTwoParameterModel = [('2007', 0),
                                         ('2007', 150),
                                         ('2007', 250),
                                         ('2007', 600)
                           ]
-@pytest.mark.parametrize('year, iteration', testcase_fitThreeParameterModel)
+@pytest.mark.parametrize('year, iteration', testcase_fitTwoParameterModel)
 def test_fitTwoParameterModel(test_engine, year, iteration):
 
     input_names = ['Fc2', 'x', 'y', 'n', 'pSig']

@@ -34,6 +34,7 @@ function [Fc3] = fitOperational3ParamModel( ...
     x2 = (x - x(i)) .* zAbv;
 
     % Fit the 3-parameter model
+    % A = [ones(n,1) x1 x2];
     a3 = [ones(n,1) x1 x2] \ y;
 
     % Predicted values
@@ -41,7 +42,8 @@ function [Fc3] = fitOperational3ParamModel( ...
 
     % Full model SSE
     SSEFull3 = sum((y - yHat3).^2);
-
     % Compute F-statistic
+    % Fc3 = a3;
     Fc3(i) = (SSERed3 - SSEFull3) / (SSEFull3 / (n - nFull3));
+    % Fc3 =a3;
 end

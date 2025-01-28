@@ -28,5 +28,8 @@ function [x, y] = removeOutliers(x, y, n)
     % Remove outliers from x and y
     x(iOut) = [];
     y(iOut) = [];
+
+    % x = iOut;
+    % y = sdy;
 end
 
