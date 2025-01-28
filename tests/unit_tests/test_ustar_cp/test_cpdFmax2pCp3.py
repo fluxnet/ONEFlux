@@ -97,8 +97,10 @@ def test_calculate_p_low(test_engine, Fmax, FmaxCritical_low, n, expected_p, des
     Fmax = test_engine.convert(Fmax)
     FmaxCritical_low = test_engine.convert(FmaxCritical_low)
     n = test_engine.convert(n)
+    # cp3 lower tail probability
+    lowerP = 0.95
 
-    result = test_engine.calculate_p_low(Fmax, FmaxCritical_low, n)
+    result = test_engine.calculate_p_low(lowerP, Fmax, FmaxCritical_low, n)
 
     assert test_engine.equal(test_engine.convert(result), expected_p), description
 
@@ -144,6 +146,6 @@ def test_interpolate_FmaxCritical(n, nTable, FmaxTable, expected_FmaxCritical, d
     nTable = test_engine.convert(nTable)
     FmaxTable = test_engine.convert(FmaxTable)
 
-    result = test_engine.interpolate_FmaxCritical(n, nTable, FmaxTable)
+    result = test_engine.interpolate_FmaxCritical(n, 3, nTable, FmaxTable)
 
     assert test_engine.equal(test_engine.convert(expected_FmaxCritical), result), description

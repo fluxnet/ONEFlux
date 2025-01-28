@@ -24,6 +24,7 @@ def fcDatevec(t : numpy.ndarray) -> tuple:
     if (hasattr(t, "__len__") and len(t) > 0 and hasattr(t[0], "__len__")):
         # Input is 2-Dimensional, so vectorise ourselves
         return numpy.vectorize(fcDatevec)(t)
+    
     t = numpy.asarray(t)
 
     # Quantise the input to the granularity of 0.0001 seconds in a day
