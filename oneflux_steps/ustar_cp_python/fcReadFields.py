@@ -1,41 +1,9 @@
-from oneflux_steps.ustar_cp_python.utils import *
-
-# @function
-# def fcReadFields(s=None, FieldName=None):
-#     globals().update(load_all_vars())
-
-#     nd = ndims(s)
-#     # oneflux_steps/ustar_cp_refactor_wip/fcReadFields.m:3
-#     ns = size(s)
-#     # oneflux_steps/ustar_cp_refactor_wip/fcReadFields.m:3
-#     x = matlabarray(dot(NaN, ones(ns)))
-#     # oneflux_steps/ustar_cp_refactor_wip/fcReadFields.m:3
-#     if 2 == nd:
-#         for i in arange(1, take(ns, 1)).reshape(-1):
-#             for j in arange(1, take(ns, 2)).reshape(-1):
-#                 tmp = getfield(s, cellarray([i, j]), FieldName)
-#                 # oneflux_steps/ustar_cp_refactor_wip/fcReadFields.m:9
-#                 if logical_not(isempty(tmp)):
-#                     x[i, j] = tmp
-#     # oneflux_steps/ustar_cp_refactor_wip/fcReadFields.m:10
-#     else:
-#         if 3 == nd:
-#             for i in arange(1, take(ns, 1)).reshape(-1):
-#                 for j in arange(1, take(ns, 2)).reshape(-1):
-#                     for k in arange(1, take(ns, 3)).reshape(-1):
-#                         tmp = getfield(s, cellarray([i, j, k]), FieldName)
-#                         # oneflux_steps/ustar_cp_refactor_wip/fcReadFields.m:17
-#                         if logical_not(isempty(tmp)):
-#                             x[i, j, k] = tmp
-#     # oneflux_steps/ustar_cp_refactor_wip/fcReadFields.m:18
-
-#     return x
-
+from oneflux_steps.ustar_cp_python.utils import size, jsondecode, ndims
 import numpy as np
 
-def fcReadFields(s, field_name, *vargs):
+def fcReadFields(s : str | dict, field_name : str, *vargs) -> np.ndarray:
     """
-    Extracts the specified field from a structured array.
+    Extracts the specified field from a structured array or JSON string.
 
     Parameters:
     s (array-like): Structured array.
@@ -44,32 +12,37 @@ def fcReadFields(s, field_name, *vargs):
     Returns:
     np.ndarray: Array containing the values of the specified field.
     """
-    s = jsondecode(s)
-    nd = ndims(s)
-    ns = size(s, b = 0, nargout=2)
-    print(ns)
-    print("nd: ", nd)
-    print("len s: ", len(s))
-    # if s is not a structure array then wrap it up into a structure array
-    if not isinstance(s, np.ndarray):
-        s = np.array([s])
+    # Decode the JSON string 
+    s_decoded = jsondecode(s)
+    # Computer the number of dimension (minimum 2)
+    nd = ndims(s_decoded)
+    # Compute the size
+    ns = size(s_decoded, b = 0, nargout=2)
 
-    print("s[0] = ", s[0])
-    print("s[0][0] = ", s[0][0])
+    # if s is not a structure array or list then wrap it up into a structured array
+    # corresponding to the dimensionality
+    if not isinstance(s_decoded, np.ndarray) and not isinstance(s_decoded, list):
+        if nd == 2:
+          s_struct = np.array([[s_decoded]])
+        elif nd == 3:
+          s_struct = np.array([[[s_decoded]]])
+        else:
+          s_struct = s_decoded
+    else:
+        s_struct = s_decoded
+
     x = np.full(ns, np.nan)
     if nd == 2:
-        print("nd == 2")
         for i in range(ns[0]):
             for j in range(ns[1]):
-                print( s[i][j].get(field_name))
-                tmp = getfield(s, cellarray([i, j]), FieldName) # s[i][j].get(field_name, np.nan)
+                tmp = s_struct[i][j].get(field_name, np.nan)
                 if tmp is not None:
                     x[i, j] = tmp
     elif nd == 3:
         for i in range(ns[0]):
             for j in range(ns[1]):
                 for k in range(ns[2]):
-                    tmp = getfield(s, cellarray([i, j, k]), FieldName) # s[i][j][k].get(field_name, np.nan)
+                    tmp = s_struct[i][j][k].get(field_name, np.nan)
                     if tmp is not None:
                         x[i, j, k] = tmp
     return x
