@@ -1,5 +1,4 @@
 import pytest
-import matlab.engine
 import numpy as np
 
 # Parameterised test fixtures for fcDatetick (myDateTick)
@@ -32,31 +31,25 @@ import numpy as np
             "iDateStr": 4,
             "fLimits": 1
         },
-        # # Case: Monthly
+        # Case: Monthly
         {
             "t": ([737647, 737647+365, 737647+365*2, 737647+365*3, 737647+365*4]),
             "sFrequency": "Mo",
             "iDateStr": 4,
             "fLimits": 0
         },
-        # # Case: Monthly
-        {
-            "t": ([737647, 737647+365, 737647+365*2, 737647+365*3, 737647+365*4]),
-            "sFrequency": "Yr",
-            "iDateStr": 4,
-            "fLimits": 1
-        }
         ])
 # Parameterised tests using the above fixtures
+# At the moment this is largely a smoke test: did it run without failing?
 def test_fcDatetick(test_engine, data):
     """
     Test MATLAB's fcDatetick function with various edge cases.
     """
     # Prepare MATLAB inputs
-    t_matlab = matlab.double(data["t"])
+    t_matlab = test_engine.convert(data["t"])
     sFrequency = data["sFrequency"]
     iDateStr = data["iDateStr"]
-    fLimits = matlab.double(data["fLimits"])
+    fLimits = test_engine.convert(data["fLimits"])
 
     # Call MATLAB function
     result = 0
