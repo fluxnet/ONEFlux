@@ -45,15 +45,23 @@ def fcReadFields(s, field_name, *vargs):
     np.ndarray: Array containing the values of the specified field.
     """
     s = jsondecode(s)
-    nd = np.ndim(s)
-    ns = np.shape(s)
+    nd = ndims(s)
+    ns = size(s, b = 0, nargout=2)
+    print(ns)
+    print("nd: ", nd)
+    print("len s: ", len(s))
+    # if s is not a structure array then wrap it up into a structure array
+    if not isinstance(s, np.ndarray):
+        s = np.array([s])
+
+    print("s[0] = ", s[0])
+    print("s[0][0] = ", s[0][0])
     x = np.full(ns, np.nan)
-    error(s[0][0])
     if nd == 2:
+        print("nd == 2")
         for i in range(ns[0]):
             for j in range(ns[1]):
                 print( s[i][j].get(field_name))
-                fail(s[i][j].get(field_name))
                 tmp = getfield(s, cellarray([i, j]), FieldName) # s[i][j].get(field_name, np.nan)
                 if tmp is not None:
                     x[i, j] = tmp

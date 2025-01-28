@@ -482,7 +482,15 @@ def mod(a, b):
 
 
 def ndims(a):
-    return np.asarray(a).ndim
+    # Scalars treated as 2D (singleton) matrics by ndim
+    if isinstance(a, int) or isinstance(a, float):
+        return 2
+    else:
+        ndim = np.asarray(a).ndim
+        if ndim < 2:
+            return 2
+        else:
+            return ndim
 
 
 def numel(a):
