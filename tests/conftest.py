@@ -28,6 +28,7 @@ import io
 import atexit
 import numpy as np
 from matlab.engine.matlabengine import MatlabFunc
+from typing import Any
 
 from oneflux_steps.ustar_cp_python.utils import transpose
 
@@ -88,6 +89,7 @@ import oneflux_steps.ustar_cp_python.utils
 
 # Python version imported here
 from oneflux_steps.ustar_cp_python import *
+from oneflux_steps.ustar_cp_python.fcNaniqr import *
 from oneflux_steps.ustar_cp_python.cpdFmax2pCore import *
 from oneflux_steps.ustar_cp_python.fcDatenum import *
 from oneflux_steps.ustar_cp_python.cpdFmax2pCp3 import *
@@ -535,26 +537,15 @@ def compare_text_blocks(text1, text2):
     """
     return text1.replace('\n', '').strip() == text2.replace('\n', '').strip()
 
-def to_matlab_type(data):
+def to_matlab_type(data: Any) -> Any:
     """
     Converts various Python data types to their MATLAB equivalents.
 
-    This function handles conversion of Python dictionaries, NumPy arrays, lists,
-    and numeric types to MATLAB-compatible types using the `matlab` library.
-
     Args:
-        data (any): The input data to be converted. Can be a dictionary, NumPy array,
-                    list, integer, float, or other types.
+        data (Any): The input data to be converted.
 
     Returns:
-        any: The converted data in a MATLAB-compatible format. The specific return type
-             depends on the input data type:
-             - dict: Converted to a MATLAB struct.
-             - np.ndarray: Converted to MATLAB logical, double, or list.
-             - list: Converted to MATLAB double array or cell array.
-             - int, float: Converted to MATLAB double.
-             - Other types: Returned as-is if already MATLAB-compatible.
-
+        Any: The converted data in a MATLAB-compatible format.
     """
     if isinstance(data, dict):
         # Convert a Python dictionary to a MATLAB struct

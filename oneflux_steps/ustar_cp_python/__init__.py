@@ -4,11 +4,13 @@ from .fcx2rowvec import fcx2rowvec
 from .fcDatetick import fcDatetick
 from .fcDoy import fcDoy
 from .fcr2Calc import fcr2Calc
+from .cpdFmax2pCp3 import cpdFmax2pCp3
+from .fcNaniqr import *
 from .cpdFmax2pCp2 import cpdFmax2pCp2
 from .cpdFmax2pCore import interpolate_FmaxCritical, calculate_p_low, calculate_p_interpolate
-from .cpdFmax2pCp3 import cpdFmax2pCp3
 from .fcDatenum import datenum
 from .fcBin import fcBin
+
 
 from os.path import dirname, basename, isfile, join
 import glob
