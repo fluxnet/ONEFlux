@@ -15,6 +15,7 @@ function [nBins,mx,my] = fcBin(x,y,dx,nPerBin);
 
 %	-----------------------------------------------------------------------
 
+
 	nBins=0; mx=[]; my=[];
   % TODO, should this be any(dx <= 0)?
 	if dx<=0; disp('Function cpdBin aborted. dx cannot be <=0. ');  return; end;

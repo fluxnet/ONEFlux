@@ -1,11 +1,17 @@
 import numpy
 
+# TODO: probably we don't need this; utils/prctile is used in fcBin
+
 def myprctile(Y, q):
     """
     Stripped down version of Octave prctile.m
     """
-    Q = myquantile(Y, q/float(100))
-    return Q
+    # If Y is empty, return NaNs for size of q
+    if numpy.size(Y) == 0:
+      return numpy.full_like(q, numpy.nan)
+    else:        
+      Q = myquantile(Y, numpy.double(q)/numpy.double(100.0))
+      return Q
 
 def myquantile(x, p, method=5):
     """

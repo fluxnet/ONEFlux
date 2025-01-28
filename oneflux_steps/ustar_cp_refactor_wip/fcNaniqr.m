@@ -29,46 +29,15 @@
 
 	% find non-singleton dimensions of length d
 
-	d=size(X); 
-	d=setdiff(d,1); 
-	nd=length(d); 
+	nd = get_dims(X);
 	
 	switch nd; 
 		case 1; 
-	      iYaN=find(~isnan(X)); 
-		  nYaN=length(iYaN); 
-		  IQR=NaN; 
-			if nYaN<=3;
-				y=X(iYaN); 
-				yN=prctile(y,25); 
-				yX=prctile(y,75); 
-				IQR=yX-yN; 
-			end; 
+	    	IQR = iqr_1D_eval(X);
 		case 2; 
-			[nr,nc]=size(X); 
-			IQR=NaN*ones(1,nc); 
-			for ic=1:nc;
-				iYaN=find(~isnan(X(:,ic))); 
-				nYaN=length(iYaN);
-				if nYaN>3;
-					y=X(iYaN,ic); yN=prctile(y,25); yX=prctile(y,75); IQR(ic)=yX-yN;
-				end;
-			end;
+			IQR = iqr_2d_eval(X);
 		case 3; 
-			[nr,nc,nq]=size(X); 
-			IQR=NaN*ones(nc,nq); 
-			for iq=1:nq;
-				for ic=1:nc;
-					iYaN=find(~isnan(X(:,ic,iq))); 
-					nYaN=length(iYaN);
-					if nYaN>3;
-						y=X(iYaN,ic,iq); 
-						yN=prctile(y,25); 
-						yX=prctile(y,75); 
-						IQR(ic,iq)=yX-yN;
-					end; 
-				end;
-			end;
+			IQR = iqr_3d_eval(X);
    
 	end; 
 	
