@@ -1,6 +1,5 @@
 # test_cpdFmax2pCp2.py
 import pytest
-from tests.conftest import test_engine
 
 def test_cpdFmax2pCp2_with_valid_data(test_engine):
     """

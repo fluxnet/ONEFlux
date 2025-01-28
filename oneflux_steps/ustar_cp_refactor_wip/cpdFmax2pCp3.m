@@ -27,11 +27,11 @@ function p = cpdFmax2pCp3(Fmax, n)
     FmaxTable = get_FmaxTable();
 
     % Interpolate critical Fmax values
-    FmaxCritical = interpolate_FmaxCritical(n, nTable, FmaxTable);
+    FmaxCritical = interpolate_FmaxCritical(n, 3, nTable, FmaxTable);
 
     % Calculate p based on Fmax comparison
     if Fmax < FmaxCritical(1)
-        p = calculate_p_low(Fmax, FmaxCritical(1), n);
+        p = calculate_p_low(0.95 ,Fmax, FmaxCritical(1), n);
     elseif Fmax > FmaxCritical(3)
         p = calculate_p_high(Fmax, FmaxCritical(3), n);
     else
