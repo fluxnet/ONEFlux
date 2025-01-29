@@ -10,7 +10,7 @@ import xlwt
 # local modules
 from fcDatevec import mydatevec
 from fcDoy import mydoy
-from fcDatenum import mydatenum
+from fcDatenum import datenum
 from fcBin import cpdBin
 from cpdFindChangePoint20100901 import cpdFindChangePoint20100901
 from myprctile import myprctile
@@ -71,7 +71,7 @@ def cpdEvaluateUStarTh4Season20100901(t, NEE, uStar, T, fNight, fPlot, cSiteYr):
     Y, M, D, h, m, s = mydatevec(t)
     # mydatevec returns float because it uses numpy.nan
     iYr = int(numpy.median(Y))
-    dn = mydatenum(iYr, 12, 31, 12, 0, 0)
+    dn = datenum(iYr, 12, 31, 12, 0, 0)
     EndDOY = mydoy(dn)
     nPerDay = int(round(1 / numpy.median(numpy.diff(t))))
     nSeasons = 4

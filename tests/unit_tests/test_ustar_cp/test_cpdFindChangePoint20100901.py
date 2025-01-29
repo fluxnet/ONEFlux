@@ -1,5 +1,4 @@
 import pytest
-import matlab.engine
 import numpy as np
 
 @pytest.fixture
@@ -10,14 +9,14 @@ def test_data():
                       [lambda x: 2 * x + 1, lambda x: -x + 10, lambda x: 0.5 * x - 0.5])
     return xx, yy
 
-def test_cpdFindChangePoint20100901(matlab_engine, test_data):
+def test_cpdFindChangePoint20100901(test_engine, test_data):
     # Define test inputs
     xx, yy = test_data
     fPlot = 0
     cPlot = 'Test Plot'
 
     # Call the MATLAB function
-    Cp2, s2, Cp3, s3 = matlab_engine.cpdFindChangePoint20100901(xx, yy, fPlot, cPlot, nargout=4)
+    Cp2, s2, Cp3, s3 = test_engine.cpdFindChangePoint20100901(xx, yy, fPlot, cPlot, nargout=4)
 
     # Perform assertions
     assert isinstance(Cp2, float)

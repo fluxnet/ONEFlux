@@ -34,30 +34,18 @@ import numpy as np
         ([0, 1, 0], [], []),
     ],
 )
-def test_fcEqnAnnualSine_edge_cases(matlab_engine, b, t, expected):
+
+def test_fcEqnAnnualSine_edge_cases(test_engine, b, t, expected, request):
     """
-    Test MATLAB's fcEqnAnnualSine function with various edge cases.
+    Test fcEqnAnnualSine function with various edge cases.
     """
-    # Prepare MATLAB inputs
-    b_matlab = matlab.double(b)
-    t_matlab = matlab.double(t)
+    
+    # Prepare inputs
+    b_input = test_engine.convert(b)
+    t_input = test_engine.convert(t)
 
-    # Call MATLAB function
-    result = np.array(matlab_engine.fcEqnAnnualSine(b_matlab, t_matlab)).flatten()
+    # Call MATLAB or Python function
+    result = test_engine.fcEqnAnnualSine(b_input, t_input)
 
-    # Verify Result
-    assert result is not None, "Expected non-None result from MATLAB function"
-
-    # Perform Element-wise Comparison
-    for idx, exp_val in enumerate(expected):
-        # Extract result as scalar
-        try:
-            result_value = float(result[idx])
-        except (IndexError, TypeError):
-            result_value = np.nan
-
-        # Handle NaN and numerical comparisons
-        if np.isnan(exp_val):
-            assert np.isnan(result_value), f"Expected NaN, got {result_value} at index {idx}"
-        else:
-            assert np.isclose(result_value, exp_val, atol=1e-6), f"Expected {exp_val}, got {result_value} at index {idx}"
+    # Verify result
+    assert test_engine.equal(result, expected)
