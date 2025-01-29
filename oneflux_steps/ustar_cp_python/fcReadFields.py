@@ -6,14 +6,17 @@ def fcReadFields(s : str | dict, field_name : str, *vargs) -> np.ndarray:
     Extracts the specified field from a structured array or JSON string.
 
     Parameters:
-    s (array-like): Structured array.
+    s: Structured data either as a dictionary or a JSON string.
     field_name (str): Name of the field to extract.
 
     Returns:
     np.ndarray: Array containing the values of the specified field.
     """
     # Decode the JSON string 
-    s_decoded = jsondecode(s)
+    if isinstance(s, str):
+      s_decoded = jsondecode(s)
+    else:
+      s_decoded = s
     # Computer the number of dimension (minimum 2)
     nd = ndims(s_decoded)
     # Compute the size
