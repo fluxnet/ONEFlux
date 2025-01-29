@@ -30,8 +30,6 @@ import numpy as np
 from matlab.engine.matlabengine import MatlabFunc
 from typing import Any
 
-from oneflux_steps.ustar_cp_python.utils import transpose
-
 class MFWrapper:
     def __init__(self, func):
         self.func = func
@@ -85,7 +83,7 @@ MatlabFunc.__new__ = mf_factory
 from abc import ABC, abstractmethod
 import warnings
 
-import oneflux_steps.ustar_cp_python.utils
+import oneflux_steps.ustar_cp_python.utilities
 
 # Python version imported here
 from oneflux_steps.ustar_cp_python import *
