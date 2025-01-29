@@ -1,5 +1,5 @@
 import numpy as np
-from oneflux_steps.ustar_cp_python.utils import squeeze
+from oneflux_steps.ustar_cp_python.utilities import squeeze
 
 def fcr2Calc(y=None, yHat=None):
     """

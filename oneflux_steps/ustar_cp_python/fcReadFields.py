@@ -1,4 +1,4 @@
-from oneflux_steps.ustar_cp_python.utils import size, jsondecode, ndims
+from oneflux_steps.ustar_cp_python.utilities import size, jsondecode, ndims
 import numpy as np
 
 def fcReadFields(s : str | dict, field_name : str, *vargs) -> np.ndarray:
