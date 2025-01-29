@@ -1,8 +1,22 @@
 import numpy as np
 from typing import Dict, List
-from oneflux_steps.ustar_cp_python.utilities import dot, ones
+from oneflux_steps.ustar_cp_python.utilities import dot, intersect
 
-def generate_stats_mt() -> Dict[str, float]:
+def cpdBootstrapUStarTh4Season20100901(*args, **kwargs):
+    """
+    cpdBootstrapUStarTh4Season20100901: Bootstrap the uStarTh for a season
+
+    Args:
+        *args: Variable length argument list.
+        **kwargs: Arbitrary keyword arguments.
+
+    Returns:
+        None
+    """
+    # TODO: implement this function
+    return None
+
+def generate_statsMT() -> Dict[str, float]:
     """
     Initialize a stats structure with NaN values for predefined fields.
 
@@ -21,7 +35,7 @@ def generate_stats_mt() -> Dict[str, float]:
     return stats_mt
 
 
-def setup_stats(n_boot: int, n_seasons: int, n_strata_x: int) -> List[List[List[Dict[str, float]]]]|dict[str, float]:
+def setup_Stats(n_boot: int, n_seasons: int, n_strata_x: int, **kwargs) -> List[List[List[Dict[str, float]]]]|dict[str, float]:
     """
     Initialize the Stats structure based on input dimensions.
 
@@ -42,7 +56,7 @@ def setup_stats(n_boot: int, n_seasons: int, n_strata_x: int) -> List[List[List[
                              with value {n}. This may lead undesired behaviour')
 
     # Preallocate stats array
-    stats = [[[generate_stats_mt() for _ in range(n_strata_x)]
+    stats = [[[generate_statsMT() for _ in range(n_strata_x)]
               for _ in range(n_seasons)]
              for _ in range(n_boot)]
 
@@ -50,4 +64,30 @@ def setup_stats(n_boot: int, n_seasons: int, n_strata_x: int) -> List[List[List[
 
 def setup_Cp(nSeasons=None, nStrataX=None, nBoot=None):
     # TODO: check definition, may need to use the definition in utils.py
-    return dot(np.nan, np.ones(nSeasons, nStrataX, nBoot))
+    return dot(np.nan, np.ones([nSeasons, nStrataX, nBoot]))
+
+# TODO: rough attempt in np
+def get_itNee(NEE=None, uStar=None, T=None, iNight=None):
+    itNee = np.where(np.logical_not(np.isnan(NEE + uStar + T)))
+    # itNee = intersect(itNee, iNight)
+    return []
+
+def get_ntN(t = None, nSeasons=None):
+    # TODO
+    return []
+
+def update_uStar(x):
+    # TODO
+    return 0
+
+def get_iNight(x):
+    # TODO
+    return 0
+
+def get_nPerBin(x):
+    # TODO
+    return 0
+
+def get_nPerDay(x):
+    # TODO
+    return 0

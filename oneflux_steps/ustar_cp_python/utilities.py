@@ -60,6 +60,37 @@ def floor(a : np.ndarray) -> np.ndarray:
     """
     return np.asanyarray(a // 1).astype(int)
 
+def intersect(a : np.ndarray, b : np.ndarray, nargout=1) -> np.ndarray:
+    """
+    Return the intersection of two arrays.
+    
+    Parameters:
+    a : np.ndarray
+        The first array to intersect
+
+    b : np.ndarray
+        The second array to intersect
+    
+    nargout : int
+        The number of output arguments to return
+
+    Returns:
+    np.ndarray
+        The intersection of the two arrays
+    """
+    from builtins import set
+
+    if nargout == 1:
+        c = sorted(set(a.flat) & set(b.flat))
+        if isinstance(a, str):
+            return "".join(c)
+        elif isinstance(a, list):
+            return c
+        else:
+            # FIXME: the result is a column vector if
+            # both args are column vectors; otherwise row vector
+            return np.array(c).reshape((1, -1) if a.shape[1] > 1 else (-1, 1))
+    raise NotImplementedError
 
 def jsonencode(a):
     return a if isinstance(a, cellarray) else json.dumps(a)

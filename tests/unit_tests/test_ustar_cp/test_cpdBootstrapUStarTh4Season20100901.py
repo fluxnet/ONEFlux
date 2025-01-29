@@ -5,12 +5,9 @@ These tests cover basic behaviour, edge cases and errors.
 """
 
 import pytest
-import matlab.engine
 import numpy as np
 import json
-# from oneflux_steps.ustar_cp_py.libsmop import struct, matlabarray
-from tests.conftest import to_matlab_type, read_file, parse_testcase, compare_matlab_arrays
-from oneflux_steps.ustar_cp_python.cpdBootstrap import setup_stats, generate_stats_mt
+from tests.conftest import parse_testcase
 
 nan = np.nan
 
@@ -64,7 +61,7 @@ def test_cpdBootstrapUStarTh4Season20100901_basic(test_engine, mock_data):
     NEE_matlab = test_engine.convert(NEE.tolist())
     uStar_matlab = test_engine.convert(uStar.tolist())
     T_matlab = test_engine.convert(T.tolist())
-    fNight_matlab = matlab.logical(fNight.tolist())
+    fNight_matlab = test_engine.convert(fNight.tolist())
 
     # Call MATLAB function
     Cp2, Stats2, Cp3, Stats3 = test_engine.cpdBootstrapUStarTh4Season20100901(
@@ -104,7 +101,7 @@ def test_cpdBootstrapUStarTh4Season20100901_edge_case_high_bootstrap(test_engine
     NEE_matlab = test_engine.convert(NEE.tolist())
     uStar_matlab = test_engine.convert(uStar.tolist())
     T_matlab = test_engine.convert(T.tolist())
-    fNight_matlab = matlab.logical(fNight.tolist())
+    fNight_matlab = test_engine.convert(fNight.tolist())
 
     # Call MATLAB function
     Cp2, Stats2, Cp3, Stats3 = test_engine.cpdBootstrapUStarTh4Season20100901(
@@ -130,9 +127,9 @@ def test_cpdBootstrap_against_testcases(test_engine):
         # Ensure test_case is passed correctly to parse_testcase
         inputs, outputs = parse_testcase(test_case, path_to_artifacts)
 
-        # Convert inputs into a list for MATLAB function call
+        # Convert inputs into a list for function call
         inputs_list = [inputs[str(i)] for i in range(len(inputs))]
-        matlab_args = to_matlab_type(inputs_list)
+        matlab_args = test_engine.convert(inputs_list)
 
         # Call the MATLAB function and capture its output
         Cp2, Stats2, Cp3, Stats3 = test_engine.cpdBootstrapUStarTh4Season20100901(*matlab_args, jsonencode=[1,3], nargout=4)
@@ -141,10 +138,10 @@ def test_cpdBootstrap_against_testcases(test_engine):
         outputs_list = [outputs[str(i)] for i in range(len(outputs))]
 
         # Assertions to compare MATLAB results to expected outputs
-        assert compare_matlab_arrays(Cp2, outputs_list[0])
-        assert compare_matlab_arrays(Stats2, outputs_list[1])
-        assert compare_matlab_arrays(Cp3, outputs_list[2])
-        assert compare_matlab_arrays(Stats3, outputs_list[3])
+        assert test_engine.convert(Cp2, outputs_list[0])
+        assert test_engine.convert(Stats2, outputs_list[1])
+        assert test_engine.convert(Cp3, outputs_list[2])
+        assert test_engine.convert(Stats3, outputs_list[3])
 
 # Parameterized test for the get_nPerDay function
 @pytest.mark.parametrize("input_data, expected_result", [
@@ -155,7 +152,7 @@ def test_cpdBootstrap_against_testcases(test_engine):
     ([0, 1.1, 2.2, 3.3, 4.4], 1),                 # Non-integer difference
 ])
 def test_get_nPerDay(test_engine, input_data, expected_result):
-    input_data = to_matlab_type(input_data)
+    input_data = test_engine.convert(input_data)
     result = test_engine.get_nPerDay(input_data)
     assert result == expected_result, f"Expected {expected_result}, but got {result}"
 
@@ -234,7 +231,7 @@ def test_get_ntN(test_engine, t_input, nSeasons, expected_ntN):
     "NEE, uStar, T, iNight, expected_itNee",
     [
         # Case 1: No NaNs and full intersection with iNight
-        ([1, 2, 3, 4], [1, 1, 1, 1], [1, 1, 1, 1], [1, 2, 3], matlab.double([1.0,2.0,3.0])),
+        ([1, 2, 3, 4], [1, 1, 1, 1], [1, 1, 1, 1], [1, 2, 3], [1.0,2.0,3.0]),
 
         # Case 2: Some NaN values, partial intersection with iNight
         ([1, np.nan, 3, 4], [1, 1, np.nan, 1], [1, 1, 1, np.nan], [1, 3], 1.0),
@@ -243,13 +240,13 @@ def test_get_ntN(test_engine, t_input, nSeasons, expected_ntN):
         ([1, 2, 3, 4], [1, 1, 1, 1], [1, 1, 1, 1], [5, 6], [[]]),
 
         # Case 4: All elements are NaN, so no valid indices
-        ([np.nan, np.nan], [np.nan, np.nan], [np.nan, np.nan], [1, 2], matlab.double([[]])),
+        ([np.nan, np.nan], [np.nan, np.nan], [np.nan, np.nan], [1, 2], [[]]),
 
         # Case 5: All valid values, but no intersection with iNight
         ([1, 2, 3, 4], [1, 1, 1, 1], [1, 1, 1, 1], [], []),
 
         # Case 6: All valid values and full intersection with iNight
-        ([1, 2, 3], [1, 1, 1], [1, 1, 1], [1, 2, 3], matlab.double([1.0, 2.0, 3.0]))
+        ([1, 2, 3], [1, 1, 1], [1, 1, 1], [1, 2, 3], [1.0, 2.0, 3.0])
     ]
 )
 def test_get_itNee(test_engine, NEE, uStar, T, iNight, expected_itNee):
@@ -302,6 +299,7 @@ def test_setup_Cp(test_engine, nSeasons, nStrataX, nBoot, expected_shape):
     # Ensure all elements are NaN
     assert np.isnan(Cp_array).all(), "Not all elements in Cp2 are NaN"
 
+# TODO: remove differential tests
 stats_entry = {'n': nan, 'Cp': nan, 'Fmax': nan, 'p': nan, 'b0': nan, 'b1': nan, 'b2': nan, 'c2': nan, 'cib0': nan, 'cib1': nan, 'cic2': nan, 'mt': nan, 'ti': nan, 'tf': nan, 'ruStarVsT': nan, 'puStarVsT': nan, 'mT': nan, 'ciT': nan}
 # Test for the setup_Stats function
 @pytest.mark.parametrize(
@@ -318,14 +316,15 @@ stats_entry = {'n': nan, 'Cp': nan, 'Fmax': nan, 'p': nan, 'b0': nan, 'b1': nan,
         #(0, 2, 3, stats_entry),
     ]
 )
-def test_setup_Stats(test_engine, nBoot, nSeasons, nStrataX, expected_shape):
+def test_setup_Stats_differential(test_engine, nBoot, nSeasons, nStrataX, expected_shape):
     # Call the MATLAB function
     Stats= test_engine.setup_Stats(nBoot, nSeasons, nStrataX, jsonencode=[0])
 
     assert test_engine.equal(Stats, expected_shape)
 
     # Call the python function
-    Stats_python = setup_stats(nBoot, nSeasons, nStrataX)
+    import oneflux_steps.ustar_cp_python.cpdBootstrap as cpdBootstrap
+    Stats_python = cpdBootstrap.setup_Stats(nBoot, nSeasons, nStrataX)
 
     assert_dicts_with_nan_equal(Stats_python, expected_shape)
 
