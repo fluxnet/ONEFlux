@@ -526,8 +526,36 @@ def mod(a, b):
         return a
 
 
-def ndims(a):
-    return np.asarray(a).ndim
+def ndims(a : int | float | np.ndarray) -> int:
+    """
+    Compute the number of dimensions on a piece of data
+
+    Parameters:
+    a : np.ndarray | int | float
+        The data to compute the number of dimensions for
+
+    Returns:
+    int: The number of dimensions for the data
+
+    Examples:
+    >>> ndims(1)
+    2
+    >>> ndims(np.array([1,2,3]))
+    2
+    >>> ndims(np.array([[1,2,3]]))
+    2
+    >>> ndims(np.array([[[1,2,3]]]))
+    3
+    """
+    # Scalars are treated as 2D (singleton) matrics by ndim
+    if isinstance(a, int) or isinstance(a, float):
+        return 2
+    else:
+        ndim = np.asarray(a).ndim
+        if ndim < 2:
+            return 2
+        else:
+            return ndim
 
 
 def numel(a):
@@ -615,7 +643,7 @@ def schur(a):
 def size(a, b=0, nargout=1):
     """
     >>> size(zeros(3,3)) + 1
-    matlabarray([[4, 4]])
+    np.ndarray([[4, 4]])
     """
     s = np.asarray(a).shape
     if s == ():
