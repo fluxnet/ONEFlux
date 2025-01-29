@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Dict, List
+from oneflux_steps.ustar_cp_python.utilities import dot, ones
 
 def generate_stats_mt() -> Dict[str, float]:
     """
@@ -46,3 +47,7 @@ def setup_stats(n_boot: int, n_seasons: int, n_strata_x: int) -> List[List[List[
              for _ in range(n_boot)]
 
     return stats
+
+def setup_Cp(nSeasons=None, nStrataX=None, nBoot=None):
+    # TODO: check definition, may need to use the definition in utils.py
+    return dot(np.nan, np.ones(nSeasons, nStrataX, nBoot))
