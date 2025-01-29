@@ -1,5 +1,5 @@
 import numpy as np
-from oneflux_steps.ustar_cp_python.utils import transpose, prctile
+from oneflux_steps.ustar_cp_python.utilities import transpose, prctile_hazen
 
 def allNonPositive(dx : int | float | np.ndarray):
     """
@@ -64,7 +64,7 @@ def fcBin(x : np.ndarray, y : np.ndarray, dx : int | float | np.ndarray, nPerBin
           iprctile = np.clip(iprctile, 0, 100)
 
         # Calculate the `x` value at the top of percentile per bin
-        dx = prctile(x[iYaN], iprctile)
+        dx = prctile_hazen(x[iYaN], iprctile)
 
         # xL has all but last point
         # xU has all but first point

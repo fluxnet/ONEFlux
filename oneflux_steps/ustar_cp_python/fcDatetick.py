@@ -1,4 +1,4 @@
-from oneflux_steps.ustar_cp_python.utils import floor, ceil, dot, arange, xlim, unique
+from oneflux_steps.ustar_cp_python.utilities import floor, dot, arange, xlim, unique
 from oneflux_steps.ustar_cp_python.fcDatevec import fcDatevec
 from oneflux_steps.ustar_cp_python.fcDatenum import datenum
 import numpy as np
@@ -88,7 +88,7 @@ def fcDatetick(t : float | np.ndarray, sFrequency : str, iDateStr : int, fLimits
         plt.gca().set_xticklabels(cDates)
 
     if fLimits == 1:
-        xlim([floor(min(xDates)), ceil(max(xDates))])
+        xlim([floor(min(xDates)), np.ceil(max(xDates))])
         # Turn on the grid and box using matplotlib
         plt.grid("on")
         plt.box("on")

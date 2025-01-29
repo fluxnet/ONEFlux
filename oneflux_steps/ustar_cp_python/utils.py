@@ -55,42 +55,6 @@ ALL_MATLAB_TYPES = (
 )
 
 
-def transpose(a):
-    """
-    A multi-purpose transpose function that
-    - on 2-dimensions, does the usual matrix transpotision
-    - on 1-dimensional data, converts a row vector to a column vector
-     
-    Note that a column vector already looks 2-dimensional, and so its
-     transpose gives us back a row-vector (but as a matrix), thus
-     this operation is not an involution.
-
-    >>> transpose(np.array([[1,2],[3,4]]))
-    array([[1, 3],
-          [2, 4]])
-    >>> transpose(np.array([1,2,3]))
-    array([[1],
-          [2],
-          [3]])
-    >>> transpose(transpose(np.array([1,2,3])))
-    array([[1, 2, 3]])
-
-    """
-    if np.ndim(a) == 2:
-        # if we have a tuple then
-        # we have to convert it to a list
-        # because tuples are immutable
-        if isinstance(a, tuple):
-            a = np.asarray(list(a))
-
-        return a.transpose()
-    elif np.ndim(a) == 1:
-        return a.reshape(-1, 1)
-    elif np.ndim(a) == 0:
-        return a
-    else:
-        error("Transpose is not defined for arrays of dimension greater than 2, but given data of dimension " + str(np.ndim(a)))
-    
 
 def function(f):
     from contextlib import redirect_stdout, redirect_stderr
@@ -163,12 +127,6 @@ def exec_(s, globals=None, locals=None):
     exec(s, globals, locals)
 
 
-def jsonencode(a):
-    return a if isinstance(a, cellarray) else json.dumps(a)
-
-
-def jsondecode(a):
-    return a if isinstance(a, cellarray) else json.loads(a)
 
 
 def getfield(a, *fields):
@@ -241,14 +199,6 @@ def arange_column(start, stop, step=1, **kwargs):
     expand_value = 1 if step > 0 else -1
     return np.arange(start, stop + expand_value, step, **kwargs).reshape(1, -1),
 
-def arange(start, stop, step=1, **kwargs):
-    """
-    >>> a=arange(1,10) # 1:10
-    >>> size(a)
-    matlabarray([[ 1, 10]])
-    """
-    expand_value = 1 if step > 0 else -1
-    return np.arange(start, stop + expand_value, step, **kwargs)
 
 
 def concat(args, axis=1):
@@ -262,12 +212,6 @@ def concat(args, axis=1):
     return np.concatenate(t, axis=axis).view(matlabarray)
 
 
-def squeeze(a, axis=None):
-    if axis is not None and a.shape[axis] != 1:
-        return a
-    if axis is None and a.ndim == 2 and a.shape[0] == 1:
-        return a.reshape(-1)
-    return np.squeeze(a, axis=axis)
 
 
 def reshape(a, *shape):
@@ -389,8 +333,6 @@ def find(a, n=None, d=None, nargout=1):
     raise NotImplementedError
 
 
-def floor(a):
-    return np.asanyarray(a // 1).astype(int)
 
 
 def fopen(*args):
@@ -526,38 +468,6 @@ def mod(a, b):
         return a
 
 
-def ndims(a : int | float | np.ndarray) -> int:
-    """
-    Compute the number of dimensions on a piece of data
-
-    Parameters:
-    a : np.ndarray | int | float
-        The data to compute the number of dimensions for
-
-    Returns:
-    int: The number of dimensions for the data
-
-    Examples:
-    >>> ndims(1)
-    2
-    >>> ndims(np.array([1,2,3]))
-    2
-    >>> ndims(np.array([[1,2,3]]))
-    2
-    >>> ndims(np.array([[[1,2,3]]]))
-    3
-    """
-    # Scalars are treated as 2D (singleton) matrics by ndim
-    if isinstance(a, int) or isinstance(a, float):
-        return 2
-    else:
-        ndim = np.asarray(a).ndim
-        if ndim < 2:
-            return 2
-        else:
-            return ndim
-
-
 def numel(a):
     return np.asarray(a).size
 
@@ -640,22 +550,6 @@ def schur(a):
     return matlabarray(_schur(np.asarray(a)))
 
 
-def size(a, b=0, nargout=1):
-    """
-    >>> size(zeros(3,3)) + 1
-    np.ndarray([[4, 4]])
-    """
-    s = np.asarray(a).shape
-    if s == ():
-        return 1 if b else (1,) * nargout
-    # a is not a scalar
-    try:
-        if b:
-            return s[b - 1]
-        else:
-            return np.squeeze(s)
-    except IndexError:
-        return 1
 
 
 def size_equal(a, b):
@@ -846,11 +740,6 @@ def isnan(a):
     return np.isnan(np.asarray(a))
 
 
-def unique(a):
-    """
-    Return the unique elements of an array.
-    """
-    return np.unique(np.asarray(a))
 
 
 def interp1(x, v, xq, method):
@@ -880,25 +769,8 @@ def interp1(x, v, xq, method):
     return matlabarray(f(xq))
 
 
-def prctile(a, q):
-    """
-    Compute the q-th percentile of the data along the specified axis.
-    """
-    q = np.asarray(q)
-    if np.size(a) == 0:
-        return np.full_like(q, np.nan)
-    a = np.percentile(np.asarray(a), q, method="hazen")
-    return a
 
 
-def dot(a, b):
-    """
-    Compute the dot product of two arrays.
-    """
-    try:
-        return np.dot(a, b)
-    except ValueError:
-        return sum([x * y for x, y in zip(a, b)])
 
 
 def datenum(a, *args):
@@ -1059,13 +931,6 @@ def box(on=True):
     plt.box(on)
 
 
-def xlim(left=None, right=None):
-    """
-    Set the x limits of the current axes.
-    """
-    import matplotlib.pyplot as plt
-
-    plt.xlim(left, right)
 
 
 def ylim(bottom=None, top=None):
