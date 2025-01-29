@@ -95,6 +95,7 @@ from oneflux_steps.ustar_cp_python.fcDatenum import *
 from oneflux_steps.ustar_cp_python.cpdFmax2pCp3 import *
 from oneflux_steps.ustar_cp_python.utilities import *
 from oneflux_steps.ustar_cp_python.cpd_evaluate_functions import *
+from oneflux_steps.ustar_cp_python.cpdBootstrap import *
 
 def pytest_addoption(parser):
     parser.addoption("--language", action="store", default="matlab")
