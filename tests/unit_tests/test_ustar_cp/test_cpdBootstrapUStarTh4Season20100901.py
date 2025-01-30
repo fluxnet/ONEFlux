@@ -138,10 +138,10 @@ def test_cpdBootstrap_against_testcases(test_engine):
         outputs_list = [outputs[str(i)] for i in range(len(outputs))]
 
         # Assertions to compare MATLAB results to expected outputs
-        assert test_engine.convert(Cp2, outputs_list[0])
-        assert test_engine.convert(Stats2, outputs_list[1])
-        assert test_engine.convert(Cp3, outputs_list[2])
-        assert test_engine.convert(Stats3, outputs_list[3])
+        assert test_engine.equal(Cp2, outputs_list[0])
+        assert test_engine.equal(Stats2, outputs_list[1])
+        assert test_engine.equal(Cp3, outputs_list[2])
+        assert test_engine.equal(Stats3, outputs_list[3])
 
 # Parameterized test for the get_nPerDay function
 @pytest.mark.parametrize("input_data, expected_result", [
