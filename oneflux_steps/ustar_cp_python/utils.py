@@ -31,6 +31,7 @@ from sys import stdin, stdout, stderr
 from scipy.io import loadmat
 from scipy.special import gamma
 
+# TODO: remove
 import matlab
 
 
@@ -39,6 +40,7 @@ eps = np.finfo(float).eps
 NaN = np.nan
 
 
+# TODO: remove
 ALL_MATLAB_TYPES = (
     matlab.double,
     matlab.logical,
@@ -51,6 +53,7 @@ ALL_MATLAB_TYPES = (
     matlab.uint32,
     matlab.uint64,
 )
+
 
 
 def function(f):
@@ -124,12 +127,6 @@ def exec_(s, globals=None, locals=None):
     exec(s, globals, locals)
 
 
-def jsonencode(a):
-    return a if isinstance(a, cellarray) else json.dumps(a)
-
-
-def jsondecode(a):
-    return a if isinstance(a, cellarray) else json.loads(a)
 
 
 def getfield(a, *fields):
@@ -193,17 +190,15 @@ def any(a):
     return np.any(a)
 
 
-def arange(start, stop, step=1, **kwargs):
+def arange_column(start, stop, step=1, **kwargs):
     """
     >>> a=arange(1,10) # 1:10
     >>> size(a)
     matlabarray([[ 1, 10]])
     """
     expand_value = 1 if step > 0 else -1
-    return matlabarray(
-        np.arange(start, stop + expand_value, step, **kwargs).reshape(1, -1),
-        **kwargs,
-    )
+    return np.arange(start, stop + expand_value, step, **kwargs).reshape(1, -1),
+
 
 
 def concat(args, axis=1):
@@ -217,12 +212,6 @@ def concat(args, axis=1):
     return np.concatenate(t, axis=axis).view(matlabarray)
 
 
-def squeeze(a, axis=None):
-    if axis is not None and a.shape[axis] != 1:
-        return a
-    if axis is None and a.ndim == 2 and a.shape[0] == 1:
-        return a.reshape(-1)
-    return np.squeeze(a, axis=axis)
 
 
 def reshape(a, *shape):
@@ -344,8 +333,6 @@ def find(a, n=None, d=None, nargout=1):
     raise NotImplementedError
 
 
-def floor(a):
-    return np.asanyarray(a // 1).astype(int)
 
 
 def fopen(*args):
@@ -481,10 +468,6 @@ def mod(a, b):
         return a
 
 
-def ndims(a):
-    return np.asarray(a).ndim
-
-
 def numel(a):
     return np.asarray(a).size
 
@@ -567,22 +550,6 @@ def schur(a):
     return matlabarray(_schur(np.asarray(a)))
 
 
-def size(a, b=0, nargout=1):
-    """
-    >>> size(zeros(3,3)) + 1
-    matlabarray([[4, 4]])
-    """
-    s = np.asarray(a).shape
-    if s == ():
-        return 1 if b else (1,) * nargout
-    # a is not a scalar
-    try:
-        if b:
-            return s[b - 1]
-        else:
-            return np.squeeze(s)
-    except IndexError:
-        return 1
 
 
 def size_equal(a, b):
@@ -773,11 +740,6 @@ def isnan(a):
     return np.isnan(np.asarray(a))
 
 
-def unique(a):
-    """
-    Return the unique elements of an array.
-    """
-    return matlabarray(np.unique(np.asarray(a)))
 
 
 def interp1(x, v, xq, method):
@@ -807,25 +769,8 @@ def interp1(x, v, xq, method):
     return matlabarray(f(xq))
 
 
-def prctile(a, q):
-    """
-    Compute the q-th percentile of the data along the specified axis.
-    """
-    q = np.asarray(q)
-    if np.size(a) == 0:
-        return np.full_like(q, np.nan)
-    a = np.percentile(np.asarray(a), q)
-    return matlabarray(a)
 
 
-def dot(a, b):
-    """
-    Compute the dot product of two arrays.
-    """
-    try:
-        return np.dot(a, b)
-    except ValueError:
-        return sum([x * y for x, y in zip(a, b)])
 
 
 def datenum(a, *args):
@@ -986,13 +931,6 @@ def box(on=True):
     plt.box(on)
 
 
-def xlim(left=None, right=None):
-    """
-    Set the x limits of the current axes.
-    """
-    import matplotlib.pyplot as plt
-
-    plt.xlim(left, right)
 
 
 def ylim(bottom=None, top=None):

@@ -21,7 +21,12 @@ def fcDatevec(t : numpy.ndarray) -> tuple:
      This function converts times of 00:00 to 24:00 the previous day.
     """
     # mimic MATLAB's ability to handle scalar or vector inputs
+    if (hasattr(t, "__len__") and len(t) > 0 and hasattr(t[0], "__len__")):
+        # Input is 2-Dimensional, so vectorise ourselves
+        return numpy.vectorize(fcDatevec)(t)
+    
     t = numpy.asarray(t)
+
     # Quantise the input to the granularity of 0.0001 seconds in a day
     hundredmicrosecond_days = 1.1574074074074074e-09
     t = numpy.round(t / hundredmicrosecond_days) * hundredmicrosecond_days

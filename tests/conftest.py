@@ -28,17 +28,73 @@ import io
 import atexit
 import numpy as np
 from matlab.engine.matlabengine import MatlabFunc
+from typing import Any
+
+class MFWrapper:
+    def __init__(self, func):
+        self.func = func
+        self.out = io.StringIO()
+        self.err = io.StringIO()
+        name = func._name
+        # make matlab stdout and stderr printed at the end of pytest
+        atexit.register(lambda: (s := self.out.getvalue()) and print(f"{name} stdout:\n{s}"))
+        atexit.register(lambda: (s := self.err.getvalue()) and print(f"{name} stderr:\n{s}"))
+        
+    def __call__(self, *args, jsonencode=(), jsondecode=(), **kwargs):
+        """
+        Call the wrapped function with optional JSON encoding/decoding to handle the issue that non-scalar structs (arrays of structs) cannot be returned from MATLAB functions to Python.
+        Args:
+            *args: Positional arguments to pass to the wrapped function.
+            jsonencode (tuple, optional): Indices of output arguments to JSON encode (into string) before the matlab function returns.
+            jsondecode (tuple, optional): Indices of input arguments to JSON decode (from string) at the beginning of the matlab function.
+            **kwargs: Keyword arguments to pass to the wrapped function.
+        Returns:
+            The result of the wrapped function, with specified outputs JSON decoded if necessary.
+        """
+        args = list(args)
+        if jsonencode:
+            args.append(['jsonencode'] + [i+1 for i in jsonencode])
+        if jsondecode:
+            for i in jsondecode:
+                args[i] = json.dumps(args[i])
+            args.append(['jsondecode'] + [i+1 for i in jsondecode])
+        out = kwargs.pop('stdout', self.out)
+        err = kwargs.pop('stderr', self.err)
+        ret = self.func(*args, **kwargs, stdout=out, stderr=err)
+        if jsonencode:
+            nargout = kwargs.get('nargout', 1)
+            if nargout <= 1:
+                ret = [ret]
+            else:
+                ret = list(ret)
+            for j in jsonencode:
+                ret[j] = json.loads(ret[j], object_hook=none2nan)
+            if nargout <= 1:
+                ret = ret[0]
+        return ret
+
+def mf_factory(cls, *args, **kwargs):
+    f = object.__new__(MatlabFunc)
+    f.__init__(*args, **kwargs)
+    return MFWrapper(f)
+MatlabFunc.__new__ = mf_factory
+
 # from oneflux_steps.ustar_cp_py.libsmop import matlabarray, struct
 from abc import ABC, abstractmethod
 import warnings
 
-import oneflux_steps.ustar_cp_python.utils
+import oneflux_steps.ustar_cp_python.utilities
 
 # Python version imported here
 from oneflux_steps.ustar_cp_python import *
+from oneflux_steps.ustar_cp_python.fcNaniqr import *
+from oneflux_steps.ustar_cp_python.cpdFmax2pCore import *
+from oneflux_steps.ustar_cp_python.fcDatenum import *
+from oneflux_steps.ustar_cp_python.cpdFmax2pCp3 import *
 from oneflux_steps.ustar_cp_python.utilities import *
 from oneflux_steps.ustar_cp_python.cpd_evaluate_functions import *
 from oneflux_steps.ustar_cp_python.cpdFindChangePoint_functions import *
+from oneflux_steps.ustar_cp_python.cpdBootstrap import *
 
 def pytest_addoption(parser):
     parser.addoption("--language", action="store", default="matlab")
@@ -56,7 +112,7 @@ class TestEngine(ABC):
         return "Test Engine"
 
     @abstractmethod
-    def convert(self, x):
+    def convert(self, x, fromFile=False):
         """Convert the input to a type compatible with this engine. Can just be identity
         if the runner is Python"""
         return np.array(x)
@@ -75,10 +131,12 @@ class TestEngine(ABC):
 class PythonEngine(TestEngine):
     def _repr_pretty_(self, *args):
         return "Python Test Engine"
+
 #'to_python' needs to be added back in
 # https://github.com/Cambridge-ICCS/ONEFlux/commit/04655fd915b2326ce61db0d263dcd60ec80bb5e6#diff-e52e4ddd58b7ef887ab03c04116e676f6280b824ab7469d5d3080e5cba4f2128
 # Accidently removed in a merge conflict?
-    def convert(self, x, index=False):
+
+    def convert(self, x, index=False, fromFile=False):
         """Convert input to a compatible type."""
         if x is None:
             raise ValueError("Input cannot be None")
@@ -88,7 +146,14 @@ class PythonEngine(TestEngine):
             elif isinstance(x, list):
                 x = np.asarray(x)-1
         if isinstance(x, list):
-            return np.asarray(x)
+            # Transpose to capture MATLAB data layout
+            # when the data has been serialised from MATLAB
+            # to a file
+            if fromFile:
+              return transpose(np.array(x).astype(np.float64))
+            else:
+              return np.array(x).astype(np.float64)
+              
         elif isinstance(x, tuple):
             return tuple([self.convert(xi) for xi in x])
         else:
@@ -118,9 +183,16 @@ class PythonEngine(TestEngine):
         def newfunc(*args, **kwargs):
             try:
                 # Dynamically load modules based on the function name
+                # mod_path = f"oneflux_steps.ustar_cp_python.{name}"
+                # mod = __import__(mod_path, fromlist=[name])
+                # func = getattr(mod, name, None)
                 # if nargout is present in kwargs then remove it
                 if 'nargout' in kwargs:
                     kwargs.pop('nargout')
+                # if jsonencode is present in kwargs then remove it
+                if 'jsonencode' in kwargs:
+                    kwargs.pop('jsonencode')
+
                 func = globals().get(name)
                 if callable(func):
                     return func(*args, **kwargs)
@@ -478,29 +550,19 @@ def compare_text_blocks(text1, text2):
     """
     return text1.replace('\n', '').strip() == text2.replace('\n', '').strip()
 
-def to_matlab_type(data):
+def to_matlab_type(data: Any) -> Any:
     """
     Converts various Python data types to their MATLAB equivalents.
 
-    This function handles conversion of Python dictionaries, NumPy arrays, lists,
-    and numeric types to MATLAB-compatible types using the `matlab` library.
-
     Args:
-        data (any): The input data to be converted. Can be a dictionary, NumPy array,
-                    list, integer, float, or other types.
+        data (Any): The input data to be converted.
 
     Returns:
-        any: The converted data in a MATLAB-compatible format. The specific return type
-             depends on the input data type:
-             - dict: Converted to a MATLAB struct.
-             - np.ndarray: Converted to MATLAB logical, double, or list.
-             - list: Converted to MATLAB double array or cell array.
-             - int, float: Converted to MATLAB double.
-             - Other types: Returned as-is if already MATLAB-compatible.
-
+        Any: The converted data in a MATLAB-compatible format.
     """
     if isinstance(data, dict):
         # Convert a Python dictionary to a MATLAB struct
+        # TODO: the following doesn't actually work but is not yet used
         matlab_struct = matlab.struct()
         for key, value in data.items():
             matlab_struct[key] = to_matlab_type(value)  # Recursively handle nested structures
@@ -606,7 +668,7 @@ def none2nan(obj):
     if isinstance(obj, dict):
         return {k: none2nan(v) for k, v in obj.items()}
     elif hasattr(obj, 'size'):
-        return np.where(obj == None, np.nan, obj).tolist()
+        return np.where(obj is None, np.nan, obj).tolist()
     elif isinstance(obj, list):
         return [none2nan(v) for v in obj]
     elif obj is None:

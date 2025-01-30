@@ -11,7 +11,7 @@
 		if isempty(s)
 			error('Decoded structure is empty. Check the JSON format.');
 		end
-		
+	
 	nd=ndims(s); ns=size(s); x=NaN*ones(ns); 
 	
 	switch nd; 
@@ -19,7 +19,7 @@
 			for i=1:ns(1); 
 				for j=1:ns(2); 
 					tmp=getfield(s,{i,j},FieldName); 
-					if ~isempty(tmp); x(i,j)=tmp; end;
+          if ~isempty(tmp); x(i,j)=tmp; end;
 				end; 
 			end; 
 		case 3; 
@@ -33,3 +33,4 @@
 			end;
 		otherwise; 
 	end; 
+
