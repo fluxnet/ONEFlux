@@ -552,6 +552,7 @@ def to_matlab_type(data: Any) -> Any:
     """
     if isinstance(data, dict):
         # Convert a Python dictionary to a MATLAB struct
+        # TODO: the following doesn't actually work but is not yet used
         matlab_struct = matlab.struct()
         for key, value in data.items():
             matlab_struct[key] = to_matlab_type(value)  # Recursively handle nested structures
