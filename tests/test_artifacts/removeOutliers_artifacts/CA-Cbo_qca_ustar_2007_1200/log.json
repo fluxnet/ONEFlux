@@ -1,0 +1,1 @@
+{"removeOutliers":{"siteFile":"CA-Cbo_qca_ustar_2007","description":"removeOutliers","input":{"x":"tests/test_artifacts/input_x.csv","y":"tests/test_artifacts/input_y.csv","n":"tests/test_artifacts/input_n.csv"},"output":{"x":"tests/test_artifacts/output_x.csv","y":"tests/test_artifacts/output_y.csv"}}}

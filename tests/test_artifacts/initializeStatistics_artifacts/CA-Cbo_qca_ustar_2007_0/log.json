@@ -1,0 +1,1 @@
+{"initializeStatistics":{"siteFile":"CA-Cbo_qca_ustar_2007","description":"initializeStatistics","input":{"nSeasons":"tests/test_artifacts/input_nSeasons.csv","nStrataX":"tests/test_artifacts/input_nStrataX.csv"},"output":{"Stats2":"tests/test_artifacts/output_Stats2.json","Stats3":"tests/test_artifacts/output_Stats3.json"}}}

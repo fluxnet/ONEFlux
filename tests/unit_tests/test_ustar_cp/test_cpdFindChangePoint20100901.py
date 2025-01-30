@@ -52,11 +52,14 @@ def test_data():
     return xx, yy
 
 
-testcase_cpdFindChangePoint20100901_site_data = [ ('2007', 0), # Cp2 change point
-                                                  ('2007', 150), # No change point
-                                                  ('2007', 250), # Cp3 change point
-                                                  ('2007', 600), # Cp2 change point
-                                                  ]
+testcase_cpdFindChangePoint20100901_site_data = [('2007', x) for x in range(0, 1001, 50)]
+
+# [ ('2007', 0), # Cp2 change point
+#                                                   ('2007', 150), # No change point
+#                                                   ('2007', 250), # Cp3 change point
+#                                                   ('2007', 600), # Cp2 change point
+#                                                   ]
+
 @pytest.mark.parametrize('year, iteration', testcase_cpdFindChangePoint20100901_site_data)
 def test_cpdFindChangePoint20100901_site_data(test_engine, year, iteration):
 
@@ -81,10 +84,9 @@ def test_cpdFindChangePoint20100901_site_data(test_engine, year, iteration):
             output_data[name] = pd.read_csv(path_to_artifacts, header=None).iloc[1,:].to_numpy(dtype=float)
         else:
             output_data[name] = pd.read_csv(path_to_artifacts, header=None).iloc[:,0].to_numpy()
-             
 
-    assert test_engine.equal((list(s2.values())), output_data['xs2'], ), f'Expected s2: {output_data["xs2"]}, but got: {s2.values()}'
-    assert test_engine.equal((list(s3.values())), output_data['xs3']), f'Expected s3: {output_data["xs3"]}, but got: {s3.values()}'
+    assert test_engine.equal(np.asarray(list(s2.values())), output_data['xs2']), f'Expected s2: {output_data["xs2"]}, but got: {s2.values()}'
+    assert test_engine.equal(np.asarray(list(s3.values())), output_data['xs3']), f'Expected s3: {output_data["xs3"]}, but got: {s3.values()}'
     assert test_engine.equal(Cp2, output_data['xCp2']), f'Expected Cp2: {output_data["Cp2"]}, but got: {Cp2}'
     assert test_engine.equal(Cp3, output_data['xCp3']), f'Expected Cp3: {output_data["Cp3"]}, but got: {Cp3}'
 
@@ -118,14 +120,14 @@ def test_cpdFindChangePoint20100901(test_engine, test_data):
 
 def test_cpdFindChangePoint_invalid_input(test_engine):
     # Invalid inputs: empty arrays
-    xx = np.array([])
-    yy = np.array([])
+    xx = test_engine.convert(np.array([]))
+    yy = test_engine.convert(np.array([]))
     fPlot = 0
     cPlot = 'Invalid Input'
 
     # Call the MATLAB function and expect failure or NaN outputs
     Cp2, s2, Cp3, s3 = test_engine.cpdFindChangePoint20100901(
-        matlab.double(xx.tolist()), matlab.double(yy.tolist()), fPlot, cPlot, nargout=4)
+    xx, yy, fPlot, cPlot, nargout=4)
 
     # Assertions
     assert test_engine.equal(Cp2, float('nan')), "Cp2 should be NaN for empty input"
@@ -133,14 +135,14 @@ def test_cpdFindChangePoint_invalid_input(test_engine):
 
 def test_cpdFindChangePoint_insufficient_data(test_engine):
     # Insufficient data
-    xx = np.array([1])
-    yy = np.array([2])
+    xx = test_engine.convert(np.array([1]))
+    yy = test_engine.convert(np.array([2]))
     fPlot = 0
     cPlot = 'Insufficient Data'
 
     # Call the MATLAB function and expect NaN outputs
     Cp2, s2, Cp3, s3 = test_engine.cpdFindChangePoint20100901(
-        matlab.double(xx.tolist()), matlab.double(yy.tolist()), fPlot, cPlot, nargout=4)
+        xx, yy, fPlot, cPlot, nargout=4)
 
     # Assertions
     assert test_engine.equal(Cp2, float('nan')), "Cp2 should be NaN for insufficient data"
@@ -260,11 +262,7 @@ def test_computeNEndPts(test_engine, n, expected_nEndPts):
 
     test_engine.equal(nEndPts, expected_nEndPts)
 
-testcase_updateS2 = [('2007', 0),
-                     ('2007', 150),
-                    ('2007', 250),
-                    ('2007', 600)
-                       ]
+testcase_updateS2 = [('2007', x) for x in range(0, 901, 50)]
 @pytest.mark.parametrize('year, iteration', testcase_updateS2)
 def test_updateS2(test_engine, year, iteration):
     # Define test inputs
@@ -288,11 +286,7 @@ def test_updateS2(test_engine, year, iteration):
 
 
 
-testcase_updateS3 = [('2007', 0),
-                     ('2007', 150),
-                    ('2007', 250),
-                    ('2007', 600)
-                       ]
+testcase_updateS3 = [('2007', x) for x in range(0, 901, 50)]
 @pytest.mark.parametrize('year, iteration', testcase_updateS3)
 def test_updateS3(test_engine, year, iteration):
     # Define test inputs
@@ -314,11 +308,8 @@ def test_updateS3(test_engine, year, iteration):
     assert test_engine.equal(test_engine.convert(s3_values), test_engine.convert(expected_s3))
 
 
-testcase_fitOperational2ParamModel = [('2007', 0),
-                                      ('2007', 150),
-                                      ('2007', 250),
-                                      ('2007', 600)
-                       ]
+testcase_fitOperational2ParamModel = [('2007', x) for x in range(0, 1001, 50)]
+
 @pytest.mark.parametrize('year, iteration', testcase_fitOperational2ParamModel)
 def test_fitOperational2ParamModel(test_engine, year, iteration):
 
@@ -336,11 +327,8 @@ def test_fitOperational2ParamModel(test_engine, year, iteration):
     assert test_engine.equal(Fc2, output_data['Fc2'])
 
 
-testcase_fitOperational3ParamModel = [('2007', 0),
-                                        ('2007', 150),
-                                        ('2007', 250),
-                                        ('2007', 600)
-                          ]
+testcase_fitOperational3ParamModel = [('2007', x) for x in range(0, 1001, 50)]
+
 @pytest.mark.parametrize('year, iteration', testcase_fitOperational3ParamModel)
 def test_fitOperational3ParamModel(test_engine, year, iteration):
 
@@ -362,12 +350,9 @@ def test_fitOperational3ParamModel(test_engine, year, iteration):
     assert test_engine.equal(Fc3, output_data['Fc3'])
 
 
-testcase_fitTwoParameterModel = [('2007', 0),
-                                        ('2007', 150),
-                                        ('2007', 250),
-                                        ('2007', 600)
-                          ]
-@pytest.mark.parametrize('year, iteration', testcase_fitTwoParameterModel)
+testcase_fitThreeParameterModel = [('2007', x) for x in range(0, 1001, 50)]
+
+@pytest.mark.parametrize('year, iteration', testcase_fitThreeParameterModel)
 def test_fitThreeParameterModel(test_engine, year, iteration):
 
     input_names = ['Fc3', 'x', 'y', 'n', 'pSig']
@@ -391,11 +376,8 @@ def test_fitThreeParameterModel(test_engine, year, iteration):
     assert test_engine.equal(Cp3, output_data['Cp3'])
 
 
-testcase_fitTwoParameterModel = [('2007', 0),
-                                        ('2007', 150),
-                                        ('2007', 250),
-                                        ('2007', 600)
-                          ]
+testcase_fitTwoParameterModel = [('2007', x) for x in range(0, 1001, 50)]
+
 @pytest.mark.parametrize('year, iteration', testcase_fitTwoParameterModel)
 def test_fitTwoParameterModel(test_engine, year, iteration):
 

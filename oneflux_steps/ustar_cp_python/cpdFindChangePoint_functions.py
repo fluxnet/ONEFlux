@@ -1,9 +1,132 @@
 import numpy as np
-from typing import Tuple, List, Dict, Callable
+from typing import Tuple, List, Dict, Callable, Any
 from scipy.stats import t
 from oneflux_steps.ustar_cp_python.cpdFmax2pCp3 import cpdFmax2pCp3
 from oneflux_steps.ustar_cp_python.cpdFmax2pCp2 import cpdFmax2pCp2
 
+
+def cpdFindChangePoint20100901(
+    xx: np.ndarray,
+    yy: np.ndarray,
+    fPlot: int,
+    cPlot: str
+) -> Tuple[float, Dict[str, float], float, Dict[str, float]]:
+    """
+    cpdFindChangePoint20100901
+
+    An operational version of the Lund and Reeves (2002) change-point detection
+    algorithm, as modified and implemented by Alan Barr for uStarTh evaluation.
+
+    Syntax (MATLAB equivalent):
+        [Cp2, s2, Cp3, s3] = cpdFindChangePoint20100901(uStar, NEE, fPlot, Txt)
+
+    Parameters
+    ----------
+    xx : np.ndarray
+        Independent variable for change-point detection.
+    yy : np.ndarray
+        Dependent variable for change-point detection.
+    fPlot : int
+        Flag (0 or 1) to control optional plotting (not used here, but included for parity).
+    cPlot : str
+        Text string for plot title (not used here, but included for parity).
+
+    Returns
+    -------
+    Cp2 : float
+        Change point (uStarTh) from the operational 2-parameter model, or NaN if not significant.
+    s2 : Dict[str, float]
+        Dictionary containing statistics from the Cp2 evaluation.
+    Cp3 : float
+        Change point (uStarTh) from the diagnostic 3-parameter model, or NaN if not significant.
+    s3 : Dict[str, float]
+        Dictionary containing statistics from the Cp3 evaluation.
+
+    Notes
+    -----
+    - The individual variables Cp2 and Cp3 are set to NaN if not significant, but
+      the values s2['Cp'] and s3['Cp'] are retained even if not significant.
+    - This function calls:
+        * initValues
+        * removeNans
+        * removeOutliers
+        * computeReducedModels
+        * computeNEndPts
+        * fitOperational2ParamModel
+        * fitOperational3ParamModel
+        * fitTwoParameterModel
+        * fitThreeParameterModel
+        * updateS2
+        * updateS3
+      These are assumed to be available in the current Python environment.
+    - All indexing is 0-based, unlike the original MATLAB code which used 1-based indexing.
+    """
+
+    # Shallow copies of the input arrays
+    xxCopy = xx.copy()
+    yyCopy = yy.copy()
+
+    # Initialize Cp2, s2, Cp3, s3
+    # (Assumes initValues() returns (Cp2, Cp3, s2, s3).)
+    Cp2, Cp3, s2, s3 = initValues()
+
+    # 1) Exclude missing data
+    x, y = removeNans(xxCopy, yyCopy)
+
+    n = len(x)
+    if n < 10:
+        return Cp2, s2, Cp3, s3
+
+    # 2) Exclude extreme linear regression outliers
+    x, y = removeOutliers(x, y, n)
+
+    n = len(x)
+    if n < 10:
+        return Cp2, s2, Cp3, s3
+
+    # 3) Compute statistics of reduced (null hypothesis) models
+    SSERed2, SSERed3 = computeReducedModels(x, y, n)
+
+    # nRed2=1; nRed3=2;  # (not used in this Python version)
+
+    # 4) Allocate space for F scores
+    Fc2 = np.full(n, np.nan)
+    Fc3 = np.full(n, np.nan)
+
+    # 5) Compute minimum boundary points
+    nEndPts = computeNEndPts(n)
+
+    # 6) Loop over potential breakpoints
+    for i in range(n - 1):
+        # fit operational 2-parameter model
+        iAbv, Fc2 = fitOperational2ParamModel(i, n, x, y, SSERed2, Fc2)
+        # fit diagnostic 3-parameter model
+        Fc3 = fitOperational3ParamModel(i, iAbv, n, x, y, SSERed3, Fc3)
+
+    # 7) Find the maximum F-value for 2-parameter model
+    pSig = 0.05
+    (Fmax2, iCp2, xCp2, a2, a2int, yHat2, p2, Cp2) = fitTwoParameterModel(
+        Fc2, x, y, n, pSig
+    )
+
+    # 8) Find the maximum F-value for 3-parameter model
+    (Fmax3, iCp3, xCp3, a3, a3int, yHat3, p3, Cp3) = fitThreeParameterModel(
+        Fc3, x, y, n, pSig
+    )
+
+    # 9) Assign values to s2, s3
+    s2["n"] = n
+    s3["n"] = n
+
+    # Only update s2 if iCp2 is not too close to the ends
+    if iCp2+1 > nEndPts and iCp2+1 < (n - nEndPts): # +1 to Account for 0-based indexing
+        s2 = updateS2(a2, a2int, Cp2, Fmax2, p2, s2)
+
+    # Only update s3 if iCp3 is not too close to the ends
+    if iCp3+1> nEndPts and iCp3+1 < (n - nEndPts): # +1 to Account for 0-based indexing
+        s3 = updateS3(a3, a3int, xCp3, Fmax3, p3, s3)
+
+    return Cp2, s2, Cp3, s3
 
 def initValues() -> Tuple[float, float, Dict[str, float], Dict[str, float]]:
     """
@@ -263,20 +386,7 @@ def fitOperational2ParamModel(
         iAbv: Indices above i
         Fc2[i]: F-statistic for testing improvement of this model vs. reduced model
     """
-    # print('i')
-    # print(i)
-    # print(type(i))
-    # print('n')
-    # print(n)
-    # print('x')
-    # print(x)
-    # print(type(x))
-    # print(x.dtype)
-    # print(x.shape)
-    # print(y)
-    # print(type(y))
-    # print(Fc2)
-    # print(type(Fc2))
+
     # Number of parameters in the 'full' model
     nFull2 = 2
     
@@ -289,7 +399,6 @@ def fitOperational2ParamModel(
     
     # Prepare design matrix for linear regression
     error = (np.ones(n), x1)
-    print(error)
     X = np.column_stack((np.ones(n), x1))
     
     # Fit the model: a2[0] is intercept, a2[1] is slope for segment 1
@@ -361,7 +470,6 @@ def fitOperational3ParamModel(
 
       where x2 is zero until x > x(i), and then continues with the same slope increment.
     """
-    print('i', i)
     # Make shallow copies to avoid modifying the original arrays in-place
     x_copy = x.copy()
     y_copy = y.copy()
@@ -379,10 +487,6 @@ def fitOperational3ParamModel(
     # x2 is zero until x > x(i), then x - x(i)
     x2 = (x_copy - x_copy[i]) * zAbv
 
-    # Fit the 3-parameter model: a3(1) = intercept, a3(2) = slope, a3(3) = slope increment
-    # A = np.column_stack((np.ones(n), x1, x2)) # Matlab mldivide sets the third column to zero then calculates the coefficients using least squares
-    # Therefore to mimic the same behaviour, we will set the third column to zero and calculate the coefficients using least squares
-    # A = np.column_stack((np.ones(n), x1, np.zeros(n)))
     A = np.column_stack((np.ones(n), x1, x2))
     a3, _, _, _ = np.linalg.lstsq(A, y_copy, rcond=None)
 
@@ -456,10 +560,6 @@ def updateS2(
     - cib1 = half the difference between upper and lower slope CIs.
     - b2, c2, and cic2 are set to NaN in this two-parameter model context.
     """
-    print('a2')
-    print(a2)
-    print('a2int')
-    print(a2int)
 
     # Create a shallow copy of s2 to avoid in-place modifications
     s2_copy = s2.copy()
@@ -473,6 +573,8 @@ def updateS2(
     cib1 = 0.5 * (a2int[1, 1] - a2int[1, 0])
 
     # Update s2_copy fields
+    if isinstance(Cp2, np.ndarray):
+        Cp2 = Cp2[0]
     s2_copy["Cp"]   = Cp2
     s2_copy["Fmax"] = Fmax2
     s2_copy["p"]    = p2
@@ -483,7 +585,7 @@ def updateS2(
     s2_copy["cib0"] = cib0
     s2_copy["cib1"] = cib1
     s2_copy["cic2"] = np.nan
-
+    print(s2_copy)
     return s2_copy
 
 
@@ -557,6 +659,8 @@ def updateS3(
     c2 = b1 + b2
 
     # Update s3_copy fields
+    if isinstance(xCp3, np.ndarray):
+        xCp3 = xCp3[0]
     s3_copy["Cp"]   = xCp3
     s3_copy["Fmax"] = Fmax3
     s3_copy["p"]    = p3
@@ -567,7 +671,8 @@ def updateS3(
     s3_copy["cib0"] = cib0
     s3_copy["cib1"] = cib1
     s3_copy["cic2"] = cic2
-
+    print('s3_copy')
+    print(s3_copy)
     return s3_copy
 
 
@@ -644,10 +749,7 @@ def fitThreeParameterModel(
     Fmax3 = np.nanmax(Fc3_copy)
     iCp3 = int(np.nanargmax(Fc3_copy))  # 0-based index
     xCp3 = x_copy[iCp3]
-    print('Fmax3')  
-    print(Fmax3)
-    print('iCp3')
-    print(iCp3)
+
     # --- 3) Create indicator vector zAbv for x-values above xCp3 ---
     zAbv = np.zeros((n,1), dtype=float)
     if iCp3 < n - 1:
@@ -656,12 +758,7 @@ def fitThreeParameterModel(
     # --- 4) Define regression variables for the 3-parameter model ---
     x1 = x_copy
     x2 = (x_copy - xCp3) * zAbv
-    print('zAbv')
-    print(zAbv)
-    print('x1')
-    # print(x1)
-    print('x2')
-    # print(x2)
+
     # --- 5) Ordinary least squares on [1, x1, x2] to get a3 ---
     A = np.column_stack((np.ones(n), x1, x2))
     a3, residuals, rank, svals = np.linalg.lstsq(A, y_copy, rcond=None)
@@ -674,28 +771,20 @@ def fitThreeParameterModel(
     # Mean square error
     MSE = SSE / df
     # Covariance of coefficients
-    # print(A)
-    print(A.shape)
+
     ATA_inv = np.linalg.inv(A.T @ A)
     var_a3 = np.diag(ATA_inv) * MSE
     se_a3 = np.sqrt(var_a3)
 
     # For a 95% two-sided CI, get t critical value
-    from scipy.stats import t
     tval = t.ppf(0.975, df)
-    print('tval')
-    print(tval)
-    print('se_a3')
-    print(se_a3)
-    print('a3')
-    print(a3)
+
     # Compute lower/upper bounds
     a3_lower = a3.flatten() - tval * se_a3
     a3_upper = a3.flatten() + tval * se_a3
     # Stack them into (3, 2)
     a3int = np.column_stack((a3_lower, a3_upper))
-    print('a3int')
-    print(a3int)
+
 
     # --- 7) Compute p-value for Fmax3 via user-defined function ---
     p3 = cpdFmax2pCp3(Fmax3, n)
@@ -705,7 +794,8 @@ def fitThreeParameterModel(
         Cp3 = np.nan
     else:
         Cp3 = xCp3
-
+    if isinstance(Cp3, np.ndarray):
+        Cp3 = Cp3[0]
     return Fmax3, iCp3, xCp3, a3, a3int, yHat3, p3, Cp3
 
 
@@ -810,10 +900,13 @@ def fitTwoParameterModel(
     a2int = np.column_stack((a2_lower, a2_upper))
 
     # --- 5) Compute p-value for Fmax2 using user-defined function ---
+    print('Fmax2, n')
+    print(Fmax2, n)
     p2 = cpdFmax2pCp2(Fmax2, n)
 
     # --- 6) Decide if Cp2 is significant ---
     Cp2 = xCp2 if p2 <= pSig else np.nan
-
+    if isinstance(Cp2, np.ndarray):
+        Cp2 = Cp2[0]
     return Fmax2, iCp2, xCp2, a2, a2int, yHat2, p2, Cp2
 
