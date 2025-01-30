@@ -35,7 +35,7 @@ def generate_statsMT() -> Dict[str, float]:
     return stats_mt
 
 
-def setup_Stats(n_boot: int, n_seasons: int, n_strata_x: int, **kwargs) -> List[List[List[Dict[str, float]]]]|dict[str, float]:
+def setup_Stats(n_boot: int, n_seasons: int, n_strata_x: int) -> List[List[List[Dict[str, float]]]]|dict[str, float]:
     """
     Initialize the Stats structure based on input dimensions.
 

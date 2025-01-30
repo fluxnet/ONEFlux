@@ -179,6 +179,10 @@ class PythonEngine(TestEngine):
                 # if nargout is present in kwargs then remove it
                 if 'nargout' in kwargs:
                     kwargs.pop('nargout')
+                # if jsonencode is present in kwargs then remove it
+                if 'jsonencode' in kwargs:
+                    kwargs.pop('jsonencode')
+
                 func = globals().get(name)
                 if callable(func):
                     return func(*args, **kwargs)
