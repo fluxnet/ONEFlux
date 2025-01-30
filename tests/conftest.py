@@ -93,6 +93,7 @@ from oneflux_steps.ustar_cp_python.fcDatenum import *
 from oneflux_steps.ustar_cp_python.cpdFmax2pCp3 import *
 from oneflux_steps.ustar_cp_python.utilities import *
 from oneflux_steps.ustar_cp_python.cpd_evaluate_functions import *
+from oneflux_steps.ustar_cp_python.cpdBootstrap import *
 
 def pytest_addoption(parser):
     parser.addoption("--language", action="store", default="matlab")
@@ -178,6 +179,10 @@ class PythonEngine(TestEngine):
                 # if nargout is present in kwargs then remove it
                 if 'nargout' in kwargs:
                     kwargs.pop('nargout')
+                # if jsonencode is present in kwargs then remove it
+                if 'jsonencode' in kwargs:
+                    kwargs.pop('jsonencode')
+
                 func = globals().get(name)
                 if callable(func):
                     return func(*args, **kwargs)
@@ -547,6 +552,7 @@ def to_matlab_type(data: Any) -> Any:
     """
     if isinstance(data, dict):
         # Convert a Python dictionary to a MATLAB struct
+        # TODO: the following doesn't actually work but is not yet used
         matlab_struct = matlab.struct()
         for key, value in data.items():
             matlab_struct[key] = to_matlab_type(value)  # Recursively handle nested structures
