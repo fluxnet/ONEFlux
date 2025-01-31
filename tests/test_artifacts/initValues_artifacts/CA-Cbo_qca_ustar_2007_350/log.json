@@ -1,0 +1,1 @@
+{"initValues":{"siteFile":"CA-Cbo_qca_ustar_2007","description":"initValues","input":{},"output":{"Cp2":"tests/test_artifacts/output_Cp2.csv","s2":"tests/test_artifacts/output_s2.csv","Cp3":"tests/test_artifacts/output_Cp3.csv","s3":"tests/test_artifacts/output_s3.csv"}}}

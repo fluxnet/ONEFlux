@@ -1,0 +1,1 @@
+{"removeNans":{"siteFile":"CA-Cbo_qca_ustar_2007","description":"removeNans","input":{"xx":"tests/test_artifacts/input_xx.csv","yy":"tests/test_artifacts/input_yy.csv"},"output":{"x":"tests/test_artifacts/output_x.csv","y":"tests/test_artifacts/output_y.csv"}}}

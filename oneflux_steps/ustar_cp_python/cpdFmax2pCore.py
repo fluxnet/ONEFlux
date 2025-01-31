@@ -39,7 +39,7 @@ def cpdFmax2pCore(Fmax : float, n: int, k : int
   # Calculate p based on Fmax comparison
   if Fmax < FmaxCritical[0]:
       return float(calculate_p_low(lowerP, Fmax, FmaxCritical[0], n))
-  elif Fmax > FmaxCritical[2]:
+  elif Fmax > FmaxCritical[-1]:
       return float(calculate_p_high(Fmax, FmaxCritical[2], n))
   else:
       return float(calculate_p_interpolate(Fmax, FmaxCritical, pTable))

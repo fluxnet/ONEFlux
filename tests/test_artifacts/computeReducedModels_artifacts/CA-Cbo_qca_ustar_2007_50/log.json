@@ -1,0 +1,1 @@
+{"computeReducedModels":{"siteFile":"CA-Cbo_qca_ustar_2007","description":"computeReducedModels","input":{"x":"tests/test_artifacts/input_x.csv","y":"tests/test_artifacts/input_y.csv","n":"tests/test_artifacts/input_n.csv"},"output":{"SSERed2":"tests/test_artifacts/output_SSERed2.csv","SSERed3":"tests/test_artifacts/output_SSERed3.csv"}}}

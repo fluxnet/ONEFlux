@@ -61,3 +61,4 @@ nTable : np.ndarray = np.concatenate([
 
 """ A 1D NumPy array containing significance levels. """
 pTable : np.ndarray = np.array([0.90, 0.95, 0.99])
+
