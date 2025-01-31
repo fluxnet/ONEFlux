@@ -2,6 +2,7 @@
 from .fcx2colvec import fcx2colvec
 from .fcx2rowvec import fcx2rowvec
 from .fcDatetick import fcDatetick
+from .fcDatevec import fcDatevec
 from .fcDoy import fcDoy
 from .fcr2Calc import fcr2Calc
 from .fcReadFields import fcReadFields

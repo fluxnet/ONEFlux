@@ -69,15 +69,18 @@ def fcDatevec(t : numpy.ndarray) -> tuple:
     # index of midnights
     idx = numpy.where((h == 0) & (mn == 0) & (s == 0))[0]
     for ix in idx:
-        # If we are at the start of the month we need to go back t
+        # If we are at the start of the month we need to go back to
         # the last day of the previous month
         if (d[ix] == 1) & (m[ix] != 0):
+            mCurrent = m[ix]
+            # Set month to previous (mCurrent holds what it was before)
             m[ix] -= 1
+            # If month is now 0 we need to go to December on the previous year
             if m[ix] == 0:
                 m[ix] = 12
                 y[ix] -= 1
-            # Get the number of days in the previous month
-            d[ix] = (datetime.datetime(int(y[ix]) + yr0 + int(m[ix] / 12), (int(m[ix]) + 1) % 12, 1)
+
+            d[ix] = (datetime.datetime(int(y[ix]) + yr0 + int(m[ix] / 12), int(mCurrent) % 13, 1)
                       - datetime.datetime(int(y[ix]) + yr0, int(m[ix]), 1)).days
         else:
             d[ix] -= 1

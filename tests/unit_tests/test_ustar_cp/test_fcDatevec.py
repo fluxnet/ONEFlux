@@ -2,12 +2,9 @@
 # which converts a date string to a date vector
 
 import pytest
-from tests.conftest import test_engine
 
 from hypothesis import given, settings
-from hypothesis.strategies import floats, lists, composite
-
-import numpy as np
+from hypothesis.strategies import floats, lists
 
 from oneflux_steps.ustar_cp_python.fcDatevec import fcDatevec
 
@@ -73,6 +70,7 @@ def test_fcDatevec_shape(test_engine, data):
     , ([5.0446049250313e-10], (-1, 12, 30, 24, 0, 0))
     , ([6.0446049250313e-10], (0, 0, 0, 0, 0, 0.0001))
     , ([10+6.0446049250313e-10], (0, 1, 10, 0, 0, 0.0001))
+    , ([336], (0.0, 11.0, 30.0, 24.0, 0.0, 0.0))
 ])
 def test_fcDatevec_specific(test_engine, t, expected):
     """
