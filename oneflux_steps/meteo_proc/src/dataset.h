@@ -14,6 +14,7 @@
 
 /* includes */
 #include "types.h"
+#include "mds_vars.h"
 
 /* enumerations */
 enum {
@@ -76,7 +77,7 @@ typedef struct {
 /* prototypes */
 void free_datasets(DATASET *datasets, const int datasets_count);
 DATASET *get_datasets(int *const datasets_count);
-int compute_datasets(DATASET *const datasets, const int datasets_count);
+int compute_datasets(DATASET *const datasets, const int datasets_count, MDS_VARS* mds_vars);
 
 /* */
 #endif /* DATASET_H */

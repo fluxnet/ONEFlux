@@ -70,7 +70,7 @@ SW_IN_POT_OBJ := $(SW_IN_POT_SRC:.c=.o)
 SW_IN_POT_BIN := $(join ${TGTDIR}, sw_in_pot)
 
 METEO_PROC_DIR := $(join ${SRCDIR}, meteo_proc/src/)
-METEO_PROC_SRC := dataset.c main.c
+METEO_PROC_SRC := dataset.c main.c defs.c mds_vars.c
 METEO_PROC_OBJ := $(METEO_PROC_SRC:.c=.o)
 METEO_PROC_BIN := $(join ${TGTDIR}, meteo_proc)
 
