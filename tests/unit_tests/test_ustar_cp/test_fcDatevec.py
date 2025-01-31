@@ -83,3 +83,18 @@ def test_fcDatevec_specific(test_engine, t, expected):
 
     # Check the result
     assert test_engine.equal(result, test_engine.convert(expected))
+
+
+def test_fcDatevec_site_data(test_engine):
+
+    time_artifact_path = 'tests/test_artifacts/cpdEvaluateUStarTh4Season20100901_artifacts/CA-Cbo_qca_ustar_2007/input_time_it_.csv'
+    data = pd.read_csv(time_artifact_path, header=None).values.tolist()
+
+    # Call the function
+    expected_result = test_engine.fcDatevec(test_engine.convert(data), nargout=6)
+
+    print("test_engine.fcDatevec(test_engine.convert(data), nargout=6) has run...\n\n")
+
+    result = fcDatevec(data)
+
+    assert test_engine.equal(result, expected_result)
