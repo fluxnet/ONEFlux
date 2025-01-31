@@ -181,11 +181,6 @@ def test_removeNans(test_engine, xx, yy, expected_xx, expected_yy):
     xx, yy = test_engine.removeNans(test_engine.convert(xx), test_engine.convert(yy), nargout=2)
 
     # Perform assertions
-    # x = 1.1111111111111111111
-    # test.convert(x)
-    # print(x)
-    print(xx, yy)
-    print(expected_xx, expected_yy)
     assert test_engine.equal(xx, test_engine.convert(expected_xx))
     assert test_engine.equal(yy, test_engine.convert(expected_yy))
 
@@ -223,29 +218,29 @@ def test_removeOutliers(test_engine, xx, yy, expected_x, expected_y):
     x, y = test_engine.removeOutliers(test_engine.convert(xx), test_engine.convert(yy), n, nargout=2)
 
     # Perform assertions
-    # print(x[:10].shape, y[:10].shape)
-    # print(expected_x[:10].shape, expected_y[:10].shape)
-    # assert False
-    print(x, y)
-    print(test_x, test_y)
     assert test_engine.equal(test_engine.convert(x), test_engine.convert(expected_x))
     assert test_engine.equal(test_engine.convert(y), test_engine.convert(expected_y))
 
 
 ## TODO: Add site data tests for computeReducedModels
-def test_computeReducedModels(test_engine):
-    # Define test inputs
-    x = np.arange(1, 11).reshape(-1,1)
-    y = np.arange(1, 11).reshape(-1,1)
-    n = 10
+testcase_computeReducedModels = [('2007', x) for x in range(0, 501, 50)]
 
-    expected_SSERed2, expected_SSERed3 = computeReducedModels(x, y, n)
+@pytest.mark.parametrize('year, iteration', testcase_computeReducedModels)
+def test_computeReducedModels(test_engine, year, iteration):
 
-    SSERed2, SSERed3 = test_engine.computeReducedModels(test_engine.convert(x), test_engine.convert(y), n, nargout=2)
+    input_data = {}
+    input_names = ['x', 'y', 'n']
+    artifacts_dir = 'tests/test_artifacts/computeReducedModels_artifacts' 
+    input_data = load_data(test_engine, artifacts_dir, year, iteration, input_names, 'CA-Cbo_qca_ustar', 'input')
 
 
-    assert test_engine.equal(SSERed2, expected_SSERed2)
-    assert test_engine.equal(SSERed3, expected_SSERed3)
+    SSERed2, SSERed3 = test_engine.computeReducedModels(*input_data.values(), nargout=2)
+
+    output_names = ['SSERed2', 'SSERed3']
+    output_data = load_data(test_engine, artifacts_dir, year, iteration, output_names, 'CA-Cbo_qca_ustar', 'output')
+
+    assert test_engine.equal(SSERed2, output_data['SSERed2'])
+    assert test_engine.equal(SSERed3, output_data['SSERed3'])
 
 testcases_computeNEndPts = [ (100, 5), # Nominal case
                             (10, 3), # less than 0.05*n
@@ -278,7 +273,6 @@ def test_updateS2(test_engine, year, iteration):
     expected_s2 = pd.read_csv(path_to_artifacts, header=None)
     expected_s2 = np.asarray(expected_s2.values.tolist()[1], dtype=float)
 
-    print(s2)
     s2_values = np.asarray(list(s2.values()), dtype=float)
 
     assert test_engine.equal(test_engine.convert(s2_values), test_engine.convert(expected_s2))
@@ -336,17 +330,13 @@ def test_fitOperational3ParamModel(test_engine, year, iteration):
     artifacts_dir = 'tests/test_artifacts/fitOperational3ParamModel_artifacts' 
  
     input_data = load_data(test_engine, artifacts_dir, year, iteration, input_names, 'CA-Cbo_qca_ustar', 'input')
-    # python_fc3 = fitOperational3ParamModel(*input_data.values())
 
     Fc3 = test_engine.fitOperational3ParamModel(*input_data.values(), nargout=1)
 
     output_names = ['Fc3']
     output_data = load_data(test_engine, artifacts_dir, year, iteration, output_names, 'CA-Cbo_qca_ustar', 'output')
 
-    print("FC£: ",Fc3)
-    # print(python_fc3)
-    #print(output_data['Fc3'])
-    # assert False
+
     assert test_engine.equal(Fc3, output_data['Fc3'])
 
 

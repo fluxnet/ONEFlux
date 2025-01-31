@@ -132,10 +132,6 @@ class PythonEngine(TestEngine):
     def _repr_pretty_(self, *args):
         return "Python Test Engine"
 
-#'to_python' needs to be added back in
-# https://github.com/Cambridge-ICCS/ONEFlux/commit/04655fd915b2326ce61db0d263dcd60ec80bb5e6#diff-e52e4ddd58b7ef887ab03c04116e676f6280b824ab7469d5d3080e5cba4f2128
-# Accidently removed in a merge conflict?
-
     def convert(self, x, index=False, fromFile=False):
         """Convert input to a compatible type."""
         if x is None:
