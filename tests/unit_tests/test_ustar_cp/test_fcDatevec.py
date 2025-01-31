@@ -8,6 +8,8 @@ from hypothesis.strategies import floats, lists
 
 from oneflux_steps.ustar_cp_python.fcDatevec import fcDatevec
 
+import pandas as pd
+
 # Property-based tests for fcDatevec
 # The size of the input `n` determines the size of the output as `n x 6`
 @given(data=lists(floats(allow_infinity=False, min_value=-10000, max_value=10000), min_size=1, max_size=100))
