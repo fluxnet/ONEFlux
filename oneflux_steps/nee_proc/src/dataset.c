@@ -1481,7 +1481,7 @@ ROW_NIGHT *compute_nights(DATASET *const dataset,
 		for ( y = 0; y < NIGHT_RAND_VALUES; y++ ) {
 			/* do not compute _y if it was skipped */
 			if ( ! nee_matrix_y &&
-					((NEE_REF_Y == y) || (NEE_UST50_Y == y) || (NEE_REF_Y_RAND == y) || (NEE_UST50_Y_RAND)) ) {
+					((NEE_REF_Y == y) || (NEE_UST50_Y == y) || (NEE_REF_Y_RAND == y) || (NEE_UST50_Y_RAND == y)) ) {
 				continue;
 			}
 			/* do not compute _c if years count is less than 3 */
@@ -1846,13 +1846,11 @@ static int compute_night_rand(const DATASET *const dataset, ROW_NIGHT *const row
 		/* loop on each var to compute */
 		for ( y = NIGHT_QC_VALUES; y < NIGHT_RAND_VALUES; y++ ) {
 			/* do not compute _y if ... */
-			if (	skip_y &&
-					((NEE_REF_Y == y) || (NEE_UST50_Y == y) || (NEE_REF_Y_RAND == y) || (NEE_UST50_Y_RAND == y)) ) {
+			if (	skip_y && ((NEE_REF_Y_RAND == y) || (NEE_UST50_Y_RAND == y)) ) {
 				continue;
 			}
 			/* do not compute _c if years count is less than 3 */
-			if ( (dataset->years_count < 3) &&
-					((NEE_REF_C == y) || (NEE_UST50_C == y) || (NEE_REF_C_RAND == y) || (NEE_UST50_C_RAND == y)) ) {
+			if ( (dataset->years_count < 3) && ((NEE_REF_C_RAND == y) || (NEE_UST50_C_RAND == y)) ) {
 				continue;
 			}
 			rows_night[index].night[y] = 0.0;
@@ -4368,24 +4366,22 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 
 		if ( datasets[dataset].years_count >= 3 ) {
 			/* get uts_c */
-			if ( datasets[dataset].years_count >= 3 ) {
-				if ( !get_uts_c(datasets[dataset].details->site, datasets[dataset].years, datasets[dataset].years_count, uts, &uts_count) ) {
-					if ( compute_nee_flags ) {
-						if ( datasets[dataset].years_count >= 3 ) {
-							free(nee_flags_c);
-						}
-						free(nee_flags_y);
+			if ( !get_uts_c(datasets[dataset].details->site, datasets[dataset].years, datasets[dataset].years_count, uts, &uts_count) ) {
+				if ( compute_nee_flags ) {
+					if ( datasets[dataset].years_count >= 3 ) {
+						free(nee_flags_c);
 					}
-					free(unc_rows_temp);
-					free(unc_rows_aggr);
-					free(unc_rows);
-					free(nee_matrix_y);
-					free(percentiles_y);
-					free(nee_matrix_c);
-					free(uts);
-					free(rows_copy);
-					continue;
+					free(nee_flags_y);
 				}
+				free(unc_rows_temp);
+				free(unc_rows_aggr);
+				free(unc_rows);
+				free(nee_matrix_y);
+				free(percentiles_y);
+				free(nee_matrix_c);
+				free(uts);
+				free(rows_copy);
+				continue;
 			}
 
 			/* get percentiles */
