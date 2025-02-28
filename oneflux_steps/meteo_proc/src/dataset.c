@@ -1486,8 +1486,8 @@ static int import_meteo_values(DATASET *const dataset) {
 								value = INVALID_VALUE;
 							}
 
-							for ( y = 0; y < dataset->ts_count; ++y ) {
-								if ( dataset->ts_profiles[y] == profile ) {
+							for ( y = 0; y < dataset->swc_count; ++y ) {
+								if ( dataset->swc_profiles[y] == profile ) {
 									break;
 								}
 							}
@@ -4827,9 +4827,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 					}
 				}
 				if ( start_row == end_row ) {
-					printf("only one valid value for TS_%d\n!", current_dataset->ts_profiles[profile]);
-					/* free memory */
-					free_dataset(current_dataset);
+					printf("only one valid value for TS_%d!\n", current_dataset->ts_profiles[profile]);
 					continue;
 				}
 
@@ -4884,8 +4882,6 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				);
 
 				if ( !gf_rows ) {
-					/* free memory */
-					free_dataset(current_dataset);
 					continue;
 				}
 
@@ -4934,9 +4930,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 					}
 				}
 				if ( start_row == end_row ) {
-					printf("only one valid value for TS_%d\n!", current_dataset->swc_profiles[profile]);
-					/* free memory */
-					free_dataset(current_dataset);
+					printf("only one valid value for SWC_%d!\n", current_dataset->swc_profiles[profile]);
 					continue;
 				}
 
@@ -4992,8 +4986,6 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				);
 
 				if ( !gf_rows ) {
-					/* free memory */
-					free_dataset(current_dataset);
 					continue;
 				}
 
