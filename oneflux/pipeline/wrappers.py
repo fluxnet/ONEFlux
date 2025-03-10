@@ -54,6 +54,8 @@ class Pipeline(object):
     RECORD_INTERVAL = 'hh'
     VALIDATE_ON_CREATE = False
     SIMULATION = False
+    NT_SKIP = False
+    DT_SKIP = False
 
     def __init__(self, siteid, timestamp=datetime.now().strftime("%Y%m%d%H%M%S"), *args, **kwargs):
         '''
@@ -163,6 +165,12 @@ class Pipeline(object):
         # True: simulation only -- generates commands, but does not execute them
         self.simulation = self.configs.get('simulation', self.SIMULATION)
         log.debug("ONEFlux Pipeline: using simulation '{v}'".format(v=self.simulation))
+
+        # True: skips partitioning step
+        self.nt_skip = self.configs.get('nt_skip', self.NT_SKIP)
+        log.debug("ONEFlux Pipeline, skip NT config: '{v}'".format(v=self.NT_SKIP))
+        self.dt_skip = self.configs.get('dt_skip', self.DT_SKIP)
+        log.debug("ONEFlux Pipeline, skip DT config: '{v}'".format(v=self.DT_SKIP))
 
         # ERA timestamp ranges
         self.era_first_timestamp_start = self.configs.get('era_first_timestamp_start', ERA_FIRST_TIMESTAMP_START)
@@ -1477,6 +1485,7 @@ class PipelineNEEPartitionNT(object):
         self.output_file_patterns_c = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_C]
         self.prod_to_compare = self.pipeline.configs.get('prod_to_compare', PROD_TO_COMPARE)
         self.perc_to_compare = self.pipeline.configs.get('perc_to_compare', PERC_TO_COMPARE)
+        self.nt_skip_on_error = self.pipeline.configs.get('nt_skip_on_error', True)
 
     def pre_validate(self):
         '''
@@ -1505,20 +1514,32 @@ class PipelineNEEPartitionNT(object):
         log.info("Pipeline {s} execution started".format(s=self.label))
         self.pre_validate()
 
+        # skip execution completely after pre_validation (used when partitioning is not possible)
+        if self.pipeline.nt_skip:
+            log.info("Pipeline {s} execution will be skipped".format(s=self.label))
+            return
+
         create_replace_dir(tdir=self.nee_partition_nt_dir, label='{s}.run'.format(s=self.label), suffix=self.pipeline.run_id, simulation=self.pipeline.simulation)
 
         log.info('Execution command: oneflux.tools.partition_nt.run_partition_nt()')
         if self.pipeline.simulation:
             log.info('Simulation only, {s} execution command skipped'.format(s=self.label))
         else:
-            run_partition_nt(datadir=self.pipeline.data_dir_main,
-                             siteid=self.pipeline.siteid,
-                             sitedir=self.pipeline.site_dir,
-                             years_to_compare=range(self.pipeline.first_year, self.pipeline.last_year + 1),
-                             py_remove_old=False,
-                             prod_to_compare=self.prod_to_compare,
-                             perc_to_compare=self.perc_to_compare,)
-            self.post_validate()
+            try:
+                run_partition_nt(datadir=self.pipeline.data_dir_main,
+                                siteid=self.pipeline.siteid,
+                                sitedir=self.pipeline.site_dir,
+                                years_to_compare=range(self.pipeline.first_year, self.pipeline.last_year + 1),
+                                py_remove_old=False,
+                                prod_to_compare=self.prod_to_compare,
+                                perc_to_compare=self.perc_to_compare,)
+                self.post_validate()
+            except Exception as e:
+                msg = 'Failed NT partitioning for site {s}, will {m} execution of NT partitioning'.format(s=self.pipeline.siteid, m=('skip' if self.nt_skip_on_error else 'stop'))
+                log.critical(msg)
+                log_trace(exception=e)
+                if self.nt_skip_on_error:
+                    self.pipeline.nt_skip = True
 
         log.info("Pipeline {s} execution finished".format(s=self.label))
 
@@ -1555,6 +1576,7 @@ class PipelineNEEPartitionDT(object):
         self.output_file_patterns_c = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_C]
         self.prod_to_compare = self.pipeline.configs.get('prod_to_compare', PROD_TO_COMPARE)
         self.perc_to_compare = self.pipeline.configs.get('perc_to_compare', PERC_TO_COMPARE)
+        self.dt_skip_on_error = self.pipeline.configs.get('dt_skip_on_error', True)
 
     def pre_validate(self):
         '''
@@ -1583,6 +1605,11 @@ class PipelineNEEPartitionDT(object):
         log.info("Pipeline {s} execution started".format(s=self.label))
         self.pre_validate()
 
+        # skip execution completely after pre_validation (used when partitioning is not possible)
+        if self.pipeline.dt_skip:
+            log.info("Pipeline {s} execution will be skipped".format(s=self.label))
+            return
+
         # if execution fails on optimization step, add window to exclusion and restart with count+1
         suffix = (self.pipeline.run_id if (count == 0) else self.pipeline.run_id + '_{c}'.format(c=count))
 
@@ -1603,34 +1630,42 @@ class PipelineNEEPartitionDT(object):
             log.info('Simulation only, {s} execution command skipped'.format(s=self.label))
         else:
             try:
-                run_partition_dt(datadir=self.pipeline.data_dir_main,
-                                 siteid=self.pipeline.siteid,
-                                 sitedir=self.pipeline.site_dir,
-                                 years_to_compare=range(self.pipeline.first_year, self.pipeline.last_year + 1),
-                                 py_remove_old=False,
-                                 prod_to_compare=self.prod_to_compare,
-                                 perc_to_compare=self.perc_to_compare,)
-            except ONEFluxPartitionBrokenOptError as e:
-                error_filename = os.path.join(self.pipeline.data_dir, PARTITIONING_DT_ERROR_FILE.format(s=self.pipeline.siteid))
-                lines2append = ''
-                if not os.path.isfile(error_filename):
-                    lines2append += 'site_year_nee_des,begin,end\n'
-                lines2append += e.line2add + '\n'
-                with open(error_filename, "a") as f:
-                    f.write(lines2append)
-                log.warning('Added line "{line}" to error file "{f}"'.format(line=e.line2add, f=error_filename))
+                try:
+                    run_partition_dt(datadir=self.pipeline.data_dir_main,
+                                    siteid=self.pipeline.siteid,
+                                    sitedir=self.pipeline.site_dir,
+                                    years_to_compare=range(self.pipeline.first_year, self.pipeline.last_year + 1),
+                                    py_remove_old=False,
+                                    prod_to_compare=self.prod_to_compare,
+                                    perc_to_compare=self.perc_to_compare,)
+                except ONEFluxPartitionBrokenOptError as e:
+                    error_filename = os.path.join(self.pipeline.data_dir, PARTITIONING_DT_ERROR_FILE.format(s=self.pipeline.siteid))
+                    lines2append = ''
+                    if not os.path.isfile(error_filename):
+                        lines2append += 'site_year_nee_des,begin,end\n'
+                    lines2append += e.line2add + '\n'
+                    with open(error_filename, "a") as f:
+                        f.write(lines2append)
+                    log.warning('Added line "{line}" to error file "{f}"'.format(line=e.line2add, f=error_filename))
 
-                # if not alredy in rerun mode, marks as rerun, when returning from next call knows rerun for all versions required
-                if not rerun:
-                    log.warning('Will re-run all years/perc/prod for site {s} with {n} restarts'.format(s=self.pipeline.siteid, n=count + 10000))
-                    rerun_call = True
-                log.warning('Restarting DT partitioning for site {s} with {n} restarts'.format(s=self.pipeline.siteid, n=count))
-                self.run(count=count + 1, rerun=True)
+                    # if not alredy in rerun mode, marks as rerun, when returning from next call knows rerun for all versions required
+                    if not rerun:
+                        log.warning('Will re-run all years/perc/prod for site {s} with {n} restarts'.format(s=self.pipeline.siteid, n=count + 10000))
+                        rerun_call = True
+                    log.warning('Restarting DT partitioning for site {s} with {n} restarts'.format(s=self.pipeline.siteid, n=count))
+                    self.run(count=count + 1, rerun=True)
 
-            if rerun_call:
-                self.run(count=count + 10000, rerun=False)
+                if rerun_call:
+                    self.run(count=count + 10000, rerun=False)
 
-            self.post_validate()
+                self.post_validate()
+            except Exception as e:
+                msg = 'Failed DT partitioning for site {s}, will {m} execution of DT partitioning'.format(s=self.pipeline.siteid, m=('skip' if self.dt_skip_on_error else 'stop'))
+                log.critical(msg)
+                log_trace(exception=e)
+                if self.dt_skip_on_error:
+                    self.pipeline.dt_skip = True
+
 
         log.info("Pipeline {s} execution finished".format(s=self.label))
 
@@ -1721,11 +1756,13 @@ class PipelinePrepareURE(object):
     DT_RECO_TEMPLATE = "{s}_{y}_DT_RECO.csv"
     NT_GPP_TEMPLATE = "{s}_{y}_NT_GPP.csv"
     NT_RECO_TEMPLATE = "{s}_{y}_NT_RECO.csv"
-    _OUTPUT_FILE_PATTERNS_NT_DT = [
-        DT_GPP_TEMPLATE.format(y='????', s='{s}'),
-        DT_RECO_TEMPLATE.format(y='????', s='{s}'),
+    _OUTPUT_FILE_PATTERNS_NT = [
         NT_GPP_TEMPLATE.format(y='????', s='{s}'),
         NT_RECO_TEMPLATE.format(y='????', s='{s}'),
+    ]
+    _OUTPUT_FILE_PATTERNS_DT = [
+        DT_GPP_TEMPLATE.format(y='????', s='{s}'),
+        DT_RECO_TEMPLATE.format(y='????', s='{s}'),
     ]
 
     def __init__(self, pipeline, perc=PERC_TO_COMPARE, prod=PROD_TO_COMPARE):
@@ -1742,15 +1779,18 @@ class PipelinePrepareURE(object):
         self.execute = self.pipeline.configs.get('prepare_ure_execute', self.PREPARE_URE_EXECUTE)
         self.prepare_ure_dir = self.pipeline.configs.get('prepare_ure_dir', os.path.join(self.pipeline.data_dir, self.PREPARE_URE_DIR))
         self.prepare_ure_dir_fmt = self.prepare_ure_dir + os.sep
-        self.output_file_patterns_nt_dt = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_NT_DT]
+        self.output_file_patterns_nt = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_NT]
+        self.output_file_patterns_dt = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_DT]
 
     def pre_validate(self):
         '''
         Validate pre-execution requirements
         '''
         # check dependency steps
-        self.pipeline.nee_partition_nt.post_validate()
-        self.pipeline.nee_partition_dt.post_validate()
+        if not self.pipeline.nt_skip:
+            self.pipeline.nee_partition_nt.post_validate()
+        if not self.pipeline.dt_skip:
+            self.pipeline.nee_partition_dt.post_validate()
 
     def post_validate(self):
         '''
@@ -1759,9 +1799,13 @@ class PipelinePrepareURE(object):
         # check output directory
         test_dir(tdir=self.prepare_ure_dir, label='prepare_ure.post_validate')
 
-        # check output files
-        # NT and DT
-        test_file_list(file_list=self.output_file_patterns_nt_dt, tdir=self.prepare_ure_dir, label='prepare_ure.post_validate')
+        # check output files NT
+        if not self.pipeline.nt_skip:
+            test_file_list(file_list=self.output_file_patterns_nt, tdir=self.prepare_ure_dir, label='prepare_ure.post_validate')
+
+        # check output files DT
+        if not self.pipeline.dt_skip:
+            test_file_list(file_list=self.output_file_patterns_dt, tdir=self.prepare_ure_dir, label='prepare_ure.post_validate')
 
     def check_cleanup_nt(self, reco, gpp, filename):
         """
@@ -1870,9 +1914,51 @@ class PipelinePrepareURE(object):
         return reco, gpp
 
 
-    def convert_files(self):
+    def convert_files_nt(self):
         '''
-        Runs the actual conversion of partitioning outputs into URE inputs
+        Runs the actual conversion of partitioning outputs into URE inputs NT
+        '''
+
+        # per year/per var input files -- per year output files
+        for year in range(self.pipeline.first_year, self.pipeline.last_year + 1):
+            # headers for outputs
+            headers = ['{s}_{y}_{pd}_{pc}.hdr'.format(s=self.pipeline.siteid, y=year, pd=pd, pc=pc).replace('.', '__') for pd in PROD_TO_COMPARE for pc in PERC_TO_COMPARE]
+
+            # allocate output arrays for year
+            gpp_nt_data = get_empty_array_year(year=year, start_end=False, variable_list=headers, record_interval=self.pipeline.record_interval)
+            reco_nt_data = get_empty_array_year(year=year, start_end=False, variable_list=headers, record_interval=self.pipeline.record_interval)
+
+            # populate output filnames for year
+            gpp_nt_output_filename = os.path.join(self.prepare_ure_dir, self.NT_GPP_TEMPLATE.format(y=year, s=self.pipeline.siteid))
+            reco_nt_output_filename = os.path.join(self.prepare_ure_dir, self.NT_RECO_TEMPLATE.format(y=year, s=self.pipeline.siteid))
+
+            # within year, load and reformat reco and gpp variables for each product and percentile
+            for pd in self.prod:
+                for pc in self.perc:
+                    # variable label format -- keeping original label -- TODO: update when new URE code available)
+                    var = '{s}_{y}_{pd}_{pc}.hdr'.format(s=self.pipeline.siteid, y=year, pd=pd, pc=pc).replace('.', '__')
+                    generic_filename = self.FILENAME_TEMPLATE.format(prod=pd, perc=pc, s=self.pipeline.siteid, year=year, extra=EXTRA_FILENAME)
+
+                    # load NT
+                    nt_filename = os.path.join(self.pipeline.nee_partition_nt.nee_partition_nt_dir, generic_filename)
+                    if test_file(tfile=nt_filename, label='ure.run', log_only=True):
+                        with open(nt_filename, 'r') as f:
+                            header_line = f.readline()
+                            input_headers = [i.strip().replace('.', '__').lower() for i in header_line.strip().split(',')]
+                        reco_idx, gpp_idx = input_headers.index('reco_2'), input_headers.index('gpp_2'),
+                        data = numpy.genfromtxt(fname=nt_filename, names=True, delimiter=',', skip_header=0, usemask=False, usecols=(reco_idx, gpp_idx,))
+                        reco_nt_data[var][:], gpp_nt_data[var][:] = self.check_cleanup_nt(reco=data['reco_2'], gpp=data['gpp_2'], filename=nt_filename)
+
+                # save NT
+                numpy.savetxt(fname=gpp_nt_output_filename, X=gpp_nt_data, delimiter=',', fmt='%s', header=','.join([i.replace('__', '.') for i in gpp_nt_data.dtype.names]), comments='')
+                log.info("Pipeline prepare_ure: saved '{s}'".format(s=gpp_nt_output_filename))
+                numpy.savetxt(fname=reco_nt_output_filename, X=reco_nt_data, delimiter=',', fmt='%s', header=','.join([i.replace('__', '.') for i in reco_nt_data.dtype.names]), comments='')
+                log.info("Pipeline prepare_ure: saved '{s}'".format(s=reco_nt_output_filename))
+
+
+    def convert_files_dt(self):
+        '''
+        Runs the actual conversion of partitioning outputs into URE inputs DT
         '''
 
         # per year/per var input files -- per year output files
@@ -1882,15 +1968,11 @@ class PipelinePrepareURE(object):
 
             # allocate output arrays for year
             gpp_dt_data = get_empty_array_year(year=year, start_end=False, variable_list=headers, record_interval=self.pipeline.record_interval)
-            gpp_nt_data = get_empty_array_year(year=year, start_end=False, variable_list=headers, record_interval=self.pipeline.record_interval)
             reco_dt_data = get_empty_array_year(year=year, start_end=False, variable_list=headers, record_interval=self.pipeline.record_interval)
-            reco_nt_data = get_empty_array_year(year=year, start_end=False, variable_list=headers, record_interval=self.pipeline.record_interval)
 
             # populate output filnames for year
             gpp_dt_output_filename = os.path.join(self.prepare_ure_dir, self.DT_GPP_TEMPLATE.format(y=year, s=self.pipeline.siteid))
-            gpp_nt_output_filename = os.path.join(self.prepare_ure_dir, self.NT_GPP_TEMPLATE.format(y=year, s=self.pipeline.siteid))
             reco_dt_output_filename = os.path.join(self.prepare_ure_dir, self.DT_RECO_TEMPLATE.format(y=year, s=self.pipeline.siteid))
-            reco_nt_output_filename = os.path.join(self.prepare_ure_dir, self.NT_RECO_TEMPLATE.format(y=year, s=self.pipeline.siteid))
 
             # within year, load and reformat reco and gpp variables for each product and percentile
             for pd in self.prod:
@@ -1898,16 +1980,6 @@ class PipelinePrepareURE(object):
                     # variable label format -- keeping original label -- TODO: update when new URE code available)
                     var = '{s}_{y}_{pd}_{pc}.hdr'.format(s=self.pipeline.siteid, y=year, pd=pd, pc=pc).replace('.', '__')
                     generic_filename = self.FILENAME_TEMPLATE.format(prod=pd, perc=pc, s=self.pipeline.siteid, year=year, extra=EXTRA_FILENAME)
-                    nt_filename = os.path.join(self.pipeline.nee_partition_nt.nee_partition_nt_dir, generic_filename)
-
-                    # load NT
-                    if test_file(tfile=nt_filename, label='ure.run', log_only=True):
-                        with open(nt_filename, 'r') as f:
-                            header_line = f.readline()
-                            input_headers = [i.strip().replace('.', '__').lower() for i in header_line.strip().split(',')]
-                        reco_idx, gpp_idx = input_headers.index('reco_2'), input_headers.index('gpp_2'),
-                        data = numpy.genfromtxt(fname=nt_filename, names=True, delimiter=',', skip_header=0, usemask=False, usecols=(reco_idx, gpp_idx,))
-                        reco_nt_data[var][:], gpp_nt_data[var][:] = self.check_cleanup_nt(reco=data['reco_2'], gpp=data['gpp_2'], filename=nt_filename)
 
                     # load DT
                     dt_filename = os.path.join(self.pipeline.nee_partition_dt.nee_partition_dt_dir, generic_filename)
@@ -1918,12 +1990,6 @@ class PipelinePrepareURE(object):
                         reco_idx, gpp_idx = input_headers.index('reco_hblr'), input_headers.index('gpp_hblr'),
                         data = numpy.genfromtxt(fname=dt_filename, names=True, delimiter=',', skip_header=0, usemask=False, usecols=(reco_idx, gpp_idx,))
                         reco_dt_data[var][:], gpp_dt_data[var][:] = self.check_cleanup_dt(reco=data['reco_hblr'], gpp=data['gpp_hblr'], filename=dt_filename)
-
-                # save NT
-                numpy.savetxt(fname=gpp_nt_output_filename, X=gpp_nt_data, delimiter=',', fmt='%s', header=','.join([i.replace('__', '.') for i in gpp_nt_data.dtype.names]), comments='')
-                log.info("Pipeline prepare_ure: saved '{s}'".format(s=gpp_nt_output_filename))
-                numpy.savetxt(fname=reco_nt_output_filename, X=reco_nt_data, delimiter=',', fmt='%s', header=','.join([i.replace('__', '.') for i in reco_nt_data.dtype.names]), comments='')
-                log.info("Pipeline prepare_ure: saved '{s}'".format(s=reco_nt_output_filename))
 
                 # save DT
                 numpy.savetxt(fname=gpp_dt_output_filename, X=gpp_dt_data, delimiter=',', fmt='%s', header=','.join([i.replace('__', '.') for i in gpp_dt_data.dtype.names]), comments='')
@@ -1945,7 +2011,10 @@ class PipelinePrepareURE(object):
         if self.pipeline.simulation:
             log.info('Simulation only, {s} execution command skipped'.format(s=self.label))
         else:
-            self.convert_files()
+            if not self.pipeline.nt_skip:
+                self.convert_files_nt()
+            if not self.pipeline.dt_skip:
+                self.convert_files_dt()
             self.post_validate()
 
         log.info("Pipeline prepare_ure execution finished")
@@ -1960,16 +2029,9 @@ class PipelineURE(object):
     URE_EX = "ure"
     URE_DIR = "12_ure"
     _OUTPUT_FILE_PATTERNS = [
-        "{s}_DT_GPP_dd.csv",
-        "{s}_DT_GPP_hh.csv",
-        "{s}_DT_GPP_mm.csv",
-        "{s}_DT_GPP_ww.csv",
-        "{s}_DT_GPP_yy.csv",
-        "{s}_DT_RECO_dd.csv",
-        "{s}_DT_RECO_hh.csv",
-        "{s}_DT_RECO_mm.csv",
-        "{s}_DT_RECO_ww.csv",
-        "{s}_DT_RECO_yy.csv",
+        OUTPUT_LOG_TEMPLATE.format(t='*'), # TODO: change when method implemented
+    ]
+    _OUTPUT_FILE_PATTERNS_NT = [
         "{s}_NT_GPP_dd.csv",
         "{s}_NT_GPP_hh.csv",
         "{s}_NT_GPP_mm.csv",
@@ -1980,19 +2042,20 @@ class PipelineURE(object):
         "{s}_NT_RECO_mm.csv",
         "{s}_NT_RECO_ww.csv",
         "{s}_NT_RECO_yy.csv",
-        OUTPUT_LOG_TEMPLATE.format(t='*'), # TODO: change when method implemented
     ]
-    _OUTPUT_FILE_PATTERNS_INFO = [
-        "{s}_DT_GPP_dd_info.txt",
-        "{s}_DT_GPP_hh_info.txt",
-        "{s}_DT_GPP_mm_info.txt",
-        "{s}_DT_GPP_ww_info.txt",
-        "{s}_DT_GPP_yy_info.txt",
-        "{s}_DT_RECO_dd_info.txt",
-        "{s}_DT_RECO_hh_info.txt",
-        "{s}_DT_RECO_mm_info.txt",
-        "{s}_DT_RECO_ww_info.txt",
-        "{s}_DT_RECO_yy_info.txt",
+    _OUTPUT_FILE_PATTERNS_DT = [
+        "{s}_DT_GPP_dd.csv",
+        "{s}_DT_GPP_hh.csv",
+        "{s}_DT_GPP_mm.csv",
+        "{s}_DT_GPP_ww.csv",
+        "{s}_DT_GPP_yy.csv",
+        "{s}_DT_RECO_dd.csv",
+        "{s}_DT_RECO_hh.csv",
+        "{s}_DT_RECO_mm.csv",
+        "{s}_DT_RECO_ww.csv",
+        "{s}_DT_RECO_yy.csv",
+    ]
+    _OUTPUT_FILE_PATTERNS_INFO_NT = [
         "{s}_NT_GPP_dd_info.txt",
         "{s}_NT_GPP_hh_info.txt",
         "{s}_NT_GPP_mm_info.txt",
@@ -2004,27 +2067,19 @@ class PipelineURE(object):
         "{s}_NT_RECO_ww_info.txt",
         "{s}_NT_RECO_yy_info.txt",
     ]
-    _OUTPUT_FILE_PATTERNS_MEF = [
-        "{s}_DT_GPP_mef_matrix_dd_c_????_????.csv",
-        "{s}_DT_GPP_mef_matrix_dd_y_????_????.csv",
-        "{s}_DT_GPP_mef_matrix_hh_c_????_????.csv",
-        "{s}_DT_GPP_mef_matrix_hh_y_????_????.csv",
-        "{s}_DT_GPP_mef_matrix_mm_c_????_????.csv",
-        "{s}_DT_GPP_mef_matrix_mm_y_????_????.csv",
-        "{s}_DT_GPP_mef_matrix_ww_c_????_????.csv",
-        "{s}_DT_GPP_mef_matrix_ww_y_????_????.csv",
-        "{s}_DT_GPP_mef_matrix_yy_c_????_????.csv",
-        "{s}_DT_GPP_mef_matrix_yy_y_????_????.csv",
-        "{s}_DT_RECO_mef_matrix_dd_c_????_????.csv",
-        "{s}_DT_RECO_mef_matrix_dd_y_????_????.csv",
-        "{s}_DT_RECO_mef_matrix_hh_c_????_????.csv",
-        "{s}_DT_RECO_mef_matrix_hh_y_????_????.csv",
-        "{s}_DT_RECO_mef_matrix_mm_c_????_????.csv",
-        "{s}_DT_RECO_mef_matrix_mm_y_????_????.csv",
-        "{s}_DT_RECO_mef_matrix_ww_c_????_????.csv",
-        "{s}_DT_RECO_mef_matrix_ww_y_????_????.csv",
-        "{s}_DT_RECO_mef_matrix_yy_c_????_????.csv",
-        "{s}_DT_RECO_mef_matrix_yy_y_????_????.csv",
+    _OUTPUT_FILE_PATTERNS_INFO_DT = [
+        "{s}_DT_GPP_dd_info.txt",
+        "{s}_DT_GPP_hh_info.txt",
+        "{s}_DT_GPP_mm_info.txt",
+        "{s}_DT_GPP_ww_info.txt",
+        "{s}_DT_GPP_yy_info.txt",
+        "{s}_DT_RECO_dd_info.txt",
+        "{s}_DT_RECO_hh_info.txt",
+        "{s}_DT_RECO_mm_info.txt",
+        "{s}_DT_RECO_ww_info.txt",
+        "{s}_DT_RECO_yy_info.txt",
+    ]
+    _OUTPUT_FILE_PATTERNS_MEF_NT = [
         "{s}_NT_GPP_mef_matrix_dd_c_????_????.csv",
         "{s}_NT_GPP_mef_matrix_dd_y_????_????.csv",
         "{s}_NT_GPP_mef_matrix_hh_c_????_????.csv",
@@ -2046,6 +2101,28 @@ class PipelineURE(object):
         "{s}_NT_RECO_mef_matrix_yy_c_????_????.csv",
         "{s}_NT_RECO_mef_matrix_yy_y_????_????.csv",
     ]
+    _OUTPUT_FILE_PATTERNS_MEF_DT = [
+        "{s}_DT_GPP_mef_matrix_dd_c_????_????.csv",
+        "{s}_DT_GPP_mef_matrix_dd_y_????_????.csv",
+        "{s}_DT_GPP_mef_matrix_hh_c_????_????.csv",
+        "{s}_DT_GPP_mef_matrix_hh_y_????_????.csv",
+        "{s}_DT_GPP_mef_matrix_mm_c_????_????.csv",
+        "{s}_DT_GPP_mef_matrix_mm_y_????_????.csv",
+        "{s}_DT_GPP_mef_matrix_ww_c_????_????.csv",
+        "{s}_DT_GPP_mef_matrix_ww_y_????_????.csv",
+        "{s}_DT_GPP_mef_matrix_yy_c_????_????.csv",
+        "{s}_DT_GPP_mef_matrix_yy_y_????_????.csv",
+        "{s}_DT_RECO_mef_matrix_dd_c_????_????.csv",
+        "{s}_DT_RECO_mef_matrix_dd_y_????_????.csv",
+        "{s}_DT_RECO_mef_matrix_hh_c_????_????.csv",
+        "{s}_DT_RECO_mef_matrix_hh_y_????_????.csv",
+        "{s}_DT_RECO_mef_matrix_mm_c_????_????.csv",
+        "{s}_DT_RECO_mef_matrix_mm_y_????_????.csv",
+        "{s}_DT_RECO_mef_matrix_ww_c_????_????.csv",
+        "{s}_DT_RECO_mef_matrix_ww_y_????_????.csv",
+        "{s}_DT_RECO_mef_matrix_yy_c_????_????.csv",
+        "{s}_DT_RECO_mef_matrix_yy_y_????_????.csv",
+    ]
 
     def __init__(self, pipeline):
         '''
@@ -2061,8 +2138,12 @@ class PipelineURE(object):
         self.ure_dir = self.pipeline.configs.get('ure_dir', os.path.join(self.pipeline.data_dir, self.URE_DIR))
         self.ure_dir_fmt = self.ure_dir + os.sep
         self.output_file_patterns = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS]
-        self.output_file_patterns_info = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_INFO]
-        self.output_file_patterns_mef = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_MEF]
+        self.output_file_patterns_nt = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_NT]
+        self.output_file_patterns_dt = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_DT]
+        self.output_file_patterns_info_nt = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_INFO_NT]
+        self.output_file_patterns_info_dt = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_INFO_DT]
+        self.output_file_patterns_mef_nt = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_MEF_NT]
+        self.output_file_patterns_mef_dt = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_MEF_DT]
         self.input_prepare_ure_dir = self.pipeline.prepare_ure.prepare_ure_dir_fmt
         self.output_log = os.path.join(self.ure_dir, 'report_{t}.txt'.format(t=self.pipeline.run_id))
         self.cmd_txt = 'cd "{o}" {cmd_sep} {c} -input_path={i} -output_path={o} > "{log}"'
@@ -2087,8 +2168,14 @@ class PipelineURE(object):
 
         # check output files and result report (log)
         test_file_list(file_list=self.output_file_patterns, tdir=self.ure_dir, label='ure.post_validate')
-        test_file_list(file_list=self.output_file_patterns_info, tdir=self.ure_dir, label='ure.post_validate', log_only=True)
-        test_file_list(file_list=self.output_file_patterns_mef, tdir=self.ure_dir, label='ure.post_validate', log_only=True)
+        if not self.pipeline.nt_skip:
+            test_file_list(file_list=self.output_file_patterns_nt, tdir=self.ure_dir, label='ure.post_validate')
+            test_file_list(file_list=self.output_file_patterns_info_nt, tdir=self.ure_dir, label='ure.post_validate', log_only=True)
+            test_file_list(file_list=self.output_file_patterns_mef_nt, tdir=self.ure_dir, label='ure.post_validate', log_only=True)
+        if not self.pipeline.dt_skip:
+            test_file_list(file_list=self.output_file_patterns_dt, tdir=self.ure_dir, label='ure.post_validate')
+            test_file_list(file_list=self.output_file_patterns_info_dt, tdir=self.ure_dir, label='ure.post_validate', log_only=True)
+            test_file_list(file_list=self.output_file_patterns_mef_dt, tdir=self.ure_dir, label='ure.post_validate', log_only=True)
 
     def run(self):
         '''
