@@ -680,7 +680,7 @@ def merge_unc(dt_reco, dt_gpp, nt_reco, nt_gpp, resolution, nt_skip=False, dt_sk
     if not nt_skip:
         timestamp_arrays = {}
         for dt in dtype_ts:
-            timestamp_arrays[dt[0]] += nt_reco[dt[0]]
+            timestamp_arrays[dt[0]] = nt_reco[dt[0]]
         for dt in nt_reco.dtype.descr:
             if dt[0] not in htype:
                 dtype_comp.append(('NT_' + dt[0], dt[1]))
@@ -691,7 +691,7 @@ def merge_unc(dt_reco, dt_gpp, nt_reco, nt_gpp, resolution, nt_skip=False, dt_sk
     if not dt_skip:
         timestamp_arrays = {}
         for dt in dtype_ts:
-            timestamp_arrays[dt[0]] += dt_reco[dt[0]]
+            timestamp_arrays[dt[0]] = dt_reco[dt[0]]
         for dt in dt_reco.dtype.descr:
             if dt[0] not in htype:
                 dtype_comp.append(('DT_' + dt[0], dt[1]))
