@@ -27,7 +27,7 @@ from oneflux import ONEFluxError
 from oneflux.utils.files import check_create_directory, file_stat, zip_file_list
 
 from oneflux.pipeline.variables_codes import VARIABLE_LIST_FULL, VARIABLE_LIST_SUB, PERC_LABEL, \
-                                              TIMESTAMP_VARIABLE_LIST, FULL_D, QC_FULL_D, VARIABLES_DONOT_GAPFILL_LONG
+                                              TIMESTAMP_VARIABLE_LIST, FULL_D, QC_FULL_D, VARIABLES_DONOT_GAPFILL_LONG, VARIABLES_DONOT_GAPFILL_LONG
 from oneflux.pipeline.aux_info_files import run_site_aux
 from oneflux.pipeline.common import QCDIR, METEODIR, NEEDIR, ENERGYDIR, UNCDIR, PRODDIR, WORKING_DIRECTORY, \
                                      PRODFILE_TEMPLATE, ZIPFILE_TEMPLATE, \
