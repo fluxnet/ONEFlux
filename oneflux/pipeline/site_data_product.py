@@ -27,7 +27,7 @@ from oneflux import ONEFluxError
 from oneflux.utils.files import check_create_directory, file_stat, zip_file_list
 
 from oneflux.pipeline.variables_codes import VARIABLE_LIST_FULL, VARIABLE_LIST_SUB, PERC_LABEL, \
-                                              TIMESTAMP_VARIABLE_LIST, FULL_D, QC_FULL_D
+                                              TIMESTAMP_VARIABLE_LIST, FULL_D, QC_FULL_D, VARIABLES_DONOT_GAPFILL_LONG
 from oneflux.pipeline.aux_info_files import run_site_aux
 from oneflux.pipeline.common import QCDIR, METEODIR, NEEDIR, ENERGYDIR, UNCDIR, PRODDIR, WORKING_DIRECTORY, \
                                      PRODFILE_TEMPLATE, ZIPFILE_TEMPLATE, \
@@ -1029,6 +1029,56 @@ def check_lengths(siteid, meteo, energy, nee, unc, resolution, nt_skip=False, dt
     return meteo, energy, nee, unc
 
 
+def get_indices_to_filter(qcdata, qc_threshold=2, window_size=48):
+    # filter QC array, minimum quality acceptable
+    qc_filtered = (qcdata >= qc_threshold).astype(int)
+
+    # prepare window array of 1s for convolution
+    conv_window = [1,] * window_size 
+    
+    # create array counting how many of entries match condition
+    # (low quality, i.e., qc values higher than threshold)
+    conv = numpy.convolve(qc_filtered, conv_window, mode='valid') 
+    
+    # create array of start indices where number of entries match window size
+    indices_start = numpy.where(conv == window_size)[0]
+    
+    # create (start, end) pair for windows
+    indices = [numpy.arange(index, index + window_size) for index in indices_start]
+
+    # flatten all entries (and remove potential duplicates)
+    indices_unique = numpy.unique(indices) 
+
+    # merge all contiguous windows into longer tuples
+    # use (i[0]:i[-1] + 1) to access indexes for each window of interest
+    indices_tmp = numpy.where(numpy.diff(indices_unique) != 1)[0] + 1
+    indices_contiguous = numpy.split(indices_unique, indices_tmp)
+
+    # create mask to be used to set values to NaN in True positions
+    mask = numpy.zeros(len(qcdata))
+    for i in indices_contiguous:
+        mask[i[0]:i[-1] + 1] = True
+    # TODO: RETURN LISTS OF DAY WINDOWS, WEEK WINDOWS, MONTH WINDOWS, YEAR WINDOWS
+    return mask
+
+
+def filter_long_gaps(data, qc_threshold=2, window_size=48):
+    for qcv, var_list in VARIABLES_DONOT_GAPFILL_LONG.iteritems():
+        print(qcv, var_list)
+        # TODO: RETURN LISTS OF DAY WINDOWS, WEEK WINDOWS, MONTH WINDOWS, YEAR WINDOWS
+
+        if qcv not in data.dtype.names:
+            log.warning('QC variable {q} not part of this temporal resolution, skipping'.format(q=qcv))
+            continue
+
+        fmask = get_indices_to_filter(qcdata=data[qcv], qc_threshold=qc_threshold, window_size=window_size)
+
+        for var in var_list:
+            data[var][fmask] = numpy.NaN
+
+    return data
+
+
 def run_site(siteid,
              sitedir,
              first_t1,
@@ -1154,6 +1204,21 @@ def run_site(siteid,
                 raise ONEFluxError("Output QC Data YY resolution not computed")
             output_data = merge_qcdata_res(qcdata=qcdata_yy, output=output_data, res=resolution)
 
+        ### Cleanup of long gapfilled results, remove gapfilled data for gaps longer than 21 days.
+        #   New for 2025, this changes default ONEFlux behavior
+        if output_resolution == 'HH':
+            # compute windows and set gaps for window_size=48*21
+            # output_data = filter_long_gaps(data=output_data, qc_threshold=2, window_size=48*21)
+            pass
+        elif output_resolution == 'HR':
+            # compute windows and set gaps for window_size=24*21
+            # output_data = filter_long_gaps(data=output_data, qc_threshold=2, window_size=24*21)
+            pass
+        elif (output_resolution == 'DD') or (output_resolution == 'WW') or (output_resolution == 'MM') or (output_resolution == 'YY'):
+            pass
+            
+        continue
+
         ### FULLSET files
         # save Tier 2 FULLSET CSV file
         filename = prodfile_template.format(sd=sitedir, s=siteid, g=FULLSET_STR, r=output_resolution, fy=first_year, ly=last_year, vd=version_data, vp=version_processing)
@@ -1237,7 +1302,7 @@ def run_site(siteid,
         # UNK
         else:
             raise ONEFluxError("Unknown Tier 1 state: first_t1={f}, last_t1={l}".format(f=first_t1, l=last_t1))
-
+    sys.exit(0)
     # save first/last year info
     prodfile_years = prodfile_years_template.format(s=siteid, sd=sitedir, vd=version_data, vp=version_processing)
     with open(prodfile_years, 'w') as f:
