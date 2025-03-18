@@ -1055,28 +1055,60 @@ def get_indices_to_filter(qcdata, qc_threshold=2, window_size=48):
     indices_contiguous = numpy.split(indices_unique, indices_tmp)
 
     # create mask to be used to set values to NaN in True positions
-    mask = numpy.zeros(len(qcdata))
+    mask = numpy.isnan(qcdata)
+    mask[:] = False
     for i in indices_contiguous:
-        mask[i[0]:i[-1] + 1] = True
-    # TODO: RETURN LISTS OF DAY WINDOWS, WEEK WINDOWS, MONTH WINDOWS, YEAR WINDOWS
+        if len(i) > 0:
+            mask[i[0]:i[-1] + 1] = True
     return mask
 
 
 def filter_long_gaps(data, qc_threshold=2, window_size=48):
+    ftimestamp = {}
     for qcv, var_list in VARIABLES_DONOT_GAPFILL_LONG.iteritems():
-        print(qcv, var_list)
         # TODO: RETURN LISTS OF DAY WINDOWS, WEEK WINDOWS, MONTH WINDOWS, YEAR WINDOWS
-
+        log.debug('QC variable {q}: start cleaning long gaps'.format(q=qcv))
         if qcv not in data.dtype.names:
             log.warning('QC variable {q} not part of this temporal resolution, skipping'.format(q=qcv))
             continue
 
         fmask = get_indices_to_filter(qcdata=data[qcv], qc_threshold=qc_threshold, window_size=window_size)
+        ftimestamp[qcv] = data['TIMESTAMP_START'][fmask]
+        log.debug('QC variable {q} has {n} records to be restored to gaps'.format(q=qcv, n=numpy.sum(fmask)))
 
         for var in var_list:
-            data[var][fmask] = numpy.NaN
+            log.debug('QC variable {q}, data variable {v}: assigning -9999'.format(q=qcv, v=var))
+            data[var][fmask] = -9999.9
 
-    return data
+    return ftimestamp, data
+
+
+def slice_string_array(sarray, start, end):
+    sb = sarray.view((str, 1)).reshape(len(sarray), -1)[:, start:end]
+    return numpy.fromstring(sb.tostring(), dtype=(str, end - start))
+
+
+def generate_agg_timestamp_mask(ftimestamp, time_var, timelabel='TIMESTAMP', resolution='DD'):
+    # for earch QC variable in dict, process list of timestamps excluded from HH/HR array
+    fsliced = {}
+    for qcv, t in ftimestamp.iteritems():
+        log.debug('QC variable {q}, processing aggregation {a}'.format(q=qcv, v=resolution))
+        tmask = (time_var == '0')
+        tmask[:] = False
+        if len(t) > 0:
+            if (resolution == 'DD') or (resolution == 'WW'):
+                sliced = numpy.unique(slice_string_array(t, start=0, end=8))
+                print(sliced)
+                # TODO: create mask and add to fsliced
+            elif resolution == 'MM':
+                sliced = numpy.unique(slice_string_array(t, start=0, end=6))
+                print(sliced)
+                # TODO: create mask and add to fsliced
+            elif resolution == 'YY':
+                sliced = numpy.unique(slice_string_array(t, start=0, end=4))
+                print(sliced)
+                # TODO: create mask and add to fsliced
+    return fsliced
 
 
 def run_site(siteid,
@@ -1208,15 +1240,14 @@ def run_site(siteid,
         #   New for 2025, this changes default ONEFlux behavior
         if output_resolution == 'HH':
             # compute windows and set gaps for window_size=48*21
-            # output_data = filter_long_gaps(data=output_data, qc_threshold=2, window_size=48*21)
-            pass
+            ftimestamp, output_data = filter_long_gaps(data=output_data, qc_threshold=2, window_size=48*21)
         elif output_resolution == 'HR':
             # compute windows and set gaps for window_size=24*21
-            # output_data = filter_long_gaps(data=output_data, qc_threshold=2, window_size=24*21)
-            pass
+            ftimestamp, output_data = filter_long_gaps(data=output_data, qc_threshold=2, window_size=24*21)
         elif (output_resolution == 'DD') or (output_resolution == 'WW') or (output_resolution == 'MM') or (output_resolution == 'YY'):
-            pass
-            
+            timelabel = TIMESTAMP_DTYPE_BY_RESOLUTION[resolution][0][0]
+            ftimestamp_res = generate_agg_timestamp_mask(ftimestamp=ftimestamp, time_var=output_data[timelabel], resolution=output_resolution, timelabel=timelabel)
+            print(ftimestamp_res)
         continue
 
         ### FULLSET files
