@@ -1357,7 +1357,7 @@ int debug_save_aggr_by_year(const DATASET *const dataset, const PREC *const ECBc
 
 
 /* */
-static check_le_h(DATASET *const dataset) {
+static int check_le_h(DATASET *const dataset) {
 	int i;
 	int flag = 0;
 
