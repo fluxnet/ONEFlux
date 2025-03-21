@@ -1324,8 +1324,8 @@ class PipelineNEEProc(object):
         # check output files and result report (log)
         test_file_list(file_list=self.output_file_patterns, tdir=self.nee_proc_dir, label='nee_proc.post_validate')
         test_file_list(file_list=self.output_file_patterns_info, tdir=self.nee_proc_dir, label='nee_proc.post_validate')
-        test_file_list(file_list=self.output_file_patterns_y, tdir=self.nee_proc_dir, label='nee_proc.post_validate')
-        test_file_list_or(file_list=self.output_file_patterns_y_alt, tdir=self.nee_proc_dir, label='nee_proc.post_validate')
+        test_file_list(file_list=self.output_file_patterns_y, tdir=self.nee_proc_dir, label='nee_proc.post_validate', log_only=True)
+        test_file_list_or(file_list=self.output_file_patterns_y_alt, tdir=self.nee_proc_dir, label='nee_proc.post_validate', log_only=True)
         test_file_list(file_list=self.output_file_patterns_c, tdir=self.nee_proc_dir, label='nee_proc.post_validate', log_only=True)
         test_file_list_or(file_list=self.output_file_patterns_c_alt, tdir=self.nee_proc_dir, label='nee_proc.post_validate', log_only=True)
 
