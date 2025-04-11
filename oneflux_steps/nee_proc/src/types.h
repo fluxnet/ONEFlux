@@ -220,6 +220,11 @@ typedef struct {
 
 /* */
 typedef struct {
+	PREC nee[PERCENTILES_COUNT_2];
+} NEE_MATRIX_REF;
+
+/* */
+typedef struct {
 	PREC value;
 	PREC qc;
 } VALUE_QC;
