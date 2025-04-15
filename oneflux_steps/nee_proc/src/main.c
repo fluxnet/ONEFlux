@@ -80,9 +80,13 @@ static char msg_usage[] =	"How to use: nee_proc parameter\n\n"
 							"    -nee_flags -> save nee flags\n\n"
 							"    -qc_gf_thrs=X -> set gapfilling qc threshold ( default is %d )\n\n"
 							"    -mef -> save mef matrix\n\n"
-							"    -mef_qc -> max QC value to keep in the ref computation (0-3) ( default is %d )\n\n"
-							"    -mef_min_gap -> min gap length to be created for ref computation ( default is %d )\n\n"
-							"    -mef_max_gap -> max gap length accepted for ref computation ( default is %d )\n\n"							
+							"    -mef_qc -> max QC value to keep in the ref computation, highers will be removed (0-3) ( default is %d )\n\n"
+							"    -mef_max_gap -> maximum gap length that can be filled.\n"
+							"             Longer gaps will be removed (for ref computation here and later in the final product)\n"
+							"             ( default is %d )\n\n"							
+							"    -mef_min_gap -> In case of gaps in the middle of the timeseries, indicates the minimum gap\n"
+							"             that can be created (i.e. if shorted than mef_min_gap the data will not be removed)\n"
+							"             ( default is %d )\n\n"
 							"    -percentiles -> save percentiles for DD,WW,MM,YY time resolution\n\n"
 							"    -h -> show this help\n\n";
 
@@ -184,8 +188,9 @@ static int show_help(char *arg, char *param, void *p) {
 						METEO_PATH,
 						qc_gf_threshold,
 						mef_qc,
-						mef_min_gap,
-						mef_max_gap
+						mef_max_gap,
+						mef_min_gap
+						
 	);
 	/* must return error */
 	return 0;

@@ -116,19 +116,6 @@ static const char header_file_dd[] = "%s,DOY,";
 static const char header_file_ww[] = "%s,WEEK,";
 static const char header_file_mm[] = "%s,";
 static const char header_file_yy[] = "%s,";
-#if 0 /* new naming convention */
-static const char *types[TYPES] = { "hh_vut",
-									"dd_vut",
-									"ww_vut",
-									"mm_vut",
-									"yy_vut",
-									"hh_cut",
-									"dd_cut",
-									"ww_cut",
-									"mm_cut",
-									"yy_cut"
-};
-#else
 static const char *types[TYPES] = { "hh_y",
 									"dd_y",
 									"ww_y",
@@ -140,7 +127,6 @@ static const char *types[TYPES] = { "hh_y",
 									"mm_c",
 									"yy_c"
 };
-#endif
 
 static const char *input_columns_tokens[INPUT_VALUES] = { "NEE", "VPD", "SW_IN_POT", "USTAR", "TA", "SW_IN" };
 
@@ -599,10 +585,25 @@ int debug_save_nee_matrix(const char* filename, const NEE_MATRIX *const m, const
 }
 #endif
 
-static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix, const int rows_count, const char type, NEE_MATRIX_REF* nee_matrix_ref)
+/* 
+	Selection of the REF calculating the MEF only on the valid data.
+
+	In the view of the update to remove long gaps gapfilled (done in a second stage) the REF is selected using only data that are maintened,
+	on the basis of a maximum gap length (mef_max_gap) and minimum QC (mef_qc).
+	This part of the code creates a new NEE matrix used to calculate the MEF and select the REF.
+	The data exported are the gapfilled, not the one used here. The process is done also at the different time aggregations.
+*/
+
+static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
+									, const int rows_count
+									, const char type
+									, NEE_MATRIX_REF** nee_matrix_ref
+									, int start_year
+									, int timeres
+									, const char* site)
 {
-	nee_matrix_ref = malloc(rows_count*sizeof*nee_matrix_ref);
-	if ( ! nee_matrix_ref ) {
+	*nee_matrix_ref = malloc(rows_count*sizeof**nee_matrix_ref);
+	if ( ! *nee_matrix_ref ) {
 		puts(err_out_of_memory);
 		return 0;
 	} else {
@@ -610,13 +611,13 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix, const int row
 		for ( i = 0; i < rows_count; ++i ) {
 			int j;
 			for ( j = 0; j < PERCENTILES_COUNT_2; ++j ) {
-				nee_matrix_ref[i].nee[j] = nee_matrix[i].nee[j];
+				(*nee_matrix_ref)[i].nee[j] = nee_matrix[i].nee[j];
 			}
 		}
 	}
 
 	/*
-		if qc == 3 no filter is applied, so this routine is unnecessary
+		if qc == 3 no filter is applied, so this filter is unnecessary
 	*/
 	if ( mef_qc < 3 ) {
 	
@@ -665,12 +666,12 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix, const int row
 		}
 
 		/* debug stuff */
-		/*
+		#if _DEBUG
 		{
-			char buf[32] = { 0 };
+			char buf[PATH_SIZE] = { 0 };
 			FILE* f;
 
-			sprintf(buf, "debug_nee_matrix_filtered_%c.txt", type);
+			sprintf(buf, "%s%s_nee_matrix_cml_%c.txt", output_files_path, site, type);
 			f = fopen(buf, "w");
 			if ( f )
 			{
@@ -684,8 +685,7 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix, const int row
 				fclose(f);
 			}
 		}
-		*/
-
+		#endif
 
 		/* apply filter */
 		{
@@ -701,21 +701,55 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix, const int row
 					}
 				} else if ( start >= 0 ) {
 					end = i;
-						
-					/* debug stuff */
-					printf("mef filtering for %c from row %d to row %d ", type, start + 1, end + 1);
+
+					/* -1 'cause we start from zero */
+					if ( start == (mef_max_gap - 1) )
+						start = 0;
+					else if ( start == ((rows_count - mef_max_gap) - 1) )
+						end = rows_count - 1;
+					
+				/* debug stuff */
+				#if _DEBUG
+				{
+					/*
+						20250414
+
+						Hi Alessio, It's you from the past.
+						I know you'll be tempted to change the first 'timestamp_end_by_row'
+						into 'timestamp_start_by_row' but it is wrong.
+						Trust me,
+
+						Alessio
+					*/
+
+					TIMESTAMP t_start = *timestamp_end_by_row(start, start_year, timeres);
+					TIMESTAMP* t_end = timestamp_end_by_row(end, start_year, timeres)
+
+					/* WARNING: TIMESTAMPS ARE NOT RELIABLE */
+					printf("mef filtering for %c from %04d%02d%02d%02d%02d (row: %d) to %04d%02d%02d%02d%02d (row: %d) "	, type
+																															, t_start.YYYY
+																															, t_start.MM
+																															, t_start.DD
+																															, t_start.hh
+																															, t_start.mm
+																															, start + 1
+																															, t_end->YYYY
+																															, t_end->MM
+																															, t_end->DD
+																															, t_end->hh
+																															, t_end->mm
+																															, end + 1
+					);
+				}
+				#endif
 					n  = end - start + 1;
 					if ( n >= mef_min_gap ) {
 						puts("applied");
 						
 						for ( y = start; y < end; ++y ) {
-							for ( z = start; z < end; ++z ) {
-								nee_matrix_ref[y].nee[z] = INVALID_VALUE;
-								/*
-								nee_matrix[y].nee[z] = INVALID_VALUE;
-								nee_matrix[y].qc[z] = INVALID_VALUE;
-								nee_matrix[y].qc_ori[z] = INVALID_VALUE;
-								*/
+							/* -1 'cause we keep 50 % out */
+							for ( z = 0; z < PERCENTILES_COUNT_2 - 1; ++z ) {
+								(*nee_matrix_ref)[y].nee[z] = INVALID_VALUE;
 							}
 						}
 					} else {
@@ -727,6 +761,51 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix, const int row
 				}
 			}
 		}
+
+		/* debug stuff */
+		#if _DEBUG
+		{
+			char buf[PATH_SIZE] = { 0 };
+			int rows_per_day = (HOURLY_TIMERES == timeres) ? 24 : 48;
+			FILE* f;
+
+			sprintf(buf, "%s%s_NEE_percentiles_%c_hh_filtered.csv", output_files_path, site, type);
+			f = fopen(buf, "w");
+			if ( ! f )
+				printf("unable to create %s\n", buf);
+			else
+			{
+				int row;
+				int percentile;
+
+				fprintf(f, "%s,", TIMESTAMP_HEADER);
+				for ( percentile = 0; percentile < PERCENTILES_COUNT_2-1;percentile++ ) {
+					fprintf(f, "%g", percentiles_test_2[percentile]);
+					if ( percentile < PERCENTILES_COUNT_2-2 ) {
+						fputs(",", f);
+					}
+				}
+				fputs("\n", f);
+				/* WARNING: TIMESTAMPS ARE NOT RELIABLE */
+				for ( row = 0; row < rows_count; row++ ) {
+					TIMESTAMP* t = timestamp_start_by_row(row, start_year, timeres);
+					fprintf(f, "%04d%02d%02d%02d%02d,", t->YYYY, t->MM, t->DD, t->hh, t->mm);
+					t = timestamp_end_by_row(row, start_year, timeres);
+					fprintf(f, "%04d%02d%02d%02d%02d,", t->YYYY, t->MM, t->DD, t->hh, t->mm);
+						
+					for ( percentile = 0; percentile < PERCENTILES_COUNT_2-1; percentile++ ) {
+						fprintf(f, "%g", (*nee_matrix_ref)[row].nee[percentile]);
+						if ( percentile < PERCENTILES_COUNT_2-2 ) {
+							fputs(",", f);
+						}
+					}
+					fputs("\n", f);
+				}
+
+				fclose(f);
+			}
+		}
+		#endif 
 
 		free(qc_cml_bkw);
 		free(qc_cml_fwd);
@@ -2505,11 +2584,7 @@ int save_info(const DATASET *const dataset, const char *const path, const eTimeR
 int save_nee_matrix(const NEE_MATRIX *const m, const DATASET *const d, int type) {
 	char *p;
 	char buffer[BUFFER_SIZE];
-#if 0 /* new naming convention */
-	char tr[7] = "vut_";
-#else
 	char tr[5] = "y_";
-#endif
 	int i;
 	int y;
 	int j;
@@ -2525,13 +2600,8 @@ int save_nee_matrix(const NEE_MATRIX *const m, const DATASET *const d, int type)
 
 	if ( type >= HH_C ) tr[0] = 'c';
 	if ( type >= 5 ) type -= 5;
-#if 0 /* new naming convention */
-	strcpy(tr+4, time_resolution[type]);
-	tr[6] = '\0';
-#else
 	strcpy(tr+2, time_resolution[type]);
 	tr[4] = '\0';
-#endif
 
 	sprintf(buffer, "%s%s_NEE_percentiles_%s.csv", output_files_path, d->details->site, tr);
 	f = fopen(buffer, "w");
@@ -4698,7 +4768,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				free(nee_matrix_y_per_ref);
 				nee_matrix_y_per_ref = NULL;
 			}
-			if ( ! create_nee_matrix_for_ref(nee_matrix_y, datasets[dataset].rows_count, 'y', nee_matrix_y_per_ref) ) {
+			if ( ! create_nee_matrix_for_ref(nee_matrix_y, datasets[dataset].rows_count, 'y', &nee_matrix_y_per_ref, datasets[dataset].years[0].year, datasets[dataset].details->timeres, datasets[dataset].details->site) ) {
 				return 0;
 			}
 			p_matrix_y = process_nee_matrix(&datasets[dataset], nee_matrix_y, nee_matrix_y_per_ref, datasets[dataset].rows_count, &ref_y, HH_Y);
@@ -4726,7 +4796,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				free(nee_matrix_c_per_ref);
 				nee_matrix_c_per_ref = NULL;
 			}
-			if ( ! create_nee_matrix_for_ref(nee_matrix_c, datasets[dataset].rows_count, 'c', nee_matrix_c_per_ref) ) {
+			if ( ! create_nee_matrix_for_ref(nee_matrix_c, datasets[dataset].rows_count, 'c', &nee_matrix_c_per_ref, datasets[dataset].years[0].year, datasets[dataset].details->timeres, datasets[dataset].details->site) ) {
 				return 0;
 			}
 			p_matrix_c = process_nee_matrix(&datasets[dataset], nee_matrix_c, nee_matrix_c_per_ref, datasets[dataset].rows_count, &ref_c, HH_C);
@@ -5173,11 +5243,9 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				free(p_matrix_y);
 				free(nee_matrix_y);
 				free(nee_matrix_y_daily);
-				if ( datasets[dataset].years_count >= 3 ) {
-					free(p_matrix_c);
-					free(nee_matrix_c);
-					free(nee_matrix_c_daily);
-				}
+				free(p_matrix_c);
+				free(nee_matrix_c);
+				free(nee_matrix_c_daily);
 				continue;
 			}
 		}
@@ -5249,7 +5317,12 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			free(p_matrix_y);
 		}
 
-		/* compute dd per ref */
+		/*
+			compute dd per ref
+
+			Time aggregation of the nee matrix with gaps, to be used only for the ref selection.
+			Days (ww, mm, yy) with one single hh (dd) missing will be set as missing.
+		*/
 		index = 0;
 		for ( row = 0; row < datasets[dataset].rows_count; row += rows_per_day ) {
 			for ( percentile = 0; percentile < PERCENTILES_COUNT_2; percentile++ ) {
@@ -6219,7 +6292,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 					}
 					if ( ! skip_y ) {
 						nee_matrix_y_weekly[index+i].nee[percentile] /= 7;
-						nee_matrix_y_weekly[index+i].qc[percentile] /= 7;	
+						nee_matrix_y_weekly[index+i].qc[percentile] /= 7;
 					}
 					if ( datasets[dataset].years_count >= 3 ) {
 						nee_matrix_c_weekly[index+i].nee[percentile] /= 7;
