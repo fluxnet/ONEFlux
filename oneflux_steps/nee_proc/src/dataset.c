@@ -585,6 +585,84 @@ int debug_save_nee_matrix(const char* filename, const NEE_MATRIX *const m, const
 }
 #endif
 
+
+/* debug stuff */
+#if _DEBUG
+
+#define SECONDS_PER_DAY		(24*60*60)
+#define SECONDS_PER_HOUR	(60*60)
+#define YEAR_0				(1900)
+#define YEAR_EPOCH			(1970)
+#define DAYS_PER_YEAR(x)	((IS_LEAP_YEAR(x) ? 366 : 365))
+
+static int timestamp_to_epoch(TIMESTAMP* t)
+{
+	const short int doyArr[] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+
+	unsigned short year = t->YYYY - YEAR_0;
+	short int doy = doyArr[t->MM-1] + (t->DD-1);
+	if ( IS_LEAP_YEAR(t->YYYY) && (t->MM > 2) )
+		++doy;
+
+	return	t->ss + t->mm*60 + t->hh * SECONDS_PER_HOUR + doy * SECONDS_PER_DAY
+			+ (year-70)*31536000 + ((year-69)/4) * SECONDS_PER_DAY
+			- ((year-1)/100) * SECONDS_PER_DAY + ((year+299)/400) * SECONDS_PER_DAY
+	;
+}
+
+static TIMESTAMP timestamp_from_epoch(int ss)
+{
+	int year = YEAR_EPOCH;
+	int dayClock = ss % SECONDS_PER_DAY;
+    int day = ss / SECONDS_PER_DAY;
+	int days;
+    TIMESTAMP t = { 0 };
+
+	t.ss = dayClock % 60;
+	t.mm = (dayClock % SECONDS_PER_HOUR) / 60;
+	t.hh = dayClock / SECONDS_PER_HOUR;
+	while ( day >= DAYS_PER_YEAR(year) )
+	{
+		day -= DAYS_PER_YEAR(year);
+		++year;
+	}
+	t.YYYY = year;
+	t.MM = 0;
+	days = days_per_month[t.MM];
+	while ( day >= days )
+	{
+		day -= days;
+		++t.MM;
+		days = days_per_month[t.MM];
+		/* fix for leap year */
+		if ( (1 == t.MM) && IS_LEAP_YEAR(t.YYYY) )
+			++days;
+	}
+	t.DD = day + 1;
+	++t.MM; /* MM is 1-12 */
+
+    return t;
+}
+
+#undef DAYS_PER_YEAR
+#undef YEAR_EPOCH
+#undef YEAR_0
+#undef SECONDS_PER_HOUR
+#undef SECONDS_PER_DAY
+
+static void timestamp_add_minutes(TIMESTAMP* t, int mm)
+{
+	if ( mm )
+	{
+		int ss = timestamp_to_epoch(t);
+		mm *= 60;
+		ss += mm;
+		*t = timestamp_from_epoch(ss);
+	}
+}
+
+#endif
+
 /* 
 	Selection of the REF calculating the MEF only on the valid data.
 
@@ -670,17 +748,24 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 		{
 			char buf[PATH_SIZE] = { 0 };
 			FILE* f;
+			TIMESTAMP t = { start_year, 1, 1, 0, 30, 0 };
 
 			sprintf(buf, "%s%s_nee_matrix_cml_%c.txt", output_files_path, site, type);
 			f = fopen(buf, "w");
 			if ( f )
 			{
-				fputs("qc,cml_fwd,cml_bkw\n", f);
+				fputs(TIMESTAMP_END_STRING ",qc,cml_fwd,cml_bkw\n", f);
 				for ( i = 0; i < rows_count; i++ ) {
-					fprintf(f, "%g,%d,%d\n"	, nee_matrix[i].qc[PERCENTILE_40]
-											, qc_cml_fwd[i]
-											, qc_cml_bkw[i]
+					fprintf(f, "%04d%02d%02d%02d%02d,%g,%d,%d\n"	, t.YYYY
+																	, t.MM
+																	, t.DD
+																	, t.hh
+																	, t.mm
+																	, nee_matrix[i].qc[PERCENTILE_40]
+																	, qc_cml_fwd[i]
+																	, qc_cml_bkw[i]
 					);
+					timestamp_add_minutes(&t, 30);
 				}
 				fclose(f);
 			}
@@ -694,6 +779,7 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 			int n;
 			int y;
 			int z;
+
 			for ( i = 0; i < rows_count; ++i ) {
 				if ( (qc_cml_fwd[i] >= mef_max_gap) && (qc_cml_bkw[i] >= mef_max_gap)  ) {
 					if ( -1 == start) {
@@ -711,21 +797,13 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 				/* debug stuff */
 				#if _DEBUG
 				{
-					/*
-						20250414
+					TIMESTAMP t = { start_year, 1, 1, 0, 30, 0 };
+					TIMESTAMP t_start = t;
+					TIMESTAMP t_end = t;
 
-						Hi Alessio, It's you from the past.
-						I know you'll be tempted to change the first 'timestamp_end_by_row'
-						into 'timestamp_start_by_row' but it is wrong.
-						Trust me,
+					timestamp_add_minutes(&t_start, start * 30);
+					timestamp_add_minutes(&t_end, end * 30);
 
-						Alessio
-					*/
-
-					TIMESTAMP t_start = *timestamp_end_by_row(start, start_year, timeres);
-					TIMESTAMP* t_end = timestamp_end_by_row(end, start_year, timeres)
-
-					/* WARNING: TIMESTAMPS ARE NOT RELIABLE */
 					printf("mef filtering for %c from %04d%02d%02d%02d%02d (row: %d) to %04d%02d%02d%02d%02d (row: %d) "	, type
 																															, t_start.YYYY
 																															, t_start.MM
@@ -733,15 +811,16 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 																															, t_start.hh
 																															, t_start.mm
 																															, start + 1
-																															, t_end->YYYY
-																															, t_end->MM
-																															, t_end->DD
-																															, t_end->hh
-																															, t_end->mm
+																															, t_end.YYYY
+																															, t_end.MM
+																															, t_end.DD
+																															, t_end.hh
+																															, t_end.mm
 																															, end + 1
 					);
 				}
 				#endif
+
 					n  = end - start + 1;
 					if ( n >= mef_min_gap ) {
 						puts("applied");
@@ -768,7 +847,7 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 			char buf[PATH_SIZE] = { 0 };
 			int rows_per_day = (HOURLY_TIMERES == timeres) ? 24 : 48;
 			FILE* f;
-
+			TIMESTAMP t = { start_year, 1, 1, 0, 0, 0 };
 			sprintf(buf, "%s%s_NEE_percentiles_%c_hh_filtered.csv", output_files_path, site, type);
 			f = fopen(buf, "w");
 			if ( ! f )
@@ -786,13 +865,11 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 					}
 				}
 				fputs("\n", f);
-				/* WARNING: TIMESTAMPS ARE NOT RELIABLE */
+
 				for ( row = 0; row < rows_count; row++ ) {
-					TIMESTAMP* t = timestamp_start_by_row(row, start_year, timeres);
-					fprintf(f, "%04d%02d%02d%02d%02d,", t->YYYY, t->MM, t->DD, t->hh, t->mm);
-					t = timestamp_end_by_row(row, start_year, timeres);
-					fprintf(f, "%04d%02d%02d%02d%02d,", t->YYYY, t->MM, t->DD, t->hh, t->mm);
-						
+					fprintf(f, "%04d%02d%02d%02d%02d,", t.YYYY, t.MM, t.DD, t.hh, t.mm);
+					timestamp_add_minutes(&t, 30);
+					fprintf(f, "%04d%02d%02d%02d%02d,", t.YYYY, t.MM, t.DD, t.hh, t.mm);
 					for ( percentile = 0; percentile < PERCENTILES_COUNT_2-1; percentile++ ) {
 						fprintf(f, "%g", (*nee_matrix_ref)[row].nee[percentile]);
 						if ( percentile < PERCENTILES_COUNT_2-2 ) {
