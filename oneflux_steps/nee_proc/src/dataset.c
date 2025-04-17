@@ -680,6 +680,26 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 									, int timeres
 									, const char* site)
 {
+	/* debug stuff - adding artificial missing data for test
+	{
+		int i;
+
+		for ( i = 0; i < 850; ++i )
+		{
+			nee_matrix[i].nee[39] = INVALID_VALUE;
+			nee_matrix[i].qc[39] = mef_qc + 1;
+			nee_matrix[i].qc_ori[39] = mef_qc + 1;
+		}
+
+		for ( i = rows_count - 2000; i < rows_count; ++i )
+		{
+			nee_matrix[i].nee[39] = INVALID_VALUE;
+			nee_matrix[i].qc[39] = mef_qc + 1;
+			nee_matrix[i].qc_ori[39] = mef_qc + 1;
+		}
+	}
+	*/
+
 	*nee_matrix_ref = malloc(rows_count*sizeof**nee_matrix_ref);
 	if ( ! *nee_matrix_ref ) {
 		puts(err_out_of_memory);
@@ -725,7 +745,14 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 			qc_cml_bkw[i] = 0;
 		}
 
-		qc_cml_fwd[0] = sum_fwd = (nee_matrix[0].qc[PERCENTILE_40] > mef_qc);
+		/*
+			we set first value of fwd cumulated equal to mef_max_gap + 1
+			'cause otherwise the condition of fwd equal to bkw is not match
+			for the initial mef_max_gap block
+
+			in case the dataset starts with valid values, the condition is resetted
+		*/
+		qc_cml_fwd[0] = sum_fwd = mef_max_gap + 1;
 		for ( i = 1; i < rows_count; i++ ) {
 			if ( nee_matrix[i].qc[PERCENTILE_40] > mef_qc )
 				++sum_fwd;
@@ -734,7 +761,14 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 			qc_cml_fwd[i] = sum_fwd;
 		}
 
-		qc_cml_bkw[rows_count-1] = sum_bkw = (nee_matrix[rows_count-1].qc[PERCENTILE_40] > mef_qc);
+		/*
+			we set last value of bkw cumulated equal to mef_max_gap + 1
+			'cause otherwise the condition of bkw equal to fwd is not match
+			for the last mef_max_gap block
+
+			in case the dataset ends with valid values, the condition is resetted
+		*/
+		qc_cml_bkw[rows_count-1] = sum_bkw = mef_max_gap + 1;
 		for ( i = rows_count - 2; i >= 0; i-- ) {
 			if ( nee_matrix[i].qc[PERCENTILE_40] > mef_qc )
 				++sum_bkw;
@@ -780,19 +814,17 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 			int y;
 			int z;
 
+			/*
+				we check if  oth fwd and bkw values meet the condition to be greater than mef_max_gap. 
+				in this case there is a gap larger than mef_max_gap on boths side
+			*/
 			for ( i = 0; i < rows_count; ++i ) {
-				if ( (qc_cml_fwd[i] >= mef_max_gap) && (qc_cml_bkw[i] >= mef_max_gap)  ) {
-					if ( -1 == start) {
+				if ( (qc_cml_fwd[i] > mef_max_gap) && (qc_cml_bkw[i] > mef_max_gap) && (i != rows_count - 1) ) {
+					if ( -1 == start ) {
 						start = i;
 					}
-				} else if ( start >= 0 ) {
+				} else if ( start >= 0) {
 					end = i;
-
-					/* -1 'cause we start from zero */
-					if ( start == (mef_max_gap - 1) )
-						start = 0;
-					else if ( start == ((rows_count - mef_max_gap) - 1) )
-						end = rows_count - 1;
 					
 				/* debug stuff */
 				#if _DEBUG
@@ -821,9 +853,15 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 				}
 				#endif
 
-					n  = end - start + 1;
+					n = end - start;
+					/*
+						we check if the block removed is shorter than mef_min_gap
+						and if so we weep the data
+					*/
 					if ( n >= mef_min_gap ) {
+					#if _DEBUG
 						puts("applied");
+					#endif
 						
 						for ( y = start; y < end; ++y ) {
 							/* -1 'cause we keep 50 % out */
@@ -831,9 +869,12 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 								(*nee_matrix_ref)[y].nee[z] = INVALID_VALUE;
 							}
 						}
-					} else {
+					}
+					#if _DEBUG
+						else {
 						printf("not applied, mef_min_gap = %d\n", mef_min_gap);
 					}
+					#endif
 
 					/* reset */
 					start = -1;
