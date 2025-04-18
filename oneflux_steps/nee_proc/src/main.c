@@ -24,7 +24,7 @@
 #include "../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION			"v1.01"
+#define PROGRAM_VERSION			"v1.02"
 #define BUFFER_SIZE				1024
 #define QC_AUTO_PATH			"qc_auto"
 #define USTAR_MP_PATH			"ustar_mp"
@@ -45,6 +45,9 @@ int use_met_gf = 0;							/* default is off */
 int mef_save = 0;							/* default is off */
 int percentiles_save = 0;					/* default is off */
 int qc_gf_threshold = QC_GF_THRESHOLD;		/* see types.h */
+int mef_qc = 2;
+int mef_min_gap = 5 * 48;
+int mef_max_gap = 15 * 48;
 
 /* strings */
 static const char banner[] =	"\nnee_proc "PROGRAM_VERSION"\n"
@@ -77,6 +80,13 @@ static char msg_usage[] =	"How to use: nee_proc parameter\n\n"
 							"    -nee_flags -> save nee flags\n\n"
 							"    -qc_gf_thrs=X -> set gapfilling qc threshold ( default is %d )\n\n"
 							"    -mef -> save mef matrix\n\n"
+							"    -mef_qc -> max QC value to keep in the ref computation, highers will be removed (0-3) ( default is %d )\n\n"
+							"    -mef_max_gap -> maximum gap length that can be filled.\n"
+							"             Longer gaps will be removed (for ref computation here and later in the final product)\n"
+							"             ( default is %d )\n\n"							
+							"    -mef_min_gap -> In case of gaps in the middle of the timeseries, indicates the minimum gap\n"
+							"             that can be created (i.e. if shorted than mef_min_gap the data will not be removed)\n"
+							"             ( default is %d )\n\n"
 							"    -percentiles -> save percentiles for DD,WW,MM,YY time resolution\n\n"
 							"    -h -> show this help\n\n";
 
@@ -176,7 +186,11 @@ static int show_help(char *arg, char *param, void *p) {
 						USTAR_MP_PATH,
 						USTAR_CP_PATH,
 						METEO_PATH,
-						qc_gf_threshold
+						qc_gf_threshold,
+						mef_qc,
+						mef_max_gap,
+						mef_min_gap
+						
 	);
 	/* must return error */
 	return 0;
@@ -209,6 +223,9 @@ int main(int argc, char *argv[]) {
 		{ "no_rand_unc", set_flag, &no_rand_unc },
 		{ "nee_flags", set_flag, &compute_nee_flags },
 		{ "mef", set_flag, &mef_save },
+		{ "mef_qc", set_int_value, &mef_qc },
+		{ "mef_min_gap", set_int_value, &mef_min_gap },
+		{ "mef_max_gap", set_int_value, &mef_max_gap },
 		{ "percentiles", set_flag, &percentiles_save },
 		{ "qc_gf_thrs", set_int_value, &qc_gf_threshold },
 		{ "h", show_help, NULL },
@@ -234,6 +251,27 @@ int main(int argc, char *argv[]) {
 
 	/* parse arguments */
 	if ( !parse_arguments(argc, argv, args, SIZEOF_ARRAY(args)) ) {
+		return 1;
+	}
+
+	/* check for mef_qc */
+	if ( (mef_qc < 0) || (mef_qc > 3) ) {
+		printf("mef_qc must be between 0 and 3: %d.\n", mef_qc);
+		return 1;
+	}
+
+	if ( mef_min_gap < 0 ) {
+		printf("mef_min_gap cannot be below 0.\n", mef_min_gap);
+		return 1;
+	}
+
+	if ( mef_max_gap < 0 ) {
+		printf("mef_max_gap cannot be below 0.\n", mef_max_gap);
+		return 1;
+	}
+
+	if ( mef_min_gap > mef_max_gap ) {
+		printf("mef_min_gap cannot be above mef_max_gap. %d, %d\n", mef_min_gap, mef_max_gap);
 		return 1;
 	}
 
@@ -308,6 +346,12 @@ int main(int argc, char *argv[]) {
 		puts("");
 	}
 	printf("output path = %s\n\n", ! string_compare_i(program_path, output_files_path) ? "current folder" : output_files_path);
+	printf("mef_qc = %d\n\n", mef_qc);
+	printf("mef_min_gap = %d\n\n", mef_min_gap);
+	printf("mef_max_gap = %d\n\n", mef_max_gap);
+	if ( 3 == mef_qc ) {
+		puts("warning: mef not filtered.\n");
+	}
 
 	/* show qc gf threshold */
 	if ( use_met_gf ) {
