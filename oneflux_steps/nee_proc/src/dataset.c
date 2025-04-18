@@ -585,10 +585,7 @@ int debug_save_nee_matrix(const char* filename, const NEE_MATRIX *const m, const
 }
 #endif
 
-
-/* debug stuff */
-#if _DEBUG
-
+/* for mef filtering alert */
 #define SECONDS_PER_DAY		(24*60*60)
 #define SECONDS_PER_HOUR	(60*60)
 #define YEAR_0				(1900)
@@ -661,8 +658,6 @@ static void timestamp_add_minutes(TIMESTAMP* t, int mm)
 	}
 }
 
-#endif
-
 /* 
 	Selection of the REF calculating the MEF only on the valid data.
 
@@ -723,11 +718,14 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 	// the last one (index 40, starting from 0 of course) is the 50 percentile
 	// so the 40% is at index 39...clear ??
 	#define PERCENTILE_40 39
+
+		char buf[PATH_SIZE] = { 0 };
 		int i;
 		int* qc_cml_fwd; /* cml is cumulated */
 		int* qc_cml_bkw;
 		int sum_fwd;
 		int sum_bkw;
+		FILE* f = NULL; /* mandatory */
 
 		qc_cml_fwd = malloc(rows_count*sizeof*qc_cml_fwd);
 		if ( ! qc_cml_fwd )
@@ -780,8 +778,6 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 		/* debug stuff */
 		#if _DEBUG
 		{
-			char buf[PATH_SIZE] = { 0 };
-			FILE* f;
 			TIMESTAMP t = { start_year, 1, 1, 0, 30, 0 };
 
 			sprintf(buf, "%s%s_nee_matrix_cml_%c.txt", output_files_path, site, type);
@@ -813,6 +809,9 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 			int n;
 			int y;
 			int z;
+			TIMESTAMP t = { start_year, 1, 1, 0, 30, 0 };
+			TIMESTAMP t_start = t;
+			TIMESTAMP t_end = t;
 
 			/*
 				we check if  oth fwd and bkw values meet the condition to be greater than mef_max_gap. 
@@ -825,33 +824,25 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 					}
 				} else if ( start >= 0) {
 					end = i;
-					
-				/* debug stuff */
-				#if _DEBUG
-				{
-					TIMESTAMP t = { start_year, 1, 1, 0, 30, 0 };
-					TIMESTAMP t_start = t;
-					TIMESTAMP t_end = t;
-
+				
+					t_start = t;
+					t_end = t;
 					timestamp_add_minutes(&t_start, start * 30);
 					timestamp_add_minutes(&t_end, end * 30);
 
-					printf("mef filtering for %c from %04d%02d%02d%02d%02d (row: %d) to %04d%02d%02d%02d%02d (row: %d) "	, type
-																															, t_start.YYYY
-																															, t_start.MM
-																															, t_start.DD
-																															, t_start.hh
-																															, t_start.mm
-																															, start + 1
-																															, t_end.YYYY
-																															, t_end.MM
-																															, t_end.DD
-																															, t_end.hh
-																															, t_end.mm
-																															, end + 1
+					printf("mef filtering for %c from %04d%02d%02d%02d%02d to %04d%02d%02d%02d%02d "	, type
+																										, t_start.YYYY
+																										, t_start.MM
+																										, t_start.DD
+																										, t_start.hh
+																										, t_start.mm
+																										, t_end.YYYY
+																										, t_end.MM
+																										, t_end.DD
+																										, t_end.hh
+																										, t_end.mm
+																										
 					);
-				}
-				#endif
 
 					n = end - start;
 					/*
@@ -859,9 +850,34 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 						and if so we weep the data
 					*/
 					if ( n >= mef_min_gap ) {
-					#if _DEBUG
-						puts("applied");
-					#endif
+						printf("applied");
+
+						if ( ! f ) {
+							sprintf(buf, "%s%s_mef_filter_%c.txt", output_files_path, site, type);
+							f = fopen(buf, "w");
+							if ( ! f ) {
+								printf("unable to create %s...", buf);
+							} else {
+								fputs("; Please note that ROW_START and ROW_END are zero-based indices (i.e., the first row is index 0)\n", f);
+								fputs(TIMESTAMP_HEADER ",ROW_START,ROW_END\n", f);
+							}
+						}
+
+						if ( f ) {
+							fprintf(f, "%04d%02d%02d%02d%02d,%04d%02d%02d%02d%02d,%d,%d\n"	, t_start.YYYY
+																							, t_start.MM
+																							, t_start.DD
+																							, t_start.hh
+																							, t_start.mm
+																							, t_end.YYYY
+																							, t_end.MM
+																							, t_end.DD
+																							, t_end.hh
+																							, t_end.mm
+																							, start
+																							, end
+								);
+						}
 						
 						for ( y = start; y < end; ++y ) {
 							/* -1 'cause we keep 50 % out */
@@ -869,12 +885,13 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 								(*nee_matrix_ref)[y].nee[z] = INVALID_VALUE;
 							}
 						}
+					} else {
+						printf("not applied, mef_min_gap = %d", mef_min_gap);
 					}
-					#if _DEBUG
-						else {
-						printf("not applied, mef_min_gap = %d\n", mef_min_gap);
-					}
-					#endif
+
+					printf(" (row: %d to %d)\n"	, start + 1
+												, end + 1 
+					);
 
 					/* reset */
 					start = -1;
@@ -882,12 +899,13 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 			}
 		}
 
+		if ( f )
+			fclose(f);
+
 		/* debug stuff */
 		#if _DEBUG
 		{
-			char buf[PATH_SIZE] = { 0 };
 			int rows_per_day = (HOURLY_TIMERES == timeres) ? 24 : 48;
-			FILE* f;
 			TIMESTAMP t = { start_year, 1, 1, 0, 0, 0 };
 			sprintf(buf, "%s%s_NEE_percentiles_%c_hh_filtered.csv", output_files_path, site, type);
 			f = fopen(buf, "w");
