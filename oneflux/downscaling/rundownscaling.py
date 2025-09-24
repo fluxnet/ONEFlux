@@ -23,13 +23,16 @@ import datetime
 import logging
 import argparse
 
-from oneflux.downscaling.gapfilling_prep import *
+from oneflux.pipeline.common import ERA_FIRST_YEAR, ERA_LAST_YEAR
+from oneflux.downscaling.gapfilling_prep import read_config, gapfilling
 from oneflux import ONEFluxError, log_config
 
 log = logging.getLogger(__name__)
 
 DEFAULT_LOGGING_FILENAME = 'oneflux_downscaling.log'
 
+ERA_FIRST_YEAR_INT = int(ERA_FIRST_YEAR)
+ERA_LAST_YEAR_INT = int(ERA_LAST_YEAR)
 
 def get_all_files(path='.', recursive=False):
     files = []
@@ -44,7 +47,7 @@ def get_all_files(path='.', recursive=False):
     return (files, sizes)
 
 
-def create_config(dir_files, file_config_name, pixel, dir_meteo_era, FIRST_YEAR_ERA5, LAST_YEAR_ERA5):
+def create_config(dir_files, file_config_name, pixel, dir_meteo_era, era_first_year, era_last_year, dir_input, dir_output):
     '''
     Use on of the *qca_meteo* files in dir_files to generate the downscaling configurations
 
@@ -53,7 +56,7 @@ def create_config(dir_files, file_config_name, pixel, dir_meteo_era, FIRST_YEAR_
         file_config_name: name for the configuration file
     '''
     # import and parse one qca_meteo file
-    for root1,dir1,file1 in os.walk(os.path.join(dir_files,'02_qc_auto')):
+    for root1,dir1,file1 in os.walk(os.path.join(dir_files, dir_input)):
         for ff in file1:
             if not 'qca_meteo' in ff:
                 continue
@@ -81,17 +84,17 @@ def create_config(dir_files, file_config_name, pixel, dir_meteo_era, FIRST_YEAR_
     with open(file_config_name,'w') as fo:
         str_config = [
             '# directory dove trovo i file *_qca_synth_allvars_*.csv',
-            'name_path_weather  = %s' % os.path.join(dir_files, '02_qc_auto'),
+            'name_path_weather  = %s' % os.path.join(dir_files, dir_input),
             '# directory dove trovo i file da ERA']
         str_config.append('name_path_reanalysis = %s' % dir_meteo_era)
         str_config.append('# directory di output')
         # str_config.append('name_path_out = %s' % os.path.join(dir_files,'06_meteo_era_new_monthly_%s' % pixel))
-        str_config.append('name_path_out = %s' % os.path.join(dir_files,'06_meteo_era'))
+        str_config.append('name_path_out = %s' % os.path.join(dir_files, dir_output))
         str_config.append('gapmax = 6')
         str_config.append('# Info del sito')
         str_config.append('Site = %s' % site_code)
-        str_config.append('FirstY = %d' % FIRST_YEAR_ERA5)
-        str_config.append('LastY = %d' % LAST_YEAR_ERA5)
+        str_config.append('FirstY = %d' % era_first_year)
+        str_config.append('LastY = %d' % era_last_year)
         str_config.append('Lat = %s' % site_lat)
         str_config.append('Lon = %s' % site_lon)
         str_config.append('UTCtime = %s' % site_timezone)
@@ -102,7 +105,7 @@ def create_config(dir_files, file_config_name, pixel, dir_meteo_era, FIRST_YEAR_
     log.debug('Wrote file: %s' % file_config_name)
 
 
-def run(dir_era5_co, dir_input, dir_output):
+def run(dir_era5_co, dir_input, dir_output, era_first_year=ERA_FIRST_YEAR_INT, era_last_year=ERA_LAST_YEAR_INT):
     '''
     Main downscaling run function
 
@@ -130,9 +133,6 @@ def run(dir_era5_co, dir_input, dir_output):
 
     stat_summary_file = os.path.join(dir_output, 'stat_summary_L2.csv')
     data02_max_min_file = os.path.join(dir_output, 'data_max_min_L2.csv')
-
-    FIRST_YEAR_ERA5 = 1981
-    LAST_YEAR_ERA5 = 2023
 
     # pixel che uso per il downscaling
     combi_pixel = []
@@ -165,7 +165,7 @@ def run(dir_era5_co, dir_input, dir_output):
         for pixel in combi_pixel:                
             # controllo il numero di file ERA5
             nr_y = 1
-            for y in range(FIRST_YEAR_ERA5,LAST_YEAR_ERA5+1):
+            for y in range(era_first_year, era_last_year + 1):
                 fn = os.path.join(dir_era5_co,
                     '%s__ERA5__reanalysis-era5-single-levels__%d__%s.csv' % (sitecode,y,pixel) )
                 fnT = os.path.join(dir_era5_co,
@@ -186,7 +186,9 @@ def run(dir_era5_co, dir_input, dir_output):
             file_config_name = os.path.join(ff,'config_%s%s.txt' % (
                   sitecode, '_%s' % pixel))
             #if not os.path.exists(file_config_name):
-            create_config(ff, file_config_name, pixel, dir_era5_co, FIRST_YEAR_ERA5, LAST_YEAR_ERA5)
+            create_config(ff, file_config_name, pixel, dir_era5_co,
+                          era_first_year=era_first_year, era_last_year=era_last_year,
+                          dir_input=dir_input, dir_output=dir_output)
             dict_config = read_config(file_config_name)
             # if not os.path.exists(os.path.join(dict_config['name_path_out'],
             #                                    'stat_%s.txt' % dict_config['Site'])):
@@ -229,8 +231,8 @@ def run(dir_era5_co, dir_input, dir_output):
             log.debug('Directory to be searched for files: {s}'.format(s=dd))
             for root2,dir2,file2 in os.walk(os.path.join(dir_input,dd)):
                 for dd2 in dir2:
-                    # esporto le statisriche
-                    if '06_meteo' in dd2:
+                    # esporto le statisriche ('06_meteo')
+                    if dir_output in dd2:
                         if dd2 == '06_meteo_era_new_monthly_lon+0__lat+0':
                             if not os.path.exists( os.path.join(dir_input,dd,dd2.replace('_new_monthly_lon+0__lat+0','')) ):
                                 shutil.copytree(
@@ -261,8 +263,8 @@ def run(dir_era5_co, dir_input, dir_output):
                                         df.loc[(df[col] == '-'),col] = np.nan
                                     stat06.append(df)
                             break
-                    # esporto max/min degli input
-                    if '02_qc_auto' in dd2:
+                    # esporto max/min degli input ('02_qc_auto')
+                    if dir_input in dd2:
                         for root3,dir3,file3 in os.walk(os.path.join(dir_input,dd,dd2)):
                             for ff in file3:
                                 if not '_qca_synth_allvars_' in ff:
