@@ -1037,7 +1037,9 @@ class PipelineMeteoERA(object):
         # run downscaling
         run_downscaling(dir_era5_co=self.meteo_era_input_dir,
                         dir_input=self.pipeline.qc_auto.qc_auto_dir,
-                        dir_output=self.meteo_era_dir)
+                        dir_output=self.meteo_era_dir,
+                        era_first_year=self.pipeline.era_first_year,
+                        era_last_year=self.pipeline.era_last_year)
 
         self.post_validate()
         log.info("Pipeline meteo_era execution finished")
