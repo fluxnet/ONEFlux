@@ -24,6 +24,6 @@ enum {
 	DEF_VARS_COUNT
 };
 
-const char* sz_defs[DEF_VARS_COUNT];
+extern const char* sz_defs[DEF_VARS_COUNT];
 
 #endif /* DEFS_H */
