@@ -679,7 +679,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
           'ranges': [
                      {'label':'LE_CORR_25-75', 'data1':hh_data['LE_CORR_25'], 'data2':hh_data['LE_CORR_75'], 'color':COLOR_RNG, 'alpha':0.40},
                      ],
-          'qc': {}
+          'qc': {'label':'LE_F_MDS_QC', 'data':hh_data['LE_F_MDS_QC'], 'color':COLOR_QC, 'alpha':1}
     }
     dd = {'ts': dd_timestamps,
           'lines': [
@@ -689,7 +689,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
           'ranges': [
                      {'label':'LE_CORR_25-75', 'data1':dd_data['LE_CORR_25'], 'data2':dd_data['LE_CORR_75'], 'color':COLOR_RNG, 'alpha':0.40},
                      ],
-          'qc': {}
+          'qc': {'label':'LE_F_MDS_QC', 'data':dd_data['LE_F_MDS_QC'], 'color':COLOR_QC, 'alpha':1}
     }
     ww = {'ts': ww_timestamps,
           'lines': [
@@ -697,7 +697,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
                     {'label':'LE_CORR', 'data':ww_data['LE_CORR'], 'color':COLOR_MEAN, 'alpha':1},
                     ],
           'ranges': [],
-          'qc': {}
+          'qc': {'label':'LE_F_MDS_QC', 'data':ww_data['LE_F_MDS_QC'], 'color':COLOR_QC, 'alpha':1}
     }
     mm = {'ts': mm_timestamps,
           'lines': [
@@ -705,7 +705,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
                     {'label':'LE_CORR', 'data':mm_data['LE_CORR'], 'color':COLOR_MEAN, 'alpha':1},
                     ],
           'ranges': [],
-          'qc': {}
+          'qc': {'label':'LE_F_MDS_QC', 'data':mm_data['LE_F_MDS_QC'], 'color':COLOR_QC, 'alpha':1}
     }
     yy = {'ts': yy_timestamps,
           'lines': [
@@ -713,7 +713,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
                     {'label':'LE_CORR', 'data':yy_data['LE_CORR'], 'color':COLOR_MEAN, 'alpha':1},
                     ],
           'ranges': [],
-          'qc': {}
+          'qc': {'label':'LE_F_MDS_QC', 'data':yy_data['LE_F_MDS_QC'], 'color':COLOR_QC, 'alpha':1}
     }
 
     plot_nee_unc(hh=hh, dd=dd, ww=ww, mm=mm, yy=yy,
@@ -732,7 +732,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
           'ranges': [
                      {'label':'H_CORR_25-75', 'data1':hh_data['H_CORR_25'], 'data2':hh_data['H_CORR_75'], 'color':COLOR_RNG, 'alpha':0.50},
                      ],
-          'qc': {}
+          'qc': {'label':'H_F_MDS_QC', 'data':hh_data['H_F_MDS_QC'], 'color':COLOR_QC, 'alpha':1}
     }
     dd = {'ts': dd_timestamps,
           'lines': [
@@ -742,7 +742,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
           'ranges': [
                      {'label':'H_CORR_25-75', 'data1':dd_data['H_CORR_25'], 'data2':dd_data['H_CORR_75'], 'color':COLOR_RNG, 'alpha':0.50},
                      ],
-          'qc': {}
+          'qc': {'label':'H_F_MDS_QC', 'data':dd_data['H_F_MDS_QC'], 'color':COLOR_QC, 'alpha':1}
     }
     ww = {'ts': ww_timestamps,
           'lines': [
@@ -750,7 +750,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
                     {'label':'H_CORR', 'data':ww_data['H_CORR'], 'color':COLOR_MEAN, 'alpha':1},
                     ],
           'ranges': [],
-          'qc': {}
+          'qc': {'label':'H_F_MDS_QC', 'data':ww_data['H_F_MDS_QC'], 'color':COLOR_QC, 'alpha':1}
     }
     mm = {'ts': mm_timestamps,
           'lines': [
@@ -758,7 +758,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
                     {'label':'H_CORR', 'data':mm_data['H_CORR'], 'color':COLOR_MEAN, 'alpha':1},
                     ],
           'ranges': [],
-          'qc': {}
+          'qc': {'label':'H_F_MDS_QC', 'data':mm_data['H_F_MDS_QC'], 'color':COLOR_QC, 'alpha':1}
     }
     yy = {'ts': yy_timestamps,
           'lines': [
@@ -766,7 +766,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
                     {'label':'H_CORR', 'data':yy_data['H_CORR'], 'color':COLOR_MEAN, 'alpha':1},
                     ],
           'ranges': [],
-          'qc': {}
+          'qc': {'label':'H_F_MDS_QC', 'data':yy_data['H_F_MDS_QC'], 'color':COLOR_QC, 'alpha':1}
     }
 
     plot_nee_unc(hh=hh, dd=dd, ww=ww, mm=mm, yy=yy,
