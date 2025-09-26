@@ -22,13 +22,15 @@
 #include "../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION			"v1.01"
+#define PROGRAM_VERSION			"v1.02"
 #define BUFFER_SIZE				1024
 
 /* global variables */
 char *program_path = NULL;		/* mandatory */
 char *input_path = NULL;		/* mandatory */
 char *output_path = NULL;		/* mandatory */
+/* v1.02 */
+char* filter_path = NULL;		/* mandatory */
 const char *types_suffix[TYPES_SUFFIX] = { "GPP", "RECO" };
 const char *authors_suffix[AUTHORS_SUFFIX] = { "NT", "DT", "SR" };
 
@@ -92,6 +94,10 @@ int main(int argc, char *argv[]) {
 	const ARGUMENT args[] = {
 		{ "input_path", set_path, &input_path },
 		{ "output_path", set_path, &output_path },
+
+		/* v1.02 */
+		{ "filter_path", set_path, &filter_path },
+
 		{ "h", show_help, NULL },
 		{ "help", show_help, NULL },
 		{ "?", show_help, NULL },
@@ -138,6 +144,15 @@ int main(int argc, char *argv[]) {
 	} else {
 		output_path = string_copy(program_path);
 		if ( !output_path ) {
+			puts(err_out_of_memory);
+			return 1;
+		}
+	}
+
+	/* v1.02 */
+	if ( ! filter_path ) {
+		filter_path = string_copy(program_path);
+		if ( !filter_path ) {
 			puts(err_out_of_memory);
 			return 1;
 		}
