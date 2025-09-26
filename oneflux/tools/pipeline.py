@@ -84,6 +84,8 @@ def run_pipeline(datadir,
                     ure_execute=steps.get('ure_execute', True),
                     fluxnet2015_execute=steps.get('fluxnet2015_execute', True),
                     fluxnet2015_site_plots=steps.get('fluxnet2015_site_plots', True),
+                    nt_skip=steps.get('nt_skip', Pipeline.NT_SKIP),
+                    dt_skip=steps.get('dt_skip', Pipeline.DT_SKIP),
                     simulation=False)
         pipeline.run()
         #csv_manifest_entries, zip_manifest_entries = pipeline.fluxnet2015.csv_manifest_entries, pipeline.fluxnet2015.zip_manifest_entries
