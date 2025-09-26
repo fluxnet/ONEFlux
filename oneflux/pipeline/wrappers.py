@@ -268,6 +268,7 @@ class Pipeline(object):
             ts_begin = datetime.now()
 
             for driver in self.drivers:
+                log.debug("{s} Pipeline: checking step {d}, execute flag <{f}>".format(s=self.siteid, d=driver.__class__.__name__, f=driver.execute))
                 if driver.execute:
                     driver.run()
             self.post_validate()
