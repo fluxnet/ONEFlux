@@ -190,9 +190,13 @@ int aggr_by_days(DATASET *const dataset, PREC *const ECBcfs, PREC *const ECBcfs_
                 in order to correctly calculate the QC value in case of missing data
             */
 
-			if ( H_INDEX == y ) v = dataset->rows_aggr[day].value[H];
-			if ( LE_INDEX == y ) v = dataset->rows_aggr[day].value[LE];
-			if ( G_INDEX == y ) v = dataset->rows_aggr[day].value[G];
+			/* v1.02 */
+			/*if ( H_INDEX == y ) v = dataset->rows_aggr[day].value[H];*/
+			/*if ( LE_INDEX == y ) v = dataset->rows_aggr[day].value[LE];*/
+			/*if ( G_INDEX == y ) v = dataset->rows_aggr[day].value[G];*/
+			if ( H_INDEX == y ) v = dataset->rows_aggr[day].h_mean;
+			if ( LE_INDEX == y ) v = dataset->rows_aggr[day].le_mean;
+			if ( G_INDEX == y ) v = dataset->rows_aggr[day].value[G_FILLED];
 
 			if ( IS_INVALID_VALUE(v) ) {
 				dataset->rows_aggr[day].quality[y] = INVALID_VALUE;
@@ -528,8 +532,9 @@ int aggr_by_weeks(DATASET *const dataset, PREC *const ECBcfs, PREC *const ECBcfs
 		for ( i = 0; i < dataset->rows_aggr_count; i++ ) {		
 			dataset->rows_aggr[i].ecbcf_method = INVALID_VALUE-1;
 			dataset->rows_aggr[i].ecbcf_samples_count = INVALID_VALUE;
-			dataset->rows_aggr[i].quality[LE_INDEX] = INVALID_VALUE;
-			dataset->rows_aggr[i].quality[H_INDEX] = INVALID_VALUE;
+			/* v1.02 */
+			/*dataset->rows_aggr[i].quality[LE_INDEX] = INVALID_VALUE;*/
+			/*dataset->rows_aggr[i].quality[H_INDEX] = INVALID_VALUE;*/
 		}
 	}
 
@@ -839,8 +844,9 @@ int aggr_by_months(DATASET *const dataset, PREC *const ECBcfs, PREC *const ECBcf
 		for ( i = 0; i < dataset->rows_aggr_count; i++ ) {		
 			dataset->rows_aggr[i].ecbcf_method = INVALID_VALUE-1;
 			dataset->rows_aggr[i].ecbcf_samples_count = INVALID_VALUE;
-			dataset->rows_aggr[i].quality[LE_INDEX] = INVALID_VALUE;
-			dataset->rows_aggr[i].quality[H_INDEX] = INVALID_VALUE;
+			/* v1.02 */
+			/*dataset->rows_aggr[i].quality[LE_INDEX] = INVALID_VALUE;*/
+			/*dataset->rows_aggr[i].quality[H_INDEX] = INVALID_VALUE;*/
 		}
 	}
 
@@ -1134,8 +1140,9 @@ int aggr_by_years(DATASET *const dataset, PREC *const ECBcfs, PREC *const ECBcfs
 		for ( i = 0; i < dataset->rows_aggr_count; i++ ) {		
 			dataset->rows_aggr[i].ecbcf_method = INVALID_VALUE-1;
 			dataset->rows_aggr[i].ecbcf_samples_count = INVALID_VALUE;
-			dataset->rows_aggr[i].quality[LE_INDEX] = INVALID_VALUE;
-			dataset->rows_aggr[i].quality[H_INDEX] = INVALID_VALUE;
+			/* v1.02 */
+			/*dataset->rows_aggr[i].quality[LE_INDEX] = INVALID_VALUE;*/
+			/*dataset->rows_aggr[i].quality[H_INDEX] = INVALID_VALUE;*/
 		}
 	}
 
