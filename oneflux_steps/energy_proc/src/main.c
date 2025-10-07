@@ -25,7 +25,7 @@
 #include "../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION		"v1.01"
+#define PROGRAM_VERSION		"v1.02"
 #define BUFFER_SIZE			1024
 
 /* global variables */

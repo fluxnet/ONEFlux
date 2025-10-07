@@ -16,18 +16,18 @@ LE and H are always expressed as W m-2
 
 
 - TIMESTAMP = date and time expressed using the ISO8601 format YYYYMMDD
-- doy= Day of the Year
-- LE: latent heat flux gapfilled using the MDS method
+- doy = Day of the Year
+- LE = latent heat flux gapfilled using the MDS method
 - LEcorr = latent heat flux corrected by the energy balance closure (see above explanation)
 - LEcorr25 = latent heat flux corrected by the energy balance closure - 25th percentile (see above explanation)
 - LEcorr75 = latent heat flux corrected by the energy balance closure - 75th percentile (see above explanation)
-- LE_qc: quality flags of the LE and corrected versions. Value between 0 and 1 indicating the percentage of original or good quality data.
+- LE_qc = quality flags of the LE and corrected versions. Value between 0 and 1 indicating the percentage of original or good quality data.
 - LE_randUnc = random uncertainty of LE calculated starting from the random uncertainty of the single halfhours (rand(i))  (see halfhourly data info file for details) using the equation [sqrt(sum(rand(i)^2))/n] where n is the number of halfhours used.
-- H: sensible heat flux gapfilled using the MDS method
+- H = sensible heat flux gapfilled using the MDS method
 - Hcorr = sensible heat flux corrected by the energy balance closure (see above explanation)
 - Hcorr25 = sensible heat flux corrected by the energy balance closure - 25th percentile  (see above explanation)
 - Hcorr75 = sensible heat flux corrected by the energy balance closure - 75th percentile  (see above explanation)
-- H_qc: quality flags of the H and corrected versions. Value between 0 and 1 indicating the percentage of original or good quality data.
+- H_qc = quality flags of the H and corrected versions. Value between 0 and 1 indicating the percentage of original or good quality data.
 - H_randUnc = random uncertainty of H calculated starting from the random uncertainty of the single halfhours (rand(i))  (see halfhourly data info file for details) using the equation [sqrt(sum(rand(i)^2))/n] where n is the number of halfhours used.
-- EBCcf_n: number of EBCcf found in the moving window (method 1, min. 5 max. 15) or number of EBCcf calculated from method 1 found when methods 2 or 3 are used.
-- EBCcf_method: method used to calculate the EBCcf (1, 2 or 3) as described above.
+- EBCcf_n = number of EBCcf found in the moving window (method 1, min. 5 max. 15) or number of EBCcf calculated from method 1 found when methods 2 or 3 are used.
+- EBCcf_method = method used to calculate the EBCcf (1, 2 or 3) as described above.
