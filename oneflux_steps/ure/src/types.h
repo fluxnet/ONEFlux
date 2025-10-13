@@ -38,7 +38,6 @@ enum {
 enum {
 	AUTHOR_NT = 0,
 	AUTHOR_DT,
-	AUTHOR_SR,
 
 	AUTHORS_SUFFIX
 };
