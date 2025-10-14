@@ -39,6 +39,7 @@ char *g_output_path = NULL;							/* mandatory */
 /* v1.02 */
 char* g_filter_path = NULL;							/* mandatory */
 int g_debug = 0;									/* mandatory */
+int g_no_internal_buf = 0;							/* mandatory */
 int g_valid_data_count = VALID_DATA_COUNT_DEFAULT;	/* mandatory */
 int g_valid_perc_count = VALID_PERC_COUNT_DEFAULT;	/* mandatory */
 int g_min_7_perc_count = MIN7PERC_COUNT_DEFAULT;	/* mandatory */
@@ -67,7 +68,7 @@ static char msg_usage[] =		"How to use: ure parameter\n\n"
 								"  parameters:\n\n"
 								"    -input_path=filename or path to be processed (optional)\n"
 								"    -output_path=path where result files are created (optional)\n"
-								/*v 1.02 */
+								/* v1.02 */
 								"    -valid_data_count = valid percentile count of data. default is %d\n"
 								"    -valid_perc_count = valid count of percentiles. default is %d\n"
 								"    -min_7_perc_count = min percentile count for GPP\\RECO. default is %d\n"
@@ -161,6 +162,8 @@ int main(int argc, char *argv[]) {
 		{ "min_7_perc_count", set_int_value, &g_min_7_perc_count },
 		{ "min_3_perc_count", set_int_value, &g_min_3_perc_count },
 		{ "debug", set_flag, &g_debug },
+		/* hidden */
+		{ "no_internal_buf", set_flag, &g_no_internal_buf },
 
 		{ "h", show_help, NULL },
 		{ "help", show_help, NULL },
@@ -239,13 +242,13 @@ int main(int argc, char *argv[]) {
 		printf(". invalid, range is 1-%d, set to default: %d)", PERCENTILES_COUNT_2-1, g_valid_perc_count);
 	}
 	puts("");
-	printf("min_7_perc_count count = %d%%", g_min_7_perc_count);
+	printf("min_7_perc_count count = %d", g_min_7_perc_count);
 	if ( (g_min_7_perc_count <= 1) || (g_min_7_perc_count >= PERCENTILES_COUNT_2) ) {
 		g_min_7_perc_count = MIN7PERC_COUNT_DEFAULT;
 		printf(". invalid, range is 2-%d, set to default: %d)", PERCENTILES_COUNT_2-1, g_min_7_perc_count);
 	}
 	puts("");
-	printf("min_3_perc_count count = %d%%", g_min_3_perc_count);
+	printf("min_3_perc_count count = %d", g_min_3_perc_count);
 	if ( (g_min_3_perc_count <= 0) || (g_min_3_perc_count >= g_min_7_perc_count) ) {
 		if ( g_min_7_perc_count < MIN7PERC_COUNT_DEFAULT ) {
 			g_min_3_perc_count = g_min_7_perc_count - 1;
@@ -258,10 +261,13 @@ int main(int argc, char *argv[]) {
 
 	/* v1.02 */
 	/* alloc memory for file buffer */
-	g_file_buf_size = FILE_BUF_DEFAULT_SIZE_IN_MB << 20; /* convert to Mb */
-	g_file_buf = malloc(g_file_buf_size*sizeof*g_file_buf);
-	if ( !g_file_buf  ) {
-		puts("warning: no internal buffer for file output op");
+	if ( ! g_no_internal_buf ) {
+		g_file_buf_size = FILE_BUF_DEFAULT_SIZE_IN_MB << 20; /* convert to MB */
+		g_file_buf = malloc(g_file_buf_size*sizeof*g_file_buf);
+		if ( !g_file_buf  ) {
+			puts(err_out_of_memory);
+			return 1;
+		}
 	}
 
 	/* get datasets */
@@ -281,7 +287,7 @@ int main(int argc, char *argv[]) {
 	}
 	puts("");
 
-	if ( g_file_buf ) {
+	if ( ! g_no_internal_buf ) {
 		free(g_file_buf);
 	}
 
