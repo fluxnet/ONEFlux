@@ -4446,6 +4446,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				} else {
 					printf("%d -> filtering is not possible\n", datasets[dataset].years[year].year);
 					on_error = 1;
+					skip_y = 1;
 					break;
 				}
 
@@ -5470,15 +5471,19 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				if ( datasets[dataset].years_count >= 3 ) {
 					nee_matrix_c_per_ref_daily[index].nee[percentile] = 0.0;
 				}
-				for ( i = 0; i < rows_per_day; i++ ) {
-					if ( ! skip_y ) {
+				/* y */
+				if ( ! skip_y ) {
+					for ( i = 0; i < rows_per_day; i++ ) {
 						if  ( IS_INVALID_VALUE(nee_matrix_y_per_ref[row+i].nee[percentile]) ) {
 							has_invalid_y = 1;
 							break;
 						}
 						nee_matrix_y_per_ref_daily[index].nee[percentile] += nee_matrix_y_per_ref[row+i].nee[percentile];
 					}
-					if ( datasets[dataset].years_count >= 3 ) {
+				}
+				/* c */
+				if ( datasets[dataset].years_count >= 3 ) {
+					for ( i = 0; i < rows_per_day; i++ ) {
 						if  ( IS_INVALID_VALUE(nee_matrix_c_per_ref[row+i].nee[percentile]) ) {
 							has_invalid_c = 1;
 							break;
@@ -6555,15 +6560,19 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 						if ( datasets[dataset].years_count >= 3 ) {
 							ww_c[index+i].nee[percentile] = 0.0;
 						}
-						for ( j = 0; j < 7; j++ ) {
-							if ( ! skip_y ) {
+						/* y */
+						if ( ! skip_y ) {
+							for ( j = 0; j < 7; j++ ) {
 								if  ( IS_INVALID_VALUE(nee_matrix_y_per_ref_daily[element+row+j].nee[percentile]) ) {
 									has_invalid_y = 1;
 									break;
 								}
 								ww_y[index+i].nee[percentile] += nee_matrix_y_per_ref_daily[element+row+j].nee[percentile];
 							}
-							if ( datasets[dataset].years_count >= 3 ) {
+						}
+						/* c */
+						if ( datasets[dataset].years_count >= 3 ) {
+							for ( j = 0; j < 7; j++ ) {
 								if  ( IS_INVALID_VALUE(nee_matrix_c_per_ref_daily[element+row+j].nee[percentile]) ) {
 									has_invalid_c = 1;
 									break;
@@ -6599,15 +6608,19 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 					if ( datasets[dataset].years_count >= 3 ) {
 						ww_c[index+i].nee[percentile] = 0.0;
 					}
-					for ( j = 0; j < z; j++ ) {
-						if ( ! skip_y ) {
+					/* y */
+					if ( ! skip_y ) {
+						for ( j = 0; j < z; j++ ) {
 							if  ( IS_INVALID_VALUE(nee_matrix_y_per_ref_daily[element+row+j].nee[percentile]) ) {
 								has_invalid_y = 1;
 								break;
 							}
 							ww_y[index+i].nee[percentile] += nee_matrix_y_per_ref_daily[element+row+j].nee[percentile];
 						}
-						if ( datasets[dataset].years_count >= 3 ) {
+					}
+					/* c */
+					if ( datasets[dataset].years_count >= 3 ) {
+						for ( j = 0; j < z; j++ ) {
 							if  ( IS_INVALID_VALUE(nee_matrix_c_per_ref_daily[element+row+j].nee[percentile]) ) {
 								has_invalid_c = 1;
 								break;
@@ -8238,15 +8251,19 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 						if ( (1 == i) && IS_LEAP_YEAR(year) ) {
 							++z;
 						}
-						for ( j = 0; j < z; j++ ) {
-							if ( ! skip_y ) {
+						/* y */
+						if ( ! skip_y ) {
+							for ( j = 0; j < z; j++ ) {
 								if  ( IS_INVALID_VALUE(nee_matrix_y_per_ref_daily[row+j].nee[percentile]) ) {
 									has_invalid_y = 1;
 									break;
 								}
 								mm_y[index+i].nee[percentile] += nee_matrix_y_per_ref_daily[row+j].nee[percentile];
 							}
-							if ( datasets[dataset].years_count >= 3 ) {
+						}
+						/* c */
+						if ( datasets[dataset].years_count >= 3 ) {
+							for ( j = 0; j < z; j++ ) {
 								if  ( IS_INVALID_VALUE(nee_matrix_c_per_ref_daily[row+j].nee[percentile]) ) {
 									has_invalid_c = 1;
 									break;
@@ -9390,15 +9407,19 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 					if ( datasets[dataset].years_count >= 3 ) {
 						yy_c[index].nee[percentile] = 0.0;
 					}
-					for ( j = 0; j < y; j++ ) {
-						if ( ! skip_y ) {
+					/* y */
+					if ( ! skip_y ) {
+						for ( j = 0; j < y; j++ ) {				
 							if ( IS_INVALID_VALUE(nee_matrix_y_per_ref_daily[row+j].nee[percentile]) ) {
 								has_invalid_y = 1;
 								break;
 							}
 							yy_y[index].nee[percentile] += nee_matrix_y_per_ref_daily[row+j].nee[percentile];
 						}
-						if ( datasets[dataset].years_count >= 3 ) {
+					}
+					/* c */
+					if ( datasets[dataset].years_count >= 3 ) {
+						for ( j = 0; j < y; j++ ) {
 							if ( IS_INVALID_VALUE(nee_matrix_c_per_ref_daily[row+j].nee[percentile]) ) {
 								has_invalid_c = 1;
 								break;
