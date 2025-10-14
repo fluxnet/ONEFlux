@@ -924,7 +924,7 @@ PREC get_standard_deviation_allowing_invalid(const PREC *const values, const int
 }
 
 /* v1.02 */
-P_MATRIX *process_matrix(const DATASET *const dataset, MATRIX_REF* matrix_ref, const int is_c, int *ref, const int type, const int author_index, const int type_index) {
+P_MATRIX *process_matrix(const DATASET *const dataset, MATRIX_REF* matrix_ref, int *ref, const int type, const int author_index, const int type_index) {
 	int row;
 	int percentile;
 	int error;
@@ -989,10 +989,10 @@ P_MATRIX *process_matrix(const DATASET *const dataset, MATRIX_REF* matrix_ref, c
 	for ( row = 0; row < dataset->rows_count; row++ ) {
 		valids_count = 0;
 		for ( percentile = 0; percentile < PERCENTILES_COUNT_2-1; percentile++ ) {
-			if ( is_c ) {
-				temp[percentile] = dataset->percentiles_c[row].value[percentile];
-			} else {
+			if ( type < HH_C ) {
 				temp[percentile] = dataset->percentiles_y[row].value[percentile];
+			} else {
+				temp[percentile] = dataset->percentiles_c[row].value[percentile];
 			}
 			/* v1.02 */
 			if ( !IS_INVALID_VALUE(temp[percentile]) ) {
@@ -1567,7 +1567,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	printf("- computing hh...");
 
 	/* process nee_matrix y */
-	p_matrix_y = process_matrix(dataset, matrix_ref_y, 0, &ref_y, HH_Y, author_index, type_index);
+	p_matrix_y = process_matrix(dataset, matrix_ref_y, &ref_y, HH_Y, author_index, type_index);
 	if ( !p_matrix_y ) {
 		free_matrix_ref(matrix_ref_y);
 		return 0;
@@ -1575,7 +1575,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 
 	/* process nee_matrix c */
 	if ( dataset->years_count >= 3 ) {
-		p_matrix_c = process_matrix(dataset, matrix_ref_c, 1, &ref_c, HH_C, author_index, type_index);
+		p_matrix_c = process_matrix(dataset, matrix_ref_c, &ref_c, HH_C, author_index, type_index);
 		if ( !p_matrix_c ) {
 			if ( matrix_ref_c )
 				free_matrix_ref(matrix_ref_c);
@@ -1920,7 +1920,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	}
 
 	/* get p_matrix */
-	p_matrix_y = process_matrix(dataset, matrix_ref_y, 0, &ref_y, DD_Y, author_index, type_index);
+	p_matrix_y = process_matrix(dataset, matrix_ref_y, &ref_y, DD_Y, author_index, type_index);
 	if ( !p_matrix_y ) {
 		puts("unable to get p_matrix for daily y");
 		if ( dataset->years_count >= 3 ) {
@@ -1935,7 +1935,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	}
 
 	if ( dataset->years_count >= 3 ) {
-		p_matrix_c = process_matrix(dataset, matrix_ref_c, 1, &ref_c, DD_C, author_index, type_index);
+		p_matrix_c = process_matrix(dataset, matrix_ref_c, &ref_c, DD_C, author_index, type_index);
 		if ( !p_matrix_c ) {
 			puts("unable to get p_matrix for daily c");
 			free(p_matrix_y);
@@ -2259,7 +2259,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 
 #if 0
 		/* get p_matrix */
-		p_matrix_y = process_matrix(dataset, matrix_ref_y_weekly, 0, &ref_y, WW_Y, author_index, type_index);
+		p_matrix_y = process_matrix(dataset, matrix_ref_y_weekly, &ref_y, WW_Y, author_index, type_index);
 		if ( !p_matrix_y ) {
 			puts("unable to get p_matrix for weekly y");
 			free(matrix_y_daily);
@@ -2272,7 +2272,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 			return 0;
 		}
 		if ( dataset->years_count >= 3 ) {
-			p_matrix_c = process_matrix(dataset, matrix_ref_c_weekly, 1, &ref_c, WW_C, author_index, type_index);
+			p_matrix_c = process_matrix(dataset, matrix_ref_c_weekly, &ref_c, WW_C, author_index, type_index);
 			if ( !p_matrix_c ) {
 				puts("unable to get p_matrix for weekly c");
 				free(p_matrix_y);
@@ -2635,7 +2635,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		}
 
 		/* get p_matrix */
-		p_matrix_y = process_matrix(dataset, matrix_ref_y_monthly, 0, &ref_y, MM_Y, author_index, type_index);
+		p_matrix_y = process_matrix(dataset, matrix_ref_y_monthly, &ref_y, MM_Y, author_index, type_index);
 		if ( !p_matrix_y ) {
 			puts("unable to get p_matrix for monthly y");
 			free(matrix_y_daily);
@@ -2650,7 +2650,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		}
 
 		if ( dataset->years_count >= 3 ) {
-			p_matrix_c = process_matrix(dataset, matrix_ref_c_monthly, 1, &ref_c, MM_C, author_index, type_index);
+			p_matrix_c = process_matrix(dataset, matrix_ref_c_monthly, &ref_c, MM_C, author_index, type_index);
 			if ( !p_matrix_c ) {
 				puts("unable to get p_matrix for monthly c");
 				free(p_matrix_y);
@@ -2985,13 +2985,13 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		}
 
 		/* get p_matrix */
-		p_matrix_y = process_matrix(dataset, matrix_ref_y_yearly, 0, &ref_y, YY_Y, author_index, type_index);
+		p_matrix_y = process_matrix(dataset, matrix_ref_y_yearly, &ref_y, YY_Y, author_index, type_index);
 		if ( !p_matrix_y ) {
 			puts("unable to get p_matrix for yearly y");
 			return 0;
 		}
 		if ( dataset->years_count >= 3 ) {
-			p_matrix_c = process_matrix(dataset, matrix_ref_c_yearly, 1, &ref_c, YY_C, author_index, type_index);
+			p_matrix_c = process_matrix(dataset, matrix_ref_c_yearly, &ref_c, YY_C, author_index, type_index);
 			if ( !p_matrix_c ) {
 				puts("unable to get p_matrix for yearly c");
 				free(p_matrix_y);
