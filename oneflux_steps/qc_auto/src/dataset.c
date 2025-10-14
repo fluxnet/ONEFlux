@@ -229,18 +229,94 @@ static int parse_header(DATASET *const dataset, char *header, const char *const 
 }
 
 /* */
-static void set_height(DATASET *const dataset) {
+static int set_height(DATASET *const dataset) {
 	int i;
 	int HEIGHT;
+	int ret = 0; /* defaults to err */
 
 	/* get HEIGHT column */
 	HEIGHT = get_var_index(dataset, var_names[HEIGHT_INPUT]);
 	assert(HEIGHT != -1);
 
 	/* TODO - check for date range */
-	for ( i = 0; i < dataset->rows_count; i++ ) {
-		dataset->rows[i].value[HEIGHT] = dataset->details->htower[0].h;
+	/* finally after many years! 20250805 */
+	if (  1 == dataset->details->htower_count ) {
+		for ( i = 0; i < dataset->rows_count; i++ ) {
+			dataset->rows[i].value[HEIGHT] = dataset->details->htower[0].h;
+		}
+		ret = 1;
+	} else {
+		if ( (dataset->details->timeres != HALFHOURLY_TIMERES) && (dataset->details->timeres != HOURLY_TIMERES) ) {
+			puts("To correctly set the height, timeres must be half-hourly or hourly");
+		} else {
+			int hh = 0;
+			int mm = 30;
+
+			if ( HOURLY_TIMERES == dataset->details->timeres ) {
+				hh = 1;
+				mm = 0;
+			}
+
+			/* compute ranges */
+			/* check for first timestamp that MUST BE YYYY01010030 for hh or YYYY01010100 for h */
+			if (	(dataset->details->htower[0].timestamp.MM != 1)
+					|| (dataset->details->htower[0].timestamp.DD != 1)
+					|| (dataset->details->htower[0].timestamp.hh != hh)
+					|| (dataset->details->htower[0].timestamp.mm != mm) ) {
+				if ( HOURLY_TIMERES == dataset->details->timeres ) {
+					puts("the first timestamp for height must be in the format YYYY01010100");
+				} else {
+					puts("the first timestamp for height must be in the format YYYY01010030");
+				}
+			} else {
+				int *row_index = malloc(dataset->details->htower_count*sizeof*row_index);
+				if ( !row_index ) {
+					puts(err_out_of_memory);
+				} else {
+					int i;
+					int r;
+
+					row_index[0] = 0;
+					for ( i = 1; i < dataset->details->htower_count; ++i ) {
+						r = get_row_by_timestamp(&dataset->details->htower[i].timestamp, dataset->details->timeres);
+						if ( -1 == r ) {
+							printf("unable to parse the timestamp at index %d for height\n", i + 1);
+							break;
+						} else if ((r < 0) || (r >= dataset->rows_count)) {
+							printf("bad timestamp at index %d for height: the computed row is out of bounds\n", i + 1);
+							break;
+						} else {
+							row_index[i] = r;
+						}
+					}
+
+					if ( i == dataset->details->htower_count ) {
+						for ( i = 1; i < dataset->details->htower_count; ++i ) {
+							if (row_index[i] < row_index[i-1]) {
+								printf("Timestamps not in order at index %d\n", i + 1);
+								break;
+							}
+						}
+
+						if ( i == dataset->details->htower_count ) {
+							for ( i = 0; i < dataset->details->htower_count - 1; ++i ) {
+								for ( r = row_index[i]; r < row_index[i + 1]; ++r ) {
+									dataset->rows[r].value[HEIGHT] = dataset->details->htower[i].h;
+								}
+							}
+							for ( r = row_index[i]; r < dataset->rows_count; ++r ) {
+								dataset->rows[r].value[HEIGHT] = dataset->details->htower[i].h;
+							}
+							ret = 1;
+						}
+					}
+
+					free(row_index);
+				}
+			}
+		}
 	}
+	return ret;
 }
 
 /* */
@@ -542,7 +618,10 @@ DATASET *import_dataset(const char *const filename) {
 	}
 
 	/* set height */
-	set_height(dataset);
+	if  ( !set_height(dataset) ) {
+		free_dataset(dataset);
+		return NULL;
+	}
 
 	/* */
 	puts("ok");
