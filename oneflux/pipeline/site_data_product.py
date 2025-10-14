@@ -27,7 +27,8 @@ from oneflux import ONEFluxError
 from oneflux.utils.files import check_create_directory, file_stat, zip_file_list
 
 from oneflux.pipeline.variables_codes import VARIABLE_LIST_FULL, VARIABLE_LIST_SUB, PERC_LABEL, \
-                                              TIMESTAMP_VARIABLE_LIST, FULL_D, QC_FULL_D, VARIABLES_DONOT_GAPFILL_LONG
+                                              TIMESTAMP_VARIABLE_LIST, FULL_D, QC_FULL_D, VARIABLES_DONOT_GAPFILL_LONG, \
+                                              VARIABLES_DONOT_GAPFILL_LONG_NEEXXCUT_MEAN_L, VARIABLES_DONOT_GAPFILL_LONG_NEEXXVUT_MEAN_L
 from oneflux.pipeline.aux_info_files import run_site_aux
 from oneflux.pipeline.common import QCDIR, METEODIR, NEEDIR, ENERGYDIR, UNCDIR, PRODDIR, WORKING_DIRECTORY, \
                                      PRODFILE_TEMPLATE, ZIPFILE_TEMPLATE, \
@@ -1073,23 +1074,56 @@ def filter_long_gaps(data, qc_threshold=2, window_size=48):
     assigns -9999 to gapfilled values when QC flags are above threshold
     value continually within window size. Returns list of timestamps to
     be filtered at higher temporal aggregations and complete dataset with
-    filtered data variables
+    filtered data variables -- N.B. this function only applies to HH/HR data,
+    coarser resolutions are handled from the returned ftimestamp.
     '''
     ftimestamp = {}
+    ftimestamp_cut_mask = numpy.zeros(data.size, dtype=bool) # for _CUT_REF filtering, start with all True
+    ftimestamp_vut_mask = numpy.zeros(data.size, dtype=bool) # for _VUT_REF filtering, start with all True    
     for qcv, var_list in VARIABLES_DONOT_GAPFILL_LONG.iteritems():
         log.debug('QC variable {q}: start cleaning long gaps'.format(q=qcv))
         if qcv not in data.dtype.names:
             log.warning('QC variable {q} not part of this temporal resolution, skipping'.format(q=qcv))
             continue
+        if '_MEAN' in qcv:
+            log.warning('QC variable {q} is a _MEAN variable, handled next round'.format(q=qcv))
+            continue
 
         fmask = get_indices_to_filter(qcdata=data[qcv], qc_threshold=qc_threshold, window_size=window_size)
+        # HH/HR only, coarser resolutions are handled from the returned ftimestamp
         ftimestamp[qcv] = data['TIMESTAMP_START'][fmask]
         log.debug('QC variable {q} has {n} records to be restored to gaps'.format(q=qcv, n=numpy.sum(fmask)))
 
+        if qcv in VARIABLES_DONOT_GAPFILL_LONG_NEEXXCUT_MEAN_L:
+            # for _CUT_MEAN_QC variables, also create combined mask
+            ftimestamp_cut_mask = (ftimestamp_cut_mask | fmask)
+            log.debug('QC variable {q} has {n} records to be restored to gaps, adding to _MEAN ({m} total)'.format(q=qcv, n=numpy.sum(fmask), m=numpy.sum(ftimestamp_cut_mask)))
+        if qcv in VARIABLES_DONOT_GAPFILL_LONG_NEEXXVUT_MEAN_L:
+            # for _VUT_MEAN_QC variables, also create combined mask
+            ftimestamp_vut_mask = (ftimestamp_vut_mask | fmask)
+            log.debug('QC variable {q} has {n} records to be restored to gaps, adding to _MEAN ({m} total)'.format(q=qcv, n=numpy.sum(fmask), m=numpy.sum(ftimestamp_vut_mask)))
+
         for var in var_list:
             # TODO: handle _REF RECO/GPP (from AUX) and _MEAN (from intersection of _XX percentiles)
+            #      NEE_[C|V]UTE_REF already handled for HH/HR, but needs to be handled for coarser resolutions from NEEAUX (same as GPP/RECO for all resolutions)
+            #      _MEAN currently using _MEAN_QC which is an average of QC values, so no -9999 and _MEAN survives and needs to be handled separately
             log.debug('QC variable {q}, data variable {v}: assigning -9999'.format(q=qcv, v=var))
             data[var][fmask] = -9999.9
+    
+    # apply combined masks for MEAN _CUT_REF and _VUT_REF variables
+    if 'NEE_CUT_MEAN' in data.dtype.names:
+        ftimestamp['NEE_CUT_MEAN_QC'] = data['TIMESTAMP_START'][ftimestamp_cut_mask]
+        log.debug('QC variable NEE_CUT_MEAN_QC has {n} records to be restored to gaps'.format(q=qcv, n=numpy.sum(ftimestamp_cut_mask)))
+        for qcv in VARIABLES_DONOT_GAPFILL_LONG['NEE_CUT_MEAN_QC']:
+            log.debug('QC variable NEE_CUT_MEAN_QC, data variable {v}: assigning -9999'.format(v=qcv))
+            data[qcv][ftimestamp_cut_mask] = -9999.9
+
+    if 'NEE_VUT_MEAN' in data.dtype.names:
+        ftimestamp['NEE_VUT_MEAN_QC'] = data['TIMESTAMP_START'][ftimestamp_vut_mask]
+        log.debug('QC variable NEE_VUT_MEAN_QC has {n} records to be restored to gaps'.format(q=qcv, n=numpy.sum(ftimestamp_vut_mask)))
+        for qcv in VARIABLES_DONOT_GAPFILL_LONG['NEE_VUT_MEAN_QC']:
+            log.debug('QC variable NEE_VUT_MEAN_QC, data variable {v}: assigning -9999'.format(v=qcv))
+            data[qcv][ftimestamp_vut_mask] = -9999.9
 
     return ftimestamp, data
 
@@ -1112,7 +1146,7 @@ def generate_agg_timestamp_mask(ftimestamp, data, resolution='dd'):
     timelabels = [i[0] for i in TIMESTAMP_DTYPE_BY_RESOLUTION[resolution]]
     fmasked = {}
     for qcv, t in ftimestamp.iteritems():
-        log.debug('QC variable {q}, processing aggregation {v}'.format(q=qcv, v=resolution))
+        log.debug('QC variable {q}, processing aggregation {v}, filtering {n} records from HH/HR resolution'.format(q=qcv, v=resolution, n=len(t)))
         if len(t) > 0:
             if (resolution == 'dd') or (resolution == 'ww'):
                 sliced = numpy.unique(slice_string_array(t, start=0, end=8))
@@ -1292,6 +1326,10 @@ def run_site(siteid,
                         continue
                     log.debug('QC variable {q}, data variable {v}, resolution {r}: assigning -9999'.format(q=qcv, v=var, r=resolution))
                     output_data[var][fmask] = -9999.9
+                    # TODO: consider change corresponding _QC variables to -9999 when the main variable is -9999
+                    #       (e.g., if NEE_VUT_REF is -9999, then NEE_VUT_REF_QC should also be -9999).
+                    #       For now, only the main variable is set to -9999, QC variable is left unchanged
+           
 
         ### FULLSET files
         # save Tier 2 FULLSET CSV file
@@ -1376,7 +1414,7 @@ def run_site(siteid,
         # UNK
         else:
             raise ONEFluxError("Unknown Tier 1 state: first_t1={f}, last_t1={l}".format(f=first_t1, l=last_t1))
-    sys.exit(0)
+
     # save first/last year info
     prodfile_years = prodfile_years_template.format(s=siteid, sd=sitedir, vd=version_data, vp=version_processing)
     with open(prodfile_years, 'w') as f:
