@@ -511,10 +511,10 @@ static int get_meteo(DATASET *const dataset) {
 		while ( fgets(buffer, BUFFER_SIZE, f) ) {
 			for ( token = string_tokenizer(buffer, dataset_delimiter, &p), i = 0; token; token = string_tokenizer(NULL, dataset_delimiter, &p), i++ ) {
 				if ( ! i ) {
-					// skip timestamp start
+					/* skip timestamp start */
 					continue;
 				} else if ( 1 == i ) {
-					// get timestamp
+					/* get timestamp */
 					t = get_timestamp(token);
 					if ( ! t ) {
 						fclose(f);
@@ -1043,11 +1043,13 @@ static int import_uts(const char *const filename, PREC *const ust, const int met
 		error = 0;
 		
 	#if 1
-		// PLEASE NOTE:
-		// FOLLOWING CODE SKIP "USTAR_MP_SKIP" ROWS AND THEN CHECK FOR " forward mode 2" string!
-		// MORE FAST BUT LESS ROBUST THAN THE DISABLED ONES!
-		// ENABLED FOR CONSISTENCY!
-		// Alessio - June 27, 2022
+		/*
+			PLEASE NOTE:
+			FOLLOWING CODE SKIP "USTAR_MP_SKIP" ROWS AND THEN CHECK FOR " forward mode 2" string!
+			MORE FAST BUT LESS ROBUST THAN THE DISABLED ONES!
+			ENABLED FOR CONSISTENCY!
+			Alessio - June 27, 2022
+		 */
 		for ( i = 0; i < USTAR_MP_SKIP; i++ ) {
 			if ( !fgets(buffer, BUFFER_SIZE, f) ) {
 				sprintf(err, "bad %s file", methods[method]);
@@ -1074,11 +1076,13 @@ static int import_uts(const char *const filename, PREC *const ust, const int met
 			return 0;
 		}
 	#else
-		// PLEASE NOTE:
-		// FOLLOWING CODE CHECK EACH ROWS FOR " forward mode 2" string!
-		// MORE SLOW BUT MORE ROBUST THAN THE ENABLED ONES!
-		// DISABLED FOR CONSISTENCY!
-		// Alessio - June 27, 2022
+		/*
+			PLEASE NOTE:
+			FOLLOWING CODE CHECK EACH ROWS FOR " forward mode 2" string!
+			MORE SLOW BUT MORE ROBUST THAN THE ENABLED ONES!
+			DISABLED FOR CONSISTENCY!
+			Alessio - June 27, 2022
+		*/
 		{
 			int flag = 0;
 			while ( fgets(buffer, BUFFER_SIZE, f) ) {
@@ -3831,7 +3835,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 						strcpy(buffer2, "itp");
 						strcat(buffer2, input_columns_tokens[y]);
 						if ( ! string_compare_i(token, input_columns_tokens[y]) || ! string_compare_i(token, buffer2) ) {
-							// check if it is already assigned
+							/* check if it is already assigned */
 							if ( columns_index[y] != -1 ) {
 								printf("column %s already found at index %d\n", token, columns_index[y]);
 								fclose(f);
@@ -3856,7 +3860,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 							} else {
 								columns_index[y] = i;
 								++columns_found_count;
-								// do not skip, continue searching for redundant columns
+								/* do not skip, continue searching for redundant columns */
 							}
 						}
 					}
@@ -4184,6 +4188,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				} else {
 					printf("%d -> filtering is not possible\n", datasets[dataset].years[year].year);
 					on_error = 1;
+					skip_y = 1;
 					break;
 				}
 
