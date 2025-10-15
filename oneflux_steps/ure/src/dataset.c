@@ -188,17 +188,15 @@ static const char* get_filename(const char* path) {
 }
 
 /* v1.02 */
-static int save_matrix_ref(const char*const filename, MATRIX_REF* matrix_ref, int year) {
+static int save_matrix_ref(const char*const filename, MATRIX_REF* matrix_ref) {
 	int i;
 	int j;
 	int ret = 0; /* defaults to err */
-	int rows_per_day = 48;
-	TIMESTAMP t = { year };
 	FILE* f = fopen(filename, "w");
 	if ( ! f ) {
 		printf("unable to create %s\n", filename);
 	} else {
-		if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) && g_debug ) {
+		if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) ) {
 			printf(warning_no_setvbuf);
 		}
 
@@ -349,14 +347,14 @@ static MATRIX_REF* create_matrix_for_ref(DATASET *const dataset, int type, int* 
 		}
 
 		if ( original_rows_count != matrix_ref_temp->rows_count ) {
-			printf("- matrix_ref %s: removed %d rows entirely invalid\n", types[type], original_rows_count - matrix_ref_temp->rows_count);
+			printf("- - matrix_ref %s: removed %d rows entirely invalid\n", types[type], original_rows_count - matrix_ref_temp->rows_count);
 		}
 
 		if ( g_debug ) {
 			sprintf(buf, "%s%s_percentiles_%s_reduced_rows.csv", g_output_path, dataset->details->site, types[type]);
-			printf("- debug: saving reduced %s matrix...",  types[type]);
-			if ( save_matrix_ref(buf, matrix_ref_temp, dataset->years[0].year) ) {
-				puts("ok");
+			printf("- - debug: saving reduced %s matrix...",  types[type]);
+			if ( save_matrix_ref(buf, matrix_ref_temp) ) {
+				puts("ok!");
 			}
 		}
 
@@ -386,7 +384,7 @@ static MATRIX_REF* create_matrix_for_ref(DATASET *const dataset, int type, int* 
 			}
 		}
 
-		printf("- matrix_ref %s: maximum valid rows count %d\n", types[type], max_perc_rows_count);
+		printf("- - matrix_ref %s: maximum valid rows count %d\n", types[type], max_perc_rows_count);
 	}
 
 	/* check for valid_data_count */
@@ -413,10 +411,10 @@ static MATRIX_REF* create_matrix_for_ref(DATASET *const dataset, int type, int* 
 
 		/* if no valid columns are found, fatal_err is 0 so it's ok to continue */
 		if ( !valid_columns_count ) {
-			printf("- matrix_ref %s: all rows are invalid", types[type]);
+			printf("- - matrix_ref %s: all rows are invalid\n", types[type]);
 		} else {
 			if ( valid_columns_count < g_valid_perc_count ) {
-				printf("- matrix_ref %s: %d valid columns instead of %d", types[type], valid_columns_count, g_valid_perc_count);
+				printf("- - matrix_ref %s: %d valid columns instead of %d\n", types[type], valid_columns_count, g_valid_perc_count);
 			} else {
 				*fatal_err = 1;
 				matrix_ref = malloc(sizeof*matrix_ref);
@@ -458,7 +456,7 @@ static MATRIX_REF* create_matrix_for_ref(DATASET *const dataset, int type, int* 
 							matrix_ref->percentiles[column_index] = matrix_ref_temp->percentiles[j];
 							++column_index;
 						} else {
-							printf("- matrix_ref %s: percentile %g removed\n", types[type], percentiles_test_2[j]);
+							printf("- - matrix_ref %s: percentile %g removed\n", types[type], percentiles_test_2[j]);
 						}
 					}
 
@@ -467,10 +465,10 @@ static MATRIX_REF* create_matrix_for_ref(DATASET *const dataset, int type, int* 
 
 					if ( matrix_ref->columns_count < PERCENTILES_COUNT_2 ) {
 						int newline = 0;
-						printf("- matrix_ref %s: reduced to %d percentiles\n", types[type], matrix_ref->columns_count - 1);							
+						printf("- - matrix_ref %s: reduced to %d percentiles\n", types[type], matrix_ref->columns_count - 1);							
 						for ( i = 0; i < matrix_ref->columns_count - 1; ++i ) {
 							if ( (0 == i) || newline ) {
-								printf("- matrix_ref %s: ", types[type]);
+								printf("- - matrix_ref %s: ", types[type]);
 								newline = 0;
 							}
 							printf("%g ", percentiles_test_2[matrix_ref->percentiles[i]]);
@@ -481,14 +479,14 @@ static MATRIX_REF* create_matrix_for_ref(DATASET *const dataset, int type, int* 
 						}
 						puts("");
 					} else {
-						printf("- matrix_ref %s: no percentile reduction\n", types[type]);
+						printf("- - matrix_ref %s: no percentile reduction\n", types[type]);
 					}
 
 					if ( g_debug ) {
 						sprintf(buf, "%s%s_percentiles_%s_reduced_percentiles.csv", g_output_path, dataset->details->site, types[type]);
-						printf("- debug: saving reduced %s matrix...",  types[type]);
-						if ( save_matrix_ref(buf, matrix_ref, dataset->years[0].year) ) {
-							puts("ok");
+						printf("- - debug: saving reduced %s matrix...",  types[type]);
+						if ( save_matrix_ref(buf, matrix_ref) ) {
+							puts("ok!");
 						}
 					}
 				}
@@ -547,17 +545,17 @@ static MATRIX_REF* create_matrix_for_ref(DATASET *const dataset, int type, int* 
 		}
 
 		if ( original_rows_count != matrix_ref->rows_count ) {
-			printf("- matrix_ref %s: removed %d rows with one or more invalid value\n", types[type], original_rows_count - matrix_ref->rows_count);
+			printf("- - matrix_ref %s: removed %d rows with one or more invalid value\n", types[type], original_rows_count - matrix_ref->rows_count);
 		} else {
-			printf("- matrix_ref %s: no invalid value reduction\n", types[type]);
+			printf("- - matrix_ref %s: no invalid value reduction\n", types[type]);
 		}
 
 		if ( g_debug ) {
 			if ( matrix_ref->rows_count ) {
 				sprintf(buf, "%s%s_percentiles_%s_only_valid_rows.csv", g_output_path, dataset->details->site, types[type]);
-				printf("- debug: saving reduced %s matrix...",  types[type]);
-				if ( save_matrix_ref(buf, matrix_ref, dataset->years[0].year) ) {
-					puts("ok");
+				printf("- - debug: saving reduced %s matrix...",  types[type]);
+				if ( save_matrix_ref(buf, matrix_ref) ) {
+					puts("ok!");
 				}
 			}
 		}
@@ -707,7 +705,7 @@ int get_reference(const MATRIX_REF *const matrix_ref, const DATASET *const datas
 		f = fopen(buffer, "w");
 		if ( f ) {
 			/* v1.02 */
-			if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) && g_debug ) {
+			if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) ) {
 				printf(warning_no_setvbuf);
 			}
 
@@ -894,9 +892,22 @@ PREC get_standard_deviation_allowing_invalid(const PREC *const values, const int
 		}
 	}
 
+	/* v1.02 */
+	/*
+		prevent useless computation and
+		divide by zero on sum2 /= valid_count-1;
+	*/
+	if ( valid_count < 2 ) {
+		free(valid_values);
+		return INVALID_VALUE;
+	}
+
 	/* get mean */
 	mean = get_mean(valid_values, valid_count);
 	if ( IS_INVALID_VALUE(mean) ) {
+		/* v1.02 */
+		free(valid_values);
+
 		return INVALID_VALUE;
 	}
 
@@ -953,12 +964,13 @@ P_MATRIX *process_matrix(const DATASET *const dataset, MATRIX_REF* matrix_ref, i
 		return NULL;
 	}
 
+	/* v1.02 */
 	/*
-		In the annual time aggregation if the site has only 1 year
+		In the annual time aggregation if the matrix_ref has only 1 row
 		the calculation of the Model Efficiency is impossible or it doesn't make sense.
 		For this reason in these cases the REF is set at the same percentile selected in the monthly files.
 	*/
-	if ( (YY_Y == type) && (1 == dataset->years_count) )  {
+	if ( (YY_Y == type) && matrix_ref && (1 == matrix_ref->rows_count) )  {
 		/* ref remains same of monthly aggregation */
 	} else {
 		/* get references */
@@ -1198,7 +1210,7 @@ static int dump_dataset(const DATASET* const dataset, const char* filename)
 		int i;
 		int j;
 
-		if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) && g_debug ) {
+		if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) ) {
 			printf(warning_no_setvbuf);
 		}
 		fputs("INDEX,", f);
@@ -1247,13 +1259,13 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	int assigned;
 	int error;
 	int percentile;
-	int ref_y;
-	int ref_c;
+	int ref_y = -1;							/* mandatory */
+	int ref_c = -1;							/* mandatory */
 	int temp_rows_count;
 	int is_leap;
 	int exists;
-	int valids_y_count;
-	int valids_c_count;
+	//int valids_y_count;
+	//int valids_c_count;
 	int timestamp_column_index;
 	int rows_per_day;
 	int fatal_err;
@@ -1261,10 +1273,10 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	char *token;
 	PREC value;
 	FILE *f;
+	PERCENTILE *matrix_y_aggr;
+	PERCENTILE *matrix_c_aggr = NULL;		/* mandatory */
 	PERCENTILE *matrix_y_daily;
-	PERCENTILE *matrix_y_temp;
-	PERCENTILE *matrix_c_daily;				/* mandatory */
-	PERCENTILE *matrix_c_temp = NULL;		/* mandatory */
+	PERCENTILE *matrix_c_daily = NULL;		/* mandatory */
 	P_MATRIX *p_matrix_y;
 	P_MATRIX *p_matrix_c = NULL;			/* mandatory */
 
@@ -1324,7 +1336,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 				}
 			}
 			/* alert */
-			puts("ok (nothing found, null year added)");
+			puts("ok! (nothing found, null year added)");
 		} else {
 			/* build-up filename */
 			sprintf(buffer, "%s%s_%d_%s_%s.csv",	g_input_path,
@@ -1438,7 +1450,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 			}
 
 			/* ok */
-			puts("ok");
+			puts("ok!");
 		}
 
 		/* update index */
@@ -1456,7 +1468,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 			sprintf(buffer2, "_%d", dataset->years[dataset->years_count-1].year);
 			strcat(buffer, buffer2);
 		}
-		sprintf(buffer2, "_%s_%s_dump.csv", authors_suffix[author_index], types_suffix[type_index]);
+		sprintf(buffer2, "_%s_%s_hh.csv", authors_suffix[author_index], types_suffix[type_index]);
 		strcat(buffer, buffer2);
 		if ( ! dump_dataset(dataset, buffer) ) {
 			printf("unable to save %s!\n", buffer);
@@ -1548,6 +1560,9 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		}
 	}
 
+	/* */
+	puts("- processing hh...");
+
 	/* v1.02 */
 	matrix_ref_y = create_matrix_for_ref(dataset, HH_Y, &fatal_err);
 	if ( !matrix_ref_y && fatal_err ) {
@@ -1558,18 +1573,19 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	if ( dataset->years_count >= 3 ) {
 		matrix_ref_c = create_matrix_for_ref(dataset, HH_C, &fatal_err);
 		if ( !matrix_ref_c && fatal_err ) {
-			free_matrix_ref(matrix_ref_y);
+			if ( matrix_ref_y ) {
+				free_matrix_ref(matrix_ref_y);
+			}
 			return 0;
 		}
 	}
 
-	/* */
-	printf("- computing hh...");
-
 	/* process nee_matrix y */
 	p_matrix_y = process_matrix(dataset, matrix_ref_y, &ref_y, HH_Y, author_index, type_index);
 	if ( !p_matrix_y ) {
-		free_matrix_ref(matrix_ref_y);
+		if ( matrix_ref_y ) {
+			free_matrix_ref(matrix_ref_y);
+		}
 		return 0;
 	}
 
@@ -1587,7 +1603,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	}
 
 	/* */
-	printf("ok\n- saving hh...");
+	printf("- ...hh successfully processed!\n- saving hh...");
 
 	/* save output hh */
 	sprintf(buffer, output_file_hh, g_output_path, dataset->details->site, authors_suffix[author_index], types_suffix[type_index]);
@@ -1606,7 +1622,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	}
 
 	/* v1.02 */
-	if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) && g_debug ) {
+	if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) ) {
 		printf(warning_no_setvbuf);
 	}
 
@@ -1731,7 +1747,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	}
 
 	/* v1.02 */
-	if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) && g_debug ) {
+	if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) ) {
 		printf(warning_no_setvbuf);
 	}
 
@@ -1740,24 +1756,25 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 										types_suffix[type_index]
 	);
 	if ( dataset->years_count >= 3 ) {
+		/* v1.02 */
 		fprintf(f, model_efficiency_c_info, types_suffix[type_index], (-1 == ref_c) ? INVALID_VALUE : percentiles_test_2[ref_c]);
 		for ( i = 0; i < dataset->years_count; i++ ) {
+			/* v1.02 */
 			fprintf(f, model_efficiency_y_info, types_suffix[type_index], dataset->years[i].year, (-1 == ref_y) ? INVALID_VALUE : percentiles_test_2[ref_y]);
 		}
 	} else {
+		/* v1.02 */
 		fprintf(f, model_efficiency_y_one_year_info, types_suffix[type_index], (-1 == ref_y) ? INVALID_VALUE : percentiles_test_2[ref_y]);
 	}
 	fclose(f);
 
-	/* */
-	puts("ok");
-
 	/* free memory */
-	if ( p_matrix_y )
-		free(p_matrix_y);
-	if ( (dataset->years_count >= 3) && p_matrix_c ) {
+	free(p_matrix_y);
+	if ( dataset->years_count >= 3 ) {
 		free(p_matrix_c);
 	}
+
+	puts("ok!");
 
 	/*
 	*
@@ -1765,14 +1782,14 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	*
 	*/
 
-	printf("- computing daily...");
+	printf("- aggr dd...");
 
 	/* compute daily rows */
 	temp_rows_count = dataset->rows_count / rows_per_day;
 
 	/* alloc memory for daily */
-	matrix_y_temp = malloc(temp_rows_count*sizeof*matrix_y_temp);
-	if ( !matrix_y_temp ) {
+	matrix_y_aggr = malloc(temp_rows_count*sizeof*matrix_y_aggr);
+	if ( !matrix_y_aggr ) {
 		puts(err_out_of_memory);
 		if ( (dataset->years_count >= 3) && matrix_ref_c ) {
 			free_matrix_ref(matrix_ref_c);
@@ -1784,9 +1801,9 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	}
 
 	if ( dataset->years_count >= 3 ) {
-		matrix_c_temp = malloc(temp_rows_count*sizeof*matrix_c_temp);
-		if ( !matrix_c_temp ) {
-			free(matrix_y_temp);
+		matrix_c_aggr = malloc(temp_rows_count*sizeof*matrix_c_aggr);
+		if ( !matrix_c_aggr ) {
+			free(matrix_y_aggr);
 			if ( matrix_ref_c ) {
 				free_matrix_ref(matrix_ref_c);
 			}
@@ -1797,22 +1814,22 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		}
 	}
 
-	/* compute dd */
+	/* aggr dd */
 	index = 0;
 	for ( row = 0; row < dataset->rows_count; row += rows_per_day ) {
 		for ( percentile = 0; percentile < PERCENTILES_COUNT_2; percentile++ ) {
 			int has_invalid_y = 0;
 			int has_invalid_c = 0;
-			matrix_y_temp[index].value[percentile] = 0.0;
+			matrix_y_aggr[index].value[percentile] = 0.0;
 			if ( dataset->years_count >= 3 ) {
-				matrix_c_temp[index].value[percentile] = 0.0;
+				matrix_c_aggr[index].value[percentile] = 0.0;
 			}
 			for ( i = 0; i < rows_per_day; i++ ) {
 				if ( IS_INVALID_VALUE(dataset->percentiles_y[row+i].value[percentile]) ) {
 					has_invalid_y = 1;
 					break;
 				}
-				matrix_y_temp[index].value[percentile] += dataset->percentiles_y[row+i].value[percentile];
+				matrix_y_aggr[index].value[percentile] += dataset->percentiles_y[row+i].value[percentile];
 			}
 			if ( dataset->years_count >= 3 ) {
 				for ( i = 0; i < rows_per_day; i++ ) {
@@ -1820,21 +1837,21 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 						has_invalid_c = 1;
 						break;
 					}
-					matrix_c_temp[index].value[percentile] += dataset->percentiles_c[row+i].value[percentile];
+					matrix_c_aggr[index].value[percentile] += dataset->percentiles_c[row+i].value[percentile];
 				}
 			}
 			if ( ! has_invalid_y ) {
-				matrix_y_temp[index].value[percentile] /= rows_per_day;
-				matrix_y_temp[index].value[percentile] *= CO2TOC;
+				matrix_y_aggr[index].value[percentile] /= rows_per_day;
+				matrix_y_aggr[index].value[percentile] *= CO2TOC;
 			} else {
-				matrix_y_temp[index].value[percentile] = INVALID_VALUE;
+				matrix_y_aggr[index].value[percentile] = INVALID_VALUE;
 			}
 			if ( dataset->years_count >= 3 ) {
 				if ( ! has_invalid_c ) {
-					matrix_c_temp[index].value[percentile] /= rows_per_day;
-					matrix_c_temp[index].value[percentile] *= CO2TOC;
+					matrix_c_aggr[index].value[percentile] /= rows_per_day;
+					matrix_c_aggr[index].value[percentile] *= CO2TOC;
 				} else {
-					matrix_c_temp[index].value[percentile] = INVALID_VALUE;
+					matrix_c_aggr[index].value[percentile] = INVALID_VALUE;
 				}
 			}
 		}
@@ -1842,9 +1859,9 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	}
 	if ( index != temp_rows_count ) {
 		printf("daily rows should be %d not %d", temp_rows_count, index);
-		free(matrix_y_temp);
+		free(matrix_y_aggr);
 		if ( dataset->years_count >= 3 ) {
-			free(matrix_c_temp);
+			free(matrix_c_aggr);
 			if ( matrix_ref_c ) {
 				free_matrix_ref(matrix_ref_c);
 			}
@@ -1855,28 +1872,32 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		return 0;
 	}
 
-	/* update daily rows_count */
+	/*
+
+		update - please note:
+		
+		matrix_y_aggr, dataset->percentiles_y and eventually matrix_c_aggr and dataset->percentiles_c
+		share the same pointers as matrix_y_daily and matrix_c_daily.
+		We need daily (DD) aggregation for next aggregation levels (ww, mm, yy)
+		so DO NOT free those pointers !!!
+	*/
 	rows_count = temp_rows_count;
-
-	/* copy pointer */
-	matrix_y_daily = matrix_y_temp;
-	if ( dataset->years_count >= 3 ) {
-		matrix_c_daily = matrix_c_temp;
-	}
-
-	/* update */
+	matrix_y_daily = matrix_y_aggr;
 	dataset->rows_count = temp_rows_count;
 	free(dataset->percentiles_y);
-	dataset->percentiles_y = matrix_y_temp;
+	dataset->percentiles_y = matrix_y_aggr;
 	if ( dataset->years_count >= 3 ) {
+		matrix_c_daily = matrix_c_aggr;
 		free(dataset->percentiles_c);
-		dataset->percentiles_c = matrix_c_temp;
+		dataset->percentiles_c = matrix_c_aggr;
 	}
+
+	puts("ok!");
 
 	/* v1.02 */
 	if ( g_debug ) {
 		char buffer2[64];
-		printf("- debug: saving aggregated by dd dataset...");
+		printf("- debug: saving aggregated dd dataset...");
 		sprintf(buffer, "%s%s", g_output_path, dataset->details->site);
 		sprintf(buffer2, "_%d", dataset->years[0].year);
 		strcat(buffer, buffer2);
@@ -1895,13 +1916,19 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	}
 
 	/* v1.02 */
+	puts("- computing matrices for dd...");
+
+	/* v1.02 */
 	if ( matrix_ref_y ) {
 		free_matrix_ref(matrix_ref_y);
 	}
-
-	/* v1.02 */
 	matrix_ref_y = create_matrix_for_ref(dataset, DD_Y, &fatal_err);
 	if ( !matrix_ref_y && fatal_err ) {
+		if ( dataset->years_count >= 3 ) {
+			if ( matrix_ref_c ) {
+				free_matrix_ref(matrix_ref_c);
+			}
+		}
 		return 0;
 	}
 
@@ -1950,7 +1977,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	}
 
 	/* */
-	printf("ok\n- saving daily...");
+	printf("- ...dd matrices successfully computed!\n- saving dd...");
 
 	/* save output dd */
 	sprintf(buffer, output_file_dd, g_output_path, dataset->details->site, authors_suffix[author_index], types_suffix[type_index]);
@@ -1971,7 +1998,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	}
 
 	/* v1.02 */
-	if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) && g_debug ) {
+	if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) ) {
 		printf(warning_no_setvbuf);
 	}
 
@@ -2020,7 +2047,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 
 			if ( exists ) {
 				fprintf(f, "%g,%g,%g,%g,",
-													dataset->percentiles_y[j+row].value[ref_y],
+													(-1 == ref_y) ? INVALID_VALUE : dataset->percentiles_y[j+row].value[ref_y],
 													dataset->percentiles_y[j+row].value[PERCENTILES_COUNT_2-1],
 													p_matrix_y[j+row].mean,
 													p_matrix_y[j+row].std_err
@@ -2048,7 +2075,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 			if ( dataset->years_count >= 3 ) {
 				if ( exists ) {
 					fprintf(f, ",%g,%g,%g,%g,",
-														dataset->percentiles_c[j+row].value[ref_c],
+														(-1 == ref_c) ? INVALID_VALUE : dataset->percentiles_c[j+row].value[ref_c],
 														dataset->percentiles_c[j+row].value[PERCENTILES_COUNT_2-1],
 														p_matrix_c[j+row].mean,
 														p_matrix_c[j+row].std_err
@@ -2095,17 +2122,21 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	f = fopen(buffer, "w");
 	if  ( !f ) {
 		printf("unable to create %s\n", buffer);
+		free(matrix_y_daily);
 		if ( dataset->years_count >= 3 ) {
-			free_matrix_ref(matrix_ref_c);
-			free_matrix_ref(matrix_ref_c);
+			free(matrix_c_daily);
+			if ( matrix_ref_c ) {
+				free_matrix_ref(matrix_ref_c);
+			}
 		}
-		free_matrix_ref(matrix_ref_y);
-		free_matrix_ref(matrix_ref_y);
+		if ( matrix_ref_y ) {
+			free_matrix_ref(matrix_ref_y);
+		}
 		return 0;
 	}
 
 	/* v1.02 */
-	if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) && g_debug ) {
+	if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) ) {
 		printf(warning_no_setvbuf);
 	}
 
@@ -2114,17 +2145,16 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 										types_suffix[type_index]
 	);
 	if ( dataset->years_count >= 3 ) {
-		fprintf(f, model_efficiency_c_info, types_suffix[type_index], percentiles_test_2[ref_c]);
+		fprintf(f, model_efficiency_c_info, types_suffix[type_index], (-1 == ref_c) ? INVALID_VALUE : percentiles_test_2[ref_c]);
 		for ( i = 0; i < dataset->years_count; i++ ) {
-			fprintf(f, model_efficiency_y_info, types_suffix[type_index], dataset->years[i].year, percentiles_test_2[ref_y]);
+			fprintf(f, model_efficiency_y_info, types_suffix[type_index], dataset->years[i].year, (-1 == ref_y) ? INVALID_VALUE : percentiles_test_2[ref_y]);
 		}
 	} else {
-		fprintf(f, model_efficiency_y_one_year_info, types_suffix[type_index], percentiles_test_2[ref_y]);
+		fprintf(f, model_efficiency_y_one_year_info, types_suffix[type_index], (-1 == ref_y) ? INVALID_VALUE : percentiles_test_2[ref_y]);
 	}
 	fclose(f);
 
-	/* */
-	puts("ok");
+	puts("ok!");
 
 	/*
 	*
@@ -2132,14 +2162,16 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	*
 	*/
 
-	printf("- computing weekly...");
+	printf("- aggr ww...");
 
 	/* */
 	temp_rows_count = 52 * dataset->years_count;
-	matrix_y_temp = malloc(temp_rows_count*sizeof*matrix_y_temp);
-	if ( !matrix_y_temp ) {
+	matrix_y_aggr = malloc(temp_rows_count*sizeof*matrix_y_aggr);
+	if ( !matrix_y_aggr ) {
 		puts(err_out_of_memory);
+		free(matrix_y_daily);
 		if ( dataset->years_count >= 3 ) {
+			free(matrix_c_daily);
 			if ( matrix_ref_c ) {
 				free_matrix_ref(matrix_ref_c);
 			}
@@ -2151,8 +2183,10 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	}
 
 	if ( dataset->years_count >= 3 ) {
-		matrix_c_temp = malloc(temp_rows_count*sizeof*matrix_c_temp);
-		if ( !matrix_c_temp ) {
+		matrix_c_aggr = malloc(temp_rows_count*sizeof*matrix_c_aggr);
+		if ( !matrix_c_aggr ) {
+			free(matrix_y_daily);
+			free(matrix_c_daily);
 			puts(err_out_of_memory);
 			if ( matrix_ref_c ) {
 				free_matrix_ref(matrix_ref_c);
@@ -2160,7 +2194,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 			if ( matrix_ref_y ) {
 				free_matrix_ref(matrix_ref_y);
 			}
-			free(matrix_y_temp);
+			free(matrix_y_aggr);
 			return 0;
 		}
 	}
@@ -2178,69 +2212,78 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		for ( i = 0; i < 51; i++ ) {
 			row = i*7;
 			for ( percentile = 0; percentile < PERCENTILES_COUNT_2; percentile++ ) {
-				matrix_y_temp[index+i].value[percentile] = 0.0;
+				int has_invalid_y = 0;
+				int has_invalid_c = 0;
+				matrix_y_aggr[index+i].value[percentile] = 0.0;
 				if ( dataset->years_count >= 3 ) {
-					matrix_c_temp[index+i].value[percentile] = 0.0;
+					matrix_c_aggr[index+i].value[percentile] = 0.0;
 				}
-				valids_y_count = 0;
-				valids_c_count = 0;
 				for ( j = 0; j < 7; j++ ) {
-					/* check for valid value! */
-					if ( ! IS_INVALID_VALUE(dataset->percentiles_y[element+row+j].value[percentile]) ) {
-						matrix_y_temp[index+i].value[percentile] += dataset->percentiles_y[element+row+j].value[percentile];
-						++valids_y_count;
+					if ( IS_INVALID_VALUE(dataset->percentiles_y[element+row+j].value[percentile]) ) {
+						has_invalid_y = 1;
+						break;
 					}
-					/* check for valid value! */
-					if ( (dataset->years_count >= 3) && ! IS_INVALID_VALUE(dataset->percentiles_c[element+row+j].value[percentile]) ) {
-						matrix_c_temp[index+i].value[percentile] += dataset->percentiles_c[element+row+j].value[percentile];
-						++valids_c_count;
-					}
-				}
-				if ( ! valids_y_count ) {
-					matrix_y_temp[index+i].value[percentile] = INVALID_VALUE;
-				} else {
-					matrix_y_temp[index+i].value[percentile] /= 7;
+					matrix_y_aggr[index+i].value[percentile] += dataset->percentiles_y[element+row+j].value[percentile];
 				}
 				if ( dataset->years_count >= 3 ) {
-					if ( ! valids_c_count ) {
-						matrix_c_temp[index+i].value[percentile] = INVALID_VALUE;
+					for ( j = 0; j < 7; j++ ) {
+						if ( IS_INVALID_VALUE(dataset->percentiles_c[element+row+j].value[percentile]) ) {
+							has_invalid_c = 1;
+							break;
+						}
+						matrix_c_aggr[index+i].value[percentile] += dataset->percentiles_c[element+row+j].value[percentile];
+					}
+				}
+
+				if ( has_invalid_y ) {
+					matrix_y_aggr[index+i].value[percentile] = INVALID_VALUE;
+				} else {
+					matrix_y_aggr[index+i].value[percentile] /= 7;
+				}
+				if ( dataset->years_count >= 3 ) {
+					if ( has_invalid_c ) {
+						matrix_c_aggr[index+i].value[percentile] = INVALID_VALUE;
 					} else {
-						matrix_c_temp[index+i].value[percentile] /= 7;
+						matrix_c_aggr[index+i].value[percentile] /= 7;
 					}
 				}
 			}
 		}
-		row += j; /* 51*7 */;
+		row += j; /* 51*7 */
 		z = y-row;
 		for ( percentile = 0; percentile < PERCENTILES_COUNT_2; percentile++ ) {
-			matrix_y_temp[index+i].value[percentile] = 0.0;
+			int has_invalid_y = 0;
+			int has_invalid_c = 0;
+			matrix_y_aggr[index+i].value[percentile] = 0.0;
 			if ( dataset->years_count >= 3 ) {
-				matrix_c_temp[index+i].value[percentile] = 0.0;
+				matrix_c_aggr[index+i].value[percentile] = 0.0;
 			}
-			valids_y_count = 0;
-			valids_c_count = 0;
 			for ( j = 0; j < z; j++ ) {
-				/* check for valid value! */
-				if ( ! IS_INVALID_VALUE(dataset->percentiles_y[element+row+j].value[percentile]) ) {
-					matrix_y_temp[index+i].value[percentile] += dataset->percentiles_y[element+row+j].value[percentile];
-					++valids_y_count;
+				if ( IS_INVALID_VALUE(dataset->percentiles_y[element+row+j].value[percentile]) ) {
+					has_invalid_y = 1;
+					break;
 				}
-				/* check for valid value! */
-				if ( (dataset->years_count >= 3) && ! IS_INVALID_VALUE(dataset->percentiles_c[element+row+j].value[percentile]) ) {
-					matrix_c_temp[index+i].value[percentile] += dataset->percentiles_c[element+row+j].value[percentile];
-					++valids_c_count;
-				}
-			}
-			if ( ! valids_y_count ) {
-				matrix_y_temp[index+i].value[percentile] = INVALID_VALUE;
-			} else {
-				matrix_y_temp[index+i].value[percentile] /= z;
+				matrix_y_aggr[index+i].value[percentile] += dataset->percentiles_y[element+row+j].value[percentile];
 			}
 			if ( dataset->years_count >= 3 ) {
-				if ( ! valids_c_count ) {
-					matrix_c_temp[index+i].value[percentile] = INVALID_VALUE;
+				for ( j = 0; j < z; j++ ) {
+					if ( IS_INVALID_VALUE(dataset->percentiles_c[element+row+j].value[percentile]) ) {
+						has_invalid_c = 1;
+						break;
+					}
+					matrix_c_aggr[index+i].value[percentile] += dataset->percentiles_c[element+row+j].value[percentile];
+				}
+			}
+			if ( has_invalid_y ) {
+				matrix_y_aggr[index+i].value[percentile] = INVALID_VALUE;
+			} else {
+				matrix_y_aggr[index+i].value[percentile] /= z;
+			}
+			if ( dataset->years_count >= 3 ) {
+				if ( has_invalid_c ) {
+					matrix_c_aggr[index+i].value[percentile] = INVALID_VALUE;
 				} else {
-					matrix_c_temp[index+i].value[percentile] /= z;
+					matrix_c_aggr[index+i].value[percentile] /= z;
 				}
 			}
 		}
@@ -2252,46 +2295,101 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 
 	/* update */
 	dataset->rows_count = temp_rows_count;
-	dataset->percentiles_y = matrix_y_temp;
+	dataset->percentiles_y = matrix_y_aggr;
 	if ( dataset->years_count >= 3 ) {
-		dataset->percentiles_c = matrix_c_temp;
+		dataset->percentiles_c = matrix_c_aggr;
 	}
 
-#if 0
-		/* get p_matrix */
-		p_matrix_y = process_matrix(dataset, matrix_ref_y_weekly, &ref_y, WW_Y, author_index, type_index);
-		if ( !p_matrix_y ) {
-			puts("unable to get p_matrix for weekly y");
+	puts("ok!");
+
+	/* v1.02 */
+	if ( g_debug ) {
+		char buffer2[64];
+		printf("- debug: saving aggregated ww dataset...");
+		sprintf(buffer, "%s%s", g_output_path, dataset->details->site);
+		sprintf(buffer2, "_%d", dataset->years[0].year);
+		strcat(buffer, buffer2);
+		if ( dataset->years_count > 1 ) {
+			sprintf(buffer2, "_%d", dataset->years[dataset->years_count-1].year);
+			strcat(buffer, buffer2);
+		}
+		sprintf(buffer2, "_%s_%s_ww.csv", authors_suffix[author_index], types_suffix[type_index]);
+		strcat(buffer, buffer2);
+		
+		if ( ! dump_dataset(dataset, buffer) ) {
+			printf("unable to save %s!\n", buffer);
+		} else {
+			puts("ok!");
+		}
+	}
+
+	/* v1.02 */
+	puts("- computing matrices for ww...");
+
+	/* v1.02 */
+	if ( matrix_ref_y ) {
+		free_matrix_ref(matrix_ref_y);
+	}
+	matrix_ref_y = create_matrix_for_ref(dataset, WW_Y, &fatal_err);
+	if ( !matrix_ref_y && fatal_err ) {
+		free(matrix_y_daily);
+		if ( dataset->years_count >= 3 ) {
+			free(matrix_c_daily);
+		}
+		return 0;
+	}
+
+	/* v1.02 */
+	if ( dataset->years_count >= 3 ) {
+		if ( matrix_ref_c ) {
+			free_matrix_ref(matrix_ref_c);
+		}
+		matrix_ref_c = create_matrix_for_ref(dataset, WW_C, &fatal_err);
+		if ( !matrix_ref_c && fatal_err ) {
 			free(matrix_y_daily);
-			if ( dataset->years_count >= 3 ) {
-				free(matrix_c_daily);
-				free_matrix_ref(matrix_ref_c);
+			free(matrix_c_daily);
+			if ( matrix_ref_y ) {
+				free_matrix_ref(matrix_ref_y);
 			}
-			free_matrix_ref(matrix_ref_y);
-			free_matrix_ref(matrix_ref_y);
 			return 0;
 		}
+	}
+
+	/* get p_matrix */
+	p_matrix_y = process_matrix(dataset, matrix_ref_y, &ref_y, WW_Y, author_index, type_index);
+	if ( !p_matrix_y ) {
+		puts("unable to get p_matrix for weekly y");
+		free(matrix_y_daily);
 		if ( dataset->years_count >= 3 ) {
-			p_matrix_c = process_matrix(dataset, matrix_ref_c_weekly, &ref_c, WW_C, author_index, type_index);
-			if ( !p_matrix_c ) {
-				puts("unable to get p_matrix for weekly c");
-				free(p_matrix_y);
-				free(matrix_c_daily);
-				free(matrix_y_daily);
+			free(matrix_c_daily);
+			if ( matrix_ref_c ) {
 				free_matrix_ref(matrix_ref_c);
-				free_matrix_ref(matrix_ref_y);
-				return 0;
 			}
 		}
-
-		if ( matrix_ref_c_weekly )
-			free(matrix_ref_c_weekly);
-
-		free(matrix_ref_y_weekly);
+		if ( matrix_ref_y ) {
+			free_matrix_ref(matrix_ref_y);
+		}
+		return 0;
+	}
+	if ( dataset->years_count >= 3 ) {
+		p_matrix_c = process_matrix(dataset, matrix_ref_c, &ref_c, WW_C, author_index, type_index);
+		if ( !p_matrix_c ) {
+			puts("unable to get p_matrix for weekly c");
+			free(p_matrix_y);
+			free(matrix_c_daily);
+			free(matrix_y_daily);
+			if ( matrix_ref_c ) {
+				free_matrix_ref(matrix_ref_c);
+			}
+			if ( matrix_ref_y ) {
+				free_matrix_ref(matrix_ref_y);
+			}
+			return 0;
+		}
 	}
 
 	/* */
-	printf("ok\n- saving weekly...");
+	printf("- ...ww matrices successfully computed!\n- saving ww...");
 
 	/* save output ww */
 	sprintf(buffer, output_file_ww, g_output_path, dataset->details->site, authors_suffix[author_index], types_suffix[type_index]);
@@ -2303,16 +2401,18 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		if ( dataset->years_count >= 3 ) {
 			free(p_matrix_c);
 			free(matrix_c_daily);
-			free_matrix_ref(matrix_ref_c);
-			free_matrix_ref(matrix_ref_c);
+			if ( matrix_ref_c ) {
+				free_matrix_ref(matrix_ref_c);
+			}
 		}
-		free_matrix_ref(matrix_ref_y);
-		free_matrix_ref(matrix_ref_y);
+		if ( matrix_ref_y ) {
+			free_matrix_ref(matrix_ref_y);
+		}
 		return 0;
 	}
 
 	/* v1.02 */
-	if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) && g_debug ) {
+	if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) ) {
 		printf(warning_no_setvbuf);
 	}
 
@@ -2351,7 +2451,8 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 			fprintf(f, "%d,", row+1);
 			if ( exists ) {
 				fprintf(f, "%g,%g,%g,%g,",
-													dataset->percentiles_y[j+row].value[ref_y],
+													/* v1.02 */
+													(-1 == ref_y) ? INVALID_VALUE :  dataset->percentiles_y[j+row].value[ref_y],
 													dataset->percentiles_y[j+row].value[PERCENTILES_COUNT_2-1],
 													p_matrix_y[j+row].mean,
 													p_matrix_y[j+row].std_err
@@ -2379,7 +2480,8 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 			if ( dataset->years_count >= 3 ) {
 				if ( exists ) {
 					fprintf(f, ",%g,%g,%g,%g,",
-														dataset->percentiles_c[j+row].value[ref_c],
+														/* v1.02 */
+														(-1 == ref_c) ? INVALID_VALUE : dataset->percentiles_c[j+row].value[ref_c],
 														dataset->percentiles_c[j+row].value[PERCENTILES_COUNT_2-1],
 														p_matrix_c[j+row].mean,
 														p_matrix_c[j+row].std_err
@@ -2426,16 +2528,18 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		free(matrix_y_daily);
 		if ( dataset->years_count >= 3 ) {
 			free(matrix_c_daily);
-			free_matrix_ref(matrix_ref_c);
-			free_matrix_ref(matrix_ref_c);
+			if ( matrix_ref_c ) {
+				free_matrix_ref(matrix_ref_c);
+			}
 		}
-		free_matrix_ref(matrix_ref_y);
-		free_matrix_ref(matrix_ref_y);
+		if ( matrix_ref_y ) {
+			free_matrix_ref(matrix_ref_y);
+		}
 		return 0;
 	}
 
 	/* v1.02 */
-	if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) && g_debug ) {
+	if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) ) {
 		printf(warning_no_setvbuf);
 	}
 
@@ -2444,23 +2548,25 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 										types_suffix[type_index]
 	);
 	if ( dataset->years_count >= 3 ) {
-		fprintf(f, model_efficiency_c_info, types_suffix[type_index], percentiles_test_2[ref_c]);
+		fprintf(f, model_efficiency_c_info, types_suffix[type_index], (-1 == ref_c) ? INVALID_VALUE : percentiles_test_2[ref_c]);
 		for ( i = 0; i < dataset->years_count; i++ ) {
-			fprintf(f, model_efficiency_y_info, types_suffix[type_index], dataset->years[i].year, percentiles_test_2[ref_y]);
+			fprintf(f, model_efficiency_y_info, types_suffix[type_index], dataset->years[i].year, (-1 == ref_y) ? INVALID_VALUE : percentiles_test_2[ref_y]);
 		}
 	} else {
-		fprintf(f, model_efficiency_y_one_year_info, types_suffix[type_index], percentiles_test_2[ref_y]);
+		fprintf(f, model_efficiency_y_one_year_info, types_suffix[type_index], (-1 == ref_y) ? INVALID_VALUE : percentiles_test_2[ref_y]);
 	}
 	fclose(f);
 
-	/* */
-	printf("ok\n- computing monthly...");
+	puts("ok!");
 
 	/*
 	*
 	* monthly
 	*
 	*/
+
+	/* */
+	printf("- aggr mm...");
 
 	/* set daily */
 	free(dataset->percentiles_y);
@@ -2471,27 +2577,35 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	}
 
 	temp_rows_count = 12 * dataset->years_count;
-	matrix_y_temp = malloc(temp_rows_count*sizeof*matrix_y_temp);
-	if ( !matrix_y_temp ) {
+	matrix_y_aggr = malloc(temp_rows_count*sizeof*matrix_y_aggr);
+	if ( !matrix_y_aggr ) {
 		puts(err_out_of_memory);
 		if ( dataset->years_count >= 3 ) {
-			free_matrix_ref(matrix_ref_c);
-			free_matrix_ref(matrix_ref_c);
+			if ( matrix_ref_c ) {
+				free_matrix_ref(matrix_ref_c);
+			}
+			free(matrix_c_daily);
 		}
-		free_matrix_ref(matrix_ref_y);
-		free_matrix_ref(matrix_ref_y);
+		if ( matrix_ref_y ) {
+			free_matrix_ref(matrix_ref_y);
+		}
+		free(matrix_y_daily);
 		return 0;
 	}
 
 	if ( dataset->years_count >= 3 ) {
-		matrix_c_temp = malloc(temp_rows_count*sizeof*matrix_c_temp);
-		if ( !matrix_c_temp ) {
+		matrix_c_aggr = malloc(temp_rows_count*sizeof*matrix_c_aggr);
+		if ( !matrix_c_aggr ) {
 			puts(err_out_of_memory);
-			free(matrix_y_temp);
-			free_matrix_ref(matrix_ref_c);
-			free_matrix_ref(matrix_ref_c);
-			free_matrix_ref(matrix_ref_y);
-			free_matrix_ref(matrix_ref_y);
+			free(matrix_y_aggr);
+			free(matrix_y_daily);
+			if ( matrix_ref_c ) {
+				free_matrix_ref(matrix_ref_c);
+			}
+			if ( matrix_ref_y ) {
+				free_matrix_ref(matrix_ref_y);
+			}
+			free(matrix_c_daily);
 			return 0;
 		}
 	}
@@ -2502,38 +2616,42 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	for ( row = 0; row < rows_count; ) {
 		for ( i = 0; i < 12; i++ ) {
 			for ( percentile = 0; percentile < PERCENTILES_COUNT_2; percentile++ ) {
-				matrix_y_temp[index+i].value[percentile] = 0.0;
+				int has_invalid_y = 0;
+				int has_invalid_c = 0;
+				matrix_y_aggr[index+i].value[percentile] = 0.0;
 				if ( dataset->years_count >= 3 ) {
-					matrix_c_temp[index+i].value[percentile] = 0.0;
+					matrix_c_aggr[index+i].value[percentile] = 0.0;
 				}
 				z = days_per_month[i];
 				if ( (1 == i) && IS_LEAP_YEAR(year) ) {
 					++z;
 				}
-				valids_y_count = 0;
-				valids_c_count = 0;
 				for ( j = 0; j < z; j++ ) {
-					/* check for valid value! */
-					if ( ! IS_INVALID_VALUE(dataset->percentiles_y[row+j].value[percentile]) ) {
-						matrix_y_temp[index+i].value[percentile] += dataset->percentiles_y[row+j].value[percentile];
-						++valids_y_count;
+					if ( IS_INVALID_VALUE(dataset->percentiles_y[row+j].value[percentile]) ) {
+						has_invalid_y = 1;
+						break;
 					}
-					/* check for valid value! */
-					if ( (dataset->years_count >= 3) && ! IS_INVALID_VALUE(dataset->percentiles_c[row+j].value[percentile]) ) {
-						matrix_c_temp[index+i].value[percentile] += dataset->percentiles_c[row+j].value[percentile];
-						++valids_c_count;
-					}
-				}
-				if ( ! valids_y_count ) {
-					matrix_y_temp[index+i].value[percentile] = INVALID_VALUE;
-				} else {
-					matrix_y_temp[index+i].value[percentile] /= z;
+					matrix_y_aggr[index+i].value[percentile] += dataset->percentiles_y[row+j].value[percentile];
 				}
 				if ( dataset->years_count >= 3 ) {
-					if ( ! valids_c_count ) {
-						matrix_c_temp[index+i].value[percentile] = INVALID_VALUE;
+					for ( j = 0; j < z; j++ ) {
+						if ( IS_INVALID_VALUE(dataset->percentiles_c[row+j].value[percentile]) ) {
+							has_invalid_c = 1;
+							break;
+						}
+						matrix_c_aggr[index+i].value[percentile] += dataset->percentiles_c[row+j].value[percentile];
+					}
+				}
+				if ( has_invalid_y ) {
+					matrix_y_aggr[index+i].value[percentile] = INVALID_VALUE;
+				} else {
+					matrix_y_aggr[index+i].value[percentile] /= z;
+				}
+				if ( dataset->years_count >= 3 ) {
+					if ( has_invalid_c ) {
+						matrix_c_aggr[index+i].value[percentile] = INVALID_VALUE;
 					} else {
-						matrix_c_temp[index+i].value[percentile] /= z;
+						matrix_c_aggr[index+i].value[percentile] /= z;
 					}
 				}
 			}
@@ -2549,129 +2667,102 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 
 	/* update */
 	dataset->rows_count = temp_rows_count;
-	dataset->percentiles_y = matrix_y_temp;
+	dataset->percentiles_y = matrix_y_aggr;
 	if ( dataset->years_count >= 3 ) {
-		dataset->percentiles_c = matrix_c_temp;
+		dataset->percentiles_c = matrix_c_aggr;
+	}
+
+	puts("ok!");
+
+	/* v1.02 */
+	if ( g_debug ) {
+		char buffer2[64];
+		printf("- debug: saving aggregated mm dataset...");
+		sprintf(buffer, "%s%s", g_output_path, dataset->details->site);
+		sprintf(buffer2, "_%d", dataset->years[0].year);
+		strcat(buffer, buffer2);
+		if ( dataset->years_count > 1 ) {
+			sprintf(buffer2, "_%d", dataset->years[dataset->years_count-1].year);
+			strcat(buffer, buffer2);
+		}
+		sprintf(buffer2, "_%s_%s_mm.csv", authors_suffix[author_index], types_suffix[type_index]);
+		strcat(buffer, buffer2);
+		
+		if ( ! dump_dataset(dataset, buffer) ) {
+			printf("unable to save %s!\n", buffer);
+		} else {
+			puts("ok!");
+		}
 	}
 
 	/* v1.02 */
-	/* compute mm per ref */
-	{
-		MATRIX_REF* matrix_ref_y_monthly = NULL;
-		MATRIX_REF* matrix_ref_c_monthly = NULL;
+	puts("- computing matrices for mm...");
 
-		matrix_ref_y_monthly = malloc(dataset->rows_count*sizeof*matrix_ref_y_monthly);
-		if ( !matrix_ref_y_monthly ) {
-			puts(err_out_of_memory);
-			if ( dataset->years_count >= 3 ) {
-				free_matrix_ref(matrix_ref_c);
-				free_matrix_ref(matrix_ref_c);
-			}
-			free_matrix_ref(matrix_ref_y);
-			free_matrix_ref(matrix_ref_y);
-			return 0;
-		}
+	/* v1.02 */
+	if ( matrix_ref_y ) {
+		free_matrix_ref(matrix_ref_y);
+	}
+	matrix_ref_y = create_matrix_for_ref(dataset, MM_Y, &fatal_err);
+	if ( !matrix_ref_y && fatal_err ) {
+		free(matrix_y_daily);
 		if ( dataset->years_count >= 3 ) {
-			matrix_ref_c_monthly = malloc(dataset->rows_count*sizeof*matrix_ref_c_monthly);
-			if ( !matrix_ref_c_monthly ) {
-				puts(err_out_of_memory);
-				free(matrix_ref_y_monthly);
-				if ( dataset->years_count >= 3 ) {
-					free_matrix_ref(matrix_ref_c);
-					free_matrix_ref(matrix_ref_c);
-				}
-				free_matrix_ref(matrix_ref_y);
-				free_matrix_ref(matrix_ref_y);
-				return 0;
-			}
+			free(matrix_c_daily);
 		}
+		return 0;
+	}
 
-		index = 0;
-		year = dataset->years[0].year;
-		for ( row = 0; row < rows_count; ) {
-			for ( i = 0; i < 12; i++ ) {
-				for ( percentile = 0; percentile < PERCENTILES_COUNT_2; percentile++ ) {
-					int has_invalid_y = 0;
-					int has_invalid_c = 0;
-					MAT_VALUE(matrix_ref_y_monthly, index+i, percentile) = 0.0;
-					if ( dataset->years_count >= 3 ) {
-						MAT_VALUE(matrix_ref_c_monthly, index+i, percentile) = 0.0;
-					}
-					z = days_per_month[i];
-					if ( (1 == i) && IS_LEAP_YEAR(year) ) {
-						++z;
-					}
-					for ( j = 0; j < z; j++ ) {
-						if  ( IS_INVALID_VALUE(MAT_VALUE(matrix_ref_y, row+j, percentile)) ) {
-							has_invalid_y = 1;
-							break;
-						}
-						MAT_VALUE(matrix_ref_y_monthly, index+i, percentile) += MAT_VALUE(matrix_ref_y, row+j, percentile);
-						if ( dataset->years_count >= 3 ) {
-							if  ( IS_INVALID_VALUE(MAT_VALUE(matrix_ref_c, row+j, percentile)) ) {
-								has_invalid_c = 1;
-								break;
-							}
-							MAT_VALUE(matrix_ref_c_monthly, index+i, percentile) += MAT_VALUE(matrix_ref_c, row+j, percentile);
-						}
-					}
-					if ( ! has_invalid_y ) {
-						MAT_VALUE(matrix_ref_y_monthly, index+i, percentile) /= z;
-					} else {
-						MAT_VALUE(matrix_ref_y_monthly, index+i, percentile) = INVALID_VALUE;
-					}
-					if ( dataset->years_count >= 3 ) {
-						if ( ! has_invalid_c ) {
-							MAT_VALUE(matrix_ref_c_monthly, index+i, percentile) /= z;
-						} else {
-							MAT_VALUE(matrix_ref_c_monthly, index+i, percentile) = INVALID_VALUE;
-						}
-					}
-				}
-				row += z;
-			}
-			++year;
-			index += i;
+	/* v1.02 */
+	if ( dataset->years_count >= 3 ) {
+		if ( matrix_ref_c ) {
+			free_matrix_ref(matrix_ref_c);
 		}
-
-		/* get p_matrix */
-		p_matrix_y = process_matrix(dataset, matrix_ref_y_monthly, &ref_y, MM_Y, author_index, type_index);
-		if ( !p_matrix_y ) {
-			puts("unable to get p_matrix for monthly y");
+		matrix_ref_c = create_matrix_for_ref(dataset, MM_C, &fatal_err);
+		if ( !matrix_ref_c && fatal_err ) {
 			free(matrix_y_daily);
-			if ( dataset->years_count >= 3 ) {
-				free(matrix_c_daily);
-				free_matrix_ref(matrix_ref_c);
-				free_matrix_ref(matrix_ref_c);
+			free(matrix_c_daily);
+			if ( matrix_ref_y ) {
+				free_matrix_ref(matrix_ref_y);
 			}
-			free_matrix_ref(matrix_ref_y);
-			free_matrix_ref(matrix_ref_y);
 			return 0;
 		}
-
+	}
+	
+	/* get p_matrix */
+	p_matrix_y = process_matrix(dataset, matrix_ref_y, &ref_y, MM_Y, author_index, type_index);
+	if ( !p_matrix_y ) {
+		puts("unable to get p_matrix for monthly y");
+		free(matrix_y_daily);
 		if ( dataset->years_count >= 3 ) {
-			p_matrix_c = process_matrix(dataset, matrix_ref_c_monthly, &ref_c, MM_C, author_index, type_index);
-			if ( !p_matrix_c ) {
-				puts("unable to get p_matrix for monthly c");
-				free(p_matrix_y);
-				free(matrix_y_daily);
+			free(matrix_c_daily);
+			if ( matrix_ref_c ) {
 				free_matrix_ref(matrix_ref_c);
-				free_matrix_ref(matrix_ref_c);
-				free(matrix_c_daily);
-				free_matrix_ref(matrix_ref_y);
-				free_matrix_ref(matrix_ref_y);
-				return 0;
 			}
 		}
-
-		if ( dataset->years_count >= 3 ) {
-			free(matrix_ref_c_monthly);
+		if ( matrix_ref_y ) {
+			free_matrix_ref(matrix_ref_y);
 		}
-		free(matrix_ref_y_monthly);
+		return 0;
+	}
+
+	if ( dataset->years_count >= 3 ) {
+		p_matrix_c = process_matrix(dataset, matrix_ref_c, &ref_c, MM_C, author_index, type_index);
+		if ( !p_matrix_c ) {
+			puts("unable to get p_matrix for monthly c");
+			free(p_matrix_y);
+			free(matrix_y_daily);
+			if ( matrix_ref_c ) {
+				free_matrix_ref(matrix_ref_c);
+			}
+			free(matrix_c_daily);
+			if ( matrix_ref_y ) {
+				free_matrix_ref(matrix_ref_y);
+			}
+			return 0;
+		}
 	}
 
 	/* */
-	printf("ok\n- saving monthly...");
+	printf("- ...mm matrices successfully computed!\n- saving mm...");
 
 	/* save output mm */
 	sprintf(buffer, output_file_mm, g_output_path, dataset->details->site, authors_suffix[author_index], types_suffix[type_index]);
@@ -2681,18 +2772,20 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		free(p_matrix_y);
 		free(matrix_y_daily);
 		if ( dataset->years_count >= 3 ) {
-			free_matrix_ref(matrix_ref_c);
-			free_matrix_ref(matrix_ref_c);
+			if ( matrix_ref_c ) {
+				free_matrix_ref(matrix_ref_c);
+			}
 			free(p_matrix_c);
 			free(matrix_c_daily);
 		}
-		free_matrix_ref(matrix_ref_y);
-		free_matrix_ref(matrix_ref_y);
+		if ( matrix_ref_y ) {
+			free_matrix_ref(matrix_ref_y);
+		}
 		return 0;
 	}
 
 	/* v1.02 */
-	if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) && g_debug ) {
+	if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) ) {
 		printf(warning_no_setvbuf);
 	}
 
@@ -2728,7 +2821,8 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 
 			if ( exists ) {
 				fprintf(f, "%g,%g,%g,%g,",
-													dataset->percentiles_y[j+row].value[ref_y],
+													/* v1.02 */
+													(-1 == ref_y) ? INVALID_VALUE : dataset->percentiles_y[j+row].value[ref_y],
 													dataset->percentiles_y[j+row].value[PERCENTILES_COUNT_2-1],
 													p_matrix_y[j+row].mean,
 													p_matrix_y[j+row].std_err
@@ -2755,7 +2849,8 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 			if ( dataset->years_count >= 3 ) {
 				if ( exists ) {
 					fprintf(f, ",%g,%g,%g,%g,",
-													dataset->percentiles_c[j+row].value[ref_c],
+													/* v1.02 */
+													(-1 == ref_c) ? INVALID_VALUE : dataset->percentiles_c[j+row].value[ref_c],
 													dataset->percentiles_c[j+row].value[PERCENTILES_COUNT_2-1],
 													p_matrix_c[j+row].mean,
 													p_matrix_c[j+row].std_err
@@ -2801,16 +2896,18 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		free(matrix_y_daily);
 		if ( dataset->years_count >= 3 ) {
 			free(matrix_c_daily);
-			free_matrix_ref(matrix_ref_c);
-			free_matrix_ref(matrix_ref_c);
+			if ( matrix_ref_c ) {
+				free_matrix_ref(matrix_ref_c);
+			}
 		}
-		free_matrix_ref(matrix_ref_y);
-		free_matrix_ref(matrix_ref_y);
+		if ( matrix_ref_y ) {
+			free_matrix_ref(matrix_ref_y);
+		}
 		return 0;
 	}
 
 	/* v1.02 */
-	if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) && g_debug ) {
+	if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) ) {
 		printf(warning_no_setvbuf);
 	}
 
@@ -2819,23 +2916,25 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 										types_suffix[type_index]
 	);
 	if ( dataset->years_count >= 3 ) {
-		fprintf(f, model_efficiency_c_info, types_suffix[type_index], percentiles_test_2[ref_c]);
+		fprintf(f, model_efficiency_c_info, types_suffix[type_index], (-1 == ref_c) ? INVALID_VALUE : percentiles_test_2[ref_c]);
 		for ( i = 0; i < dataset->years_count; i++ ) {
-			fprintf(f, model_efficiency_y_info, types_suffix[type_index], dataset->years[i].year, percentiles_test_2[ref_y]);
+			fprintf(f, model_efficiency_y_info, types_suffix[type_index], dataset->years[i].year, (-1 == ref_y) ? INVALID_VALUE : percentiles_test_2[ref_y]);
 		}
 	} else {
-		fprintf(f, model_efficiency_y_one_year_info, types_suffix[type_index], percentiles_test_2[ref_y]);
+		fprintf(f, model_efficiency_y_one_year_info, types_suffix[type_index], (-1 == ref_y) ? INVALID_VALUE : percentiles_test_2[ref_y]);
 	}
 	fclose(f);
 
-	/* */
-	printf("ok\n- computing yearly...");
+	puts("ok!");
 
 	/*
 	*
 	* yearly
 	*
 	*/
+
+	/* */
+	printf("- aggr yy...");
 
 	/* set daily */
 	free(dataset->percentiles_y);
@@ -2845,27 +2944,31 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		dataset->percentiles_c = matrix_c_daily;
 	}
 
-	matrix_y_temp = malloc(dataset->years_count*sizeof*matrix_y_temp);
-	if ( !matrix_y_temp ) {
+	matrix_y_aggr = malloc(dataset->years_count*sizeof*matrix_y_aggr);
+	if ( !matrix_y_aggr ) {
 		puts(err_out_of_memory);
 		if ( dataset->years_count >= 3 ) {
-			free_matrix_ref(matrix_ref_c);
-			free_matrix_ref(matrix_ref_c);
+			if ( matrix_ref_c ) {
+				free_matrix_ref(matrix_ref_c);
+			}
 		}
-		free_matrix_ref(matrix_ref_y);
-		free_matrix_ref(matrix_ref_y);
+		if ( matrix_ref_y ) {
+			free_matrix_ref(matrix_ref_y);
+		}
 		return 0;
 	}
 
 	if ( dataset->years_count >= 3 ) {
-		matrix_c_temp = malloc(dataset->years_count*sizeof*matrix_c_temp);
-		if ( !matrix_c_temp ) {
+		matrix_c_aggr = malloc(dataset->years_count*sizeof*matrix_c_aggr);
+		if ( !matrix_c_aggr ) {
 			puts(err_out_of_memory);
-			free(matrix_y_temp);
-			free_matrix_ref(matrix_ref_c);
-			free_matrix_ref(matrix_ref_c);
-			free_matrix_ref(matrix_ref_y);
-			free_matrix_ref(matrix_ref_y);
+			free(matrix_y_aggr);
+			if ( matrix_ref_c ) {
+				free_matrix_ref(matrix_ref_c);
+			}
+			if ( matrix_ref_y ) {
+				free_matrix_ref(matrix_ref_y);
+			}
 			return 0;
 		}
 	}
@@ -2876,30 +2979,34 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	for ( row = 0; row < rows_count; ) {
 		y = IS_LEAP_YEAR(year) ? 366 : 365;
 		for ( percentile = 0; percentile < PERCENTILES_COUNT_2; percentile++ ) {
-			matrix_y_temp[index].value[percentile] = 0.0;
+			int has_invalid_y = 0;
+			int has_invalid_c = 0;
+			matrix_y_aggr[index].value[percentile] = 0.0;
 			if ( dataset->years_count >= 3 ) {
-				matrix_c_temp[index].value[percentile] = 0.0;
+				matrix_c_aggr[index].value[percentile] = 0.0;
 			}
-			valids_y_count = 0;
-			valids_c_count = 0;
 			for ( j = 0; j < y; j++ ) {
-				/* check for valid value! */
-				if ( ! IS_INVALID_VALUE(dataset->percentiles_y[row+j].value[percentile]) ) {
-					matrix_y_temp[index].value[percentile] += dataset->percentiles_y[row+j].value[percentile];
-					++valids_y_count;
+				if ( IS_INVALID_VALUE(dataset->percentiles_y[row+j].value[percentile]) ) {
+					has_invalid_y = 1;
+					break;
 				}
-				/* check for valid value! */
-				if ( (dataset->years_count >= 3) && ! IS_INVALID_VALUE(dataset->percentiles_c[row+j].value[percentile]) ) {
-					matrix_c_temp[index].value[percentile] += dataset->percentiles_c[row+j].value[percentile];
-					++valids_c_count;
-				}
-			}
-			if ( ! valids_y_count ) {
-				matrix_y_temp[index].value[percentile] = INVALID_VALUE;
+				matrix_y_aggr[index].value[percentile] += dataset->percentiles_y[row+j].value[percentile];
 			}
 			if ( dataset->years_count >= 3 ) {
-				if ( ! valids_c_count ) {
-					matrix_c_temp[index].value[percentile] = INVALID_VALUE;
+				for ( j = 0; j < y; j++ ) {
+					if ( IS_INVALID_VALUE(dataset->percentiles_c[row+j].value[percentile]) ) {
+						has_invalid_c = 1;
+						break;
+					}
+					matrix_c_aggr[index].value[percentile] += dataset->percentiles_c[row+j].value[percentile];
+				}
+			}
+			if ( has_invalid_y ) {
+				matrix_y_aggr[index].value[percentile] = INVALID_VALUE;
+			}
+			if ( dataset->years_count >= 3 ) {
+				if ( has_invalid_c ) {
+					matrix_c_aggr[index].value[percentile] = INVALID_VALUE;
 				}
 			}
 		}
@@ -2910,103 +3017,103 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		++index;
 	}
 
-	/* free daily */
-	free(dataset->percentiles_y);
-	if ( dataset->years_count >= 3 ) {
-		free(dataset->percentiles_c);
-	}
-
 	/* update */
 	dataset->rows_count = dataset->years_count;
-	dataset->percentiles_y = matrix_y_temp;
+	dataset->percentiles_y = matrix_y_aggr;
 	if ( dataset->years_count >= 3 ) {
-		dataset->percentiles_c = matrix_c_temp;
+		dataset->percentiles_c = matrix_c_aggr;
+	}
+
+	puts("ok!");
+
+	/* v1.02 */
+	if ( g_debug ) {
+		char buffer2[64];
+		printf("- debug: saving aggregated yy dataset...");
+		sprintf(buffer, "%s%s", g_output_path, dataset->details->site);
+		sprintf(buffer2, "_%d", dataset->years[0].year);
+		strcat(buffer, buffer2);
+		if ( dataset->years_count > 1 ) {
+			sprintf(buffer2, "_%d", dataset->years[dataset->years_count-1].year);
+			strcat(buffer, buffer2);
+		}
+		sprintf(buffer2, "_%s_%s_yy.csv", authors_suffix[author_index], types_suffix[type_index]);
+		strcat(buffer, buffer2);
+		
+		if ( ! dump_dataset(dataset, buffer) ) {
+			printf("unable to save %s!\n", buffer);
+		} else {
+			puts("ok!");
+		}
 	}
 
 	/* v1.02 */
-	/* compute yy for ref */
-	{
-		MATRIX_REF* matrix_ref_y_yearly = NULL;
-		MATRIX_REF* matrix_ref_c_yearly = NULL;
+	puts("- computing matrices for yy...");
 
-		matrix_ref_y_yearly = malloc(dataset->years_count*sizeof*matrix_ref_y_yearly);
-		if ( ! matrix_ref_y_yearly ) {
-			puts(err_out_of_memory);
-			if ( dataset->years_count >= 3 ) {
-				free_matrix_ref(matrix_ref_c);
-				free_matrix_ref(matrix_ref_c);
+	/* v1.02 */
+	if ( matrix_ref_y ) {
+		free_matrix_ref(matrix_ref_y);
+	}
+	matrix_ref_y = create_matrix_for_ref(dataset, YY_Y, &fatal_err);
+	if ( !matrix_ref_y && fatal_err ) {
+		free(matrix_y_daily);
+		if ( dataset->years_count >= 3 ) {
+			free(matrix_c_daily);
+		}
+		return 0;
+	}
+
+	/* v1.02 */
+	if ( dataset->years_count >= 3 ) {
+		if ( matrix_ref_c ) {
+			free_matrix_ref(matrix_ref_c);
+		}
+		matrix_ref_c = create_matrix_for_ref(dataset, YY_C, &fatal_err);
+		if ( !matrix_ref_c && fatal_err ) {
+			free(matrix_y_daily);
+			free(matrix_c_daily);
+			if ( matrix_ref_y ) {
+				free_matrix_ref(matrix_ref_y);
 			}
-			free_matrix_ref(matrix_ref_y);
-			free_matrix_ref(matrix_ref_y);
 			return 0;
 		}
+	}
 
+	/* get p_matrix */
+	p_matrix_y = process_matrix(dataset, matrix_ref_y, &ref_y, YY_Y, author_index, type_index);
+	if ( !p_matrix_y ) {
+		puts("unable to get p_matrix for yearly y");
+		free(matrix_y_daily);
+		if ( matrix_ref_y ) {
+			free_matrix_ref(matrix_ref_y);
+		}
 		if ( dataset->years_count >= 3 ) {
-			matrix_ref_c_yearly = malloc(dataset->years_count*sizeof*matrix_ref_c_yearly);
-			if ( ! matrix_ref_c_yearly ) {
-				puts(err_out_of_memory);
+			free(matrix_c_daily);
+			if ( matrix_ref_c ) {
 				free_matrix_ref(matrix_ref_c);
-				free_matrix_ref(matrix_ref_c);
-				free_matrix_ref(matrix_ref_y);
-				free_matrix_ref(matrix_ref_y);
-				return 0;
 			}
 		}
-
-		index = 0;
-		year = dataset->years[0].year;
-		for ( row = 0; row < rows_count; ) {
-			y = IS_LEAP_YEAR(year) ? 366 : 365;
-			for ( percentile = 0; percentile < PERCENTILES_COUNT_2; percentile++ ) {
-				int has_invalid_y = 0;
-				int has_invalid_c = 0;
-				MAT_VALUE(matrix_ref_y_yearly, index, percentile) = 0.0;
-				if ( dataset->years_count >= 3 ) {
-					MAT_VALUE(matrix_ref_c_yearly, index, percentile) = 0.0;
-				}
-				for ( j = 0; j < y; j++ ) {
-					if ( IS_INVALID_VALUE(MAT_VALUE(matrix_ref_y, row+j, percentile)) ) {
-						has_invalid_y = 1;
-						break;
-					}
-					MAT_VALUE(matrix_ref_y_yearly, index, percentile) += MAT_VALUE(matrix_ref_y, row+j, percentile);
-					if ( dataset->years_count >= 3 ) {
-						if ( IS_INVALID_VALUE(MAT_VALUE(matrix_ref_c, row+j, percentile)) ) {
-							has_invalid_c = 1;
-							break;
-						}
-						MAT_VALUE(matrix_ref_c_yearly, index, percentile) += MAT_VALUE(matrix_ref_c, row+j, percentile);
-					}
-				}
+		return 0;
+	}
+	if ( dataset->years_count >= 3 ) {
+		p_matrix_c = process_matrix(dataset, matrix_ref_c, &ref_c, YY_C, author_index, type_index);
+		if ( !p_matrix_c ) {
+			puts("unable to get p_matrix for yearly c");
+			free(p_matrix_y);
+			free(matrix_y_daily);
+			if ( matrix_ref_y ) {
+				free_matrix_ref(matrix_ref_y);
 			}
-			row += y;
-			++year;
-			++index;
-		}
-
-		/* get p_matrix */
-		p_matrix_y = process_matrix(dataset, matrix_ref_y_yearly, &ref_y, YY_Y, author_index, type_index);
-		if ( !p_matrix_y ) {
-			puts("unable to get p_matrix for yearly y");
+			free(matrix_c_daily);
+			if ( matrix_ref_c ) {
+				free_matrix_ref(matrix_ref_c);
+			}
 			return 0;
-		}
-		if ( dataset->years_count >= 3 ) {
-			p_matrix_c = process_matrix(dataset, matrix_ref_c_yearly, &ref_c, YY_C, author_index, type_index);
-			if ( !p_matrix_c ) {
-				puts("unable to get p_matrix for yearly c");
-				free(p_matrix_y);
-				return 0;
-			}
-		}
-
-		free(matrix_ref_y_yearly);
-		if ( dataset->years_count >= 3 ) {
-			free(matrix_ref_c_yearly);
 		}
 	}
 
 	/* */
-	printf("ok\n- saving yearly...");
+	printf("- ...yy matrices successfully computed!\n- saving yy...");
 
 	/* save output yy */
 	sprintf(buffer, output_file_yy, g_output_path, dataset->details->site, authors_suffix[author_index], types_suffix[type_index]);
@@ -3014,18 +3121,22 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	if ( !f ) {
 		printf("unable to create %s\n", buffer);
 		free(p_matrix_y);
+		free(matrix_y_daily);
 		if ( dataset->years_count >= 3 ) {
 			free(p_matrix_c);
-			free_matrix_ref(matrix_ref_c);
-			free_matrix_ref(matrix_ref_c);
+			free(matrix_c_daily);
+			if ( matrix_ref_c ) {
+				free_matrix_ref(matrix_ref_c);
+			}
 		}
-		free_matrix_ref(matrix_ref_y);
-		free_matrix_ref(matrix_ref_y);
+		if ( matrix_ref_y ) {
+			free_matrix_ref(matrix_ref_y);
+		}
 		return 0;
 	}
 
 	/* v1.02 */
-	if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) && g_debug ) {
+	if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) ) {
 		printf(warning_no_setvbuf);
 	}
 
@@ -3057,7 +3168,8 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		fprintf(f, "%d,", year);
 		if ( exists ) {
 			fprintf(f, "%g,%g,%g,%g,",
-											dataset->percentiles_y[i].value[ref_y],
+											/* v1.02 */
+											(-1 == ref_y) ? INVALID_VALUE : dataset->percentiles_y[i].value[ref_y],
 											dataset->percentiles_y[i].value[PERCENTILES_COUNT_2-1],
 											p_matrix_y[i].mean,
 											p_matrix_y[i].std_err
@@ -3083,7 +3195,8 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		if ( dataset->years_count >= 3 ) {
 			if ( exists ) {
 				fprintf(f, ",%g,%g,%g,%g,",
-													dataset->percentiles_c[i].value[ref_c],
+													/* v1.02 */
+													(-1 == ref_c) ? INVALID_VALUE : dataset->percentiles_c[i].value[ref_c],
 													dataset->percentiles_c[i].value[PERCENTILES_COUNT_2-1],
 													p_matrix_c[i].mean,
 													p_matrix_c[i].std_err
@@ -3128,16 +3241,18 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		free(matrix_y_daily);
 		if ( dataset->years_count >= 3 ) {
 			free(matrix_c_daily);
-			free_matrix_ref(matrix_ref_c);
-			free_matrix_ref(matrix_ref_c);
+			if ( matrix_ref_c ) {
+				free_matrix_ref(matrix_ref_c);
+			}
 		}
-		free_matrix_ref(matrix_ref_y);
-		free_matrix_ref(matrix_ref_y);
+		if ( matrix_ref_y ) {
+			free_matrix_ref(matrix_ref_y);
+		}
 		return 0;
 	}
 
 	/* v1.02 */
-	if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) && g_debug ) {
+	if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) ) {
 		printf(warning_no_setvbuf);
 	}
 
@@ -3146,18 +3261,28 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 										types_suffix[type_index]
 	);
 	if ( dataset->years_count >= 3 ) {
-		fprintf(f, model_efficiency_c_info, types_suffix[type_index], percentiles_test_2[ref_c]);
+		fprintf(f, model_efficiency_c_info, types_suffix[type_index], (-1 == ref_c) ? INVALID_VALUE : percentiles_test_2[ref_c]);
 		for ( i = 0; i < dataset->years_count; i++ ) {
-			fprintf(f, model_efficiency_y_info, types_suffix[type_index], dataset->years[i].year, percentiles_test_2[ref_y]);
+			fprintf(f, model_efficiency_y_info, types_suffix[type_index], dataset->years[i].year, (-1 == ref_y) ? INVALID_VALUE : percentiles_test_2[ref_y]);
 		}
 	} else {
-		fprintf(f, model_efficiency_y_one_year_info, types_suffix[type_index], percentiles_test_2[ref_y]);
+		fprintf(f, model_efficiency_y_one_year_info, types_suffix[type_index], (-1 == ref_y) ? INVALID_VALUE : percentiles_test_2[ref_y]);
 	}
 	fclose(f);
-#endif 
 
 	/* */
-	puts("ok\n");
+	puts("ok!\n");
+
+	free(matrix_y_daily);
+	if ( matrix_ref_y ) {
+		free_matrix_ref(matrix_ref_y);
+	}
+	if ( dataset->years_count >= 3 ) {
+		free(matrix_c_daily);
+		if ( matrix_ref_c ) {
+			free_matrix_ref(matrix_ref_c);
+		}
+	}
 
 	return 1;
 }
