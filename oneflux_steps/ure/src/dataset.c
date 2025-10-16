@@ -194,7 +194,7 @@ static int save_matrix_ref(const char*const filename, MATRIX_REF* matrix_ref) {
 	int ret = 0; /* defaults to err */
 	FILE* f = fopen(filename, "w");
 	if ( ! f ) {
-		printf("unable to create %s\n", filename);
+		puts("unable to create file!");
 	} else {
 		if ( g_file_buf && setvbuf(f, g_file_buf, _IOFBF, g_file_buf_size) ) {
 			printf(warning_no_setvbuf);
@@ -291,7 +291,19 @@ static MATRIX_REF* create_matrix_for_ref(DATASET *const dataset, int type, int* 
 					for ( i = 0; i < PERCENTILES_COUNT_2; ++i ) {
 						matrix_ref_temp->percentiles[i] = i;
 					}
+					*fatal_err = 0;
 				}
+			}
+		}
+	}
+
+	/* saving clean matrix */
+	if ( matrix_ref_temp ) {
+		if ( g_debug ) {
+			sprintf(buf, "%s%s_percentiles_%s_imported.csv", g_output_path, dataset->details->site, types[type]);
+			printf("- - debug: saving imported %s matrix (%s)...",  types[type], get_filename(buf));
+			if ( save_matrix_ref(buf, matrix_ref_temp) ) {
+				puts("ok!");
 			}
 		}
 	}
@@ -351,10 +363,12 @@ static MATRIX_REF* create_matrix_for_ref(DATASET *const dataset, int type, int* 
 		}
 
 		if ( g_debug ) {
-			sprintf(buf, "%s%s_percentiles_%s_reduced_rows.csv", g_output_path, dataset->details->site, types[type]);
-			printf("- - debug: saving reduced %s matrix...",  types[type]);
-			if ( save_matrix_ref(buf, matrix_ref_temp) ) {
-				puts("ok!");
+			if ( matrix_ref_temp->rows_count ) {
+				sprintf(buf, "%s%s_percentiles_%s_reduced_rows.csv", g_output_path, dataset->details->site, types[type]);
+				printf("- - debug: saving reduced %s matrix (%s)...",  types[type], get_filename(buf));
+				if ( save_matrix_ref(buf, matrix_ref_temp) ) {
+					puts("ok!");
+				}
 			}
 		}
 
@@ -460,7 +474,7 @@ static MATRIX_REF* create_matrix_for_ref(DATASET *const dataset, int type, int* 
 						}
 					}
 
-					/* get 50% */
+					/* set 50% index */
 					matrix_ref->percentiles[column_index] = PERCENTILES_COUNT_2 - 1;
 
 					if ( matrix_ref->columns_count < PERCENTILES_COUNT_2 ) {
@@ -484,7 +498,7 @@ static MATRIX_REF* create_matrix_for_ref(DATASET *const dataset, int type, int* 
 
 					if ( g_debug ) {
 						sprintf(buf, "%s%s_percentiles_%s_reduced_percentiles.csv", g_output_path, dataset->details->site, types[type]);
-						printf("- - debug: saving reduced %s matrix...",  types[type]);
+						printf("- - debug: saving reduced %s matrix (%s)...",  types[type], get_filename(buf));
 						if ( save_matrix_ref(buf, matrix_ref) ) {
 							puts("ok!");
 						}
@@ -553,7 +567,7 @@ static MATRIX_REF* create_matrix_for_ref(DATASET *const dataset, int type, int* 
 		if ( g_debug ) {
 			if ( matrix_ref->rows_count ) {
 				sprintf(buf, "%s%s_percentiles_%s_only_valid_rows.csv", g_output_path, dataset->details->site, types[type]);
-				printf("- - debug: saving reduced %s matrix...",  types[type]);
+				printf("- - debug: saving reduced %s matrix (%s)...",  types[type], get_filename(buf));
 				if ( save_matrix_ref(buf, matrix_ref) ) {
 					puts("ok!");
 				}
@@ -998,52 +1012,54 @@ P_MATRIX *process_matrix(const DATASET *const dataset, MATRIX_REF* matrix_ref, i
 	}
 
 	/* compute percentile matrix */
-	for ( row = 0; row < dataset->rows_count; row++ ) {
-		valids_count = 0;
-		for ( percentile = 0; percentile < PERCENTILES_COUNT_2-1; percentile++ ) {
-			if ( type < HH_C ) {
-				temp[percentile] = dataset->percentiles_y[row].value[percentile];
-			} else {
-				temp[percentile] = dataset->percentiles_c[row].value[percentile];
+	if ( matrix_ref ) {
+		for ( row = 0; row < dataset->rows_count; row++ ) {
+			valids_count = 0;
+			for ( percentile = 0; percentile < PERCENTILES_COUNT_2-1; percentile++ ) {
+				if ( type < HH_C ) {
+					temp[percentile] = dataset->percentiles_y[row].value[percentile];
+				} else {
+					temp[percentile] = dataset->percentiles_c[row].value[percentile];
+				}
+				/* v1.02 */
+				if ( !IS_INVALID_VALUE(temp[percentile]) ) {
+					++valids_count;
+				}
 			}
-			/* v1.02 */
-			if ( !IS_INVALID_VALUE(temp[percentile]) ) {
-				++valids_count;
-			}
-		}
 
-		/* v1.02 */
-		if ( valids_count > g_min_3_perc_count ) {
-			for ( percentile = 0; percentile < PERCENTILES_COUNT_1; percentile++ ) {
-				if (	(valids_count < g_min_7_perc_count)
-						&& (	
-								(25 != percentiles_test_1[percentile])
-								&& (50 != percentiles_test_1[percentile])
-								&& (75 != percentiles_test_1[percentile])
-								) ) {
-					continue;
+			/* v1.02 */
+			if ( valids_count > g_min_3_perc_count ) {
+				for ( percentile = 0; percentile < PERCENTILES_COUNT_1; percentile++ ) {
+					if (	(valids_count < g_min_7_perc_count)
+							&& (	
+									(25 != percentiles_test_1[percentile])
+									&& (50 != percentiles_test_1[percentile])
+									&& (75 != percentiles_test_1[percentile])
+									) ) {
+						continue;
+					}
+					p_matrix[row].value[percentile] = get_percentile_allowing_invalid(temp, PERCENTILES_COUNT_2-1, percentiles_test_1[percentile], &error);
+					/* should no more happens */
+					if ( error ) {
+						printf("unable to compute %g%% percentile\n", percentiles_test_1[percentile]);
+						free(p_matrix);
+						free(temp);
+						return NULL;
+					}
 				}
-				p_matrix[row].value[percentile] = get_percentile_allowing_invalid(temp, PERCENTILES_COUNT_2-1, percentiles_test_1[percentile], &error);
-				/* should no more happens */
-				if ( error ) {
-					printf("unable to compute %g%% percentile\n", percentiles_test_1[percentile]);
-					free(p_matrix);
-					free(temp);
-					return NULL;
+				p_matrix[row].mean = get_mean_allowing_invalid(temp, PERCENTILES_COUNT_2-1);
+				if ( IS_INVALID_VALUE(p_matrix[row].mean) ) {
+					p_matrix[row].std_err = INVALID_VALUE;
+				} else {
+					p_matrix[row].std_err = get_standard_deviation_allowing_invalid(temp, PERCENTILES_COUNT_2-1, &error);
+					if ( error ) {
+						puts(err_out_of_memory);
+						free(p_matrix);
+						free(temp);
+						return NULL;
+					}
+					p_matrix[row].std_err /= 6.324555320336759; /* sqrt(PERCENTILES_COUNT2-1) */
 				}
-			}
-			p_matrix[row].mean = get_mean_allowing_invalid(temp, PERCENTILES_COUNT_2-1);
-			if ( IS_INVALID_VALUE(p_matrix[row].mean) ) {
-				p_matrix[row].std_err = INVALID_VALUE;
-			} else {
-				p_matrix[row].std_err = get_standard_deviation_allowing_invalid(temp, PERCENTILES_COUNT_2-1, &error);
-				if ( error ) {
-					puts(err_out_of_memory);
-					free(p_matrix);
-					free(temp);
-					return NULL;
-				}
-				p_matrix[row].std_err /= 6.324555320336759; /* sqrt(PERCENTILES_COUNT2-1) */
 			}
 		}
 	}
@@ -1460,7 +1476,6 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	/* v1.02 */
 	if ( g_debug ) {
 		char buffer2[64];
-		printf("- debug: saving imported dataset...");
 		sprintf(buffer, "%s%s", g_output_path, dataset->details->site);
 		sprintf(buffer2, "_%d", dataset->years[0].year);
 		strcat(buffer, buffer2);
@@ -1470,8 +1485,9 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		}
 		sprintf(buffer2, "_%s_%s_hh.csv", authors_suffix[author_index], types_suffix[type_index]);
 		strcat(buffer, buffer2);
+		printf("- debug: saving imported dataset (%s)...", get_filename(buffer));
 		if ( ! dump_dataset(dataset, buffer) ) {
-			printf("unable to save %s!\n", buffer);
+			puts("unable to create file!");
 		} else {
 			puts("ok!");
 		}
@@ -1542,7 +1558,6 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 
 	if ( g_debug ) {
 		char buffer2[64];
-		printf("- debug: saving dataset filtered by mef...");
 		sprintf(buffer, "%s%s", g_output_path, dataset->details->site);
 		sprintf(buffer2, "_%d", dataset->years[0].year);
 		strcat(buffer, buffer2);
@@ -1552,9 +1567,9 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		}
 		sprintf(buffer2, "_%s_%s_filtered.csv", authors_suffix[author_index], types_suffix[type_index]);
 		strcat(buffer, buffer2);
-		
+		printf("- debug: saving dataset filtered by mef (%s)...", get_filename(buffer));
 		if ( ! dump_dataset(dataset, buffer) ) {
-			printf("unable to save %s!\n", buffer);
+			puts("unable to create file!");
 		} else {
 			puts("ok!");
 		}
@@ -1897,7 +1912,6 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	/* v1.02 */
 	if ( g_debug ) {
 		char buffer2[64];
-		printf("- debug: saving aggregated dd dataset...");
 		sprintf(buffer, "%s%s", g_output_path, dataset->details->site);
 		sprintf(buffer2, "_%d", dataset->years[0].year);
 		strcat(buffer, buffer2);
@@ -1907,9 +1921,9 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		}
 		sprintf(buffer2, "_%s_%s_dd.csv", authors_suffix[author_index], types_suffix[type_index]);
 		strcat(buffer, buffer2);
-		
+		printf("- debug: saving aggregated dd dataset (%s)...", get_filename(buffer));		
 		if ( ! dump_dataset(dataset, buffer) ) {
-			printf("unable to save %s!\n", buffer);
+			puts("unable to create file!");
 		} else {
 			puts("ok!");
 		}
@@ -2305,7 +2319,6 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	/* v1.02 */
 	if ( g_debug ) {
 		char buffer2[64];
-		printf("- debug: saving aggregated ww dataset...");
 		sprintf(buffer, "%s%s", g_output_path, dataset->details->site);
 		sprintf(buffer2, "_%d", dataset->years[0].year);
 		strcat(buffer, buffer2);
@@ -2315,9 +2328,9 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		}
 		sprintf(buffer2, "_%s_%s_ww.csv", authors_suffix[author_index], types_suffix[type_index]);
 		strcat(buffer, buffer2);
-		
+		printf("- debug: saving aggregated ww dataset (%s)...", get_filename(buffer));
 		if ( ! dump_dataset(dataset, buffer) ) {
-			printf("unable to save %s!\n", buffer);
+			puts("unable to create file!");
 		} else {
 			puts("ok!");
 		}
@@ -2677,7 +2690,6 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	/* v1.02 */
 	if ( g_debug ) {
 		char buffer2[64];
-		printf("- debug: saving aggregated mm dataset...");
 		sprintf(buffer, "%s%s", g_output_path, dataset->details->site);
 		sprintf(buffer2, "_%d", dataset->years[0].year);
 		strcat(buffer, buffer2);
@@ -2687,9 +2699,9 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		}
 		sprintf(buffer2, "_%s_%s_mm.csv", authors_suffix[author_index], types_suffix[type_index]);
 		strcat(buffer, buffer2);
-		
+		printf("- debug: saving aggregated mm dataset (%s)...", get_filename(buffer));
 		if ( ! dump_dataset(dataset, buffer) ) {
-			printf("unable to save %s!\n", buffer);
+			puts("unable to create file!");
 		} else {
 			puts("ok!");
 		}
@@ -3029,7 +3041,6 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	/* v1.02 */
 	if ( g_debug ) {
 		char buffer2[64];
-		printf("- debug: saving aggregated yy dataset...");
 		sprintf(buffer, "%s%s", g_output_path, dataset->details->site);
 		sprintf(buffer2, "_%d", dataset->years[0].year);
 		strcat(buffer, buffer2);
@@ -3039,9 +3050,9 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		}
 		sprintf(buffer2, "_%s_%s_yy.csv", authors_suffix[author_index], types_suffix[type_index]);
 		strcat(buffer, buffer2);
-		
+		printf("- debug: saving aggregated yy dataset (%s)...", get_filename(buffer));
 		if ( ! dump_dataset(dataset, buffer) ) {
-			printf("unable to save %s!\n", buffer);
+			puts("unable to create file!");
 		} else {
 			puts("ok!");
 		}
