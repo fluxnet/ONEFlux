@@ -71,8 +71,8 @@ static char msg_usage[] =		"How to use: ure parameter\n\n"
 								/* v1.02 */
 								"    -valid_data_count = valid percentile count of data. default is %d\n"
 								"    -valid_perc_count = valid count of percentiles. default is %d\n"
-								"    -min_7_perc_count = min percentile count for GPP\\RECO. default is %d\n"
-								"    -min_3_perc_count = min percentile count for GPP\\RECO 25%%, 50%% and 75%%. default is %d\n"
+								"    -min_7_perc_count = min percentile count for GPP\\RECO percentiles extraction. default is %d\n"
+								"    -min_3_perc_count = min percentile count for GPP\\RECO 25%%, 50%% and 75%% percentiles extraction. default is %d\n"
 								"    -debug -> save to file extra stuff for debug purposes\n"
 
 								"    -h -> show this help\n\n";
