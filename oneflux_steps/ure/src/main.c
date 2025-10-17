@@ -26,11 +26,34 @@
 #define BUFFER_SIZE						1024
 
 /* v1.02 */
+/*
+	minimum amount of valid data in the 40 percentiles to be used in the MEF.
+	it is calculated respect to the percentile with the largest number of valid data,
+	if below the threshold the percentile is excluded.
+*/
 #define VALID_DATA_COUNT_DEFAULT		90
+
+/* v1.02 */
+/*
+	minimum number of 40 percentiles with valid data to return GPP and RECO products.
+	if below the threshold no results are produced for the flux processed.
+*/
 #define VALID_PERC_COUNT_DEFAULT		10
-#define FILE_BUF_DEFAULT_SIZE_IN_MB		20
+
+/* v1.02 */
+/* min number of the 40 percentiles to proceed to the 7 product percentiles extraction. */
 #define MIN7PERC_COUNT_DEFAULT			30
+
+/* v1.02 */
+/*
+	min number of the 40 percentiles to proceed to the extraction of three (instead of 7) percentiles (25%, 50% and 75%).
+	above the min_7_perc_count all the 7 are extracted
+*/
 #define MIN3PERC_COUNT_DEFAULT			10
+
+/* v1.02 */
+#define FILE_BUF_DEFAULT_SIZE_IN_MB		20
+
 
 /* global variables */
 char *g_program_path = NULL;						/* mandatory */
@@ -69,10 +92,14 @@ static char msg_usage[] =		"How to use: ure parameter\n\n"
 								"    -input_path=filename or path to be processed (optional)\n"
 								"    -output_path=path where result files are created (optional)\n"
 								/* v1.02 */
-								"    -valid_data_count = valid percentile count of data. default is %d\n"
-								"    -valid_perc_count = valid count of percentiles. default is %d\n"
-								"    -min_7_perc_count = min percentile count for GPP\\RECO percentiles extraction. default is %d\n"
-								"    -min_3_perc_count = min percentile count for GPP\\RECO 25%%, 50%% and 75%% percentiles extraction. default is %d\n"
+								"    -valid_data_count = minimum amount of valid data in the 40 percentiles to be used in the MEF.\n"
+								"                        it is calculated respect to the percentile with the largest number of valid data,\n"
+								"                        if below the threshold the percentile is excluded. default is %d\n"
+								"    -valid_perc_count = minimum number of 40 percentiles with valid data to return GPP and RECO products.\n"
+								"                        if below the threshold no results are produced for the flux processed. default is %d\n"
+								"    -min_7_perc_count = min number of the 40 percentiles to proceed to the 7 product percentiles extraction. default is %d\n"
+								"    -min_3_perc_count = min number of the 40 percentiles to proceed to the extraction of three (instead of 7) percentiles (25%, 50% and 75%).\n"
+								"                        above the min_7_perc_count all the 7 are extracted. default is %d\n"
 								"    -debug -> save to file extra stuff for debug purposes\n"
 
 								"    -h -> show this help\n\n";
