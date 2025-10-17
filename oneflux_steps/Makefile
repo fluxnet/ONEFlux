@@ -70,7 +70,7 @@ SW_IN_POT_OBJ := $(SW_IN_POT_SRC:.c=.o)
 SW_IN_POT_BIN := $(join ${TGTDIR}, sw_in_pot)
 
 METEO_PROC_DIR := $(join ${SRCDIR}, meteo_proc/src/)
-METEO_PROC_SRC := dataset.c main.c
+METEO_PROC_SRC := dataset.c main.c defs.c mds_vars.c
 METEO_PROC_OBJ := $(METEO_PROC_SRC:.c=.o)
 METEO_PROC_BIN := $(join ${TGTDIR}, meteo_proc)
 
@@ -145,8 +145,24 @@ ${SW_IN_POT_BIN}: ${COMMON_TGT}
 	${CC} -w -c ${SW_IN_POT_SRC} ;\
 	${CC} ${SW_IN_POT_OBJ} $(join ${COMMON_DIR}, ${COMMON_OBJ}) -w -lm -o ${SW_IN_POT_BIN}
 
-${METEO_PROC_BIN}: ${COMMON_TGT}
+${METEO_PROC_BIN}: ${COMMON_TGT} ${TXT2H_BIN}
 	@echo "\nBuilding ${METEO_PROC_BIN}..."
+	@if [ ! -f ${TXT2H_BIN} ]; then \
+		echo "Error: txt2h not found. Building txt2h first..."; \
+		$(MAKE) ${TXT2H_BIN}; \
+	fi
+	@echo "\nGenerating headers with txt2h..."
+	@${TXT2H_BIN}  $(join ${SRCDIR}, meteo_proc/info/info_swc_hh.txt) ${METEO_PROC_DIR} info_swc_hh || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, meteo_proc/info/info_swc_dd_ww_mm_yy.txt) ${METEO_PROC_DIR} info_swc_dd_ww_mm_yy || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, meteo_proc/info/info_ts_hh.txt) ${METEO_PROC_DIR} info_ts_hh || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, meteo_proc/info/info_ts_dd_ww_mm_yy.txt) ${METEO_PROC_DIR} info_ts_dd_ww_mm_yy || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, meteo_proc/info/info_hh.txt) ${METEO_PROC_DIR} info_hh || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, meteo_proc/info/info_dd.txt) ${METEO_PROC_DIR} info_dd || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, meteo_proc/info/info_ww.txt) ${METEO_PROC_DIR} info_ww || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, meteo_proc/info/info_mm.txt) ${METEO_PROC_DIR} info_mm || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, meteo_proc/info/info_yy.txt) ${METEO_PROC_DIR} info_yy || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, meteo_proc/info/info_nights_days_dd.txt) ${METEO_PROC_DIR} info_nights_days_dd || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, meteo_proc/info/info_nights_days_ww_mm.txt) ${METEO_PROC_DIR} info_nights_days_ww_mm || { echo "failed!"; exit 1; }
 	cd ${METEO_PROC_DIR}  ;\
 	${CC} -w -c ${METEO_PROC_SRC} ;\
 	${CC} ${METEO_PROC_OBJ} $(join ${COMMON_DIR}, ${COMMON_OBJ}) -w -lm -o ${METEO_PROC_BIN}
@@ -157,20 +173,67 @@ ${METEO_MDS_BIN}: ${COMMON_TGT}
 	${CC} -w -c ${METEO_MDS_SRC} ;\
 	${CC} ${METEO_MDS_OBJ} $(join ${COMMON_DIR}, ${COMMON_OBJ}) -w -lm -o ${METEO_MDS_BIN}
 
-${NEE_PROC_BIN}: ${COMMON_TGT}
+${NEE_PROC_BIN}: ${COMMON_TGT} ${TXT2H_BIN}
 	@echo "\nBuilding ${NEE_PROC_BIN}..."
+	@if [ ! -f ${TXT2H_BIN} ]; then \
+		echo "Error: txt2h not found. Building txt2h first..."; \
+		$(MAKE) ${TXT2H_BIN}; \
+	fi
+	@echo "\nGenerating headers with txt2h..."
+	@${TXT2H_BIN}  $(join ${SRCDIR}, nee_proc/info/info_hh.txt) ${NEE_PROC_DIR} info_hh || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, nee_proc/info/info_dd.txt) ${NEE_PROC_DIR} info_dd || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, nee_proc/info/info_ww.txt) ${NEE_PROC_DIR} info_ww || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, nee_proc/info/info_mm.txt) ${NEE_PROC_DIR} info_mm || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, nee_proc/info/info_yy.txt) ${NEE_PROC_DIR} info_yy || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, nee_proc/info/info_utem.txt) ${NEE_PROC_DIR} info_utem || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, nee_proc/info/info_model_efficiency.txt) ${NEE_PROC_DIR} info_model_efficiency || { echo "failed!"; exit 1; }
 	cd ${NEE_PROC_DIR}  ;\
 	${CC} -w -c ${NEE_PROC_SRC} ;\
 	${CC} ${NEE_PROC_OBJ} $(join ${COMMON_DIR}, ${COMMON_OBJ}) -w -lm -o ${NEE_PROC_BIN}
 
-${ENERGY_PROC_BIN}: ${COMMON_TGT}
+${ENERGY_PROC_BIN}: ${COMMON_TGT} ${TXT2H_BIN}
 	@echo "\nBuilding ${ENERGY_PROC_BIN}..."
+	@if [ ! -f ${TXT2H_BIN} ]; then \
+		echo "Error: txt2h not found. Building txt2h first..."; \
+		$(MAKE) ${TXT2H_BIN}; \
+	fi
+	@echo "\nGenerating headers with txt2h..."
+	@${TXT2H_BIN}  $(join ${SRCDIR}, energy_proc/info/info_hh.txt) ${ENERGY_PROC_DIR} info_hh || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, energy_proc/info/info_dd.txt) ${ENERGY_PROC_DIR} info_dd || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, energy_proc/info/info_ww.txt) ${ENERGY_PROC_DIR} info_ww || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, energy_proc/info/info_mm.txt) ${ENERGY_PROC_DIR} info_mm || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, energy_proc/info/info_yy.txt) ${ENERGY_PROC_DIR} info_yy || { echo "failed!"; exit 1; }
 	cd ${ENERGY_PROC_DIR}  ;\
 	${CC} -w -c ${ENERGY_PROC_SRC} ;\
 	${CC} ${ENERGY_PROC_OBJ} $(join ${COMMON_DIR}, ${COMMON_OBJ}) -w -lm -o ${ENERGY_PROC_BIN}
 
-${URE_BIN}: ${COMMON_TGT}
+${URE_BIN}: ${COMMON_TGT} ${TXT2H_BIN}
 	@echo "\nBuilding ${URE_BIN}..."
+	@if [ ! -f ${TXT2H_BIN} ]; then \
+		echo "Error: txt2h not found. Building txt2h first..."; \
+		$(MAKE) ${TXT2H_BIN}; \
+	fi
+	@echo "\nGenerating headers with txt2h..."
+	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_reco_nt_hh.txt) ${URE_DIR} info_reco_nt_hh || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_reco_nt_dd.txt) ${URE_DIR} info_reco_nt_dd || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_reco_nt_ww.txt) ${URE_DIR} info_reco_nt_ww || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_reco_nt_mm.txt) ${URE_DIR} info_reco_nt_mm || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_reco_nt_yy.txt) ${URE_DIR} info_reco_nt_yy || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_reco_dt_hh.txt) ${URE_DIR} info_reco_dt_hh || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_reco_dt_dd.txt) ${URE_DIR} info_reco_dt_dd || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_reco_dt_ww.txt) ${URE_DIR} info_reco_dt_ww || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_reco_dt_mm.txt) ${URE_DIR} info_reco_dt_mm || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_reco_dt_yy.txt) ${URE_DIR} info_reco_dt_yy || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_gpp_nt_hh.txt) ${URE_DIR} info_gpp_nt_hh || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_gpp_nt_dd.txt) ${URE_DIR} info_gpp_nt_dd || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_gpp_nt_ww.txt) ${URE_DIR} info_gpp_nt_ww || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_gpp_nt_mm.txt) ${URE_DIR} info_gpp_nt_mm || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_gpp_nt_yy.txt) ${URE_DIR} info_gpp_nt_yy || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_gpp_dt_hh.txt) ${URE_DIR} info_gpp_dt_hh || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_gpp_dt_dd.txt) ${URE_DIR} info_gpp_dt_dd || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_gpp_dt_ww.txt) ${URE_DIR} info_gpp_dt_ww || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_gpp_dt_mm.txt) ${URE_DIR} info_gpp_dt_mm || { echo "failed!"; exit 1; }
+	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_gpp_dt_yy.txt) ${URE_DIR} info_gpp_dt_yy || { echo "failed!"; exit 1; }
 	cd ${URE_DIR} ;\
 	${CC} -w -c ${URE_SRC} ;\
 	${CC} ${URE_OBJ} $(join ${COMMON_DIR}, ${COMMON_OBJ}) -w -lm -o ${URE_BIN}

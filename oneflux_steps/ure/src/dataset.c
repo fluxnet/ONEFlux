@@ -16,6 +16,7 @@
 #include <ctype.h>
 #include <assert.h>
 #include "dataset.h"
+/*
 #include "info_gpp_dt_hh.h"
 #include "info_gpp_dt_dd.h"
 #include "info_gpp_dt_ww.h"
@@ -36,7 +37,7 @@
 #include "info_reco_nt_ww.h"
 #include "info_reco_nt_mm.h"
 #include "info_reco_nt_yy.h"
-#include "info_reco_sr.h"
+*/
 
 /* v1.02 */
 /* defines */
@@ -1150,47 +1151,6 @@ void free_datasets(DATASET *datasets, const int datasets_count) {
 }
 
 /* */
-static const char *get_info(const int author_index, const int type_index, const int timeres) {
-	int index;
-	static const char *infos[] = { /* DO NOT CHANGE THIS ORDER */
-									info_gpp_nt_hh
-									, info_gpp_nt_dd
-									, info_gpp_nt_ww
-									, info_gpp_nt_mm
-									, info_gpp_nt_yy
-									, info_gpp_dt_hh
-									, info_gpp_dt_dd
-									, info_gpp_dt_ww
-									, info_gpp_dt_mm
-									, info_gpp_dt_yy
-									, info_reco_nt_hh
-									, info_reco_nt_dd
-									, info_reco_nt_ww
-									, info_reco_nt_mm
-									, info_reco_nt_yy
-									, info_reco_dt_hh
-									, info_reco_dt_dd
-									, info_reco_dt_ww
-									, info_reco_dt_mm
-									, info_reco_dt_yy
-									, info_reco_sr 
-	};
-
-	assert((author_index >= 0) && (author_index < AUTHORS_SUFFIX));
-	assert((type_index >= 0) && (type_index < TYPES_SUFFIX));
-	assert((timeres >=0) && (timeres < TIMERES));
-
-	index = (type_index * TYPES_SUFFIX * TIMERES) + (author_index * TIMERES) + timeres;
-
-	/* fix for sr */
-	if ( index > SIZEOF_ARRAY(infos) ) {
-		index = SIZEOF_ARRAY(infos) - 1;
-	}
-
-	return infos[index];
-}
-
-/* */
 static char *get_invalid_years(DATASET *const dataset) {
 	int i;
 	char year[5];
@@ -1280,8 +1240,6 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	int temp_rows_count;
 	int is_leap;
 	int exists;
-	//int valids_y_count;
-	//int valids_c_count;
 	int timestamp_column_index;
 	int rows_per_day;
 	int fatal_err;
