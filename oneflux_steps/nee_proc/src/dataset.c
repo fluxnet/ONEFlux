@@ -674,7 +674,9 @@ int get_reference(const DATASET *const dataset, const NEE_MATRIX *const nee_matr
 				sum /= rows_count;
 				sum /= variance;
 
-				mes[column].value[i] = 1 - sum;
+				/* wrong order! */
+				/*mes[column].value[i] = 1 - sum;*/
+				mes[i].value[column] = 1 - sum;
 			}
 		}
 	} else {
@@ -783,7 +785,9 @@ int get_reference(const DATASET *const dataset, const NEE_MATRIX *const nee_matr
 				sum /= ex_rows_count;
 				sum /= variance;
 
-				mes[column].value[i] = 1 - sum;
+				/* wrong order! */
+				/*mes[column].value[i] = 1 - sum;*/
+				mes[i].value[column] = 1 - sum;
 			}
 		}
 
