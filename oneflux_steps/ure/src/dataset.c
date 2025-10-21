@@ -16,6 +16,9 @@
 #include <ctype.h>
 #include <assert.h>
 #include "dataset.h"
+
+/* v1.02 */
+/* maybe one day they're used again* /
 /*
 #include "info_gpp_dt_hh.h"
 #include "info_gpp_dt_dd.h"
@@ -640,7 +643,7 @@ int get_reference(const MATRIX_REF *const matrix_ref, const DATASET *const datas
 				mean += MAT_VALUE(matrix_ref, row, column);
 				++mean_count;
 			} else {
-				puts("- get_reference: unexpected invalid value found");
+				puts("- - get_reference: unexpected invalid value found");
 			}
 		}
 		if ( mean_count ) {
@@ -654,13 +657,13 @@ int get_reference(const MATRIX_REF *const matrix_ref, const DATASET *const datas
 				square += SQUARE(MAT_VALUE(matrix_ref, row, column) - mean);
 				++square_count;
 			} else {
-				puts("- get_reference: unexpected invalid value found");
+				puts("- - get_reference: unexpected invalid value found");
 			}
 		}
 		if ( square_count ) {
 			variance = square / square_count;
 		} else {
-			printf("- unable to get variance for %s, column %d\n\n", types[type], column + 1);
+			printf("- - get_reference: unable to get variance for %s, column %d\n\n", types[type], column + 1);
 			free(mess);
 			free(mes);
 			return -1;
@@ -678,19 +681,25 @@ int get_reference(const MATRIX_REF *const matrix_ref, const DATASET *const datas
 					sum += (MAT_VALUE(matrix_ref, j, column) - MAT_VALUE(matrix_ref, j, i))*(MAT_VALUE(matrix_ref, j, column) - MAT_VALUE(matrix_ref, j, i));
 					++rows_valids_count;
 				} else {
-					puts("- get_reference: unexpected invalid value found");
+					puts("- - get_reference: unexpected invalid value found");
 				}
 			}
+			/* v1.02 */
+			/* columns and rows was inverted */
+			/* so that each comparison is organized by column */
 			if ( rows_valids_count ) {
 				sum /= rows_valids_count;
 				sum /= variance;
-				mes[column].value[i] = 1 - sum;
+				/* mes[column].value[i] = 1 - sum; */
+				mes[i].value[column] = 1 - sum;
 			} else {
-				mes[column].value[i] = INVALID_VALUE;
+				/* mes[column].value[i] = INVALID_VALUE; */
+				mes[i].value[column] = INVALID_VALUE;
 			}
 		}
 	}
 
+	/* v1.02 */
 	/* get selected */
 	for ( column = 0; column < matrix_ref->columns_count-1; column++ ) {
 		mess[column] = 0.0;
@@ -708,6 +717,21 @@ int get_reference(const MATRIX_REF *const matrix_ref, const DATASET *const datas
 		if ( mess[i] > sum ) {
 			sum = mess[i];
 			column = i;
+		}
+	}
+
+	/* v1.02 */
+	if ( g_debug ) {
+		printf("- - debug: column index ref is %d\n", column + 1);
+	}
+
+	/* v1.02 */
+	/* we can have a reduced matrix */
+	/* so ref must be reflect the original 40x40 matrix */
+	if ( column != matrix_ref->percentiles[column] ) {
+		column = matrix_ref->percentiles[column];
+		if ( g_debug ) {
+			printf("- - debug: matrix was reduced so column ref is %g (%d)\n", percentiles_test_2[column], column + 1);
 		}
 	}
 
@@ -743,7 +767,7 @@ int get_reference(const MATRIX_REF *const matrix_ref, const DATASET *const datas
 			}
 			fclose(f);
 		} else {
-			printf("unable to save %s\n", buffer);
+			printf("- get_reference: unable to save %s\n", buffer);
 		}
 	}
 
@@ -1921,7 +1945,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	/* get p_matrix */
 	p_matrix_y = process_matrix(dataset, matrix_ref_y, &ref_y, DD_Y, author_index, type_index);
 	if ( !p_matrix_y ) {
-		puts("unable to get p_matrix for daily y");
+		puts("- - unable to get p_matrix for daily y");
 		if ( dataset->years_count >= 3 ) {
 			if ( matrix_ref_c ) {
 				free_matrix_ref(matrix_ref_c);
@@ -1936,7 +1960,7 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 	if ( dataset->years_count >= 3 ) {
 		p_matrix_c = process_matrix(dataset, matrix_ref_c, &ref_c, DD_C, author_index, type_index);
 		if ( !p_matrix_c ) {
-			puts("unable to get p_matrix for daily c");
+			puts("- - unable to get p_matrix for daily c");
 			free(p_matrix_y);
 			if ( matrix_ref_c ) {
 				free_matrix_ref(matrix_ref_c);
