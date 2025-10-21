@@ -721,18 +721,13 @@ int get_reference(const MATRIX_REF *const matrix_ref, const DATASET *const datas
 	}
 
 	/* v1.02 */
-	if ( g_debug ) {
-		printf("- - debug: column index ref is %d\n", column + 1);
-	}
-
-	/* v1.02 */
 	/* we can have a reduced matrix */
 	/* so ref must be reflect the original 40x40 matrix */
-	if ( column != matrix_ref->percentiles[column] ) {
-		column = matrix_ref->percentiles[column];
-		if ( g_debug ) {
-			printf("- - debug: matrix was reduced so column ref is %g (%d)\n", percentiles_test_2[column], column + 1);
-		}
+	column = matrix_ref->percentiles[column];
+
+	/* v1.02 */
+	if ( g_debug ) {
+		printf("- - debug: column ref for %s is %g%% (%d)\n", types[type], percentiles_test_2[column], column + 1);
 	}
 
 	if ( g_debug ) {
