@@ -91,14 +91,16 @@ static char msg_usage[] =		"How to use: ure parameter\n\n"
 								"  parameters:\n\n"
 								"    -input_path=filename or path to be processed (optional)\n"
 								"    -output_path=path where result files are created (optional)\n"
+
 								/* v1.02 */
-								"    -valid_data_count = minimum amount of valid data in the 40 percentiles to be used in the MEF.\n"
+								"    -filter_path=path where mef filter files are found (optional). default to input path\n" 
+								"    -valid_data_count=minimum amount of valid data in the 40 percentiles to be used in the MEF.\n"
 								"                        it is calculated respect to the percentile with the largest number of valid data,\n"
 								"                        if below the threshold the percentile is excluded. default is %d\n"
-								"    -valid_perc_count = minimum number of 40 percentiles with valid data to return GPP and RECO products.\n"
+								"    -valid_perc_count=minimum number of 40 percentiles with valid data to return GPP and RECO products.\n"
 								"                        if below the threshold no results are produced for the flux processed. default is %d\n"
-								"    -min_7_perc_count = min number of the 40 percentiles to proceed to the 7 product percentiles extraction. default is %d\n"
-								"    -min_3_perc_count = min number of the 40 percentiles to proceed to the extraction of three (instead of 7) percentiles (25%, 50% and 75%).\n"
+								"    -min_7_perc_count=min number of the 40 percentiles to proceed to the 7 product percentiles extraction. default is %d\n"
+								"    -min_3_perc_count=min number of the 40 percentiles to proceed to the extraction of three (instead of 7) percentiles (25%, 50% and 75%).\n"
 								"                        above the min_7_perc_count all the 7 are extracted. default is %d\n"
 								"    -debug -> save to file extra stuff for debug purposes\n"
 
@@ -245,7 +247,7 @@ int main(int argc, char *argv[]) {
 
 	/* v1.02 */
 	if ( ! g_filter_path ) {
-		g_filter_path = string_copy(g_program_path);
+		g_filter_path = string_copy(g_input_path);
 		if ( !g_filter_path ) {
 			puts(err_out_of_memory);
 			return 1;
@@ -255,6 +257,8 @@ int main(int argc, char *argv[]) {
 	/* show paths */
 	printf("input path = %s\n", g_input_path);
 	printf("output path = %s\n", g_output_path);
+	/* v1.02 */
+	printf("filter path = %s\n", g_filter_path);
 
 	/* v1.02 */
 	printf("valid data count = %d%%", g_valid_data_count);
