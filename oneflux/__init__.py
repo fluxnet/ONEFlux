@@ -78,9 +78,6 @@ _log = logging.getLogger(__name__)
 # 'no-op' handler in case no logging setup is done
 _log.addHandler(logging.NullHandler())
 
-# log ONEFlux version
-_log.info("ONEFlux version {v}".format(v=VERSION))
-
 # customize showwarning to get py.warnings to be logged instead of printed and
 # to avoid new line characters in log
 def format_warning(message, category, filename, lineno, file=None, line=None):
@@ -176,6 +173,9 @@ def log_config(level=logging.DEBUG,
 
     # initialization message
     logger_root.info("Logging started")
+
+    # log ONEFlux version
+    logger_root.info("ONEFlux version {v}".format(v=VERSION))
 
     # registers results from housekeeping checks
     if reset_level:
