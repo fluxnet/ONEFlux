@@ -39,10 +39,10 @@ try:
     from oneflux.local_settings import MODE_ISSUER, MODE_PRODUCT, MODE_ERA, ERA_FIRST_YEAR, ERA_LAST_YEAR
 except ImportError as e:
     MODE_ISSUER = 'FLX'
-    MODE_PRODUCT = 'FLUXNET2015'
-    MODE_ERA = 'ERAI'
+    MODE_PRODUCT = 'FLUXNET'
+    MODE_ERA = 'ERA5'
     # most recent year available for ERA -- assuming new ERA year available after March each year
-    ERA_FIRST_YEAR = '1989'
+    ERA_FIRST_YEAR = '1981'
     ERA_LAST_YEAR = (NOW_DATETIME.year - 1 if (NOW_DATETIME.month > 3) else NOW_DATETIME.year - 2)
 
 ERA_FIRST_TIMESTAMP_START_TEMPLATE = '{y}01010000'
