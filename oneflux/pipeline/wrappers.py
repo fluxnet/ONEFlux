@@ -32,8 +32,9 @@ from oneflux.pipeline.common import CSVMANIFEST_HEADER, ZIPMANIFEST_HEADER, ONEF
                                      PRODFILE_FIGURE_TEMPLATE_F, ZIPFILE_TEMPLATE_F, NEE_PERC_USTAR_VUT_PATTERN, \
                                      NEE_PERC_USTAR_CUT_PATTERN, UNC_INFO_F, UNC_INFO_ALT_F, NEE_PERC_NEE_F, \
                                      METEO_INFO_F, NEE_INFO_F, \
-                                     HOSTNAME, NOW_TS, ERA_FIRST_TIMESTAMP_START, ERA_LAST_TIMESTAMP_START,\
-                                     MODE_ISSUER, MODE_PRODUCT, ERA_SOURCE_DIRECTORY
+                                     HOSTNAME, NOW_TS, \
+                                     ERA_FIRST_YEAR, ERA_LAST_YEAR, ERA_FIRST_TIMESTAMP_START, ERA_LAST_TIMESTAMP_START, \
+                                     MODE_ISSUER, MODE_PRODUCT, MODE_ERA, ERA_SOURCE_DIRECTORY
 from oneflux.partition.library import PARTITIONING_DT_ERROR_FILE, EXTRA_FILENAME
 from oneflux.downscaling.rundownscaling import run as run_downscaling
 from oneflux.partition.auxiliary import nan, nan_ext, NAN, NAN_TEST
@@ -173,6 +174,8 @@ class Pipeline(object):
         log.debug("ONEFlux Pipeline, skip DT config: '{v}'".format(v=self.DT_SKIP))
 
         # ERA timestamp ranges
+        log.debug("ONEFlux Pipeline: ERA First Year '{fy}'".format(fy=ERA_FIRST_YEAR))
+        log.debug("ONEFlux Pipeline: ERA Last Year '{ly}'".format(ly=ERA_LAST_YEAR))
         self.era_first_timestamp_start = self.configs.get('era_first_timestamp_start', ERA_FIRST_TIMESTAMP_START)
         self.era_last_timestamp_start = self.configs.get('era_last_timestamp_start', ERA_LAST_TIMESTAMP_START)
         self.era_first_year = int(self.era_first_timestamp_start[:4])
@@ -180,7 +183,11 @@ class Pipeline(object):
         log.debug("ONEFlux Pipeline: using ERA first timestamp start '{v}'".format(v=self.era_first_timestamp_start))
         log.debug("ONEFlux Pipeline: using ERA last timestamp start '{v}'".format(v=self.era_last_timestamp_start))
 
-
+        # log mode settings
+        log.debug("ONEFlux Pipeline: Issuer string '{i}'".format(i=MODE_ISSUER))
+        log.debug("ONEFlux Pipeline: Product string '{p}'".format(p=MODE_PRODUCT))
+        log.debug("ONEFlux Pipeline: ERA string '{e}'".format(e=MODE_ERA))
+        
         ### create drivers for individual steps
         self.fp_creator = PipelineFPCreator(pipeline=self)
         self.qc_visual = PipelineQCVisual(pipeline=self)

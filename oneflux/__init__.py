@@ -174,6 +174,9 @@ def log_config(level=logging.DEBUG,
     # initialization message
     logger_root.info("Logging started")
 
+    # log ONEFlux version
+    logger_root.info("ONEFlux version {v}".format(v=VERSION))
+
     # registers results from housekeeping checks
     if reset_level:
         logger_root.warn("Invalid logging level, reset to DEBUG")
