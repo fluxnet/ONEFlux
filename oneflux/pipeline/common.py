@@ -39,10 +39,10 @@ try:
     from oneflux.local_settings import MODE_ISSUER, MODE_PRODUCT, MODE_ERA, ERA_FIRST_YEAR, ERA_LAST_YEAR
 except ImportError as e:
     MODE_ISSUER = 'FLX'
-    MODE_PRODUCT = 'FLUXNET2015'
-    MODE_ERA = 'ERAI'
+    MODE_PRODUCT = 'FLUXNET'
+    MODE_ERA = 'ERA5'
     # most recent year available for ERA -- assuming new ERA year available after March each year
-    ERA_FIRST_YEAR = '1989'
+    ERA_FIRST_YEAR = '1981'
     ERA_LAST_YEAR = (NOW_DATETIME.year - 1 if (NOW_DATETIME.month > 3) else NOW_DATETIME.year - 2)
 
 ERA_FIRST_TIMESTAMP_START_TEMPLATE = '{y}01010000'
@@ -157,11 +157,13 @@ TIMESTAMP_PRECISION_BY_RESOLUTION = {
 NEW_METEO_VARS = ['WD', 'USTAR', 'RH', 'NETRAD', 'PPFD_IN', 'PPFD_DIF', 'PPFD_OUT', 'SW_DIF', 'SW_OUT', 'LW_OUT'] # NEW FOR APRIL2016 # FIX FOR JULY2016: ADDED RH
 NEW_ERA_VARS = ['TA_ERA', 'TA_ERA_NIGHT', 'TA_ERA_NIGHT_SD', 'TA_ERA_DAY', 'TA_ERA_DAY_SD', 'SW_IN_ERA', 'LW_IN_ERA', 'VPD_ERA', 'PA_ERA', 'P_ERA', 'WS_ERA'] # NEW FOR JULY2016
 
+
 class ONEFluxPipelineError(ONEFluxError):
     """
     Pipeline specific FPP error
     """
     pass
+
 
 def run_command(cmd):
     """
@@ -176,6 +178,7 @@ def run_command(cmd):
         log.error(msg)
         raise ONEFluxPipelineError(msg)
 
+
 def test_dir(tdir, label, log_only=False):
     """
     Tests if directory exists, if not logs error and raises exception
@@ -185,7 +188,7 @@ def test_dir(tdir, label, log_only=False):
     :param label: label for type of directory being tested
     :type label: str
     """
-    if not os.path.isdir(tdir):
+    if (tdir is None) or (not os.path.isdir(tdir)):
         msg = "Pipeline {l} directory not found in '{d}'".format(l=label, d=tdir)
         if log_only:
             log.warning(msg)
@@ -196,6 +199,7 @@ def test_dir(tdir, label, log_only=False):
     log.debug("Pipeline {l} directory is '{d}'".format(l=label, d=tdir))
     return True
 
+
 def test_file(tfile, label, log_only=False):
     """
     Tests if file exists, if not logs error and raises exception
@@ -205,7 +209,7 @@ def test_file(tfile, label, log_only=False):
     :param label: label for type of file being tested
     :type label: str
     """
-    if (not os.path.isfile(tfile)) or (not os.path.isfile(tfile.replace('_HH_', '_HR_'))):
+    if (tfile is None) or (not os.path.isfile(tfile)) or (not os.path.isfile(tfile.replace('_HH_', '_HR_'))):
         msg = "Pipeline {l} file not found '{d}'".format(l=label, d=tfile)
         if log_only:
             log.warning(msg)
@@ -215,6 +219,7 @@ def test_file(tfile, label, log_only=False):
             raise ONEFluxPipelineError(msg)
     log.debug("Pipeline {l} file is '{d}'".format(l=label, d=tfile))
     return True
+
 
 def test_file_not_empty(tfile, label, log_only=False):
     """
@@ -313,6 +318,7 @@ def test_file_list(file_list, tdir, label, log_only=False):
             all_true = all_true and res
     return all_true
 
+
 def test_file_list_or(file_list, tdir, label, log_only=False):
     """
     Tests files in file list (if any, returns True), tests filenames only
@@ -367,6 +373,7 @@ def test_create_dir(tdir, label, simulation=False):
         log.debug("Created '{d}'".format(d=tdir))
         return True
 
+
 def create_replace_dir(tdir, label, suffix=datetime.now().strftime("%Y%m%d%H%M%S"), sep='__', simulation=False):
     """
     Tests if directory exists, if not creates it. If yes, tests if readable/writable.
@@ -405,6 +412,7 @@ def create_replace_dir(tdir, label, suffix=datetime.now().strftime("%Y%m%d%H%M%S
             os.makedirs(tdir)
         log.debug("Created '{d}'".format(d=tdir))
         return True
+
 
 def create_and_empty_dir(tdir, label, suffix=datetime.now().strftime("%Y%m%d%H%M%S"), sep='__', simulation=False):
     """
@@ -447,6 +455,7 @@ def create_and_empty_dir(tdir, label, suffix=datetime.now().strftime("%Y%m%d%H%M
         log.debug("Created '{d}'".format(d=tdir))
         return True
 
+
 def copy_files_pattern(src_dir, tgt_dir, file_pattern='*', label='common.copy_files_pattern', simulation=False):
     """
     Copy all files matching pattern inside src_dir into tgt_dir (non-recursive)
@@ -479,6 +488,7 @@ def copy_files_pattern(src_dir, tgt_dir, file_pattern='*', label='common.copy_fi
                 log.error('Cannot copy {f} into {t}'.format(f=filename, t=tgt_dir))
     return True
 
+
 def get_headers(filename):
     """
     Parse headers from FPFileV2 format and returns list
@@ -496,6 +506,7 @@ def get_headers(filename):
         raise ONEFluxError("Headers too short: '{h}'".format(h=line))
     headers = [i.strip() for i in headers]
     return headers
+
 
 def check_headers_fluxnet2015(filename):
     """
@@ -529,6 +540,7 @@ def check_headers_fluxnet2015(filename):
             log.info("Variable '{v}' might be missing from headers of file: {f}".format(v=var_label, f=filename))
 
     return all_present
+
 
 def get_empty_array_year(year=datetime.now().year, start_end=True, variable_list=['TEST', ], variable_list_dtype=None, record_interval='HH'):
     """

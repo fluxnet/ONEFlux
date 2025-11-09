@@ -328,7 +328,7 @@ def plot_nee_unc(hh, dd, ww, mm, yy, title='', width=10, height=25, filename='ne
 def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=None):
     log.info("Generation of plots for site {s} started".format(s=siteid))
 
-    if pipeline is None:
+    if pipeline is None: # TODO: remove and add error handling, pipeline should not be None
         prodfile_template = PRODFILE_TEMPLATE
         prodfile_figure_template = PRODFILE_FIGURE_TEMPLATE
         prodfile_years_template = PRODFILE_YEARS_TEMPLATE
@@ -453,230 +453,221 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
 
 
     ### RECO
-    hh = {'ts': hh_timestamps,
-          'lines': [
-#                    {'label':'RECO_NT_VUT_U50', 'data':hh_data['RECO_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1},
-                    {'label':'RECO_NT_VUT_REF', 'data':hh_data['RECO_NT_VUT_REF'], 'color':COLOR_NT_REF, 'alpha':1},
-                    ],
-          'lines2': [
-#                    {'label':'RECO_DT_VUT_U50', 'data':hh_data['RECO_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1},
-                    {'label':'RECO_DT_VUT_REF', 'data':hh_data['RECO_DT_VUT_REF'], 'color':COLOR_DT_REF, 'alpha':1},
-                    ],
-          'ranges': [
-                     {'label':'RECO_NT_VUT_05-95', 'data1':hh_data['RECO_NT_VUT_05'], 'data2':hh_data['RECO_NT_VUT_95'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     {'label':'RECO_NT_VUT_16-84', 'data1':hh_data['RECO_NT_VUT_16'], 'data2':hh_data['RECO_NT_VUT_84'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     {'label':'RECO_NT_VUT_25-75', 'data1':hh_data['RECO_NT_VUT_25'], 'data2':hh_data['RECO_NT_VUT_75'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     ],
-          'ranges2': [
-                     {'label':'RECO_DT_VUT_05-95', 'data1':hh_data['RECO_DT_VUT_05'], 'data2':hh_data['RECO_DT_VUT_95'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     {'label':'RECO_DT_VUT_16-84', 'data1':hh_data['RECO_DT_VUT_16'], 'data2':hh_data['RECO_DT_VUT_84'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     {'label':'RECO_DT_VUT_25-75', 'data1':hh_data['RECO_DT_VUT_25'], 'data2':hh_data['RECO_DT_VUT_75'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     ],
-          'qc': {'label':'NEE_VUT_MEAN_QC', 'data':hh_data['NEE_VUT_MEAN_QC'], 'color':COLOR_QC, 'alpha':1}
-    }
-    dd = {'ts': dd_timestamps,
-          'lines': [
-#                    {'label':'RECO_NT_VUT_U50', 'data':dd_data['RECO_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1},
-                    {'label':'RECO_NT_VUT_REF', 'data':dd_data['RECO_NT_VUT_REF'], 'color':COLOR_NT_REF, 'alpha':1},
-                    ],
-          'lines2': [
-#                    {'label':'RECO_DT_VUT_U50', 'data':dd_data['RECO_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1},
-                    {'label':'RECO_DT_VUT_REF', 'data':dd_data['RECO_DT_VUT_REF'], 'color':COLOR_DT_REF, 'alpha':1},
-                    ],
-          'ranges': [
-                     {'label':'RECO_NT_VUT_05-95', 'data1':dd_data['RECO_NT_VUT_05'], 'data2':dd_data['RECO_NT_VUT_95'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     {'label':'RECO_NT_VUT_16-84', 'data1':dd_data['RECO_NT_VUT_16'], 'data2':dd_data['RECO_NT_VUT_84'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     {'label':'RECO_NT_VUT_25-75', 'data1':dd_data['RECO_NT_VUT_25'], 'data2':dd_data['RECO_NT_VUT_75'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     ],
-          'ranges2': [
-                     {'label':'RECO_DT_VUT_05-95', 'data1':dd_data['RECO_DT_VUT_05'], 'data2':dd_data['RECO_DT_VUT_95'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     {'label':'RECO_DT_VUT_16-84', 'data1':dd_data['RECO_DT_VUT_16'], 'data2':dd_data['RECO_DT_VUT_84'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     {'label':'RECO_DT_VUT_25-75', 'data1':dd_data['RECO_DT_VUT_25'], 'data2':dd_data['RECO_DT_VUT_75'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     ],
-          'qc': {'label':'NEE_VUT_MEAN_QC', 'data':dd_data['NEE_VUT_MEAN_QC'], 'color':COLOR_QC, 'alpha':1}
-    }
-    ww = {'ts': ww_timestamps,
-          'lines': [
-#                    {'label':'RECO_NT_VUT_U50', 'data':ww_data['RECO_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1},
-                    {'label':'RECO_NT_VUT_REF', 'data':ww_data['RECO_NT_VUT_REF'], 'color':COLOR_NT_REF, 'alpha':1},
-                    ],
-          'lines2': [
-#                    {'label':'RECO_DT_VUT_U50', 'data':ww_data['RECO_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1},
-                    {'label':'RECO_DT_VUT_REF', 'data':ww_data['RECO_DT_VUT_REF'], 'color':COLOR_DT_REF, 'alpha':1},
-                    ],
-          'ranges': [
-                     {'label':'RECO_NT_VUT_05-95', 'data1':ww_data['RECO_NT_VUT_05'], 'data2':ww_data['RECO_NT_VUT_95'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     {'label':'RECO_NT_VUT_16-84', 'data1':ww_data['RECO_NT_VUT_16'], 'data2':ww_data['RECO_NT_VUT_84'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     {'label':'RECO_NT_VUT_25-75', 'data1':ww_data['RECO_NT_VUT_25'], 'data2':ww_data['RECO_NT_VUT_75'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     ],
-          'ranges2': [
-                     {'label':'RECO_DT_VUT_05-95', 'data1':ww_data['RECO_DT_VUT_05'], 'data2':ww_data['RECO_DT_VUT_95'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     {'label':'RECO_DT_VUT_16-84', 'data1':ww_data['RECO_DT_VUT_16'], 'data2':ww_data['RECO_DT_VUT_84'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     {'label':'RECO_DT_VUT_25-75', 'data1':ww_data['RECO_DT_VUT_25'], 'data2':ww_data['RECO_DT_VUT_75'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     ],
-          'qc': {'label':'NEE_VUT_MEAN_QC', 'data':ww_data['NEE_VUT_MEAN_QC'], 'color':COLOR_QC, 'alpha':1}
-    }
-    mm = {'ts': mm_timestamps,
-          'lines': [
-#                    {'label':'RECO_NT_VUT_U50', 'data':mm_data['RECO_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1},
-                    {'label':'RECO_NT_VUT_REF', 'data':mm_data['RECO_NT_VUT_REF'], 'color':COLOR_NT_REF, 'alpha':1},
-                    ],
-          'lines2': [
-#                    {'label':'RECO_DT_VUT_U50', 'data':mm_data['RECO_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1},
-                    {'label':'RECO_DT_VUT_REF', 'data':mm_data['RECO_DT_VUT_REF'], 'color':COLOR_DT_REF, 'alpha':1},
-                    ],
-          'ranges': [
-                     {'label':'RECO_NT_VUT_05-95', 'data1':mm_data['RECO_NT_VUT_05'], 'data2':mm_data['RECO_NT_VUT_95'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     {'label':'RECO_NT_VUT_16-84', 'data1':mm_data['RECO_NT_VUT_16'], 'data2':mm_data['RECO_NT_VUT_84'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     {'label':'RECO_NT_VUT_25-75', 'data1':mm_data['RECO_NT_VUT_25'], 'data2':mm_data['RECO_NT_VUT_75'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     ],
-          'ranges2': [
-                     {'label':'RECO_DT_VUT_05-95', 'data1':mm_data['RECO_DT_VUT_05'], 'data2':mm_data['RECO_DT_VUT_95'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     {'label':'RECO_DT_VUT_16-84', 'data1':mm_data['RECO_DT_VUT_16'], 'data2':mm_data['RECO_DT_VUT_84'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     {'label':'RECO_DT_VUT_25-75', 'data1':mm_data['RECO_DT_VUT_25'], 'data2':mm_data['RECO_DT_VUT_75'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     ],
-          'qc': {'label':'NEE_VUT_MEAN_QC', 'data':mm_data['NEE_VUT_MEAN_QC'], 'color':COLOR_QC, 'alpha':1}
-    }
-    yy = {'ts': yy_timestamps,
-          'lines': [
-                    {'label':'RECO_NT_VUT_U50', 'data':yy_data['RECO_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1},
-                    {'label':'RECO_NT_VUT_REF', 'data':yy_data['RECO_NT_VUT_REF'], 'color':COLOR_NT_REF, 'alpha':1},
-                    ],
-          'lines2': [
-                    {'label':'RECO_DT_VUT_U50', 'data':yy_data['RECO_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1},
-                    {'label':'RECO_DT_VUT_REF', 'data':yy_data['RECO_DT_VUT_REF'], 'color':COLOR_DT_REF, 'alpha':1},
-                    ],
-          'ranges': [
-                     {'label':'RECO_NT_VUT_05-95', 'data1':yy_data['RECO_NT_VUT_05'], 'data2':yy_data['RECO_NT_VUT_95'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     {'label':'RECO_NT_VUT_16-84', 'data1':yy_data['RECO_NT_VUT_16'], 'data2':yy_data['RECO_NT_VUT_84'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     {'label':'RECO_NT_VUT_25-75', 'data1':yy_data['RECO_NT_VUT_25'], 'data2':yy_data['RECO_NT_VUT_75'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     ],
-          'ranges2': [
-                     {'label':'RECO_DT_VUT_05-95', 'data1':yy_data['RECO_DT_VUT_05'], 'data2':yy_data['RECO_DT_VUT_95'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     {'label':'RECO_DT_VUT_16-84', 'data1':yy_data['RECO_DT_VUT_16'], 'data2':yy_data['RECO_DT_VUT_84'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     {'label':'RECO_DT_VUT_25-75', 'data1':yy_data['RECO_DT_VUT_25'], 'data2':yy_data['RECO_DT_VUT_75'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     ],
-          'qc': {'label':'NEE_VUT_MEAN_QC', 'data':yy_data['NEE_VUT_MEAN_QC'], 'color':COLOR_QC, 'alpha':1}
-    }
+    if pipeline.nt_skip and pipeline.dt_skip:
+        pass
+    else:
+        hh = {'ts': hh_timestamps,
+              'lines': [],
+              'lines2': [],
+              'ranges': [],
+              'ranges2': [],
+              'qc': {'label':'NEE_VUT_MEAN_QC', 'data':hh_data['NEE_VUT_MEAN_QC'], 'color':COLOR_QC, 'alpha':1}
+        }
+        if not pipeline.nt_skip:
+            #hh['lines'].append({'label':'RECO_NT_VUT_U50', 'data':hh_data['RECO_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1})
+            hh['lines'].append({'label':'RECO_NT_VUT_REF', 'data':hh_data['RECO_NT_VUT_REF'], 'color':COLOR_NT_REF, 'alpha':1})
+            hh['ranges'].append({'label':'RECO_NT_VUT_05-95', 'data1':hh_data['RECO_NT_VUT_05'], 'data2':hh_data['RECO_NT_VUT_95'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+            hh['ranges'].append({'label':'RECO_NT_VUT_16-84', 'data1':hh_data['RECO_NT_VUT_16'], 'data2':hh_data['RECO_NT_VUT_84'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+            hh['ranges'].append({'label':'RECO_NT_VUT_25-75', 'data1':hh_data['RECO_NT_VUT_25'], 'data2':hh_data['RECO_NT_VUT_75'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+        if not pipeline.dt_skip:
+            #hh['lines2'].append({'label':'RECO_DT_VUT_U50', 'data':hh_data['RECO_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1})
+            hh['lines2'].append({'label':'RECO_DT_VUT_REF', 'data':hh_data['RECO_DT_VUT_REF'], 'color':COLOR_DT_REF, 'alpha':1})
+            hh['ranges2'].append({'label':'RECO_DT_VUT_05-95', 'data1':hh_data['RECO_DT_VUT_05'], 'data2':hh_data['RECO_DT_VUT_95'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+            hh['ranges2'].append({'label':'RECO_DT_VUT_16-84', 'data1':hh_data['RECO_DT_VUT_16'], 'data2':hh_data['RECO_DT_VUT_84'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+            hh['ranges2'].append({'label':'RECO_DT_VUT_25-75', 'data1':hh_data['RECO_DT_VUT_25'], 'data2':hh_data['RECO_DT_VUT_75'], 'color':COLOR_DT_RNG, 'alpha':0.40})
 
-    plot_nee_unc(hh=hh, dd=dd, ww=ww, mm=mm, yy=yy,
-                 title="{s} - RECO".format(s=siteid),
-                 y_label='RECO',
-                 filename=prodfile_figure_template.format(s=siteid, sd=sitedir, f='RECO', fy=first_year, ly=last_year, vd=version_data, vp=version_processing),
-                 show=False)
+        dd = {'ts': dd_timestamps,
+              'lines': [],
+              'lines2': [],
+              'ranges': [],
+              'ranges2': [],
+              'qc': {'label':'NEE_VUT_MEAN_QC', 'data':dd_data['NEE_VUT_MEAN_QC'], 'color':COLOR_QC, 'alpha':1}
+        }
+        if not pipeline.nt_skip:
+            #dd['lines'].append({'label':'RECO_NT_VUT_U50', 'data':dd_data['RECO_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1})
+            dd['lines'].append({'label':'RECO_NT_VUT_REF', 'data':dd_data['RECO_NT_VUT_REF'], 'color':COLOR_NT_REF, 'alpha':1})
+            dd['ranges'].append({'label':'RECO_NT_VUT_05-95', 'data1':dd_data['RECO_NT_VUT_05'], 'data2':dd_data['RECO_NT_VUT_95'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+            dd['ranges'].append({'label':'RECO_NT_VUT_16-84', 'data1':dd_data['RECO_NT_VUT_16'], 'data2':dd_data['RECO_NT_VUT_84'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+            dd['ranges'].append({'label':'RECO_NT_VUT_25-75', 'data1':dd_data['RECO_NT_VUT_25'], 'data2':dd_data['RECO_NT_VUT_75'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+        if not pipeline.dt_skip:
+            #dd['lines2'].append({'label':'RECO_DT_VUT_U50', 'data':dd_data['RECO_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1})
+            dd['lines2'].append({'label':'RECO_DT_VUT_REF', 'data':dd_data['RECO_DT_VUT_REF'], 'color':COLOR_DT_REF, 'alpha':1})
+            dd['ranges2'].append({'label':'RECO_DT_VUT_05-95', 'data1':dd_data['RECO_DT_VUT_05'], 'data2':dd_data['RECO_DT_VUT_95'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+            dd['ranges2'].append({'label':'RECO_DT_VUT_16-84', 'data1':dd_data['RECO_DT_VUT_16'], 'data2':dd_data['RECO_DT_VUT_84'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+            dd['ranges2'].append({'label':'RECO_DT_VUT_25-75', 'data1':dd_data['RECO_DT_VUT_25'], 'data2':dd_data['RECO_DT_VUT_75'], 'color':COLOR_DT_RNG, 'alpha':0.40})
 
-    ### GPP
-    hh = {'ts': hh_timestamps,
-          'lines': [
-#                    {'label':'GPP_NT_VUT_U50', 'data':hh_data['GPP_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1},
-                    {'label':'GPP_NT_VUT_REF', 'data':hh_data['GPP_NT_VUT_REF'], 'color':COLOR_NT_REF, 'alpha':1},
-                    ],
-          'lines2': [
-#                    {'label':'GPP_DT_VUT_U50', 'data':hh_data['GPP_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1},
-                    {'label':'GPP_DT_VUT_REF', 'data':hh_data['GPP_DT_VUT_REF'], 'color':COLOR_DT_REF, 'alpha':1},
-                    ],
-          'ranges': [
-                     {'label':'GPP_NT_VUT_05-95', 'data1':hh_data['GPP_NT_VUT_05'], 'data2':hh_data['GPP_NT_VUT_95'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     {'label':'GPP_NT_VUT_16-84', 'data1':hh_data['GPP_NT_VUT_16'], 'data2':hh_data['GPP_NT_VUT_84'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     {'label':'GPP_NT_VUT_25-75', 'data1':hh_data['GPP_NT_VUT_25'], 'data2':hh_data['GPP_NT_VUT_75'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     ],
-          'ranges2': [
-                     {'label':'GPP_DT_VUT_05-95', 'data1':hh_data['GPP_DT_VUT_05'], 'data2':hh_data['GPP_DT_VUT_95'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     {'label':'GPP_DT_VUT_16-84', 'data1':hh_data['GPP_DT_VUT_16'], 'data2':hh_data['GPP_DT_VUT_84'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     {'label':'GPP_DT_VUT_25-75', 'data1':hh_data['GPP_DT_VUT_25'], 'data2':hh_data['GPP_DT_VUT_75'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     ],
-          'qc': {'label':'NEE_VUT_MEAN_QC', 'data':hh_data['NEE_VUT_MEAN_QC'], 'color':COLOR_QC, 'alpha':1}
-    }
-    dd = {'ts': dd_timestamps,
-          'lines': [
-#                    {'label':'GPP_NT_VUT_U50', 'data':dd_data['GPP_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1},
-                    {'label':'GPP_NT_VUT_REF', 'data':dd_data['GPP_NT_VUT_REF'], 'color':COLOR_NT_REF, 'alpha':1},
-                    ],
-          'lines2': [
-#                    {'label':'GPP_DT_VUT_U50', 'data':dd_data['GPP_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1},
-                    {'label':'GPP_DT_VUT_REF', 'data':dd_data['GPP_DT_VUT_REF'], 'color':COLOR_DT_REF, 'alpha':1},
-                    ],
-          'ranges': [
-                     {'label':'GPP_NT_VUT_05-95', 'data1':dd_data['GPP_NT_VUT_05'], 'data2':dd_data['GPP_NT_VUT_95'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     {'label':'GPP_NT_VUT_16-84', 'data1':dd_data['GPP_NT_VUT_16'], 'data2':dd_data['GPP_NT_VUT_84'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     {'label':'GPP_NT_VUT_25-75', 'data1':dd_data['GPP_NT_VUT_25'], 'data2':dd_data['GPP_NT_VUT_75'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     ],
-          'ranges2': [
-                     {'label':'GPP_DT_VUT_05-95', 'data1':dd_data['GPP_DT_VUT_05'], 'data2':dd_data['GPP_DT_VUT_95'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     {'label':'GPP_DT_VUT_16-84', 'data1':dd_data['GPP_DT_VUT_16'], 'data2':dd_data['GPP_DT_VUT_84'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     {'label':'GPP_DT_VUT_25-75', 'data1':dd_data['GPP_DT_VUT_25'], 'data2':dd_data['GPP_DT_VUT_75'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     ],
-          'qc': {'label':'NEE_VUT_MEAN_QC', 'data':dd_data['NEE_VUT_MEAN_QC'], 'color':COLOR_QC, 'alpha':1}
-    }
-    ww = {'ts': ww_timestamps,
-          'lines': [
-#                    {'label':'GPP_NT_VUT_U50', 'data':ww_data['GPP_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1},
-                    {'label':'GPP_NT_VUT_REF', 'data':ww_data['GPP_NT_VUT_REF'], 'color':COLOR_NT_REF, 'alpha':1},
-                    ],
-          'lines2': [
-#                    {'label':'GPP_DT_VUT_U50', 'data':ww_data['GPP_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1},
-                    {'label':'GPP_DT_VUT_REF', 'data':ww_data['GPP_DT_VUT_REF'], 'color':COLOR_DT_REF, 'alpha':1},
-                    ],
-          'ranges': [
-                     {'label':'GPP_NT_VUT_05-95', 'data1':ww_data['GPP_NT_VUT_05'], 'data2':ww_data['GPP_NT_VUT_95'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     {'label':'GPP_NT_VUT_16-84', 'data1':ww_data['GPP_NT_VUT_16'], 'data2':ww_data['GPP_NT_VUT_84'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     {'label':'GPP_NT_VUT_25-75', 'data1':ww_data['GPP_NT_VUT_25'], 'data2':ww_data['GPP_NT_VUT_75'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     ],
-          'ranges2': [
-                     {'label':'GPP_DT_VUT_05-95', 'data1':ww_data['GPP_DT_VUT_05'], 'data2':ww_data['GPP_DT_VUT_95'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     {'label':'GPP_DT_VUT_16-84', 'data1':ww_data['GPP_DT_VUT_16'], 'data2':ww_data['GPP_DT_VUT_84'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     {'label':'GPP_DT_VUT_25-75', 'data1':ww_data['GPP_DT_VUT_25'], 'data2':ww_data['GPP_DT_VUT_75'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     ],
-          'qc': {'label':'NEE_VUT_MEAN_QC', 'data':ww_data['NEE_VUT_MEAN_QC'], 'color':COLOR_QC, 'alpha':1}
-    }
-    mm = {'ts': mm_timestamps,
-          'lines': [
-#                    {'label':'GPP_NT_VUT_U50', 'data':mm_data['GPP_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1},
-                    {'label':'GPP_NT_VUT_REF', 'data':mm_data['GPP_NT_VUT_REF'], 'color':COLOR_NT_REF, 'alpha':1},
-                    ],
-          'lines2': [
-#                    {'label':'GPP_DT_VUT_U50', 'data':mm_data['GPP_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1},
-                    {'label':'GPP_DT_VUT_REF', 'data':mm_data['GPP_DT_VUT_REF'], 'color':COLOR_DT_REF, 'alpha':1},
-                    ],
-          'ranges': [
-                     {'label':'GPP_NT_VUT_05-95', 'data1':mm_data['GPP_NT_VUT_05'], 'data2':mm_data['GPP_NT_VUT_95'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     {'label':'GPP_NT_VUT_16-84', 'data1':mm_data['GPP_NT_VUT_16'], 'data2':mm_data['GPP_NT_VUT_84'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     {'label':'GPP_NT_VUT_25-75', 'data1':mm_data['GPP_NT_VUT_25'], 'data2':mm_data['GPP_NT_VUT_75'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     ],
-          'ranges2': [
-                     {'label':'GPP_DT_VUT_05-95', 'data1':mm_data['GPP_DT_VUT_05'], 'data2':mm_data['GPP_DT_VUT_95'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     {'label':'GPP_DT_VUT_16-84', 'data1':mm_data['GPP_DT_VUT_16'], 'data2':mm_data['GPP_DT_VUT_84'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     {'label':'GPP_DT_VUT_25-75', 'data1':mm_data['GPP_DT_VUT_25'], 'data2':mm_data['GPP_DT_VUT_75'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     ],
-          'qc': {'label':'NEE_VUT_MEAN_QC', 'data':mm_data['NEE_VUT_MEAN_QC'], 'color':COLOR_QC, 'alpha':1}
-    }
-    yy = {'ts': yy_timestamps,
-          'lines': [
-                    {'label':'GPP_NT_VUT_U50', 'data':yy_data['GPP_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1},
-                    {'label':'GPP_NT_VUT_REF', 'data':yy_data['GPP_NT_VUT_REF'], 'color':COLOR_NT_REF, 'alpha':1},
-                    ],
-          'lines2': [
-                    {'label':'GPP_DT_VUT_U50', 'data':yy_data['GPP_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1},
-                    {'label':'GPP_DT_VUT_REF', 'data':yy_data['GPP_DT_VUT_REF'], 'color':COLOR_DT_REF, 'alpha':1},
-                    ],
-          'ranges': [
-                     {'label':'GPP_NT_VUT_05-95', 'data1':yy_data['GPP_NT_VUT_05'], 'data2':yy_data['GPP_NT_VUT_95'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     {'label':'GPP_NT_VUT_16-84', 'data1':yy_data['GPP_NT_VUT_16'], 'data2':yy_data['GPP_NT_VUT_84'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     {'label':'GPP_NT_VUT_25-75', 'data1':yy_data['GPP_NT_VUT_25'], 'data2':yy_data['GPP_NT_VUT_75'], 'color':COLOR_NT_RNG, 'alpha':0.40},
-                     ],
-          'ranges2': [
-                     {'label':'GPP_DT_VUT_05-95', 'data1':yy_data['GPP_DT_VUT_05'], 'data2':yy_data['GPP_DT_VUT_95'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     {'label':'GPP_DT_VUT_16-84', 'data1':yy_data['GPP_DT_VUT_16'], 'data2':yy_data['GPP_DT_VUT_84'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     {'label':'GPP_DT_VUT_25-75', 'data1':yy_data['GPP_DT_VUT_25'], 'data2':yy_data['GPP_DT_VUT_75'], 'color':COLOR_DT_RNG, 'alpha':0.40},
-                     ],
-          'qc': {'label':'NEE_VUT_MEAN_QC', 'data':yy_data['NEE_VUT_MEAN_QC'], 'color':COLOR_QC, 'alpha':1}
-    }
+        ww = {'ts': ww_timestamps,
+              'lines': [],
+              'lines2': [],
+              'ranges': [],
+              'ranges2': [],
+              'qc': {'label':'NEE_VUT_MEAN_QC', 'data':ww_data['NEE_VUT_MEAN_QC'], 'color':COLOR_QC, 'alpha':1}
+        }
+        if not pipeline.nt_skip:
+            #ww['lines'].append({'label':'RECO_NT_VUT_U50', 'data':ww_data['RECO_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1})
+            ww['lines'].append({'label':'RECO_NT_VUT_REF', 'data':ww_data['RECO_NT_VUT_REF'], 'color':COLOR_NT_REF, 'alpha':1})
+            ww['ranges'].append({'label':'RECO_NT_VUT_05-95', 'data1':ww_data['RECO_NT_VUT_05'], 'data2':ww_data['RECO_NT_VUT_95'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+            ww['ranges'].append({'label':'RECO_NT_VUT_16-84', 'data1':ww_data['RECO_NT_VUT_16'], 'data2':ww_data['RECO_NT_VUT_84'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+            ww['ranges'].append({'label':'RECO_NT_VUT_25-75', 'data1':ww_data['RECO_NT_VUT_25'], 'data2':ww_data['RECO_NT_VUT_75'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+        if not pipeline.dt_skip:
+            #ww['lines2'].append({'label':'RECO_DT_VUT_U50', 'data':ww_data['RECO_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1})
+            ww['lines2'].append({'label':'RECO_DT_VUT_REF', 'data':ww_data['RECO_DT_VUT_REF'], 'color':COLOR_DT_REF, 'alpha':1})
+            ww['ranges2'].append({'label':'RECO_DT_VUT_05-95', 'data1':ww_data['RECO_DT_VUT_05'], 'data2':ww_data['RECO_DT_VUT_95'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+            ww['ranges2'].append({'label':'RECO_DT_VUT_16-84', 'data1':ww_data['RECO_DT_VUT_16'], 'data2':ww_data['RECO_DT_VUT_84'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+            ww['ranges2'].append({'label':'RECO_DT_VUT_25-75', 'data1':ww_data['RECO_DT_VUT_25'], 'data2':ww_data['RECO_DT_VUT_75'], 'color':COLOR_DT_RNG, 'alpha':0.40})
 
-    plot_nee_unc(hh=hh, dd=dd, ww=ww, mm=mm, yy=yy,
-                 title="{s} - GPP".format(s=siteid),
-                 y_label='GPP',
-                 filename=prodfile_figure_template.format(s=siteid, sd=sitedir, f='GPP', fy=first_year, ly=last_year, vd=version_data, vp=version_processing),
-                 show=False)
+        mm = {'ts': mm_timestamps,
+              'lines': [],
+              'lines2': [],
+              'ranges': [],
+              'ranges2': [],
+              'qc': {'label':'NEE_VUT_MEAN_QC', 'data':mm_data['NEE_VUT_MEAN_QC'], 'color':COLOR_QC, 'alpha':1}
+        }
+        if not pipeline.nt_skip:
+            #mm['lines'].append({'label':'RECO_NT_VUT_U50', 'data':mm_data['RECO_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1})
+            mm['lines'].append({'label':'RECO_NT_VUT_REF', 'data':mm_data['RECO_NT_VUT_REF'], 'color':COLOR_NT_REF, 'alpha':1})
+            mm['ranges'].append({'label':'RECO_NT_VUT_05-95', 'data1':mm_data['RECO_NT_VUT_05'], 'data2':mm_data['RECO_NT_VUT_95'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+            mm['ranges'].append({'label':'RECO_NT_VUT_16-84', 'data1':mm_data['RECO_NT_VUT_16'], 'data2':mm_data['RECO_NT_VUT_84'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+            mm['ranges'].append({'label':'RECO_NT_VUT_25-75', 'data1':mm_data['RECO_NT_VUT_25'], 'data2':mm_data['RECO_NT_VUT_75'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+        if not pipeline.dt_skip:
+            #mm['lines2'].append({'label':'RECO_DT_VUT_U50', 'data':mm_data['RECO_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1})
+            mm['lines2'].append({'label':'RECO_DT_VUT_REF', 'data':mm_data['RECO_DT_VUT_REF'], 'color':COLOR_DT_REF, 'alpha':1})
+            mm['ranges2'].append({'label':'RECO_DT_VUT_05-95', 'data1':mm_data['RECO_DT_VUT_05'], 'data2':mm_data['RECO_DT_VUT_95'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+            mm['ranges2'].append({'label':'RECO_DT_VUT_16-84', 'data1':mm_data['RECO_DT_VUT_16'], 'data2':mm_data['RECO_DT_VUT_84'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+            mm['ranges2'].append({'label':'RECO_DT_VUT_25-75', 'data1':mm_data['RECO_DT_VUT_25'], 'data2':mm_data['RECO_DT_VUT_75'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+
+        yy = {'ts': yy_timestamps,
+              'lines': [],
+              'lines2': [],
+              'ranges': [],
+              'ranges2': [],
+              'qc': {'label':'NEE_VUT_MEAN_QC', 'data':yy_data['NEE_VUT_MEAN_QC'], 'color':COLOR_QC, 'alpha':1}
+        }
+        if not pipeline.nt_skip:
+            yy['lines'].append({'label':'RECO_NT_VUT_U50', 'data':yy_data['RECO_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1})
+            yy['lines'].append({'label':'RECO_NT_VUT_REF', 'data':yy_data['RECO_NT_VUT_REF'], 'color':COLOR_NT_REF, 'alpha':1})
+            yy['ranges'].append({'label':'RECO_NT_VUT_05-95', 'data1':yy_data['RECO_NT_VUT_05'], 'data2':yy_data['RECO_NT_VUT_95'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+            yy['ranges'].append({'label':'RECO_NT_VUT_16-84', 'data1':yy_data['RECO_NT_VUT_16'], 'data2':yy_data['RECO_NT_VUT_84'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+            yy['ranges'].append({'label':'RECO_NT_VUT_25-75', 'data1':yy_data['RECO_NT_VUT_25'], 'data2':yy_data['RECO_NT_VUT_75'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+        if not pipeline.dt_skip:
+            yy['lines2'].append({'label':'RECO_DT_VUT_U50', 'data':yy_data['RECO_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1})
+            yy['lines2'].append({'label':'RECO_DT_VUT_REF', 'data':yy_data['RECO_DT_VUT_REF'], 'color':COLOR_DT_REF, 'alpha':1})
+            yy['ranges2'].append({'label':'RECO_DT_VUT_05-95', 'data1':yy_data['RECO_DT_VUT_05'], 'data2':yy_data['RECO_DT_VUT_95'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+            yy['ranges2'].append({'label':'RECO_DT_VUT_16-84', 'data1':yy_data['RECO_DT_VUT_16'], 'data2':yy_data['RECO_DT_VUT_84'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+            yy['ranges2'].append({'label':'RECO_DT_VUT_25-75', 'data1':yy_data['RECO_DT_VUT_25'], 'data2':yy_data['RECO_DT_VUT_75'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+
+        plot_nee_unc(hh=hh, dd=dd, ww=ww, mm=mm, yy=yy,
+                    title="{s} - RECO".format(s=siteid),
+                    y_label='RECO',
+                    filename=prodfile_figure_template.format(s=siteid, sd=sitedir, f='RECO', fy=first_year, ly=last_year, vd=version_data, vp=version_processing),
+                    show=False)
+
+        ### GPP
+        hh = {'ts': hh_timestamps,
+              'lines': [],
+              'lines2': [],
+              'ranges': [],
+              'ranges2': [],
+              'qc': {'label':'NEE_VUT_MEAN_QC', 'data':hh_data['NEE_VUT_MEAN_QC'], 'color':COLOR_QC, 'alpha':1}
+        }
+        if not pipeline.nt_skip:
+            #hh['lines'].append({'label':'GPP_NT_VUT_U50', 'data':hh_data['GPP_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1})
+            hh['lines'].append({'label':'GPP_NT_VUT_REF', 'data':hh_data['GPP_NT_VUT_REF'], 'color':COLOR_NT_REF, 'alpha':1})
+            hh['ranges'].append({'label':'GPP_NT_VUT_05-95', 'data1':hh_data['GPP_NT_VUT_05'], 'data2':hh_data['GPP_NT_VUT_95'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+            hh['ranges'].append({'label':'GPP_NT_VUT_16-84', 'data1':hh_data['GPP_NT_VUT_16'], 'data2':hh_data['GPP_NT_VUT_84'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+            hh['ranges'].append({'label':'GPP_NT_VUT_25-75', 'data1':hh_data['GPP_NT_VUT_25'], 'data2':hh_data['GPP_NT_VUT_75'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+        if not pipeline.dt_skip:
+            #hh['lines2'].append({'label':'GPP_DT_VUT_U50', 'data':hh_data['GPP_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1})
+            hh['lines2'].append({'label':'GPP_DT_VUT_REF', 'data':hh_data['GPP_DT_VUT_REF'], 'color':COLOR_DT_REF, 'alpha':1})
+            hh['ranges2'].append({'label':'GPP_DT_VUT_05-95', 'data1':hh_data['GPP_DT_VUT_05'], 'data2':hh_data['GPP_DT_VUT_95'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+            hh['ranges2'].append({'label':'GPP_DT_VUT_16-84', 'data1':hh_data['GPP_DT_VUT_16'], 'data2':hh_data['GPP_DT_VUT_84'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+            hh['ranges2'].append({'label':'GPP_DT_VUT_25-75', 'data1':hh_data['GPP_DT_VUT_25'], 'data2':hh_data['GPP_DT_VUT_75'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+
+        dd = {'ts': dd_timestamps,
+              'lines': [],
+              'lines2': [],
+              'ranges': [],
+              'ranges2': [],
+              'qc': {'label':'NEE_VUT_MEAN_QC', 'data':dd_data['NEE_VUT_MEAN_QC'], 'color':COLOR_QC, 'alpha':1}
+        }
+        if not pipeline.nt_skip:
+            #dd['lines'].append({'label':'GPP_NT_VUT_U50', 'data':dd_data['GPP_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1})
+            dd['lines'].append({'label':'GPP_NT_VUT_REF', 'data':dd_data['GPP_NT_VUT_REF'], 'color':COLOR_NT_REF, 'alpha':1})
+            dd['ranges'].append({'label':'GPP_NT_VUT_05-95', 'data1':dd_data['GPP_NT_VUT_05'], 'data2':dd_data['GPP_NT_VUT_95'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+            dd['ranges'].append({'label':'GPP_NT_VUT_16-84', 'data1':dd_data['GPP_NT_VUT_16'], 'data2':dd_data['GPP_NT_VUT_84'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+            dd['ranges'].append({'label':'GPP_NT_VUT_25-75', 'data1':dd_data['GPP_NT_VUT_25'], 'data2':dd_data['GPP_NT_VUT_75'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+        if not pipeline.dt_skip:
+            #dd['lines2'].append({'label':'GPP_DT_VUT_U50', 'data':dd_data['GPP_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1})
+            dd['lines2'].append({'label':'GPP_DT_VUT_REF', 'data':dd_data['GPP_DT_VUT_REF'], 'color':COLOR_DT_REF, 'alpha':1})
+            dd['ranges2'].append({'label':'GPP_DT_VUT_05-95', 'data1':dd_data['GPP_DT_VUT_05'], 'data2':dd_data['GPP_DT_VUT_95'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+            dd['ranges2'].append({'label':'GPP_DT_VUT_16-84', 'data1':dd_data['GPP_DT_VUT_16'], 'data2':dd_data['GPP_DT_VUT_84'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+            dd['ranges2'].append({'label':'GPP_DT_VUT_25-75', 'data1':dd_data['GPP_DT_VUT_25'], 'data2':dd_data['GPP_DT_VUT_75'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+
+        ww = {'ts': ww_timestamps,
+              'lines': [],
+              'lines2': [],
+              'ranges': [],
+              'ranges2': [],
+              'qc': {'label':'NEE_VUT_MEAN_QC', 'data':ww_data['NEE_VUT_MEAN_QC'], 'color':COLOR_QC, 'alpha':1}
+        }
+        if not pipeline.nt_skip:
+            #ww['lines'].append({'label':'GPP_NT_VUT_U50', 'data':ww_data['GPP_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1})
+            ww['lines'].append({'label':'GPP_NT_VUT_REF', 'data':ww_data['GPP_NT_VUT_REF'], 'color':COLOR_NT_REF, 'alpha':1})
+            ww['ranges'].append({'label':'GPP_NT_VUT_05-95', 'data1':ww_data['GPP_NT_VUT_05'], 'data2':ww_data['GPP_NT_VUT_95'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+            ww['ranges'].append({'label':'GPP_NT_VUT_16-84', 'data1':ww_data['GPP_NT_VUT_16'], 'data2':ww_data['GPP_NT_VUT_84'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+            ww['ranges'].append({'label':'GPP_NT_VUT_25-75', 'data1':ww_data['GPP_NT_VUT_25'], 'data2':ww_data['GPP_NT_VUT_75'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+        if not pipeline.dt_skip:
+            #ww['lines2'].append({'label':'GPP_DT_VUT_U50', 'data':ww_data['GPP_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1})
+            ww['lines2'].append({'label':'GPP_DT_VUT_REF', 'data':ww_data['GPP_DT_VUT_REF'], 'color':COLOR_DT_REF, 'alpha':1})
+            ww['ranges2'].append({'label':'GPP_DT_VUT_05-95', 'data1':ww_data['GPP_DT_VUT_05'], 'data2':ww_data['GPP_DT_VUT_95'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+            ww['ranges2'].append({'label':'GPP_DT_VUT_16-84', 'data1':ww_data['GPP_DT_VUT_16'], 'data2':ww_data['GPP_DT_VUT_84'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+            ww['ranges2'].append({'label':'GPP_DT_VUT_25-75', 'data1':ww_data['GPP_DT_VUT_25'], 'data2':ww_data['GPP_DT_VUT_75'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+
+        mm = {'ts': mm_timestamps,
+              'lines': [],
+              'lines2': [],
+              'ranges': [],
+              'ranges2': [],
+              'qc': {'label':'NEE_VUT_MEAN_QC', 'data':mm_data['NEE_VUT_MEAN_QC'], 'color':COLOR_QC, 'alpha':1}
+        }
+        if not pipeline.nt_skip:
+            #mm['lines'].append({'label':'GPP_NT_VUT_U50', 'data':mm_data['GPP_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1})
+            mm['lines'].append({'label':'GPP_NT_VUT_REF', 'data':mm_data['GPP_NT_VUT_REF'], 'color':COLOR_NT_REF, 'alpha':1})
+            mm['ranges'].append({'label':'GPP_NT_VUT_05-95', 'data1':mm_data['GPP_NT_VUT_05'], 'data2':mm_data['GPP_NT_VUT_95'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+            mm['ranges'].append({'label':'GPP_NT_VUT_16-84', 'data1':mm_data['GPP_NT_VUT_16'], 'data2':mm_data['GPP_NT_VUT_84'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+            mm['ranges'].append({'label':'GPP_NT_VUT_25-75', 'data1':mm_data['GPP_NT_VUT_25'], 'data2':mm_data['GPP_NT_VUT_75'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+        if not pipeline.dt_skip:
+            #mm['lines2'].append({'label':'GPP_DT_VUT_U50', 'data':mm_data['GPP_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1})
+            mm['lines2'].append({'label':'GPP_DT_VUT_REF', 'data':mm_data['GPP_DT_VUT_REF'], 'color':COLOR_DT_REF, 'alpha':1})
+            mm['ranges2'].append({'label':'GPP_DT_VUT_05-95', 'data1':mm_data['GPP_DT_VUT_05'], 'data2':mm_data['GPP_DT_VUT_95'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+            mm['ranges2'].append({'label':'GPP_DT_VUT_16-84', 'data1':mm_data['GPP_DT_VUT_16'], 'data2':mm_data['GPP_DT_VUT_84'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+            mm['ranges2'].append({'label':'GPP_DT_VUT_25-75', 'data1':mm_data['GPP_DT_VUT_25'], 'data2':mm_data['GPP_DT_VUT_75'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+
+        yy = {'ts': yy_timestamps,
+              'lines': [],
+              'lines2': [],
+              'ranges': [],
+              'ranges2': [],
+              'qc': {'label':'NEE_VUT_MEAN_QC', 'data':yy_data['NEE_VUT_MEAN_QC'], 'color':COLOR_QC, 'alpha':1}
+        }
+        if not pipeline.nt_skip:
+            yy['lines'].append({'label':'GPP_NT_VUT_U50', 'data':yy_data['GPP_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1})
+            yy['lines'].append({'label':'GPP_NT_VUT_REF', 'data':yy_data['GPP_NT_VUT_REF'], 'color':COLOR_NT_REF, 'alpha':1})
+            yy['ranges'].append({'label':'GPP_NT_VUT_05-95', 'data1':yy_data['GPP_NT_VUT_05'], 'data2':yy_data['GPP_NT_VUT_95'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+            yy['ranges'].append({'label':'GPP_NT_VUT_16-84', 'data1':yy_data['GPP_NT_VUT_16'], 'data2':yy_data['GPP_NT_VUT_84'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+            yy['ranges'].append({'label':'GPP_NT_VUT_25-75', 'data1':yy_data['GPP_NT_VUT_25'], 'data2':yy_data['GPP_NT_VUT_75'], 'color':COLOR_NT_RNG, 'alpha':0.40})
+        if not pipeline.dt_skip:
+            yy['lines2'].append({'label':'GPP_DT_VUT_U50', 'data':yy_data['GPP_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1})
+            yy['lines2'].append({'label':'GPP_DT_VUT_REF', 'data':yy_data['GPP_DT_VUT_REF'], 'color':COLOR_DT_REF, 'alpha':1})
+            yy['ranges2'].append({'label':'GPP_DT_VUT_05-95', 'data1':yy_data['GPP_DT_VUT_05'], 'data2':yy_data['GPP_DT_VUT_95'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+            yy['ranges2'].append({'label':'GPP_DT_VUT_16-84', 'data1':yy_data['GPP_DT_VUT_16'], 'data2':yy_data['GPP_DT_VUT_84'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+            yy['ranges2'].append({'label':'GPP_DT_VUT_25-75', 'data1':yy_data['GPP_DT_VUT_25'], 'data2':yy_data['GPP_DT_VUT_75'], 'color':COLOR_DT_RNG, 'alpha':0.40})
+
+        plot_nee_unc(hh=hh, dd=dd, ww=ww, mm=mm, yy=yy,
+                    title="{s} - GPP".format(s=siteid),
+                    y_label='GPP',
+                    filename=prodfile_figure_template.format(s=siteid, sd=sitedir, f='GPP', fy=first_year, ly=last_year, vd=version_data, vp=version_processing),
+                    show=False)
 
 
     ### LE
@@ -688,7 +679,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
           'ranges': [
                      {'label':'LE_CORR_25-75', 'data1':hh_data['LE_CORR_25'], 'data2':hh_data['LE_CORR_75'], 'color':COLOR_RNG, 'alpha':0.40},
                      ],
-          'qc': {}
+          'qc': {'label':'LE_F_MDS_QC', 'data':hh_data['LE_F_MDS_QC'], 'color':COLOR_QC, 'alpha':1}
     }
     dd = {'ts': dd_timestamps,
           'lines': [
@@ -698,7 +689,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
           'ranges': [
                      {'label':'LE_CORR_25-75', 'data1':dd_data['LE_CORR_25'], 'data2':dd_data['LE_CORR_75'], 'color':COLOR_RNG, 'alpha':0.40},
                      ],
-          'qc': {}
+          'qc': {'label':'LE_F_MDS_QC', 'data':dd_data['LE_F_MDS_QC'], 'color':COLOR_QC, 'alpha':1}
     }
     ww = {'ts': ww_timestamps,
           'lines': [
@@ -706,7 +697,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
                     {'label':'LE_CORR', 'data':ww_data['LE_CORR'], 'color':COLOR_MEAN, 'alpha':1},
                     ],
           'ranges': [],
-          'qc': {}
+          'qc': {'label':'LE_F_MDS_QC', 'data':ww_data['LE_F_MDS_QC'], 'color':COLOR_QC, 'alpha':1}
     }
     mm = {'ts': mm_timestamps,
           'lines': [
@@ -714,7 +705,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
                     {'label':'LE_CORR', 'data':mm_data['LE_CORR'], 'color':COLOR_MEAN, 'alpha':1},
                     ],
           'ranges': [],
-          'qc': {}
+          'qc': {'label':'LE_F_MDS_QC', 'data':mm_data['LE_F_MDS_QC'], 'color':COLOR_QC, 'alpha':1}
     }
     yy = {'ts': yy_timestamps,
           'lines': [
@@ -722,7 +713,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
                     {'label':'LE_CORR', 'data':yy_data['LE_CORR'], 'color':COLOR_MEAN, 'alpha':1},
                     ],
           'ranges': [],
-          'qc': {}
+          'qc': {'label':'LE_F_MDS_QC', 'data':yy_data['LE_F_MDS_QC'], 'color':COLOR_QC, 'alpha':1}
     }
 
     plot_nee_unc(hh=hh, dd=dd, ww=ww, mm=mm, yy=yy,
@@ -741,7 +732,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
           'ranges': [
                      {'label':'H_CORR_25-75', 'data1':hh_data['H_CORR_25'], 'data2':hh_data['H_CORR_75'], 'color':COLOR_RNG, 'alpha':0.50},
                      ],
-          'qc': {}
+          'qc': {'label':'H_F_MDS_QC', 'data':hh_data['H_F_MDS_QC'], 'color':COLOR_QC, 'alpha':1}
     }
     dd = {'ts': dd_timestamps,
           'lines': [
@@ -751,7 +742,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
           'ranges': [
                      {'label':'H_CORR_25-75', 'data1':dd_data['H_CORR_25'], 'data2':dd_data['H_CORR_75'], 'color':COLOR_RNG, 'alpha':0.50},
                      ],
-          'qc': {}
+          'qc': {'label':'H_F_MDS_QC', 'data':dd_data['H_F_MDS_QC'], 'color':COLOR_QC, 'alpha':1}
     }
     ww = {'ts': ww_timestamps,
           'lines': [
@@ -759,7 +750,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
                     {'label':'H_CORR', 'data':ww_data['H_CORR'], 'color':COLOR_MEAN, 'alpha':1},
                     ],
           'ranges': [],
-          'qc': {}
+          'qc': {'label':'H_F_MDS_QC', 'data':ww_data['H_F_MDS_QC'], 'color':COLOR_QC, 'alpha':1}
     }
     mm = {'ts': mm_timestamps,
           'lines': [
@@ -767,7 +758,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
                     {'label':'H_CORR', 'data':mm_data['H_CORR'], 'color':COLOR_MEAN, 'alpha':1},
                     ],
           'ranges': [],
-          'qc': {}
+          'qc': {'label':'H_F_MDS_QC', 'data':mm_data['H_F_MDS_QC'], 'color':COLOR_QC, 'alpha':1}
     }
     yy = {'ts': yy_timestamps,
           'lines': [
@@ -775,7 +766,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
                     {'label':'H_CORR', 'data':yy_data['H_CORR'], 'color':COLOR_MEAN, 'alpha':1},
                     ],
           'ranges': [],
-          'qc': {}
+          'qc': {'label':'H_F_MDS_QC', 'data':yy_data['H_F_MDS_QC'], 'color':COLOR_QC, 'alpha':1}
     }
 
     plot_nee_unc(hh=hh, dd=dd, ww=ww, mm=mm, yy=yy,

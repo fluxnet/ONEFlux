@@ -27,7 +27,8 @@ from oneflux import ONEFluxError
 from oneflux.utils.files import check_create_directory, file_stat, zip_file_list
 
 from oneflux.pipeline.variables_codes import VARIABLE_LIST_FULL, VARIABLE_LIST_SUB, PERC_LABEL, \
-                                              TIMESTAMP_VARIABLE_LIST, FULL_D, QC_FULL_D
+                                              TIMESTAMP_VARIABLE_LIST, FULL_D, QC_FULL_D, VARIABLES_DONOT_GAPFILL_LONG, \
+                                              VARIABLES_DONOT_GAPFILL_LONG_NEEXXCUT_MEAN_L, VARIABLES_DONOT_GAPFILL_LONG_NEEXXVUT_MEAN_L
 from oneflux.pipeline.aux_info_files import run_site_aux
 from oneflux.pipeline.common import QCDIR, METEODIR, NEEDIR, ENERGYDIR, UNCDIR, PRODDIR, WORKING_DIRECTORY, \
                                      PRODFILE_TEMPLATE, ZIPFILE_TEMPLATE, \
@@ -656,96 +657,131 @@ def load_energy(siteid, ddir, resolution):
     log.debug("Loading energy/{r} file: {f}".format(r=resolution, f=filename))
     return _load_data(filename=filename, resolution=resolution)
 
-def merge_unc(dt_reco, dt_gpp, nt_reco, nt_gpp, resolution):
+def merge_unc(dt_reco, dt_gpp, nt_reco, nt_gpp, resolution, nt_skip=False, dt_skip=False):
     dtype_ts = TIMESTAMP_DTYPE_BY_RESOLUTION_IN[resolution]
     htype = [dt[0] for dt in dtype_ts]
     dtype_ts = TIMESTAMP_DTYPE_BY_RESOLUTION[resolution]
     dtype_comp = []
+    array_size = None
+    timestamp_arrays = None
     for dt in TIMESTAMP_DTYPE_BY_RESOLUTION[resolution]:
         label = dt[0]
-        if not numpy.all(dt_reco[label] == dt_gpp[label]):
-            raise ONEFluxError("Timestamps differ for DT_RECO and DT_GPP")
-        if not numpy.all(dt_reco[label] == nt_reco[label]):
-            raise ONEFluxError("Timestamps differ for DT_RECO and NT_RECO")
-        if not numpy.all(dt_reco[label] == nt_gpp[label]):
-            raise ONEFluxError("Timestamps differ for DT_RECO and NT_GPP")
+        if not nt_skip:
+            if not numpy.all(nt_reco[label] == nt_gpp[label]):
+                raise ONEFluxError("Timestamps differ for NT_RECO and NT_GPP")
+            array_size = nt_reco.size
+        if not dt_skip:
+            if not numpy.all(dt_reco[label] == dt_gpp[label]):
+                raise ONEFluxError("Timestamps differ for DT_RECO and DT_GPP")
+            array_size = dt_reco.size
+        if (not nt_skip) and (not dt_skip):
+            if not numpy.all(nt_reco[label] == dt_reco[label]):
+                raise ONEFluxError("Timestamps differ for NT_RECO and DT_RECO")
 
-    for dt in dt_reco.dtype.descr:
-        if dt[0] not in htype:
-            dtype_comp.append(('DT_' + dt[0], dt[1]))
-    for dt in dt_gpp.dtype.descr:
-        if dt[0] not in htype:
-            dtype_comp.append(('DT_' + dt[0], dt[1]))
-    for dt in nt_reco.dtype.descr:
-        if dt[0] not in htype:
-            dtype_comp.append(('NT_' + dt[0], dt[1]))
-    for dt in nt_gpp.dtype.descr:
-        if dt[0] not in htype:
-            dtype_comp.append(('NT_' + dt[0], dt[1]))
+    if not nt_skip:
+        timestamp_arrays = {}
+        for dt in dtype_ts:
+            timestamp_arrays[dt[0]] = nt_reco[dt[0]]
+        for dt in nt_reco.dtype.descr:
+            if dt[0] not in htype:
+                dtype_comp.append(('NT_' + dt[0], dt[1]))
+        for dt in nt_gpp.dtype.descr:
+            if dt[0] not in htype:
+                dtype_comp.append(('NT_' + dt[0], dt[1]))
+
+    if not dt_skip:
+        timestamp_arrays = {}
+        for dt in dtype_ts:
+            timestamp_arrays[dt[0]] = dt_reco[dt[0]]
+        for dt in dt_reco.dtype.descr:
+            if dt[0] not in htype:
+                dtype_comp.append(('DT_' + dt[0], dt[1]))
+        for dt in dt_gpp.dtype.descr:
+            if dt[0] not in htype:
+                dtype_comp.append(('DT_' + dt[0], dt[1]))
 
     dtype = dtype_ts + dtype_comp
     h = [i[0] for i in dtype]
     for i in range(len(h)):
         if h[i] in h[i + 1:]:
             log.error("Load UNC/PART, duplicate header: {h}".format(h=h[i]))
-    d = numpy.empty(dt_reco.size, dtype=dtype)
-    for dt in dtype_ts:
-        d[dt[0]] = dt_reco[dt[0]]
-    for dt in dt_reco.dtype.descr:
-        if dt[0] not in htype:
-            d['DT_' + dt[0]] = dt_reco[dt[0]]
-    for dt in dt_gpp.dtype.descr:
-        if dt[0] not in htype:
-            d['DT_' + dt[0]] = dt_gpp[dt[0]]
-    for dt in nt_reco.dtype.descr:
-        if dt[0] not in htype:
-            d['NT_' + dt[0]] = nt_reco[dt[0]]
-    for dt in nt_gpp.dtype.descr:
-        if dt[0] not in htype:
-            d['NT_' + dt[0]] = nt_gpp[dt[0]]
 
+    if timestamp_arrays is not None:
+        d = numpy.empty(array_size, dtype=dtype)
+        for dt in dtype_ts:
+            d[dt[0]] = timestamp_arrays[dt[0]]
+    else:
+        log.warning("Nothing to merge in UNC, both NT and DT skipped")
+        return None
+
+    if not nt_skip:
+        for dt in nt_reco.dtype.descr:
+            if dt[0] not in htype:
+                d['NT_' + dt[0]] = nt_reco[dt[0]]
+        for dt in nt_gpp.dtype.descr:
+            if dt[0] not in htype:
+                d['NT_' + dt[0]] = nt_gpp[dt[0]]
+
+    if not dt_skip:
+        for dt in dt_reco.dtype.descr:
+            if dt[0] not in htype:
+                d['DT_' + dt[0]] = dt_reco[dt[0]]
+        for dt in dt_gpp.dtype.descr:
+            if dt[0] not in htype:
+                d['DT_' + dt[0]] = dt_gpp[dt[0]]
+    
     log.debug("Merged UNC headers: {h}".format(h=d.dtype.names))
     return d
 
-def load_unc(siteid, ddir, resolution):
-    dt_reco_filename = os.path.join(ddir, "{s}_DT_RECO_{r}.csv".format(s=siteid, r=resolution))
-    dt_gpp_filename = os.path.join(ddir, "{s}_DT_GPP_{r}.csv".format(s=siteid, r=resolution))
-    nt_reco_filename = os.path.join(ddir, "{s}_NT_RECO_{r}.csv".format(s=siteid, r=resolution))
-    nt_gpp_filename = os.path.join(ddir, "{s}_NT_GPP_{r}.csv".format(s=siteid, r=resolution))
+def load_unc(siteid, ddir, resolution, nt_skip=False, dt_skip=False):
+    nrecords = None
+    nt_reco, nt_gpp, dt_reco, dt_gpp = None, None, None, None
 
-    if not os.path.isfile(dt_reco_filename):
-        raise ONEFluxError("DT_RECO file not found: {f}".format(f=dt_reco_filename))
-    if not os.path.isfile(dt_gpp_filename):
-        raise ONEFluxError("DT_GPP file not found: {f}".format(f=dt_gpp_filename))
-    if not os.path.isfile(nt_reco_filename):
-        raise ONEFluxError("NT_RECO file not found: {f}".format(f=nt_reco_filename))
-    if not os.path.isfile(nt_gpp_filename):
-        raise ONEFluxError("NT_RECO file not found: {f}".format(f=nt_gpp_filename))
+    if not nt_skip:
+        nt_reco_filename = os.path.join(ddir, "{s}_NT_RECO_{r}.csv".format(s=siteid, r=resolution))
+        nt_gpp_filename = os.path.join(ddir, "{s}_NT_GPP_{r}.csv".format(s=siteid, r=resolution))
+        if not os.path.isfile(nt_reco_filename):
+            raise ONEFluxError("NT_RECO file not found: {f}".format(f=nt_reco_filename))
+        if not os.path.isfile(nt_gpp_filename):
+            raise ONEFluxError("NT_RECO file not found: {f}".format(f=nt_gpp_filename))
 
-    # DT RECO
-    log.debug("Loading partitioning/{r} file: {f}".format(r=resolution, f=dt_reco_filename))
-    dt_reco = _load_data(filename=dt_reco_filename, resolution=resolution)
-    nrecords = dt_reco.size
+        # NT RECO
+        log.debug("Loading partitioning/{r} file: {f}".format(r=resolution, f=nt_reco_filename))
+        nt_reco = _load_data(filename=nt_reco_filename, resolution=resolution)
+        if nrecords is None:
+            nrecords = nt_reco.size
+        elif nt_reco.size != nrecords:
+            raise ONEFluxError("Incompatible number of records UNK={p}  and  NT_RECO={s}".format(p=nrecords, s=nt_reco.size))
 
-    # DT GPP
-    log.debug("Loading partitioning/{r} file: {f}".format(r=resolution, f=dt_gpp_filename))
-    dt_gpp = _load_data(filename=dt_gpp_filename, resolution=resolution)
-    if dt_gpp.size != nrecords:
-        raise ONEFluxError("Incompatible number of records DT_RECO={p}  and  DT_GPP={s}".format(p=nrecords, s=dt_gpp.size))
+        # NT GPP
+        log.debug("Loading partitioning/{r} file: {f}".format(r=resolution, f=nt_gpp_filename))
+        nt_gpp = _load_data(filename=nt_gpp_filename, resolution=resolution)
+        if nt_gpp.size != nrecords:
+            raise ONEFluxError("Incompatible number of records NT_RECO={p}  and  NT_GPP={s}".format(p=nrecords, s=nt_gpp.size))
 
-    # NT RECO
-    log.debug("Loading partitioning/{r} file: {f}".format(r=resolution, f=nt_reco_filename))
-    nt_reco = _load_data(filename=nt_reco_filename, resolution=resolution)
-    if nt_reco.size != nrecords:
-        raise ONEFluxError("Incompatible number of records DT_RECO={p}  and  NT_RECO={s}".format(p=nrecords, s=nt_reco.size))
+    if not dt_skip:
+        dt_reco_filename = os.path.join(ddir, "{s}_DT_RECO_{r}.csv".format(s=siteid, r=resolution))
+        dt_gpp_filename = os.path.join(ddir, "{s}_DT_GPP_{r}.csv".format(s=siteid, r=resolution))
+        if not os.path.isfile(dt_reco_filename):
+            raise ONEFluxError("DT_RECO file not found: {f}".format(f=dt_reco_filename))
+        if not os.path.isfile(dt_gpp_filename):
+            raise ONEFluxError("DT_GPP file not found: {f}".format(f=dt_gpp_filename))
 
-    # NT GPP
-    log.debug("Loading partitioning/{r} file: {f}".format(r=resolution, f=nt_gpp_filename))
-    nt_gpp = _load_data(filename=nt_gpp_filename, resolution=resolution)
-    if nt_gpp.size != nrecords:
-        raise ONEFluxError("Incompatible number of records DT_RECO={p}  and  NT_GPP={s}".format(p=nrecords, s=nt_gpp.size))
+        # DT RECO
+        log.debug("Loading partitioning/{r} file: {f}".format(r=resolution, f=dt_reco_filename))
+        dt_reco = _load_data(filename=dt_reco_filename, resolution=resolution)
+        if nrecords is None:
+            nrecords = dt_reco.size
+        elif dt_reco.size != nrecords:
+            raise ONEFluxError("Incompatible number of records NT_RECO={p}  and  DT_RECO={s}".format(p=nrecords, s=dt_gpp.size))
 
-    return merge_unc(dt_reco=dt_reco, dt_gpp=dt_gpp, nt_reco=nt_reco, nt_gpp=nt_gpp, resolution=resolution)
+        # DT GPP
+        log.debug("Loading partitioning/{r} file: {f}".format(r=resolution, f=dt_gpp_filename))
+        dt_gpp = _load_data(filename=dt_gpp_filename, resolution=resolution)
+        if dt_gpp.size != nrecords:
+            raise ONEFluxError("Incompatible number of records DT/NT_RECO={p}  and  DT_GPP={s}".format(p=nrecords, s=dt_gpp.size))
+
+    return merge_unc(dt_reco=dt_reco, dt_gpp=dt_gpp, nt_reco=nt_reco, nt_gpp=nt_gpp, resolution=resolution, nt_skip=nt_skip, dt_skip=dt_skip)
 
 def update_names(data):
     old_h = []
@@ -781,7 +817,7 @@ def update_names_qc(data):
     data.dtype.names = new_h
     return data
 
-def merge_arrays(meteo, energy, nee, unc, resolution):
+def merge_arrays(meteo, energy, nee, unc, resolution, nt_skip=False, dt_skip=False):
     dtype_ts = TIMESTAMP_DTYPE_BY_RESOLUTION[resolution]
     htype = [dt[0] for dt in dtype_ts]
     dtype_comp = []
@@ -795,9 +831,10 @@ def merge_arrays(meteo, energy, nee, unc, resolution):
         if not numpy.all(meteo[label] == nee[label]):
             diff = ~(meteo[label] == nee[label])
             raise ONEFluxError("Timestamps ({l}) differ for METEO '{t1}' and NEE '{t2}'".format(l=label, t1=meteo[label][diff][0], t2=nee[label][diff][0]))
-        if not numpy.all(meteo[label] == unc[label]):
-            diff = ~(meteo[label] == unc[label])
-            raise ONEFluxError("Timestamps ({l}) differ for METEO '{t1}' and UNC '{t2}'".format(l=label, t1=meteo[label][diff][0], t2=unc[label][diff][0]))
+        if (not nt_skip) or (not dt_skip):
+            if not numpy.all(meteo[label] == unc[label]):
+                diff = ~(meteo[label] == unc[label])
+                raise ONEFluxError("Timestamps ({l}) differ for METEO '{t1}' and UNC '{t2}'".format(l=label, t1=meteo[label][diff][0], t2=unc[label][diff][0]))
 
     # populate new headers
     dtype_comp_labels = []
@@ -822,13 +859,15 @@ def merge_arrays(meteo, energy, nee, unc, resolution):
             else:
                 dtype_comp_labels.append(dt[0])
                 dtype_comp.append((dt[0], dt[1]))
-    for dt in unc.dtype.descr:
-        if dt[0] not in htype:
-            if dt[0] in dtype_comp_labels:
-                log.debug("Skip duplicate header: {h}".format(h=dt[0]))
-            else:
-                dtype_comp_labels.append(dt[0])
-                dtype_comp.append((dt[0], dt[1]))
+    
+    if (not nt_skip) or (not dt_skip):
+        for dt in unc.dtype.descr:
+            if dt[0] not in htype:
+                if dt[0] in dtype_comp_labels:
+                    log.debug("Skip duplicate header: {h}".format(h=dt[0]))
+                else:
+                    dtype_comp_labels.append(dt[0])
+                    dtype_comp.append((dt[0], dt[1]))
 
     dtype = dtype_ts + dtype_comp
     h = [i[0] for i in dtype]
@@ -851,9 +890,11 @@ def merge_arrays(meteo, energy, nee, unc, resolution):
     for dt in nee.dtype.descr:
         if dt[0] not in htype:
             d[dt[0]] = nee[dt[0]]
-    for dt in unc.dtype.descr:
-        if dt[0] not in htype:
-            d[dt[0]] = unc[dt[0]]
+    
+    if (not nt_skip) or (not dt_skip):
+        for dt in unc.dtype.descr:
+            if dt[0] not in htype:
+                d[dt[0]] = unc[dt[0]]
 
     return d
 
@@ -954,7 +995,7 @@ def get_subset_idx(data, first, last):
 
     return f, l
 
-def check_lengths(siteid, meteo, energy, nee, unc, resolution):
+def check_lengths(siteid, meteo, energy, nee, unc, resolution, nt_skip=False, dt_skip=False):
 
     # check for complete-meteo vs flux-years-only meteo
     if meteo[meteo.dtype.names[0]][0] != energy[energy.dtype.names[0]][0] or meteo[meteo.dtype.names[0]][-1] != energy[energy.dtype.names[0]][-1]:
@@ -966,20 +1007,177 @@ def check_lengths(siteid, meteo, energy, nee, unc, resolution):
             meteo['TIMESTAMP_END'][-1] = str(meteo['TIMESTAMP_END'][-1])[:4] + '1231'
 
     # check record sizes
-    if meteo.size != energy.size or meteo.size != nee.size or meteo.size != unc.size:
-        msg = "Number of records differ: METEO={m}, ENERGY={e}, NEE={n}, UNC/PART={u}".format(m=meteo.size, e=energy.size, n=nee.size, u=unc.size)
-        log.critical(msg)
-        raise ONEFluxError(msg)
+    if (not nt_skip) or (not dt_skip):
+        if meteo.size != energy.size or meteo.size != nee.size or meteo.size != unc.size:
+            msg = "Number of records differ: METEO={m}, ENERGY={e}, NEE={n}, UNC/PART={u}".format(m=meteo.size, e=energy.size, n=nee.size, u=unc.size)
+            log.critical(msg)
+            raise ONEFluxError(msg)
+    else:
+        if meteo.size != energy.size or meteo.size != nee.size:
+            msg = "Number of records differ: METEO={m}, ENERGY={e}, NEE={n}".format(m=meteo.size, e=energy.size, n=nee.size)
+            log.critical(msg)
+            raise ONEFluxError(msg)
 
     # check timestamps match # TODO: check if repeated
     if not numpy.all(meteo[meteo.dtype.names[0]] == nee[nee.dtype.names[0]]):
         raise ONEFluxError("Different timestamp ranges METEO and NEE")
     if not numpy.all(meteo[meteo.dtype.names[0]] == energy[energy.dtype.names[0]]):
         raise ONEFluxError("Different timestamp ranges METEO and ENERGY")
-    if not numpy.all(meteo[meteo.dtype.names[0]] == unc[unc.dtype.names[0]]):
-        raise ONEFluxError("Different timestamp ranges METEO and UNC/PARTITIONING")
+    if (not nt_skip) or (not dt_skip):
+        if not numpy.all(meteo[meteo.dtype.names[0]] == unc[unc.dtype.names[0]]):
+            raise ONEFluxError("Different timestamp ranges METEO and UNC/PARTITIONING")
 
     return meteo, energy, nee, unc
+
+
+def get_indices_to_filter(qcdata, qc_threshold=2, window_size=48):
+    '''
+    Fast creation of mask for QC flags above threshold value
+    continually within window size
+    '''
+    # filter QC array, minimum quality acceptable
+    qc_filtered = (qcdata >= qc_threshold).astype(int)
+
+    # prepare window array of 1s for convolution
+    conv_window = [1,] * window_size 
+    
+    # create array counting how many of entries match condition
+    # (low quality, i.e., qc values higher than threshold)
+    conv = numpy.convolve(qc_filtered, conv_window, mode='valid') 
+    
+    # create array of start indices where number of entries match window size
+    indices_start = numpy.where(conv == window_size)[0]
+    
+    # create (start, end) pair for windows
+    indices = [numpy.arange(index, index + window_size) for index in indices_start]
+
+    # flatten all entries (and remove potential duplicates)
+    indices_unique = numpy.unique(indices) 
+
+    # merge all contiguous windows into longer tuples
+    # use (i[0]:i[-1] + 1) to access indexes for each window of interest
+    indices_tmp = numpy.where(numpy.diff(indices_unique) != 1)[0] + 1
+    indices_contiguous = numpy.split(indices_unique, indices_tmp)
+
+    # create mask to be used to set values to NaN in True positions
+    mask = numpy.isnan(qcdata)
+    mask[:] = False
+    for i in indices_contiguous:
+        if len(i) > 0:
+            mask[i[0]:i[-1] + 1] = True
+    return mask
+
+
+def filter_long_gaps(data, qc_threshold=2, window_size=48):
+    '''
+    Using dictionary of QC variable to be applied to each data variable,
+    assigns -9999 to gapfilled values when QC flags are above threshold
+    value continually within window size. Returns list of timestamps to
+    be filtered at higher temporal aggregations and complete dataset with
+    filtered data variables -- N.B. this function only applies to HH/HR data,
+    coarser resolutions are handled from the returned ftimestamp.
+    '''
+    ftimestamp = {}
+    ftimestamp_cut_mask = numpy.zeros(data.size, dtype=bool) # for _CUT_REF filtering, start with all True
+    ftimestamp_vut_mask = numpy.zeros(data.size, dtype=bool) # for _VUT_REF filtering, start with all True    
+    for qcv, var_list in VARIABLES_DONOT_GAPFILL_LONG.iteritems():
+        log.debug('QC variable {q}: start cleaning long gaps'.format(q=qcv))
+        if qcv not in data.dtype.names:
+            log.warning('QC variable {q} not part of this temporal resolution, skipping'.format(q=qcv))
+            continue
+        if '_MEAN' in qcv:
+            log.warning('QC variable {q} is a _MEAN variable, handled next round'.format(q=qcv))
+            continue
+
+        fmask = get_indices_to_filter(qcdata=data[qcv], qc_threshold=qc_threshold, window_size=window_size)
+        # HH/HR only, coarser resolutions are handled from the returned ftimestamp
+        ftimestamp[qcv] = data['TIMESTAMP_START'][fmask]
+        log.debug('QC variable {q} has {n} records to be restored to gaps'.format(q=qcv, n=numpy.sum(fmask)))
+
+        if qcv in VARIABLES_DONOT_GAPFILL_LONG_NEEXXCUT_MEAN_L:
+            # for _CUT_MEAN_QC variables, also create combined mask
+            ftimestamp_cut_mask = (ftimestamp_cut_mask | fmask)
+            log.debug('QC variable {q} has {n} records to be restored to gaps, adding to _MEAN ({m} total)'.format(q=qcv, n=numpy.sum(fmask), m=numpy.sum(ftimestamp_cut_mask)))
+        if qcv in VARIABLES_DONOT_GAPFILL_LONG_NEEXXVUT_MEAN_L:
+            # for _VUT_MEAN_QC variables, also create combined mask
+            ftimestamp_vut_mask = (ftimestamp_vut_mask | fmask)
+            log.debug('QC variable {q} has {n} records to be restored to gaps, adding to _MEAN ({m} total)'.format(q=qcv, n=numpy.sum(fmask), m=numpy.sum(ftimestamp_vut_mask)))
+
+        for var in var_list:
+            # TODO: handle _REF RECO/GPP (from AUX) and _MEAN (from intersection of _XX percentiles)
+            #      NEE_[C|V]UTE_REF already handled for HH/HR, but needs to be handled for coarser resolutions from NEEAUX (same as GPP/RECO for all resolutions)
+            #      _MEAN currently using _MEAN_QC which is an average of QC values, so no -9999 and _MEAN survives and needs to be handled separately
+            log.debug('QC variable {q}, data variable {v}: assigning -9999'.format(q=qcv, v=var))
+            data[var][fmask] = -9999.9
+    
+    # apply combined masks for MEAN _CUT_REF and _VUT_REF variables
+    if 'NEE_CUT_MEAN' in data.dtype.names:
+        ftimestamp['NEE_CUT_MEAN_QC'] = data['TIMESTAMP_START'][ftimestamp_cut_mask]
+        log.debug('QC variable NEE_CUT_MEAN_QC has {n} records to be restored to gaps'.format(q=qcv, n=numpy.sum(ftimestamp_cut_mask)))
+        for qcv in VARIABLES_DONOT_GAPFILL_LONG['NEE_CUT_MEAN_QC']:
+            log.debug('QC variable NEE_CUT_MEAN_QC, data variable {v}: assigning -9999'.format(v=qcv))
+            data[qcv][ftimestamp_cut_mask] = -9999.9
+
+    if 'NEE_VUT_MEAN' in data.dtype.names:
+        ftimestamp['NEE_VUT_MEAN_QC'] = data['TIMESTAMP_START'][ftimestamp_vut_mask]
+        log.debug('QC variable NEE_VUT_MEAN_QC has {n} records to be restored to gaps'.format(q=qcv, n=numpy.sum(ftimestamp_vut_mask)))
+        for qcv in VARIABLES_DONOT_GAPFILL_LONG['NEE_VUT_MEAN_QC']:
+            log.debug('QC variable NEE_VUT_MEAN_QC, data variable {v}: assigning -9999'.format(v=qcv))
+            data[qcv][ftimestamp_vut_mask] = -9999.9
+
+    return ftimestamp, data
+
+
+def slice_string_array(sarray, start, end):
+    '''
+    Slices strings at each position of array,
+    keeps only values of string within [start, end)
+    '''
+    sb = sarray.view((str, 1)).reshape(len(sarray), -1)[:, start:end]
+    return numpy.fromstring(sb.tostring(), dtype=(str, end - start))
+
+
+def generate_agg_timestamp_mask(ftimestamp, data, resolution='dd'):
+    '''
+    For earch QC variable in ftimestamp dict,
+    process list of timestamps excluded from HH/HR array,
+    propagating to other temporal aggregations (DD, WW, MM, YY).
+    '''
+    timelabels = [i[0] for i in TIMESTAMP_DTYPE_BY_RESOLUTION[resolution]]
+    fmasked = {}
+    for qcv, t in ftimestamp.iteritems():
+        log.debug('QC variable {q}, processing aggregation {v}, filtering {n} records from HH/HR resolution'.format(q=qcv, v=resolution, n=len(t)))
+        if len(t) > 0:
+            if (resolution == 'dd') or (resolution == 'ww'):
+                sliced = numpy.unique(slice_string_array(t, start=0, end=8))
+                if (resolution == 'dd'):
+                    timestamps = data[timelabels[0]]
+                    tmask = numpy.in1d(timestamps, sliced)
+                elif (resolution == 'ww'):
+                    timestamps_start = data[timelabels[0]]
+                    timestamps_end = data[timelabels[1]]
+                    tmask = (timestamps_start != timestamps_start)
+                    
+                    # not ideal performance-wise, but <1,000 entries max so should be fine
+                    for ts in sliced:                        
+                        nmask = (ts >= timestamps_start) & (ts <= timestamps_end)
+                        tmask = (tmask | nmask)
+                fmasked[qcv] = tmask
+
+            elif resolution == 'mm':
+                sliced = numpy.unique(slice_string_array(t, start=0, end=6))
+                timestamps = data[timelabels[0]]
+                tmask = numpy.in1d(timestamps, sliced)
+                fmasked[qcv] = tmask
+            
+            elif resolution == 'yy':
+                sliced = numpy.unique(slice_string_array(t, start=0, end=4))
+                timestamps = data[timelabels[0]]
+                tmask = numpy.in1d(timestamps, sliced)
+                fmasked[qcv] = tmask
+
+            log.debug('QC variable {v}, aggregation {a} will filter {n} entries'.format(v=qcv, a=resolution, n=tmask.sum()))
+    return fmasked
 
 
 def run_site(siteid,
@@ -991,7 +1189,7 @@ def run_site(siteid,
              pipeline=None,
              era_first_timestamp_start=ERA_FIRST_TIMESTAMP_START,
              era_last_timestamp_start=ERA_LAST_TIMESTAMP_START):
-    if pipeline is None:
+    if pipeline is None: # TODO: remove this condition and add error handling, pipeline shoud not be None anymore
         datadir = WORKING_DIRECTORY
         meteo = METEODIR.format(sd=sitedir)
         nee = NEEDIR.format(sd=sitedir)
@@ -1033,7 +1231,7 @@ def run_site(siteid,
         meteo_data = load_meteo(siteid=siteid, ddir=meteo, resolution=resolution)
         nee_data = load_nee(siteid=siteid, ddir=nee, resolution=resolution)
         energy_data = load_energy(siteid=siteid, ddir=energy, resolution=resolution)
-        unc_data = load_unc(siteid=siteid, ddir=unc, resolution=resolution)
+        unc_data = load_unc(siteid=siteid, ddir=unc, resolution=resolution, nt_skip=pipeline.nt_skip, dt_skip=pipeline.dt_skip)
 
         # make duplicate of full meteo data
         dt = copy.deepcopy(meteo_data.dtype)
@@ -1041,7 +1239,7 @@ def run_site(siteid,
         full_meteo_data.dtype = dt
 
         # check lengths and update arrays if needed
-        meteo_data, energy_data, nee_data, unc_data = check_lengths(siteid=siteid, meteo=meteo_data, energy=energy_data, nee=nee_data, unc=unc_data, resolution=resolution)
+        meteo_data, energy_data, nee_data, unc_data = check_lengths(siteid=siteid, meteo=meteo_data, energy=energy_data, nee=nee_data, unc=unc_data, resolution=resolution, nt_skip=pipeline.nt_skip, dt_skip=pipeline.dt_skip)
 
         # update column names to new standard
         log.debug("{s}: updating names for meteo data".format(s=siteid))
@@ -1052,11 +1250,12 @@ def run_site(siteid,
         energy_data = update_names(data=energy_data)
         log.debug("{s}: updating names for nee data".format(s=siteid))
         nee_data = update_names(data=nee_data)
-        log.debug("{s}: updating names for unc data".format(s=siteid))
-        unc_data = update_names(data=unc_data)
+        if (not pipeline.nt_skip) or (not pipeline.dt_skip):
+            log.debug("{s}: updating names for unc data".format(s=siteid))
+            unc_data = update_names(data=unc_data)
 
         # merge arrays
-        output_data = merge_arrays(meteo=meteo_data, energy=energy_data, nee=nee_data, unc=unc_data, resolution=resolution)
+        output_data = merge_arrays(meteo=meteo_data, energy=energy_data, nee=nee_data, unc=unc_data, resolution=resolution, nt_skip=pipeline.nt_skip, dt_skip=pipeline.dt_skip)
 
         # find temporal resolution
         if resolution == 'hh':
@@ -1105,6 +1304,32 @@ def run_site(siteid,
             if qcdata_yy is None:
                 raise ONEFluxError("Output QC Data YY resolution not computed")
             output_data = merge_qcdata_res(qcdata=qcdata_yy, output=output_data, res=resolution)
+
+        # NEW FOR 2025: Cleanup of long gapfilled results,
+        # remove gapfilled data for gaps longer than 21 days.
+        # N.B.: this changes default ONEFlux behavior
+        if output_resolution == 'HH':
+            # compute windows and set gaps for window_size=48*21
+            ftimestamp, output_data = filter_long_gaps(data=output_data, qc_threshold=2, window_size=48*21)
+        elif output_resolution == 'HR':
+            # compute windows and set gaps for window_size=24*21
+            ftimestamp, output_data = filter_long_gaps(data=output_data, qc_threshold=2, window_size=24*21)
+        # use list of YYYYMMDDHHMM timestamps to be filtered from HH/HR resolution to filter aggregated resolutions
+        elif (output_resolution == 'DD') or (output_resolution == 'WW') or (output_resolution == 'MM') or (output_resolution == 'YY'):
+            res_masks = generate_agg_timestamp_mask(ftimestamp=ftimestamp, data=output_data, resolution=resolution)
+            print(res_masks)
+            for qcv, fmask in res_masks.iteritems():
+                for var in VARIABLES_DONOT_GAPFILL_LONG[qcv]:
+                    # TODO: handle _REF RECO/GPP (from AUX) and _MEAN (from intersection of _XX percentiles)
+                    if var not in output_data.dtype.names:
+                        log.warning('Data variable {q} not part of temporal  resolution {r}, skipping'.format(q=var, r=resolution))
+                        continue
+                    log.debug('QC variable {q}, data variable {v}, resolution {r}: assigning -9999'.format(q=qcv, v=var, r=resolution))
+                    output_data[var][fmask] = -9999.9
+                    # TODO: consider change corresponding _QC variables to -9999 when the main variable is -9999
+                    #       (e.g., if NEE_VUT_REF is -9999, then NEE_VUT_REF_QC should also be -9999).
+                    #       For now, only the main variable is set to -9999, QC variable is left unchanged
+           
 
         ### FULLSET files
         # save Tier 2 FULLSET CSV file
@@ -1198,7 +1423,7 @@ def run_site(siteid,
     log.debug("{s}: wrote years metadata file: {f}".format(s=siteid, f=prodfile_years))
 
     # generate aux and info files
-    aux_file_list = run_site_aux(datadir=datadir, siteid=siteid, sitedir=sitedir, first_year=first_year, last_year=last_year, version_data=version_data, version_processing=version_processing, pipeline=pipeline)
+    aux_file_list = run_site_aux(datadir=datadir, siteid=siteid, sitedir=sitedir, first_year=first_year, last_year=last_year, version_data=version_data, version_processing=version_processing, pipeline=pipeline, nt_skip=pipeline.nt_skip, dt_skip=pipeline.dt_skip)
     if full_filelist_t1:
         full_filelist_t1.extend(aux_file_list)
         full_filelist_t1.extend(erai_filelist)
