@@ -234,7 +234,6 @@ ${URE_BIN}: ${COMMON_TGT} ${TXT2H_BIN}
 	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_gpp_dt_ww.txt) ${URE_DIR} info_gpp_dt_ww || { echo "failed!"; exit 1; }
 	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_gpp_dt_mm.txt) ${URE_DIR} info_gpp_dt_mm || { echo "failed!"; exit 1; }
 	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_gpp_dt_yy.txt) ${URE_DIR} info_gpp_dt_yy || { echo "failed!"; exit 1; }
-	@${TXT2H_BIN}  $(join ${SRCDIR}, ure/info/info_reco_sr.txt) ${URE_DIR} info_reco_sr || { echo "failed!"; exit 1; }
 	cd ${URE_DIR} ;\
 	${CC} -w -c ${URE_SRC} ;\
 	${CC} ${URE_OBJ} $(join ${COMMON_DIR}, ${COMMON_OBJ}) -w -lm -o ${URE_BIN}
