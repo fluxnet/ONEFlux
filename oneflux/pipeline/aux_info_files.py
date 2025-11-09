@@ -235,7 +235,7 @@ def load_ustar_vut(siteid, sitedir, year_range, nee_perc_ustar_vut_template=NEE_
         nee_perc_ustar_vut_values[year]['50.00'] = nee_perc_ustar_vut_values[year]['50']
     return nee_perc_ustar_vut_values
 
-def generate_nee(datadir, siteid, sitedir, first_year, last_year, version_data, version_processing, pipeline=None):
+def generate_nee(datadir, siteid, sitedir, first_year, last_year, version_data, version_processing, pipeline=None, nt_skip=False, dt_skip=False):
     log.debug("{s}: starting generation of AUXNEE file".format(s=siteid))
 
     nee_info_template = (NEE_INFO if pipeline is None else pipeline.nee_info)
@@ -292,7 +292,11 @@ def generate_nee(datadir, siteid, sitedir, first_year, last_year, version_data, 
     # process NEE, RECO, and GPP info
     u50_ustar_perc = dict({'CUT':nee_perc_ustar_cut_values['50.00']}.items() + {year:threshold['50.00'] for year, threshold in nee_perc_ustar_vut_values.iteritems()}.items())
     nee_ref_ustar_perc = {i:{} for i in RESOLUTION_LIST}
-    unc_ref_ustar_perc = {i:{j:{} for j in RESOLUTION_LIST} for i in ['RECO_NT', 'GPP_NT', 'RECO_DT', 'GPP_DT']}
+    unc_ref_ustar_perc = {}
+    if not nt_skip:
+        unc_ref_ustar_perc.update({i:{j:{} for j in RESOLUTION_LIST} for i in ['RECO_NT', 'GPP_NT']})
+    if not dt_skip:
+        unc_ref_ustar_perc.update({i:{j:{} for j in RESOLUTION_LIST} for i in ['RECO_DT', 'GPP_DT']})
     ustar_not_working = {'files_mp':set(), 'files_cp':set(), 'info_mp':set(), 'info_cp':set()}
 
     lines = []
@@ -370,7 +374,12 @@ def generate_nee(datadir, siteid, sitedir, first_year, last_year, version_data, 
 #        print
 
         # process RECO, GPP
-        for method, variable in [('NT', 'RECO'), ('NT', 'GPP'), ('DT', 'RECO'), ('DT', 'GPP')]:
+        unc_var_list = []
+        if not nt_skip:
+            unc_var_list.extend([('NT', 'RECO'), ('NT', 'GPP')])
+        if not dt_skip:
+            unc_var_list.extend([('DT', 'RECO'), ('DT', 'GPP')])
+        for method, variable in unc_var_list:
             key = variable + '_' + method
             unc_info = unc_info_template.format(s=siteid, sd=sitedir, m=method, v=variable, r=res)
             if not os.path.isfile(unc_info):
@@ -470,7 +479,12 @@ def generate_nee(datadir, siteid, sitedir, first_year, last_year, version_data, 
             output_lines.append(nline)
 
     # output UNC REF
-    for prod in ['RECO_NT', 'GPP_NT', 'RECO_DT', 'GPP_DT']:
+    unc_var_list = []
+    if not nt_skip:
+        unc_var_list.extend(['RECO_NT', 'GPP_NT'])
+    if not dt_skip:
+        unc_var_list.extend(['RECO_DT', 'GPP_DT'])
+    for prod in unc_var_list:
         for res in RESOLUTION_LIST:
             entry_number += 1
             perc, thres = unc_ref_ustar_perc[prod][res].get('CUT', (-9999, -9999))
@@ -515,12 +529,12 @@ def generate_nee(datadir, siteid, sitedir, first_year, last_year, version_data, 
 
 # TODO: Make AUX files Tier aware..........
 
-def run_site_aux(datadir, siteid, sitedir, first_year, last_year, version_data, version_processing, pipeline=None):
+def run_site_aux(datadir, siteid, sitedir, first_year, last_year, version_data, version_processing, pipeline=None, nt_skip=False, dt_skip=False):
     log.info("Starting generation of AUX-INFO files for {s}".format(s=siteid))
 
     aux_file_list = []
     aux_file_list.append(generate_meteo(siteid=siteid, sitedir=sitedir, first_year=first_year, last_year=last_year, version_data=version_data, version_processing=version_processing, pipeline=pipeline))
-    aux_file_list.append(generate_nee(datadir=datadir, siteid=siteid, sitedir=sitedir, first_year=first_year, last_year=last_year, version_data=version_data, version_processing=version_processing, pipeline=pipeline))
+    aux_file_list.append(generate_nee(datadir=datadir, siteid=siteid, sitedir=sitedir, first_year=first_year, last_year=last_year, version_data=version_data, version_processing=version_processing, pipeline=pipeline, nt_skip=nt_skip, dt_skip=dt_skip))
 
     log.info("Finished generation of AUX-INFO files for {s}".format(s=siteid))
     return aux_file_list

@@ -143,7 +143,8 @@ def partitioning_dt(datadir, siteid, sitedir, prod_to_compare, perc_to_compare, 
                 if ustar_type == 'y':
                     msg = "NEE proc file not found '{f}'".format(f=nee_proc_percentiles_f)
                     _log.critical(msg)
-                    raise ONEFluxError(msg)
+                    continue
+                    #raise ONEFluxError(msg) # TODO: add exception raising when both y and c missing
                 elif ustar_type == 'c':
                     msg = "NEE proc file not found '{f}', skipping (CUT not computed?)".format(f=nee_proc_percentiles_f)
                     _log.warning(msg)

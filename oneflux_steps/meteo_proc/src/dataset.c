@@ -16,6 +16,7 @@
 #include <ctype.h>
 #include <assert.h>
 #include "dataset.h"
+#include "defs.h"
 #include "info_swc_hh.h"
 #include "info_swc_dd_ww_mm_yy.h"
 #include "info_ts_hh.h"
@@ -64,6 +65,11 @@ typedef struct {
 	PREC rmse;
 	PREC corr;
 } STAT;
+
+typedef struct {
+	const char* name;
+	int column;
+} USER_DRIVER;
 
 /* strings */
 static const char dataset_delimiter[] = " ,\r\n";
@@ -775,7 +781,7 @@ static int get_dataset_details(DATASET *const dataset) {
 }
 
 /* */
-static int import_meteo_values(DATASET *const dataset) {
+static int import_meteo_values(DATASET *const dataset, MDS_VARS* mds_vars) {
 	typedef struct {
 		int profile;
 		int index;
@@ -791,7 +797,7 @@ static int import_meteo_values(DATASET *const dataset) {
 	int error;
 	int year;
 	int columns_found_count;
-	int columns_index[MET_VALUES];
+	int columns_index[MET_VALUES+USER_DRIVERS_COUNT];
 	int profile;
 	int *int_no_leak;
 	COLUMN *column_no_leak;
@@ -1232,7 +1238,7 @@ static int import_meteo_values(DATASET *const dataset) {
 		}
 
 		/* reset columns */
-		for ( i = 0; i < MET_VALUES; i++ ) {
+		for ( i = 0; i < MET_VALUES+USER_DRIVERS_COUNT; i++ ) {
 			columns_index[i] = -1;
 		}
 
@@ -1241,6 +1247,8 @@ static int import_meteo_values(DATASET *const dataset) {
 		if ( !f ) {
 			printf("not found. set null values...");
 			for ( i = 0; i < rows_count; i++ ) {
+				int y;
+
 				dataset->rows[index+i].value[TA_MET] = INVALID_VALUE;
 				dataset->rows[index+i].value[VPD_MET] = INVALID_VALUE;
 				dataset->rows[index+i].value[PRECIP_MET] = INVALID_VALUE;
@@ -1248,6 +1256,10 @@ static int import_meteo_values(DATASET *const dataset) {
 				dataset->rows[index+i].value[SW_IN_MET] = INVALID_VALUE;
 				dataset->rows[index+i].value[LW_IN_MET] = INVALID_VALUE;
 				dataset->rows[index+i].value[PA_MET] = INVALID_VALUE;
+
+				for ( y = USER_DRIVERS_BEGIN; y < USER_DRIVERS_END; ++y ) {
+					dataset->rows[index+i].value[y] = INVALID_VALUE;
+				}
 			}
 
 			/* set rpot */
@@ -1305,8 +1317,8 @@ static int import_meteo_values(DATASET *const dataset) {
 					/* check itp */
 					strcpy(buffer2, "itp");
 					strcat(buffer2, met_values_tokens[y]);
-					if (	! string_compare_i(token, met_values_tokens[y]) ||
-							! string_compare_i(token, buffer2) ) {
+					if (	!string_compare_i(token, met_values_tokens[y]) ||
+							!string_compare_i(token, buffer2) ) {
 						/* check if it is already assigned */
 						if ( columns_index[y] != -1 ) {
 							printf("column %s already found at index %d\n", token, columns_index[y]);
@@ -1317,6 +1329,30 @@ static int import_meteo_values(DATASET *const dataset) {
 							/* do not skip, continue searching for redundant columns */
 						}
 					}
+				}
+				/* check for user mds vars */
+				if ( mds_vars ) {
+					///* check if token is defs */
+					//for ( y = 0; y < DEF_VARS_COUNT; ++y ) {
+					//	if ( !string_compare_i(token, sz_defs[y]) ) {
+					//		break;
+					//	}
+					//}
+					//if ( DEF_VARS_COUNT == i ) {
+						for ( y = 0; y < mds_vars->count; ++y ) {
+							int z;
+
+							/* we loop for each vars name of mds vars */
+							/* we skip MDS_VAR_TO_FILL, it is mandatory! */
+							for ( z = MDS_VAR_DRIVER_1; z < MDS_VARS_COUNT; ++z ) {
+								if ( mds_vars->vars[y].columns[z] >= USER_DRIVERS_BEGIN ) {
+									if ( !string_compare_i(token, mds_vars->vars[y].name[z]) ) {
+										columns_index[MET_VALUES + (z-1) + (y*3)] = i;
+									}
+								}
+							}
+						}
+					//}
 				}
 
 				/* check for TS */
@@ -1386,7 +1422,7 @@ static int import_meteo_values(DATASET *const dataset) {
 
 			/* check found columns */
 			columns_found_count = swc_columns_count+ts_columns_count;
-			for (  i = 0; i < MET_VALUES; i++ ) {
+			for (  i = 0; i < MET_VALUES+USER_DRIVERS_COUNT; i++ ) {
 				if ( columns_index[i] != -1 ) {
 					++columns_found_count;
 				}
@@ -1500,12 +1536,17 @@ static int import_meteo_values(DATASET *const dataset) {
 						}
 					}
 					/* check other vars */
-					for ( y = 0; y < MET_VALUES; y++ ) {
+					for ( y = 0; y < MET_VALUES+USER_DRIVERS_COUNT; y++ ) {
 						if ( i == columns_index[y] ) {
 							/* convert string to prec */
 							value = convert_string_to_prec(token, &error);
 							if ( error ) {
-								printf("unable to convert value %s at row %d, column %s\n", token, element+1, met_values_tokens[y]);
+								if ( y < MET_VALUES ) {
+									printf("unable to convert value %s at row %d, column %s\n", token, element+1, met_values_tokens[y]);
+								} else {
+									/* TODO - print column name instead of index */
+									printf("unable to convert value %s at row %d, column %d\n", token, element+1, i+1);
+								}
 								free(swc_columns);		
 								free(ts_columns);
 								fclose(f);
@@ -1517,58 +1558,105 @@ static int import_meteo_values(DATASET *const dataset) {
 								value = INVALID_VALUE;
 							}
 
-							switch ( y ) {
-								case 1:	/* TA */
-									if ( (value < -50) || (value > 50) ) {
-										value = INVALID_VALUE;
-									}
-								break;
+							/* user driver can use defaults vars too, so we need to adjust index */
+							{
+								int index = y;
+								if ( (index >= MET_VALUES) && mds_vars ) {
+									const char* vars[] = { "TA", "VPD", "P", "WS", "SW_IN", "LW_IN", "PA" };
+									const char* p;
+									int z;
 
-								case 2: /* VPD */
-									if ( (value < -5) || (value > 120) ) {
-										value = INVALID_VALUE;
-									} else if ( !IS_INVALID_VALUE(value) && (value < 0.0) ) {
-										value = 0.0;
+									index -= MET_VALUES;
+									++index; /* we keep TO_FILL out */
+									p = mds_vars->vars[index / 3].name[index % 3];
+									for ( z = 0; z < SIZEOF_ARRAY(vars); ++z ) {
+										if ( !string_compare_i(p, vars[z]) ) {
+											break;
+										}
 									}
-								break;
+									if ( z < SIZEOF_ARRAY(vars) ) {
+									#if 1
+										index = z + 1;
+									#else
+										/* check if user specify oor for default var */
+										if ( IS_INVALID_VALUE(mds_vars->vars[index / 3].oors[index % 3][MDS_VAR_OOR_MIN]) ) {
+											index = z + 1;
+										} else {
+											index = -1;
+											if (	(value < mds_vars->vars[index / 3].oors[index % 3][MDS_VAR_OOR_MIN])
+													|| (value > mds_vars->vars[index / 3].oors[index % 3][MDS_VAR_OOR_MAX]) ) {
+												value = INVALID_VALUE;
+											}
+										}
+									#endif // 0
+									} else {
+										if ( !IS_INVALID_VALUE(value) && !IS_INVALID_VALUE(mds_vars->vars[index / 3].oors[index % 3][MDS_VAR_OOR_MIN]) ) {
+											if (	(value < mds_vars->vars[index / 3].oors[index % 3][MDS_VAR_OOR_MIN])
+													|| (value > mds_vars->vars[index / 3].oors[index % 3][MDS_VAR_OOR_MAX]) ) {
+												value = INVALID_VALUE;
+											}
+										}
+										index = -1;
+									}
+								}
 
-								case 3:	/* PRECIP */
-									if ( (value < -0.1) || (value > 200) ) {
-										value = INVALID_VALUE;
-									} else if ( !IS_INVALID_VALUE(value) && (value < 0.0) ) {
-										value = 0.0;
-									}
-								break;
+								switch ( index ) {
+									case 1:	/* TA */
+										if ( (value < -50) || (value > 50) ) {
+											value = INVALID_VALUE;
+										}
+									break;
 
-								case 4:	/* WS */
-									if ( (value < 0) || (value > 40) ) {
-										value = INVALID_VALUE;
-									}
-								break;
+									case 2: /* VPD */
+										if ( (value < -5) || (value > 120) ) {
+											value = INVALID_VALUE;
+										} else if ( !IS_INVALID_VALUE(value) && (value < 0.0) ) {
+											value = 0.0;
+										}
+									break;
 
-								case 5:	/* SW_IN */
-									if ( (value < -50) || (value > 1400) ) {
-										value = INVALID_VALUE;
-									} else if ( !IS_INVALID_VALUE(value) && (value < 0.0) ) {
-										value = 0.0;
-									}
-								break;
+									case 3:	/* PRECIP */
+										if ( (value < -0.1) || (value > 200) ) {
+											value = INVALID_VALUE;
+										} else if ( !IS_INVALID_VALUE(value) && (value < 0.0) ) {
+											value = 0.0;
+										}
+									break;
 
-								case 6: /* LW_IN */
-									if ( (value < 50) || (value > 700) ) {
-										value = INVALID_VALUE;
-									}
-								break;
+									case 4:	/* WS */
+										if ( (value < 0) || (value > 40) ) {
+											value = INVALID_VALUE;
+										}
+									break;
 
-								case 7: /* PA */
-									if ( (value < 70) || (value > 130) ) {
-										value = INVALID_VALUE;
-									}
-								break;
+									case 5:	/* SW_IN */
+										if ( (value < -50) || (value > 1400) ) {
+											value = INVALID_VALUE;
+										} else if ( !IS_INVALID_VALUE(value) && (value < 0.0) ) {
+											value = 0.0;
+										}
+									break;
+
+									case 6: /* LW_IN */
+										if ( (value < 50) || (value > 700) ) {
+											value = INVALID_VALUE;
+										}
+									break;
+
+									case 7: /* PA */
+										if ( (value < 70) || (value > 130) ) {
+											value = INVALID_VALUE;
+										}
+									break;
+								}
 							}
 
 							/* assign value */
-							dataset->rows[index+element-1].value[CO2_MET+y] = value;
+							if ( y < MET_VALUES ) {
+								dataset->rows[index+element-1].value[CO2_MET+y] = value;
+							} else {
+								dataset->rows[index+element-1].value[y-MET_VALUES+USER_DRIVERS_BEGIN] = value;
+							}
 							++assigned;
 						}
 					}
@@ -1614,6 +1702,69 @@ static int import_meteo_values(DATASET *const dataset) {
 		printf("rows count should be %d not %d\n", dataset->rows_count, index);
 		return 0;
 	}
+
+	/* debug stuff */
+#if _DEBUG
+	if ( mds_vars )
+	{
+		int v;
+		int c = 0;
+		for ( v = 0; v < mds_vars->count; ++v ) {
+			int d;
+			for ( d = 0; d < MDS_VARS_COUNT; ++d ) {
+				if ( mds_vars->vars[v].columns[d] >= USER_DRIVERS_BEGIN ) {
+					++c;
+				}
+			}
+		}
+
+		if ( c ) {
+			char buf[256] = { 0 }; /* should be enough */
+			FILE* f;
+			int n = sprintf(buf, "%s_%d", dataset->site, dataset->years[0]);
+			if ( dataset->years_count > 1 ) {
+				sprintf(buf+n, "_%d", dataset->years[dataset->years_count-1]);
+			}
+			strcat(buf, "_imported_dataset.csv");
+			f = fopen(buf, "w");
+			if ( ! f ) {
+				printf("DEBUG: unable to create '%s' filename!\n\n", buf);
+			} else {
+				/* print header */
+				c = 0;
+				for ( v = 0; v < mds_vars->count; ++v ) {
+					int d;
+					for ( d = 0; d < MDS_VARS_COUNT; ++d ) {
+						if ( mds_vars->vars[v].columns[d] >= USER_DRIVERS_BEGIN ) {
+							fprintf(f, "%s%s", (c>0)?",":"", mds_vars->vars[v].name[d]);
+							++c;
+						}
+					}
+				}
+				fputs("\n", f);
+
+				/* print values */
+				{
+					int i;
+					for ( i = 0; i < dataset->rows_count; ++i ) {
+						c = 0;
+						for ( v = 0; v < mds_vars->count; ++v ) {
+							int d;
+							for ( d = 0; d < MDS_VARS_COUNT; ++d ) {
+								if ( mds_vars->vars[v].columns[d] >= USER_DRIVERS_BEGIN ) {
+									fprintf(f, "%s%g", (c>0)?",":"", dataset->rows[i].value[mds_vars->vars[v].columns[d]]);
+									++c;
+								}
+							}
+						}
+						fputs("\n", f);
+					}
+				}
+				fclose(f);
+			}
+		}
+	}
+#endif
 
 	/* */
 	return 1;
@@ -4172,7 +4323,10 @@ int check_met_files(DATASET *const dataset) {
 }
 
 /* */
-int compute_datasets(DATASET *const datasets, const int datasets_count) {
+int compute_datasets(DATASET *const datasets, const int datasets_count, MDS_VARS* mds_vars) {
+	//USER_DRIVER* uds = NULL;	/* mandatory */
+	//int uds_count = 0;		/* mandatory */
+	int ret = 0; /* defaults to err */
 	int i;
 	int j;
 	int dataset;
@@ -4183,6 +4337,42 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 	int profile;
 	DATASET *current_dataset;
 	GF_ROW *gf_rows;
+
+	if ( mds_vars->count != DEF_VARS_COUNT ) {
+		printf("count of mds vars must be %d\n\n", DEF_VARS_COUNT);
+		return 0;
+	}
+
+	/* we loop for each mds vars */
+	for ( i = 0; i < mds_vars->count; ++i ) {
+		/* we loop for each vars name of mds vars */
+		/* we skip MDS_VAR_TO_FILL, it is mandatory! */
+		for ( j = MDS_VAR_DRIVER_1; j < MDS_VARS_COUNT; ++j ) {
+			int y;
+			/* we need to seek if a mds_vars is a default one */
+			for ( y = 0; y < DEF_VARS_COUNT; ++y ) {
+				if ( !string_compare_i(sz_defs[y], mds_vars->vars[i].name[j]) ) {
+					break;
+				}
+			}	
+			if ( DEF_VARS_COUNT == y ) {
+				mds_vars->vars[i].columns[j] = USER_DRIVERS_BEGIN + (j-1) + (i*3);
+			} else {
+				/* set default columns */
+				if ( ! string_compare_i(sz_defs[y], sz_defs[TA_DEF_VAR]) ) {
+					mds_vars->vars[i].columns[j] = TA_MET;
+				} else if ( ! string_compare_i(sz_defs[y], sz_defs[SW_IN_DEF_VAR]) ) {
+					mds_vars->vars[i].columns[j] = SW_IN_MET;
+				} else if ( ! string_compare_i(sz_defs[y], sz_defs[LW_IN_DEF_VAR]) ) {
+					mds_vars->vars[i].columns[j] = LW_IN_MET;
+				} else if ( ! string_compare_i(sz_defs[y], sz_defs[VPD_DEF_VAR]) ) {
+					mds_vars->vars[i].columns[j] = VPD_MET;
+				} else if ( ! string_compare_i(sz_defs[y], sz_defs[CO2_DEF_VAR]) ) {
+					mds_vars->vars[i].columns[j] = CO2_MET;
+				}
+			}
+		}
+	}
 
 	/* loop on each dataset */
 	for ( dataset = 0; dataset < datasets_count; dataset++ ) {
@@ -4276,7 +4466,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 		}
 
 		/* import meteo values */
-		if ( !import_meteo_values(current_dataset) ) {
+		if ( !import_meteo_values(current_dataset, mds_vars) ) {
 			/* free memory */
 			free_dataset(current_dataset);
 			continue;
@@ -4288,520 +4478,139 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			rows_per_day /= 2;
 		}
 		
-		/* gapfilling TA */
-		printf("- gapfilling TA...");
+		/* gapfilling... */
+		{
+			int m;
 
-		/* compute start and end row */
-		start_row = -1;
-		end_row = -1;
- 		for ( i = 0; i < current_dataset->rows_count; i++ ) {
-			if ( !IS_INVALID_VALUE(current_dataset->rows[i].value[TA_MET]) ) {
-				start_row = i;
-				break;
-			}
-		}
-		if ( -1 == start_row ) {
-			for ( i = 0; i < current_dataset->rows_count; i++ ) {
-				current_dataset->rows[i].value[TA_FILLED] = INVALID_VALUE;
-				current_dataset->rows[i].value[TA_QC] = INVALID_VALUE;
-			}
-			puts("ok but is missing!");
-		} else {
-			for ( i = current_dataset->rows_count - 1; i >= 0 ; i-- ) {
-				if ( !IS_INVALID_VALUE(current_dataset->rows[i].value[TA_MET]) ) {
-					end_row = i;
-					break;
+			const int meteo_index[TS_DEF_VAR] = {
+				TA_MET,
+				SW_IN_MET,
+				LW_IN_MET,
+				VPD_MET,
+				CO2_MET
+			};
+
+			const int filled_index[TS_DEF_VAR] = {
+				TA_FILLED,
+				SW_IN_FILLED,
+				LW_IN_FILLED,
+				VPD_FILLED,
+				CO2_FILLED
+			};
+
+			const int qc_index[TS_DEF_VAR] = {
+				TA_QC,
+				SW_IN_QC,
+				LW_IN_QC,
+				VPD_QC,
+				CO2_QC
+			};
+
+			/* TS and SWC has profiles so we can't uniform mds...they are computed separately */
+			for ( m = 0; m < TS_DEF_VAR; ++m ) { 
+				printf("- gapfilling %s...", mds_vars->vars[m].name[MDS_VAR_TO_FILL]);
+
+				/* compute start and end row */
+				start_row = -1;
+				end_row = -1;
+				for ( i = 0; i < current_dataset->rows_count; i++ ) {
+					if ( !IS_INVALID_VALUE(current_dataset->rows[i].value[meteo_index[m]]) ) {
+						start_row = i;
+						break;
+					}
+				}
+				if ( -1 == start_row ) {
+					for ( i = 0; i < current_dataset->rows_count; i++ ) {
+						current_dataset->rows[i].value[filled_index[m]] = INVALID_VALUE;
+						current_dataset->rows[i].value[qc_index[m]] = INVALID_VALUE;
+					}
+					puts("ok but is missing!");
+				} else {
+					for ( i = current_dataset->rows_count - 1; i >= 0 ; i-- ) {
+						if ( !IS_INVALID_VALUE(current_dataset->rows[i].value[meteo_index[m]]) ) {
+							end_row = i;
+							break;
+						}
+					}
+					if ( start_row == end_row ) {
+						puts("only one valid value for TA!");
+						/* free memory */
+						free_dataset(current_dataset);
+						continue;
+					}
+
+					/* adjust bounds */
+					start_row -= (DAYS_FOR_GF*rows_per_day);
+					if ( start_row < 0 ) {
+						start_row = 0;
+					}
+
+					end_row += (DAYS_FOR_GF*rows_per_day);
+					if ( end_row > current_dataset->rows_count ) {
+						end_row = current_dataset->rows_count;
+					}
+				
+					gf_rows = gf_mds(	current_dataset->rows->value,
+										sizeof(ROW),
+										current_dataset->rows_count,
+										VALUES,
+										current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
+										mds_vars->vars[m].tolerances[MDS_VAR_DRIVER_1][MDS_VAR_TOLERANCE_MIN],
+										mds_vars->vars[m].tolerances[MDS_VAR_DRIVER_1][MDS_VAR_TOLERANCE_MAX],
+										mds_vars->vars[m].tolerances[MDS_VAR_DRIVER_2A][MDS_VAR_TOLERANCE_MIN],
+										mds_vars->vars[m].tolerances[MDS_VAR_DRIVER_2A][MDS_VAR_TOLERANCE_MAX],
+										mds_vars->vars[m].tolerances[MDS_VAR_DRIVER_2B][MDS_VAR_TOLERANCE_MIN],
+										mds_vars->vars[m].tolerances[MDS_VAR_DRIVER_2B][MDS_VAR_TOLERANCE_MAX],
+										mds_vars->vars[m].columns[MDS_VAR_TO_FILL],
+										mds_vars->vars[m].columns[MDS_VAR_DRIVER_1],
+										mds_vars->vars[m].columns[MDS_VAR_DRIVER_2A],
+										mds_vars->vars[m].columns[MDS_VAR_DRIVER_2B],
+										-1,
+										-1,
+										-1,
+										INVALID_VALUE,
+										INVALID_VALUE,
+										INVALID_VALUE,
+										GF_ROWS_MIN,
+										0,
+										start_row,
+										end_row,
+										&not_gf_count,
+										0,
+										0,
+										0,
+										NULL,
+										0
+
+					);
+
+					if ( !gf_rows ) {
+						/* free memory */
+						free_dataset(current_dataset);
+						continue;
+					}
+
+					if ( !not_gf_count ) {
+						puts("ok");
+					} else {
+						printf("ok (%d values unfilled)\n", not_gf_count); 
+					}
+
+					/* copy gf values and qc */
+					for ( i = 0; i < current_dataset->rows_count; i++ ) {
+						current_dataset->rows[i].value[filled_index[m]] = current_dataset->rows[i].value[meteo_index[m]];
+						current_dataset->rows[i].value[qc_index[m]] = INVALID_VALUE;
+						if ( (i >= start_row) && (i <= end_row) ) {
+							current_dataset->rows[i].value[filled_index[m]] = IS_FLAG_SET(gf_rows[i].mask, GF_TOFILL_VALID) ? current_dataset->rows[i].value[meteo_index[m]] : gf_rows[i].filled;
+							current_dataset->rows[i].value[qc_index[m]] = IS_FLAG_SET(gf_rows[i].mask, GF_TOFILL_VALID) ? 0 : gf_rows[i].quality;
+						}
+					}
+
+					/* free memory */
+					free(gf_rows);
+					gf_rows = NULL;
 				}
 			}
-			if ( start_row == end_row ) {
-				puts("only one valid value for TA!");
-				/* free memory */
-				free_dataset(current_dataset);
-				continue;
-			}
-
-			/* adjust bounds */
-			start_row -= (DAYS_FOR_GF*rows_per_day);
-			if ( start_row < 0 ) {
-				start_row = 0;
-			}
-
-			end_row += (DAYS_FOR_GF*rows_per_day);
-			if ( end_row > current_dataset->rows_count ) {
-				end_row = current_dataset->rows_count;
-			}
-		
-			gf_rows = gf_mds(	current_dataset->rows->value,
-								sizeof(ROW),
-								current_dataset->rows_count,
-								VALUES,
-								current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
-								GF_DRIVER_1_TOLERANCE_MIN,
-								GF_DRIVER_1_TOLERANCE_MAX,
-								GF_DRIVER_2A_TOLERANCE_MIN,
-								GF_DRIVER_2A_TOLERANCE_MAX,
-								GF_DRIVER_2B_TOLERANCE_MIN,
-								GF_DRIVER_2B_TOLERANCE_MAX,
-								TA_MET,
-								SW_IN_MET,
-								TA_MET,
-								VPD_MET,
-								-1,
-								-1,
-								-1,
-								INVALID_VALUE,
-								INVALID_VALUE,
-								INVALID_VALUE,
-								GF_ROWS_MIN,
-								0,
-								start_row,
-								end_row,
-								&not_gf_count,
-								0,
-								0,
-								0,
-								NULL,
-								0
-
-			);
-
-			if ( !gf_rows ) {
-				/* free memory */
-				free_dataset(current_dataset);
-				continue;
-			}
-
-			if ( !not_gf_count ) {
-				puts("ok");
-			} else {
-				printf("ok (%d values unfilled)\n", not_gf_count); 
-			}
-
-			/* copy gf values and qc */
-			for ( i = 0; i < current_dataset->rows_count; i++ ) {
-				current_dataset->rows[i].value[TA_FILLED] = current_dataset->rows[i].value[TA_MET];
-				current_dataset->rows[i].value[TA_QC] = INVALID_VALUE;
-				if ( (i >= start_row) && (i <= end_row) ) {
-					current_dataset->rows[i].value[TA_FILLED] = IS_FLAG_SET(gf_rows[i].mask, GF_TOFILL_VALID) ? current_dataset->rows[i].value[TA_MET] : gf_rows[i].filled;
-					current_dataset->rows[i].value[TA_QC] = IS_FLAG_SET(gf_rows[i].mask, GF_TOFILL_VALID) ? 0 : gf_rows[i].quality;
-				}
-			}
-
-			/* free memory */
-			free(gf_rows);
-			gf_rows = NULL;
-		}
-
-		/* gapfilling SW_IN */
-		printf("- gapfilling SW_IN...");
-
-		/* compute start and end row */
-		start_row = -1;
-		end_row = -1;
-		for ( i = 0; i < current_dataset->rows_count; i++ ) {
-			if ( !IS_INVALID_VALUE(current_dataset->rows[i].value[SW_IN_MET]) ) {
-				start_row = i;
-				break;
-			}
-		}
-		if ( -1 == start_row ) {
-			for ( i = 0; i < current_dataset->rows_count; i++ ) {
-				current_dataset->rows[i].value[SW_IN_FILLED] = INVALID_VALUE;
-				current_dataset->rows[i].value[SW_IN_QC] = INVALID_VALUE;
-			}
-			puts("ok but is missing!");
-		} else {
-			for ( i = current_dataset->rows_count - 1; i >= 0 ; i-- ) {
-				if ( !IS_INVALID_VALUE(current_dataset->rows[i].value[SW_IN_MET]) ) {
-					end_row = i;
-					break;
-				}
-			}
-			if ( start_row == end_row ) {
-				puts("only one valid value for SW_IN!");
-				/* free memory */
-				free_dataset(current_dataset);
-				continue;
-			}
-
-			/* adjust bounds */
-			start_row -= (DAYS_FOR_GF*rows_per_day);
-			if ( start_row < 0 ) {
-				start_row = 0;
-			}
-
-			end_row += (DAYS_FOR_GF*rows_per_day);
-			if ( end_row > current_dataset->rows_count ) {
-				end_row = current_dataset->rows_count;
-			}
-		
-			gf_rows = gf_mds(	current_dataset->rows->value,
-								sizeof(ROW),
-								current_dataset->rows_count,
-								VALUES,
-								current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
-								GF_DRIVER_1_TOLERANCE_MIN,
-								GF_DRIVER_1_TOLERANCE_MAX,
-								GF_DRIVER_2A_TOLERANCE_MIN,
-								GF_DRIVER_2A_TOLERANCE_MAX,
-								GF_DRIVER_2B_TOLERANCE_MIN,
-								GF_DRIVER_2B_TOLERANCE_MAX,
-								SW_IN_MET,
-								SW_IN_MET,
-								TA_MET,
-								VPD_MET,
-								-1,
-								-1,
-								-1,
-								INVALID_VALUE,
-								INVALID_VALUE,
-								INVALID_VALUE,
-								GF_ROWS_MIN,
-								0,
-								start_row,
-								end_row,
-								&not_gf_count,
-								0,
-								0,
-								0,
-								NULL,
-								0
-			);
-
-			if ( !gf_rows ) {
-				/* free memory */
-				free_dataset(current_dataset);
-				continue;
-			}
-
-			if ( !not_gf_count ) {
-				puts("ok");
-			} else {
-				printf("ok (%d values unfilled)\n", not_gf_count); 
-			}
-
-			/* copy gf values and qc */
-			for ( i = 0; i < current_dataset->rows_count; i++ ) {
-				current_dataset->rows[i].value[SW_IN_FILLED] = current_dataset->rows[i].value[SW_IN_MET];
-				current_dataset->rows[i].value[SW_IN_QC] = INVALID_VALUE;
-				if ( (i >= start_row) && (i <= end_row) ) {
-					current_dataset->rows[i].value[SW_IN_FILLED] = IS_FLAG_SET(gf_rows[i].mask, GF_TOFILL_VALID) ? current_dataset->rows[i].value[SW_IN_MET] : gf_rows[i].filled;
-					current_dataset->rows[i].value[SW_IN_QC] = IS_FLAG_SET(gf_rows[i].mask, GF_TOFILL_VALID) ? 0 : gf_rows[i].quality;
-				}
-			}
-
-			/* free memory */
-			free(gf_rows);
-			gf_rows = NULL;
-		}
-
-		/* gapfilling LW_IN */
-		printf("- gapfilling LW_IN...");
-
-		/* compute start and end row */
-		start_row = -1;
-		end_row = -1;
-		for ( i = 0; i < current_dataset->rows_count; i++ ) {
-			if ( !IS_INVALID_VALUE(current_dataset->rows[i].value[LW_IN_MET]) ) {
-				start_row = i;
-				break;
-			}
-		}
-		if ( -1 == start_row ) {
-			for ( i = 0; i < current_dataset->rows_count; i++ ) {
-				current_dataset->rows[i].value[LW_IN_FILLED] = INVALID_VALUE;
-				current_dataset->rows[i].value[LW_IN_QC] = INVALID_VALUE;				
-			}
-			puts("ok but is missing!");
-		} else  {
-			for ( i = current_dataset->rows_count - 1; i >= 0 ; i-- ) {
-				if ( !IS_INVALID_VALUE(current_dataset->rows[i].value[LW_IN_MET]) ) {
-					end_row = i;
-					break;
-				}
-			}
-			if ( start_row == end_row ) {
-				puts("only one valid value for LW_IN!");
-				/* free memory */
-				free_dataset(current_dataset);
-				continue;
-			}
-
-			/* adjust bounds */
-			start_row -= (DAYS_FOR_GF*rows_per_day);
-			if ( start_row < 0 ) {
-				start_row = 0;
-			}
-
-			end_row += (DAYS_FOR_GF*rows_per_day);
-			if ( end_row > current_dataset->rows_count ) {
-				end_row = current_dataset->rows_count;
-			}
-		
-			gf_rows = gf_mds(	current_dataset->rows->value,
-								sizeof(ROW),
-								current_dataset->rows_count,
-								VALUES,
-								current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
-								GF_DRIVER_1_TOLERANCE_MIN,
-								GF_DRIVER_1_TOLERANCE_MAX,
-								GF_DRIVER_2A_TOLERANCE_MIN,
-								GF_DRIVER_2A_TOLERANCE_MAX,
-								GF_DRIVER_2B_TOLERANCE_MIN,
-								GF_DRIVER_2B_TOLERANCE_MAX,
-								LW_IN_MET,
-								SW_IN_MET,
-								TA_MET,
-								VPD_MET,
-								-1,
-								-1,
-								-1,
-								INVALID_VALUE,
-								INVALID_VALUE,
-								INVALID_VALUE,
-								GF_ROWS_MIN,
-								0,
-								start_row,
-								end_row,
-								&not_gf_count,
-								0,
-								0,
-								0,
-								NULL,
-								0
-			);
-
-			if ( !gf_rows ) {
-				/* free memory */
-				free_dataset(current_dataset);
-				continue;
-			}
-
-			if ( !not_gf_count ) {
-				puts("ok");
-			} else {
-				printf("ok (%d values unfilled)\n", not_gf_count); 
-			}
-
-			/* copy gf values and qc */
-			for ( i = 0; i < current_dataset->rows_count; i++ ) {
-				current_dataset->rows[i].value[LW_IN_FILLED] = current_dataset->rows[i].value[LW_IN_MET];
-				current_dataset->rows[i].value[LW_IN_QC] = INVALID_VALUE;
-				if ( (i >= start_row) && (i <= end_row) ) {
-					current_dataset->rows[i].value[LW_IN_FILLED] = IS_FLAG_SET(gf_rows[i].mask, GF_TOFILL_VALID) ? current_dataset->rows[i].value[LW_IN_MET] : gf_rows[i].filled;
-					current_dataset->rows[i].value[LW_IN_QC] = IS_FLAG_SET(gf_rows[i].mask, GF_TOFILL_VALID) ? 0 : gf_rows[i].quality;
-				}
-			}
-
-			/* free memory */
-			free(gf_rows);
-			gf_rows = NULL;
-		}
-
-		/* gapfilling VPD */
-		printf("- gapfilling VPD...");
-
-		/* compute start and end row */
-		start_row = -1;
-		end_row = -1;
-		for ( i = 0; i < current_dataset->rows_count; i++ ) {
-			if ( !IS_INVALID_VALUE(current_dataset->rows[i].value[VPD_MET]) ) {
-				start_row = i;
-				break;
-			}
-		}
-		if ( -1 == start_row ) {
-			for ( i = 0; i < current_dataset->rows_count; i++ ) {
-				current_dataset->rows[i].value[VPD_FILLED] = INVALID_VALUE;
-				current_dataset->rows[i].value[VPD_QC] = INVALID_VALUE;
-			}
-			puts("ok but is missing!");
-		} else {
-			for ( i = current_dataset->rows_count - 1; i >= 0 ; i-- ) {
-				if ( !IS_INVALID_VALUE(current_dataset->rows[i].value[VPD_MET]) ) {
-					end_row = i;
-					break;
-				}
-			}
-			if ( start_row == end_row ) {
-				puts("only one valid value for VPD!");
-				/* free memory */
-				free_dataset(current_dataset);
-				continue;
-			}
-
-			/* adjust bounds */
-			start_row -= (DAYS_FOR_GF*rows_per_day);
-			if ( start_row < 0 ) {
-				start_row = 0;
-			}
-
-			end_row += (DAYS_FOR_GF*rows_per_day);
-			if ( end_row > current_dataset->rows_count ) {
-				end_row = current_dataset->rows_count;
-			}
-		
-			gf_rows = gf_mds(	current_dataset->rows->value,
-								sizeof(ROW),
-								current_dataset->rows_count,
-								VALUES,
-								current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
-								GF_DRIVER_1_TOLERANCE_MIN,
-								GF_DRIVER_1_TOLERANCE_MAX,
-								GF_DRIVER_2A_TOLERANCE_MIN,
-								GF_DRIVER_2A_TOLERANCE_MAX,
-								GF_DRIVER_2B_TOLERANCE_MIN,
-								GF_DRIVER_2B_TOLERANCE_MAX,
-								VPD_MET,
-								SW_IN_MET,
-								TA_MET,
-								VPD_MET,
-								-1,
-								-1,
-								-1,
-								INVALID_VALUE,
-								INVALID_VALUE,
-								INVALID_VALUE,
-								GF_ROWS_MIN,
-								0,
-								start_row,
-								end_row,
-								&not_gf_count,
-								0,
-								0,
-								0,
-								NULL,
-								0
-			);
-
-			if ( !gf_rows ) {
-				/* free memory */
-				free_dataset(current_dataset);
-				continue;
-			}
-
-			if ( !not_gf_count ) {
-				puts("ok");
-			} else {
-				printf("ok (%d values unfilled)\n", not_gf_count); 
-			}
-
-			/* copy gf values and qc */
-			for ( i = 0; i < current_dataset->rows_count; i++ ) {
-				current_dataset->rows[i].value[VPD_FILLED] = current_dataset->rows[i].value[VPD_MET];
-				current_dataset->rows[i].value[VPD_QC] = INVALID_VALUE;
-				if ( (i >= start_row) && (i <= end_row) ) {
-					current_dataset->rows[i].value[VPD_FILLED] = IS_FLAG_SET(gf_rows[i].mask, GF_TOFILL_VALID) ? current_dataset->rows[i].value[VPD_MET] : gf_rows[i].filled;
-					current_dataset->rows[i].value[VPD_QC] = IS_FLAG_SET(gf_rows[i].mask, GF_TOFILL_VALID) ? 0 : gf_rows[i].quality;
-				}
-			}
-
-			/* free memory */
-			free(gf_rows);
-			gf_rows = NULL;
-		}
-
-		/* gapfilling CO2 */
-		printf("- gapfilling CO2...");
-
-		/* compute start and end row */
-		start_row = -1;
-		end_row = -1;
-		for ( i = 0; i < current_dataset->rows_count; i++ ) {
-			if ( !IS_INVALID_VALUE(current_dataset->rows[i].value[CO2_MET]) ) {
-				start_row = i;
-				break;
-			}
-		}
-		if ( -1 == start_row ) {
-			for ( i = 0; i < current_dataset->rows_count; i++ ) {
-				current_dataset->rows[i].value[CO2_FILLED] = INVALID_VALUE;
-				current_dataset->rows[i].value[CO2_QC] = INVALID_VALUE;
-			}
-			puts("ok but is missing!");
-		} else {
-			for ( i = current_dataset->rows_count - 1; i >= 0 ; i-- ) {
-				if ( !IS_INVALID_VALUE(current_dataset->rows[i].value[CO2_MET]) ) {
-					end_row = i;
-					break;
-				}
-			}
-			if ( start_row == end_row ) {
-				puts("only one valid value for CO2!");
-				/* free memory */
-				free_dataset(current_dataset);
-				continue;
-			}
-
-			/* adjust bounds */
-			start_row -= (DAYS_FOR_GF*rows_per_day);
-			if ( start_row < 0 ) {
-				start_row = 0;
-			}
-
-			end_row += (DAYS_FOR_GF*rows_per_day);
-			if ( end_row > current_dataset->rows_count ) {
-				end_row = current_dataset->rows_count;
-			}
-		
-			gf_rows = gf_mds(	current_dataset->rows->value,
-								sizeof(ROW),
-								current_dataset->rows_count,
-								VALUES,
-								current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
-								GF_DRIVER_1_TOLERANCE_MIN,
-								GF_DRIVER_1_TOLERANCE_MAX,
-								GF_DRIVER_2A_TOLERANCE_MIN,
-								GF_DRIVER_2A_TOLERANCE_MAX,
-								GF_DRIVER_2B_TOLERANCE_MIN,
-								GF_DRIVER_2B_TOLERANCE_MAX,
-								CO2_MET,
-								SW_IN_MET,
-								TA_MET,
-								VPD_MET,
-								-1,
-								-1,
-								-1,
-								INVALID_VALUE,
-								INVALID_VALUE,
-								INVALID_VALUE,
-								GF_ROWS_MIN,
-								0,
-								start_row,
-								end_row,
-								&not_gf_count,
-								0,
-								0,
-								0,
-								NULL,
-								0
-			);
-
-			if ( !gf_rows ) {
-				/* free memory */
-				free_dataset(current_dataset);
-				continue;
-			}
-
-			if ( !not_gf_count ) {
-				puts("ok");
-			} else {
-				printf("ok (%d values unfilled)\n", not_gf_count); 
-			}
-
-			/* copy gf values and qc */
-			for ( i = 0; i < current_dataset->rows_count; i++ ) {
-				current_dataset->rows[i].value[CO2_FILLED] = current_dataset->rows[i].value[CO2_MET];
-				current_dataset->rows[i].value[CO2_QC] = INVALID_VALUE;
-				if ( (i >= start_row) && (i <= end_row) ) {
-					current_dataset->rows[i].value[CO2_FILLED] = IS_FLAG_SET(gf_rows[i].mask, GF_TOFILL_VALID) ? current_dataset->rows[i].value[CO2_MET] : gf_rows[i].filled;
-					current_dataset->rows[i].value[CO2_QC] = IS_FLAG_SET(gf_rows[i].mask, GF_TOFILL_VALID) ? 0 : gf_rows[i].quality;
-				}
-			}
-
-			/* free memory */
-			free(gf_rows);
-			gf_rows = NULL;
 		}
 
 		/* Ts filling */
@@ -4853,16 +4662,16 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 									current_dataset->rows_count,
 									VALUES,
 									current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
-									GF_DRIVER_1_TOLERANCE_MIN,
-									GF_DRIVER_1_TOLERANCE_MAX,
-									GF_DRIVER_2A_TOLERANCE_MIN,
-									GF_DRIVER_2A_TOLERANCE_MAX,
-									GF_DRIVER_2B_TOLERANCE_MIN,
-									GF_DRIVER_2B_TOLERANCE_MAX,
+									mds_vars->vars[TS_DEF_VAR].tolerances[MDS_VAR_DRIVER_1][MDS_VAR_TOLERANCE_MIN],
+									mds_vars->vars[TS_DEF_VAR].tolerances[MDS_VAR_DRIVER_1][MDS_VAR_TOLERANCE_MAX],
+									mds_vars->vars[TS_DEF_VAR].tolerances[MDS_VAR_DRIVER_2A][MDS_VAR_TOLERANCE_MIN],
+									mds_vars->vars[TS_DEF_VAR].tolerances[MDS_VAR_DRIVER_2A][MDS_VAR_TOLERANCE_MAX],
+									mds_vars->vars[TS_DEF_VAR].tolerances[MDS_VAR_DRIVER_2B][MDS_VAR_TOLERANCE_MIN],
+									mds_vars->vars[TS_DEF_VAR].tolerances[MDS_VAR_DRIVER_2B][MDS_VAR_TOLERANCE_MAX],
 									TEMP,
-									SW_IN_MET,
-									TA_MET,
-									VPD_MET,
+									mds_vars->vars[TS_DEF_VAR].columns[MDS_VAR_DRIVER_1],
+									mds_vars->vars[TS_DEF_VAR].columns[MDS_VAR_DRIVER_2A],
+									mds_vars->vars[TS_DEF_VAR].columns[MDS_VAR_DRIVER_2B],
 									-1,
 									-1,
 									-1,
@@ -4956,16 +4765,16 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 									current_dataset->rows_count,
 									VALUES,
 									current_dataset->hourly ? HOURLY_TIMERES : HALFHOURLY_TIMERES,
-									GF_DRIVER_1_TOLERANCE_MIN,
-									GF_DRIVER_1_TOLERANCE_MAX,
-									GF_DRIVER_2A_TOLERANCE_MIN,
-									GF_DRIVER_2A_TOLERANCE_MAX,
-									GF_DRIVER_2B_TOLERANCE_MIN,
-									GF_DRIVER_2B_TOLERANCE_MAX,
+									mds_vars->vars[SWC_DEF_VAR].tolerances[MDS_VAR_DRIVER_1][MDS_VAR_TOLERANCE_MIN],
+									mds_vars->vars[SWC_DEF_VAR].tolerances[MDS_VAR_DRIVER_1][MDS_VAR_TOLERANCE_MAX],
+									mds_vars->vars[SWC_DEF_VAR].tolerances[MDS_VAR_DRIVER_2A][MDS_VAR_TOLERANCE_MIN],
+									mds_vars->vars[SWC_DEF_VAR].tolerances[MDS_VAR_DRIVER_2A][MDS_VAR_TOLERANCE_MAX],
+									mds_vars->vars[SWC_DEF_VAR].tolerances[MDS_VAR_DRIVER_2B][MDS_VAR_TOLERANCE_MIN],
+									mds_vars->vars[SWC_DEF_VAR].tolerances[MDS_VAR_DRIVER_2B][MDS_VAR_TOLERANCE_MAX],
 									TEMP,
-									SW_IN_MET,
-									TA_MET,
-									VPD_MET,
+									mds_vars->vars[SWC_DEF_VAR].columns[MDS_VAR_DRIVER_1],
+									mds_vars->vars[SWC_DEF_VAR].columns[MDS_VAR_DRIVER_2A],
+									mds_vars->vars[SWC_DEF_VAR].columns[MDS_VAR_DRIVER_2B],
 									-1,
 									-1,
 									-1,
@@ -5128,7 +4937,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 		/* free memory */
 		free_dataset(current_dataset);
 	}
-
+	
 	/* free memory */
 	free(datasets);
 
