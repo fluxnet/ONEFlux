@@ -1059,6 +1059,7 @@ def get_indices_to_filter(qcdata, qc_threshold=2, window_size=15*48, minimum_gap
     indices_tmp = numpy.where(numpy.diff(indices_unique) != 1)[0] + 1
     indices_contiguous = numpy.split(indices_unique, indices_tmp)
     # remove empty result arrays
+    # TODO: revise logic to avoid empty arrays in the first place
     indices_contiguous_clean = []
     for a in indices_contiguous:
         if a.size > 0:
