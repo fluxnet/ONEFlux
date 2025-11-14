@@ -1030,13 +1030,13 @@ def check_lengths(siteid, meteo, energy, nee, unc, resolution, nt_skip=False, dt
     return meteo, energy, nee, unc
 
 
-def get_indices_to_filter(qcdata, qc_threshold=2, window_size=48):
+def get_indices_to_filter(qcdata, qc_threshold=2, window_size=15*48, minimum_gap=5*48):
     '''
     Fast creation of mask for QC flags above threshold value
     continually within window size
     '''
     # filter QC array, minimum quality acceptable
-    qc_filtered = (qcdata >= qc_threshold).astype(int)
+    qc_filtered = (qcdata > qc_threshold).astype(int)
 
     # prepare window array of 1s for convolution
     conv_window = [1,] * window_size 
@@ -1048,27 +1048,59 @@ def get_indices_to_filter(qcdata, qc_threshold=2, window_size=48):
     # create array of start indices where number of entries match window size
     indices_start = numpy.where(conv == window_size)[0]
     
-    # create (start, end) pair for windows
+    # create (start, end) pairs for windows
     indices = [numpy.arange(index, index + window_size) for index in indices_start]
 
     # flatten all entries (and remove potential duplicates)
-    indices_unique = numpy.unique(indices) 
+    indices_unique = numpy.unique(indices)
 
     # merge all contiguous windows into longer tuples
     # use (i[0]:i[-1] + 1) to access indexes for each window of interest
     indices_tmp = numpy.where(numpy.diff(indices_unique) != 1)[0] + 1
     indices_contiguous = numpy.split(indices_unique, indices_tmp)
 
+    # check length of pairs against window size minimums
+    # (i.e., start at record window_size+1) and taking into
+    # account the minimum gap size
+    indices_clean = []
+    for index in indices_contiguous:
+        (first, last) = (index[0], index[-1])
+        log.debug('Long gap, checking window: ({f}, {l})'.format(f=first, l=last))
+        if first == 0:
+            # at the start of the record
+            if last == window_size:
+                log.debug('Long gap, window at start matches minimum gap size, skipping removal: ({f}, {l})'.format(f=first, l=last))
+            elif last > window_size:
+                indices_clean.append((first, last - window_size + 1))
+                log.debug('Long gap, window at start larger than minimum gap size, removing head portion: ({f}, {l})'.format(f=first, l=last - window_size + 1))
+        elif last == qcdata.size - 1:
+            # at the end of the record
+            if first == qcdata.size - 1 - window_size:
+                log.debug('Long gap, window at end matches minimum gap size, skipping removal: ({f}, {l})'.format(f=first, l=last))
+            elif first < qcdata.size - 1 - window_size:
+                indices_clean.append((first + window_size - 1, last))
+                log.debug('Long gap, window at end larger than minimum gap size, removing tail portion: ({f}, {l})'.format(f=first + window_size - 1, l=last))
+        else:
+            # in the middle of the record, also check for minimum gap size
+            if (last - first + 1) <= ((2 * window_size) + minimum_gap):
+                log.debug('Long gap, window in middle smaller than minimum gap size, skipping removal: ({f}, {l})'.format(f=first, l=last))
+            else:
+                indices_clean.append((first + window_size, last - window_size))
+                log.debug('Long gap, window in middle larger than minimum gap size, removing window: ({f}, {l})'.format(f=first + window_size, l=last - window_size))
+
     # create mask to be used to set values to NaN in True positions
     mask = numpy.isnan(qcdata)
     mask[:] = False
-    for i in indices_contiguous:
-        if len(i) > 0:
-            mask[i[0]:i[-1] + 1] = True
+    for (first, last) in indices_clean:
+        mask[first:last + 1] = True
+    ### Previous implementation, now replaced by indices_clean above
+    # for i in indices_contiguous:
+    #     if len(i) > 0:
+    #         mask[i[0]:i[-1] + 1] = True
     return mask
 
 
-def filter_long_gaps(data, qc_threshold=2, window_size=48):
+def filter_long_gaps(data, qc_threshold=2, window_size=15*48, minimum_gap=5*48):
     '''
     Using dictionary of QC variable to be applied to each data variable,
     assigns -9999 to gapfilled values when QC flags are above threshold
@@ -1089,7 +1121,7 @@ def filter_long_gaps(data, qc_threshold=2, window_size=48):
             log.warning('QC variable {q} is a _MEAN variable, handled next round'.format(q=qcv))
             continue
 
-        fmask = get_indices_to_filter(qcdata=data[qcv], qc_threshold=qc_threshold, window_size=window_size)
+        fmask = get_indices_to_filter(qcdata=data[qcv], qc_threshold=qc_threshold, window_size=window_size, minimum_gap=minimum_gap)
         # HH/HR only, coarser resolutions are handled from the returned ftimestamp
         ftimestamp[qcv] = data['TIMESTAMP_START'][fmask]
         log.debug('QC variable {q} has {n} records to be restored to gaps'.format(q=qcv, n=numpy.sum(fmask)))
@@ -1107,8 +1139,14 @@ def filter_long_gaps(data, qc_threshold=2, window_size=48):
             # TODO: handle _REF RECO/GPP (from AUX) and _MEAN (from intersection of _XX percentiles)
             #      NEE_[C|V]UTE_REF already handled for HH/HR, but needs to be handled for coarser resolutions from NEEAUX (same as GPP/RECO for all resolutions)
             #      _MEAN currently using _MEAN_QC which is an average of QC values, so no -9999 and _MEAN survives and needs to be handled separately
+            #      N.B.: this needs to be implemented for all temporal resolutions, not only HH/HR
             log.debug('QC variable {q}, data variable {v}: assigning -9999'.format(q=qcv, v=var))
             data[var][fmask] = -9999.9
+        
+        # restore "missing" to QC flags variables themselves
+        # TODO: confirm this is not being set to -9999 prior to being needed/used in later
+        log.debug('QC variable (flag) {q}: assigning -9999'.format(q=qcv))
+        data[qcv][fmask] = -9999.9
     
     # apply combined masks for MEAN _CUT_REF and _VUT_REF variables
     if 'NEE_CUT_MEAN' in data.dtype.names:
@@ -1306,18 +1344,20 @@ def run_site(siteid,
             output_data = merge_qcdata_res(qcdata=qcdata_yy, output=output_data, res=resolution)
 
         # NEW FOR 2025: Cleanup of long gapfilled results,
-        # remove gapfilled data for gaps longer than 21 days.
+        # remove gapfilled data for gaps longer than window_size days,
+        # e.g., 48*15 for 15 days maximum long gap.
         # N.B.: this changes default ONEFlux behavior
+        # TODO: change qc_threshold, window_size, and minimum_gap to parameters instead of hardcoded
         if output_resolution == 'HH':
-            # compute windows and set gaps for window_size=48*21
-            ftimestamp, output_data = filter_long_gaps(data=output_data, qc_threshold=2, window_size=48*21)
+            # compute windows and set gaps for window_size=48*15 (15 days)
+            ftimestamp, output_data = filter_long_gaps(data=output_data, qc_threshold=2, window_size=15*48, minimum_gap=5*48)
         elif output_resolution == 'HR':
-            # compute windows and set gaps for window_size=24*21
-            ftimestamp, output_data = filter_long_gaps(data=output_data, qc_threshold=2, window_size=24*21)
+            # compute windows and set gaps for window_size=24*15 (15 days)
+            ftimestamp, output_data = filter_long_gaps(data=output_data, qc_threshold=2, window_size=15*24, minimum_gap=5*24)
         # use list of YYYYMMDDHHMM timestamps to be filtered from HH/HR resolution to filter aggregated resolutions
         elif (output_resolution == 'DD') or (output_resolution == 'WW') or (output_resolution == 'MM') or (output_resolution == 'YY'):
             res_masks = generate_agg_timestamp_mask(ftimestamp=ftimestamp, data=output_data, resolution=resolution)
-            print(res_masks)
+            # restore "missing" to long gaps in data variables based on masks
             for qcv, fmask in res_masks.iteritems():
                 for var in VARIABLES_DONOT_GAPFILL_LONG[qcv]:
                     # TODO: handle _REF RECO/GPP (from AUX) and _MEAN (from intersection of _XX percentiles)
@@ -1326,10 +1366,10 @@ def run_site(siteid,
                         continue
                     log.debug('QC variable {q}, data variable {v}, resolution {r}: assigning -9999'.format(q=qcv, v=var, r=resolution))
                     output_data[var][fmask] = -9999.9
-                    # TODO: consider change corresponding _QC variables to -9999 when the main variable is -9999
-                    #       (e.g., if NEE_VUT_REF is -9999, then NEE_VUT_REF_QC should also be -9999).
-                    #       For now, only the main variable is set to -9999, QC variable is left unchanged
-           
+            # restore "missing" to long gaps for QC flag variables based on masks
+            for qcv, fmask in res_masks.iteritems():
+                log.debug('QC variable {q}, resolution {r}: assigning -9999'.format(q=qcv, r=resolution))
+                output_data[qcv][fmask] = -9999.9
 
         ### FULLSET files
         # save Tier 2 FULLSET CSV file
