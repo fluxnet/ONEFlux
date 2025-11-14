@@ -1058,6 +1058,15 @@ def get_indices_to_filter(qcdata, qc_threshold=2, window_size=15*48, minimum_gap
     # use (i[0]:i[-1] + 1) to access indexes for each window of interest
     indices_tmp = numpy.where(numpy.diff(indices_unique) != 1)[0] + 1
     indices_contiguous = numpy.split(indices_unique, indices_tmp)
+    # remove empty result arrays
+    # TODO: revise logic to avoid empty arrays in the first place
+    indices_contiguous_clean = []
+    for a in indices_contiguous:
+        if a.size > 0:
+            indices_contiguous_clean.append(a)
+        else:
+            log.warning('Long gap error, empty array encountered during cleaning: {a}'.format(a=a))
+    indices_contiguous = indices_contiguous_clean
 
     # check length of pairs against window size minimums
     # (i.e., start at record window_size+1) and taking into
@@ -1110,8 +1119,8 @@ def filter_long_gaps(data, qc_threshold=2, window_size=15*48, minimum_gap=5*48):
     coarser resolutions are handled from the returned ftimestamp.
     '''
     ftimestamp = {}
-    ftimestamp_cut_mask = numpy.zeros(data.size, dtype=bool) # for _CUT_REF filtering, start with all True
-    ftimestamp_vut_mask = numpy.zeros(data.size, dtype=bool) # for _VUT_REF filtering, start with all True    
+    ftimestamp_cut_mask = numpy.zeros(data.size, dtype=bool) # for _CUT_REF filtering, start with all False
+    ftimestamp_vut_mask = numpy.zeros(data.size, dtype=bool) # for _VUT_REF filtering, start with all False    
     for qcv, var_list in VARIABLES_DONOT_GAPFILL_LONG.iteritems():
         log.debug('QC variable {q}: start cleaning long gaps'.format(q=qcv))
         if qcv not in data.dtype.names:
