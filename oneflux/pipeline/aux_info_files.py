@@ -177,6 +177,7 @@ def load_csv_lines(filename):
         output_lines.append(l)
     return output_lines
 
+
 def get_created_ustar_years(mpdir, cpdir):
     mpfiles = [f for f in os.listdir(mpdir) if os.path.isfile(os.path.join(mpdir, f))]
     cpfiles = [f for f in os.listdir(cpdir) if os.path.isfile(os.path.join(cpdir, f))]
@@ -197,17 +198,22 @@ def get_created_ustar_years(mpdir, cpdir):
 
     return mpyears, cpyears
 
+
 def load_ustar_cut(siteid, sitedir, first_year, last_year, nee_perc_ustar_cut_template=NEE_PERC_USTAR_CUT):
     nee_perc_ustar_cut = nee_perc_ustar_cut_template.format(s=siteid, sd=sitedir, fy=first_year, ly=last_year)
     log.debug("{s}: processing file: {f}".format(s=siteid, f=nee_perc_ustar_cut))
     nee_perc_ustar_cut_lines = load_csv_lines(filename=nee_perc_ustar_cut)
-    if (last_year - first_year) < 2:
-        if not nee_perc_ustar_cut_lines: log.warning("{s}: too few years, {e} file not created: {f}".format(s=siteid, e='NEE CUT USTAR percentiles', f=nee_perc_ustar_cut))
-        nee_perc_ustar_cut_values = {k:'-9999' for i, k in enumerate(PERCENTILES) }
-        nee_perc_ustar_cut_values['50.00'] = nee_perc_ustar_cut_values['50']
+    if not nee_perc_ustar_cut_lines:
+        if (last_year - first_year) < 2:
+            log.warning("{s}: too few years, {e} file not created: {f}".format(s=siteid, e='NEE CUT USTAR percentiles', f=nee_perc_ustar_cut))
+            nee_perc_ustar_cut_values = {k:'-9999' for _, k in enumerate(PERCENTILES) }
+            nee_perc_ustar_cut_values['50.00'] = nee_perc_ustar_cut_values['50']
+        else:
+            # CUT file must exist for multi-year processing (CUT is always run when more than 2 years are present)
+            raise ONEFluxError("{s}: {e} file not found: {f}".format(s=siteid, e='NEE CUT USTAR percentiles', f=nee_perc_ustar_cut))
     else:
-        if not nee_perc_ustar_cut_lines: raise ONEFluxError("{s}: {e} file not found: {f}".format(s=siteid, e='NEE CUT USTAR percentiles', f=nee_perc_ustar_cut))
-
+        if (last_year - first_year) < 2:
+            log.warning("{s}: too few years, {e} file possibly created under exception for failed VUT execution: {f}".format(s=siteid, e='NEE CUT USTAR percentiles', f=nee_perc_ustar_cut))
         if (len(nee_perc_ustar_cut_lines) == 3 and not nee_perc_ustar_cut_lines[2].strip()) or len(nee_perc_ustar_cut_lines) > 2:
             raise ONEFluxError("{s}: NEE USTAR CUT file too many lines ({l}): {f}".format(s=siteid, l=len(nee_perc_ustar_cut_lines), f=nee_perc_ustar_cut))
         elif not (nee_perc_ustar_cut_lines[0][0].startswith(PERCENTILES[0]) and nee_perc_ustar_cut_lines[0][-1].strip().endswith(PERCENTILES[-1])):
@@ -216,24 +222,31 @@ def load_ustar_cut(siteid, sitedir, first_year, last_year, nee_perc_ustar_cut_te
         nee_perc_ustar_cut_values['50.00'] = nee_perc_ustar_cut_values['50']
     return nee_perc_ustar_cut_values
 
+
 def load_ustar_vut(siteid, sitedir, year_range, nee_perc_ustar_vut_template=NEE_PERC_USTAR_VUT):
     nee_perc_ustar_vut = nee_perc_ustar_vut_template.format(s=siteid, sd=sitedir)
     log.debug("{s}: processing file: {f}".format(s=siteid, f=nee_perc_ustar_vut))
     nee_perc_ustar_vut_lines = load_csv_lines(filename=nee_perc_ustar_vut)
-    if not nee_perc_ustar_vut_lines: raise ONEFluxError("{s}: {e} file not found: {f}".format(s=siteid, e='NEE VUT USTAR percentiles', f=nee_perc_ustar_vut))
-
-    nee_perc_ustar_vut_values = {i:{} for i in year_range}
-    if not ((nee_perc_ustar_vut_lines[0][0].lower().startswith('timestamp') or\
-             nee_perc_ustar_vut_lines[0][0].lower().startswith('isodate') or\
-             nee_perc_ustar_vut_lines[0][0].lower().startswith('year')) and\
-            nee_perc_ustar_vut_lines[0][-1].endswith(PERCENTILES[-1])):
-        raise ONEFluxError("{s}: NEE USTAR VUT bad headers ({h}): {f}".format(s=siteid, h=nee_perc_ustar_vut_lines[0], f=nee_perc_ustar_vut))
-    elif (int(nee_perc_ustar_vut_lines[1][0]) != year_range[0]) or (int(nee_perc_ustar_vut_lines[-1][0]) != year_range[-1]):
-        raise ONEFluxError("{s}: NEE USTAR VUT incompatible year range data=({d}), info=({i})".format(s=siteid, d="{f}-{l}".format(f=nee_perc_ustar_vut_lines[1][0], l=nee_perc_ustar_vut_lines[-1][0]), i="{f}-{l}".format(f=year_range[0], l=year_range[-1])))
-    for y, year in enumerate(year_range):
-        nee_perc_ustar_vut_values[year] = {k:nee_perc_ustar_vut_lines[y + 1][i + 1].strip() for i, k in enumerate(PERCENTILES) }
-        nee_perc_ustar_vut_values[year]['50.00'] = nee_perc_ustar_vut_values[year]['50']
+    if not nee_perc_ustar_vut_lines:
+        log.warning("{s}: {e} file not found, possibly failed VUT execution: {f}".format(s=siteid, e='NEE VUT USTAR percentiles', f=nee_perc_ustar_vut))
+        nee_perc_ustar_vut_values = {i:{} for i in year_range}
+        for y, year in enumerate(year_range):
+            nee_perc_ustar_vut_values[year] = {k:'-9999' for _, k in enumerate(PERCENTILES) }
+            nee_perc_ustar_vut_values[year]['50.00'] = nee_perc_ustar_vut_values[year]['50']
+    else:
+        nee_perc_ustar_vut_values = {i:{} for i in year_range}
+        if not ((nee_perc_ustar_vut_lines[0][0].lower().startswith('timestamp') or\
+                nee_perc_ustar_vut_lines[0][0].lower().startswith('isodate') or\
+                nee_perc_ustar_vut_lines[0][0].lower().startswith('year')) and\
+                nee_perc_ustar_vut_lines[0][-1].endswith(PERCENTILES[-1])):
+            raise ONEFluxError("{s}: NEE USTAR VUT bad headers ({h}): {f}".format(s=siteid, h=nee_perc_ustar_vut_lines[0], f=nee_perc_ustar_vut))
+        elif (int(nee_perc_ustar_vut_lines[1][0]) != year_range[0]) or (int(nee_perc_ustar_vut_lines[-1][0]) != year_range[-1]):
+            raise ONEFluxError("{s}: NEE USTAR VUT incompatible year range data=({d}), info=({i})".format(s=siteid, d="{f}-{l}".format(f=nee_perc_ustar_vut_lines[1][0], l=nee_perc_ustar_vut_lines[-1][0]), i="{f}-{l}".format(f=year_range[0], l=year_range[-1])))
+        for y, year in enumerate(year_range):
+            nee_perc_ustar_vut_values[year] = {k:nee_perc_ustar_vut_lines[y + 1][i + 1].strip() for i, k in enumerate(PERCENTILES) }
+            nee_perc_ustar_vut_values[year]['50.00'] = nee_perc_ustar_vut_values[year]['50']
     return nee_perc_ustar_vut_values
+
 
 def generate_nee(datadir, siteid, sitedir, first_year, last_year, version_data, version_processing, pipeline=None, nt_skip=False, dt_skip=False):
     log.debug("{s}: starting generation of AUXNEE file".format(s=siteid))
@@ -404,7 +417,10 @@ def generate_nee(datadir, siteid, sitedir, first_year, last_year, version_data, 
                     else:
                         raise ONEFluxError("{s}: Unknown RECO/GPP VUT REF percentile/threshold entry in line: '{l}'".format(s=siteid, l=line.strip()))
                     threshold = line.strip().lower().split('ustar percentile')[1].strip().split()[0].strip()
-                    ustar = (nee_perc_ustar_vut_values[year][threshold] if nee_perc_ustar_vut_values.has_key(year) else -9999)
+                    if threshold == '-9999': # VUT execution failed
+                        ustar = '-9999'
+                    else:
+                        ustar = (nee_perc_ustar_vut_values[year][threshold] if nee_perc_ustar_vut_values.has_key(year) else -9999)
                     if unc_ref_ustar_perc[key][res].has_key(year):
                         raise ONEFluxError("{s} duplicated entry for {v} REF VUT USTAR: {f}".format(s=siteid, f=nee_info, v=variable))
                     else:
@@ -527,7 +543,6 @@ def generate_nee(datadir, siteid, sitedir, first_year, last_year, version_data, 
 
     return output_filename
 
-# TODO: Make AUX files Tier aware..........
 
 def run_site_aux(datadir, siteid, sitedir, first_year, last_year, version_data, version_processing, pipeline=None, nt_skip=False, dt_skip=False):
     log.info("Starting generation of AUX-INFO files for {s}".format(s=siteid))
