@@ -76,12 +76,8 @@ PRODFILE_YEARS_TEMPLATE = os.path.join(PRODDIR, PRODFILE_YEARS_TEMPLATE_F)
 PRODFILE_FIGURE_TEMPLATE = os.path.join(PRODDIR, PRODFILE_FIGURE_TEMPLATE_F)
 ZIPFILE_TEMPLATE = os.path.join(PRODDIR, ZIPFILE_TEMPLATE_F)
 
-# added path requested to physically locate files..............
-WINDOWS_DESTINATION_FOLDER = "\\\\EDDY\FLUXNET2015\\"
-WINDOWS_DESTINATION_FOLDER_ACTIVE = True
-
 CSVMANIFEST_HEADER = "zipfilename,filename,fileSize,fileChecksum,processor,createDate\n"
-ZIPMANIFEST_HEADER = "filename,fileSize,fileChecksum,fileCount,tier,processor,createDate\n"
+ZIPMANIFEST_HEADER = "filename,fileSize,fileChecksum,fileCount,processor,createDate\n"
 
 METEO_INFO_F = '{s}_meteo_{r}_info.txt'
 METEO_INFO = os.path.join(METEODIR, METEO_INFO_F)
@@ -508,10 +504,10 @@ def get_headers(filename):
     return headers
 
 
-def check_headers_fluxnet2015(filename):
+def check_headers_fluxnet(filename):
     """
     Checks variables that must, should, and could be present
-    in FULLSET output of FLUXNET2015 Data product.
+    in FULLSET output of FLUXNET Data product.
     Returns True if all present (or only missing from COULD list),
     False if any variable in MUST or SHOULD be present lists are missing
     

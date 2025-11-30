@@ -72,7 +72,7 @@ def load_years(siteid, sitedir, version_data, version_processing, prodfile_years
     with open(prodfile_years, 'r') as f:
         lines = f.readlines()
     #header = lines[0].strip.split(',')
-    first_year, last_year, _, _ = lines[1].strip().split(',')
+    first_year, last_year = lines[1].strip().split(',')
     first_year, last_year = int(first_year.strip()), int(last_year.strip())
 
     return first_year, last_year
