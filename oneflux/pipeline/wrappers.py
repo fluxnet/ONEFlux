@@ -20,7 +20,7 @@ import fnmatch
 
 from datetime import datetime
 
-from oneflux import add_file_log, ONEFluxError, log_trace
+from oneflux import add_file_log, ONEFluxError, log_trace, VERSION
 from oneflux.pipeline import CMD_SEP, COPY, DELETE, DELETE_DIR, HOMEDIR, DATA_DIR, TOOL_DIR, OUTPUT_LOG_TEMPLATE
 from oneflux.pipeline.site_data_product import run_site, get_headers_qc, _load_data, update_names_qc, save_csv_txt
 from oneflux.pipeline.variables_codes import QC_FULL_DIRECT_D
@@ -2211,17 +2211,22 @@ class PipelineFLUXNET(object):
     FLUXNET_SITE_PLOTS = True
     FLUXNET_FIRST = None
     FLUXNET_LAST = None
-    FLUXNET_VERSION_PROCESSING = 3
+    FLUXNET_VERSION_PROCESSING = VERSION[:3]
     FLUXNET_VERSION_DATA = 1
     _OUTPUT_FILE_PATTERNS = [
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_AUXMETEO_????-????_*-*.csv",
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_AUXNEE_????-????_*-*.csv",
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FULLSET_DD_????-????_*-*.csv",
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FULLSET_HH_????-????_*-*.csv",
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FULLSET_MM_????-????_*-*.csv",
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FULLSET_WW_????-????_*-*.csv",
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FULLSET_YY_????-????_*-*.csv",
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FULLSET_????-????_*-*.zip",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_AUXMETEO_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_AUXNEE_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FLUXMET_DD_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FLUXMET_HH_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FLUXMET_MM_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FLUXMET_WW_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FLUXMET_YY_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_ERA5_DD_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_ERA5_HH_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_ERA5_MM_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_ERA5_WW_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_ERA5_YY_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_????-????_*_*.zip",
     ]
 
     def __init__(self, pipeline):
@@ -2238,7 +2243,7 @@ class PipelineFLUXNET(object):
         self.fluxnet_site_plots = self.pipeline.configs.get('fluxnet_site_plots', self.FLUXNET_SITE_PLOTS)
         self.fluxnet_first = self.pipeline.configs.get('fluxnet_first', self.FLUXNET_FIRST)
         self.fluxnet_last = self.pipeline.configs.get('fluxnet_last', self.FLUXNET_LAST)
-        self.fluxnet_version_processing = self.pipeline.configs.get('fluxnet_version_processing', self.FLUXNET_VERSION_PROCESSING)
+        self.fluxnet_version_processing = self.FLUXNET_VERSION_PROCESSING
         self.fluxnet_version_data = self.pipeline.configs.get('fluxnet_version_data', self.FLUXNET_VERSION_DATA)
         self.output_file_patterns = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS]
         self.csv_manifest_entries = None

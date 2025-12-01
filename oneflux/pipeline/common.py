@@ -65,11 +65,11 @@ NEEDIR = os.path.join(WORKING_DIRECTORY_SITE, NEEDIR_PATTERN)
 ENERGYDIR = os.path.join(WORKING_DIRECTORY_SITE, "09_energy_proc")
 UNCDIR = os.path.join(WORKING_DIRECTORY_SITE, "12_ure")
 PRODDIR = os.path.join(WORKING_DIRECTORY_SITE, "99_fluxnet2015")
-PRODFILE_TEMPLATE_F = MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_{g}_{r}_{fy}-{ly}_{vd}-{vp}.csv"
-PRODFILE_AUX_TEMPLATE_F = MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_{aux}_{fy}-{ly}_{vd}-{vp}.csv"
-PRODFILE_YEARS_TEMPLATE_F = MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_YEARS_{vd}-{vp}.csv"
-PRODFILE_FIGURE_TEMPLATE_F = MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FIG-{f}_{fy}-{ly}_{vd}-{vp}.png"
-ZIPFILE_TEMPLATE_F = MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_{g}_{fy}-{ly}_{vd}-{vp}.zip"
+PRODFILE_TEMPLATE_F = MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_{g}_{r}_{fy}-{ly}_v{vp}_r{vd}.csv"
+PRODFILE_AUX_TEMPLATE_F = MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_{aux}_{fy}-{ly}_v{vp}_r{vd}.csv"
+PRODFILE_YEARS_TEMPLATE_F = MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_YEARS_v{vp}_r{vd}.csv"
+PRODFILE_FIGURE_TEMPLATE_F = MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FIG-{f}_{fy}-{ly}_v{vp}_r{vd}.png"
+ZIPFILE_TEMPLATE_F = MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_{fy}-{ly}_v{vp}_r{vd}.zip"
 PRODFILE_TEMPLATE = os.path.join(PRODDIR, PRODFILE_TEMPLATE_F)
 PRODFILE_AUX_TEMPLATE = os.path.join(PRODDIR, PRODFILE_AUX_TEMPLATE_F)
 PRODFILE_YEARS_TEMPLATE = os.path.join(PRODDIR, PRODFILE_YEARS_TEMPLATE_F)
@@ -97,7 +97,7 @@ UNC_INFO_ALT_F = '{s}_{m}_{v}_{r}_info.txt'
 UNC_INFO_ALT = os.path.join(UNCDIR, UNC_INFO_ALT_F) # DT, NT __ GPP, RECO __ HH, DD, WW, MM, YY
 #UNC_MEF_MATRIX = os.path.join(UNCDIR, '{s}_{m}_{v}_mef_matrix_{r}_{t}_{fy}_{ly}.csv') # DT, NT __ GPP, RECO __ HH, DD, WW, MM, YY __ VUT, CUT
 
-FULLSET_STR = 'FULLSET'
+FULLSET_STR = 'FLUXMET'
 SUBSET_STR = 'SUBSET'
 
 ERA_STR = MODE_ERA
@@ -507,17 +507,31 @@ def get_headers(filename):
 def check_headers_fluxnet(filename):
     """
     Checks variables that must, should, and could be present
-    in FULLSET output of FLUXNET Data product.
+    in FLUXMET output of FLUXNET Data product.
     Returns True if all present (or only missing from COULD list),
     False if any variable in MUST or SHOULD be present lists are missing
     
-    :param filename: FULLSET filename to be checked
+    :param filename: FLUXMET filename to be checked
     :type filename: str
     :rtype: bool
     """
+    #MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_{g}_{r}_{fy}-{ly}_v{vp}_r{vd}.csv"
     basename = os.path.basename(filename)
-    if not ((basename[:4] == MODE_ISSUER + "_") and (basename[10:11 + len(MODE_PRODUCT) + 8] == "_" + MODE_PRODUCT + "_FULLSET")):
-        log.error("Filename does not match {p} FULLSET filename template: {f}".format(p=MODE_PRODUCT, f=filename))
+    components = basename.split('_')
+    mode_issuer, site_id, data_product = components[0], components[1], components[2]
+    flux_product, record_interval, fyly = components[3], components[4], components[5]
+    version_processing, version_data = components[6], components[7]
+    if not (
+        (mode_issuer == MODE_ISSUER) and
+        (data_product == MODE_PRODUCT) and
+        (flux_product == FULLSET_STR) and
+        (is_int(fyly.split('-')[0])) and
+        (is_int(fyly.split('-')[1])) and
+        (record_interval in RESOLUTION_LIST) and
+        (version_processing[0].startswith('v')) and
+        (version_data[0].startswith('r'))
+    ):
+        log.error("Filename does not match {p} {g} filename template: {f}".format(p=MODE_PRODUCT, g=FULLSET_STR, f=filename))
         return False
 
     headers = get_headers(filename=filename)

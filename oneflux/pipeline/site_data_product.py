@@ -1262,7 +1262,7 @@ def run_site(siteid,
 
     first_year, last_year = None, None
     full_filelist = []
-    erai_filelist = []
+    era_filelist = []
     qcdata_dd = None # NEW FOR APRIL2016
     qcdata_ww = None # NEW FOR APRIL2016
     qcdata_mm = None # NEW FOR APRIL2016
@@ -1392,7 +1392,7 @@ def run_site(siteid,
         log.info("Saving ERA-Interim CSV file: {f}".format(f=filename))
         full_meteo_header_labels = TIMESTAMP_VARIABLE_LIST + NEW_ERA_VARS
         full_meteo_headers = [i for i in full_meteo_header_labels if i in full_meteo_data.dtype.names]
-        erai_filelist.append(filename)
+        era_filelist.append(filename)
         save_csv_txt(filename=filename, data=full_meteo_data[full_meteo_headers])
         # TODO: add era files to zips/filelists
 
@@ -1407,7 +1407,7 @@ def run_site(siteid,
     aux_file_list = run_site_aux(datadir=datadir, siteid=siteid, sitedir=sitedir, first_year=first_year, last_year=last_year, version_data=version_data, version_processing=version_processing, pipeline=pipeline, nt_skip=pipeline.nt_skip, dt_skip=pipeline.dt_skip)
     if full_filelist:
         full_filelist.extend(aux_file_list)
-        full_filelist.extend(erai_filelist)
+        full_filelist.extend(era_filelist)
 
     # generate zip and csv outputs for manifests
     zip_manifest_entries = []

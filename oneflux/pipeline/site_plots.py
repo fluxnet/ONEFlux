@@ -34,7 +34,9 @@ from matplotlib import pyplot, gridspec, dates, ticker
 
 from oneflux import ONEFluxError
 from oneflux.pipeline.variables_codes import FULL_D
-from oneflux.pipeline.common import RESOLUTION_LIST, PRODFILE_TEMPLATE, PRODFILE_AUX_TEMPLATE, PRODFILE_YEARS_TEMPLATE, PRODFILE_FIGURE_TEMPLATE, INTTEST
+from oneflux.pipeline.common import RESOLUTION_LIST, PRODFILE_TEMPLATE, PRODFILE_AUX_TEMPLATE, \
+                                    PRODFILE_YEARS_TEMPLATE, PRODFILE_FIGURE_TEMPLATE, INTTEST, \
+                                    FULLSET_STR
 from oneflux.pipeline.aux_info_files import load_ustar_cut, load_ustar_vut
 from oneflux.pipeline.site_data_product import get_headers
 
@@ -340,21 +342,21 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
     first_year, last_year = load_years(siteid=siteid, sitedir=sitedir, version_data=version_data, version_processing=version_processing, prodfile_years_template=prodfile_years_template)
     year_range = range(int(first_year), int(last_year) + 1)
 
-    hh_filename = prodfile_template.format(s=siteid, sd=sitedir, g='FULLSET', r='HH', fy=first_year, ly=last_year, vd=version_data, vp=version_processing)
+    hh_filename = prodfile_template.format(s=siteid, sd=sitedir, g=FULLSET_STR, r='HH', fy=first_year, ly=last_year, vd=version_data, vp=version_processing)
     if not os.path.isfile(hh_filename):
-        hh_filename = prodfile_template.format(s=siteid, sd=sitedir, g='FULLSET', r='HR', fy=first_year, ly=last_year, vd=version_data, vp=version_processing)
+        hh_filename = prodfile_template.format(s=siteid, sd=sitedir, g=FULLSET_STR, r='HR', fy=first_year, ly=last_year, vd=version_data, vp=version_processing)
         if not os.path.isfile(hh_filename):
             raise ONEFluxError("{s}: data file not found: {f}".format(s=siteid, f=hh_filename))
-    dd_filename = prodfile_template.format(s=siteid, sd=sitedir, g='FULLSET', r='DD', fy=first_year, ly=last_year, vd=version_data, vp=version_processing)
+    dd_filename = prodfile_template.format(s=siteid, sd=sitedir, g=FULLSET_STR, r='DD', fy=first_year, ly=last_year, vd=version_data, vp=version_processing)
     if not os.path.isfile(dd_filename):
         raise ONEFluxError("{s}: data file not found: {f}".format(s=siteid, f=dd_filename))
-    ww_filename = prodfile_template.format(s=siteid, sd=sitedir, g='FULLSET', r='WW', fy=first_year, ly=last_year, vd=version_data, vp=version_processing)
+    ww_filename = prodfile_template.format(s=siteid, sd=sitedir, g=FULLSET_STR, r='WW', fy=first_year, ly=last_year, vd=version_data, vp=version_processing)
     if not os.path.isfile(ww_filename):
         raise ONEFluxError("{s}: data file not found: {f}".format(s=siteid, f=ww_filename))
-    mm_filename = prodfile_template.format(s=siteid, sd=sitedir, g='FULLSET', r='MM', fy=first_year, ly=last_year, vd=version_data, vp=version_processing)
+    mm_filename = prodfile_template.format(s=siteid, sd=sitedir, g=FULLSET_STR, r='MM', fy=first_year, ly=last_year, vd=version_data, vp=version_processing)
     if not os.path.isfile(mm_filename):
         raise ONEFluxError("{s}: data file not found: {f}".format(s=siteid, f=mm_filename))
-    yy_filename = prodfile_template.format(s=siteid, sd=sitedir, g='FULLSET', r='YY', fy=first_year, ly=last_year, vd=version_data, vp=version_processing)
+    yy_filename = prodfile_template.format(s=siteid, sd=sitedir, g=FULLSET_STR, r='YY', fy=first_year, ly=last_year, vd=version_data, vp=version_processing)
     if not os.path.isfile(yy_filename):
         raise ONEFluxError("{s}: data file not found: {f}".format(s=siteid, f=yy_filename))
 
