@@ -64,10 +64,10 @@ def run_pipeline(datadir,
                     perc_to_compare=perc_to_compare,
                     timestamp=timestamp,
                     record_interval=record_interval,
-                    fluxnet2015_first_t1=firstyear,
-                    fluxnet2015_last_t1=lastyear,
-                    fluxnet2015_version_data=version_data,
-                    fluxnet2015_version_processing=version_proc,
+                    fluxnet_first=firstyear,
+                    fluxnet_last=lastyear,
+                    fluxnet_version_data=version_data,
+                    fluxnet_version_processing=version_proc,
                     ustar_cp_mcr_dir=mcr_directory,
                     era_first_timestamp_start=ERA_FIRST_TIMESTAMP_START_TEMPLATE.format(y=era_first_year),
                     era_last_timestamp_start=ERA_LAST_TIMESTAMP_START_TEMPLATE.format(y=era_last_year),
@@ -82,13 +82,13 @@ def run_pipeline(datadir,
                     nee_partition_dt_execute=steps.get('nee_partition_dt_execute', True),
                     prepare_ure_execute=steps.get('prepare_ure_execute', True),
                     ure_execute=steps.get('ure_execute', True),
-                    fluxnet2015_execute=steps.get('fluxnet2015_execute', True),
-                    fluxnet2015_site_plots=steps.get('fluxnet2015_site_plots', True),
+                    fluxnet_execute=steps.get('fluxnet_execute', True),
+                    fluxnet_site_plots=steps.get('fluxnet_site_plots', True),
                     nt_skip=steps.get('nt_skip', Pipeline.NT_SKIP),
                     dt_skip=steps.get('dt_skip', Pipeline.DT_SKIP),
                     simulation=False)
         pipeline.run()
-        #csv_manifest_entries, zip_manifest_entries = pipeline.fluxnet2015.csv_manifest_entries, pipeline.fluxnet2015.zip_manifest_entries
+        #csv_manifest_entries, zip_manifest_entries = pipeline.fluxnet.csv_manifest_entries, pipeline.fluxnet.zip_manifest_entries
         log.info("Finished processing site dir {d}".format(d=sitedir_full))
     except ONEFluxPipelineError as e:
         log.critical("ONEFlux Pipeline ERRORS processing site dir {d}".format(d=sitedir_full))

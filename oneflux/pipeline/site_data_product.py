@@ -26,13 +26,13 @@ from math import ceil
 from oneflux import ONEFluxError
 from oneflux.utils.files import check_create_directory, file_stat, zip_file_list
 
-from oneflux.pipeline.variables_codes import VARIABLE_LIST_FULL, VARIABLE_LIST_SUB, PERC_LABEL, \
+from oneflux.pipeline.variables_codes import VARIABLE_LIST_FULL, PERC_LABEL, \
                                               TIMESTAMP_VARIABLE_LIST, FULL_D, QC_FULL_D, VARIABLES_DONOT_GAPFILL_LONG, \
                                               VARIABLES_DONOT_GAPFILL_LONG_NEEXXCUT_MEAN_L, VARIABLES_DONOT_GAPFILL_LONG_NEEXXVUT_MEAN_L
 from oneflux.pipeline.aux_info_files import run_site_aux
 from oneflux.pipeline.common import QCDIR, METEODIR, NEEDIR, ENERGYDIR, UNCDIR, PRODDIR, WORKING_DIRECTORY, \
                                      PRODFILE_TEMPLATE, ZIPFILE_TEMPLATE, \
-                                     FULLSET_STR, SUBSET_STR, RESOLUTION_LIST, STRTEST, INTTEST, \
+                                     FULLSET_STR, RESOLUTION_LIST, STRTEST, INTTEST, \
                                      ERA_STR, \
                                      TIMESTAMP_DTYPE_BY_RESOLUTION, TIMESTAMP_DTYPE_BY_RESOLUTION_IN, PRODFILE_YEARS_TEMPLATE, \
                                      NEW_METEO_VARS, NEW_ERA_VARS, test_pattern, get_headers, \
@@ -928,10 +928,10 @@ def get_first_last_years(timestamps, first, last, error_str=''):
             raise ONEFluxError("Last year differs: {f1} <> {f2}, {e}".format(f1=l, f2=last, e=error_str))
     return f, l
 
-def gen_stats_zip(filename_list, zipfilename, tier='tier2', csv_processor='ICOS-ETC', zip_processor='LBL_AMP', ts_format="%Y-%m-%d %H:%M:%S"):
+def gen_stats_zip(filename_list, zipfilename, csv_processor='ICOS-ETC', zip_processor='LBL_AMP', ts_format="%Y-%m-%d %H:%M:%S"):
     """
     Generate stats and zip file for file list 
-    # ZIP:  filename, fileSize, fileChecksum, fileCount, tier, processor, createDate
+    # ZIP:  filename, fileSize, fileChecksum, fileCount, processor, createDate
     # CSV: zipfilename, filename, fileSize, fileChecksum,  processor, createDate
 
     :param filename_list:
@@ -953,7 +953,6 @@ def gen_stats_zip(filename_list, zipfilename, tier='tier2', csv_processor='ICOS-
                   '{e}'.format(e=format(size)),
                   '"{e}"'.format(e=md5sum),
                   '"{e}"'.format(e=len(filename_list)),
-                  '"{e}"'.format(e=tier),
                   '"{e}"'.format(e=zip_processor),
                   '"{e}"'.format(e=today)], ]
     csv_entries = []
@@ -1229,8 +1228,6 @@ def generate_agg_timestamp_mask(ftimestamp, data, resolution='dd'):
 
 def run_site(siteid,
              sitedir,
-             first_t1,
-             last_t1,
              version_processing=1,
              version_data=1,
              pipeline=None,
@@ -1254,7 +1251,7 @@ def run_site(siteid,
         nee = pipeline.nee_proc.nee_proc_dir
         energy = pipeline.energy_proc.energy_proc_dir
         unc = pipeline.ure.ure_dir
-        prod = pipeline.fluxnet2015.fluxnet2015_dir
+        prod = pipeline.fluxnet.fluxnet_dir
         prodfile_template = pipeline.prodfile_template
         zipfile_template = pipeline.zipfile_template
         prodfile_years_template = pipeline.prodfile_years_template
@@ -1264,11 +1261,8 @@ def run_site(siteid,
     check_create_directory(prod)
 
     first_year, last_year = None, None
-    full_filelist_t1 = []
-    full_filelist_t2 = []
-    sub_filelist_t1 = []
-    sub_filelist_t2 = []
-    erai_filelist = []
+    full_filelist = []
+    era_filelist = []
     qcdata_dd = None # NEW FOR APRIL2016
     qcdata_ww = None # NEW FOR APRIL2016
     qcdata_mm = None # NEW FOR APRIL2016
@@ -1312,20 +1306,6 @@ def run_site(siteid,
 
         # find first and last years
         first_year, last_year = get_first_last_years(timestamps=output_data[output_data.dtype.names[0]], first=first_year, last=last_year, error_str="{s}_{r}".format(s=siteid, r=resolution))
-
-        # check T1
-        if (first_t1 == 'none'):
-            pass
-        elif (first_t1 == 'all'):
-            first_t1, last_t1 = first_year, last_year
-        else:
-            ft1, lt1 = int(first_t1), int(last_t1)
-            if (ft1 < first_year):
-                log.error("{s}: first Tier 1 site-year ({t}) is less than first site-year available ({a}), using latter".format(s=siteid, t=ft1, a=first_year))
-                first_t1 = first_year
-            if (lt1 > last_year):
-                log.error("{s}: last Tier 1 site-year ({t}) is more than last site-year available ({a}), using latter".format(s=siteid, t=lt1, a=last_year))
-                last_t1 = last_year
 
         # NEW FOR APRIL2016: process additional met variables
         if resolution == 'hh':
@@ -1380,33 +1360,13 @@ def run_site(siteid,
                 log.debug('QC variable {q}, resolution {r}: assigning -9999'.format(q=qcv, r=resolution))
                 output_data[qcv][fmask] = -9999.9
 
-        ### FULLSET files
-        # save Tier 2 FULLSET CSV file
+        ### FLUXMET files
+        # save FLUXMET CSV file
         filename = prodfile_template.format(sd=sitedir, s=siteid, g=FULLSET_STR, r=output_resolution, fy=first_year, ly=last_year, vd=version_data, vp=version_processing)
-        log.info("Saving Tier 2 FULLSET CSV file: {f}".format(f=filename))
+        log.info("Saving FLUXMET CSV file: {f}".format(f=filename))
         subset_headers_full = [i for i in VARIABLE_LIST_FULL if i in output_data.dtype.names]
         save_csv_txt(filename=filename, data=output_data[subset_headers_full])
-        full_filelist_t2.append(filename)
-
-        # save Tier 1 FULLSET CSV file
-        # no T1
-        if (first_t1 == 'none'):
-            log.info("No Tier 1 FULLSET (none), equivalent Tier 2 file: {f}".format(f=filename))
-        # T1 is the same (all)
-        elif (int(first_t1) == first_year and int(last_t1) == last_year):
-            log.info("Tier 1 FULLSET CSV same as Tier 2 (all), reusing file: {f}".format(f=filename))
-            full_filelist_t1.append(filename)
-        # T1 differs, save new file
-        elif (int(first_t1) > first_year or int(last_t1) < last_year):
-            filename = prodfile_template.format(sd=sitedir, s=siteid, g=FULLSET_STR, r=output_resolution, fy=first_t1, ly=last_t1, vd=version_data, vp=version_processing)
-            first_idx, last_idx = get_subset_idx(data=output_data, first=first_t1, last=last_t1)
-            log.info("Saving Tier 1 FULLSET CSV file: {f}".format(f=filename))
-            save_csv_txt(filename=filename, data=output_data[subset_headers_full][first_idx:last_idx])
-            full_filelist_t1.append(filename)
-        # UNK
-        else:
-            raise ONEFluxError("Unknown Tier 1 state: first_t1={f}, last_t1={l}".format(f=first_t1, l=last_t1))
-
+        full_filelist.append(filename)
 
         # NEW FOR JULY2016: save full ERA output
         ts_precision = TIMESTAMP_PRECISION_BY_RESOLUTION[resolution]
@@ -1432,103 +1392,32 @@ def run_site(siteid,
         log.info("Saving ERA-Interim CSV file: {f}".format(f=filename))
         full_meteo_header_labels = TIMESTAMP_VARIABLE_LIST + NEW_ERA_VARS
         full_meteo_headers = [i for i in full_meteo_header_labels if i in full_meteo_data.dtype.names]
-        erai_filelist.append(filename)
+        era_filelist.append(filename)
         save_csv_txt(filename=filename, data=full_meteo_data[full_meteo_headers])
         # TODO: add era files to zips/filelists
-
-
-        ### SUBSET files
-        # save Tier 2 SUBSET CSV file
-        filename = prodfile_template.format(sd=sitedir, s=siteid, g=SUBSET_STR, r=output_resolution, fy=first_year, ly=last_year, vd=version_data, vp=version_processing)
-        log.info("Saving Tier 2 SUBSET CSV file: {f}".format(f=filename))
-        subset_headers = [i for i in VARIABLE_LIST_SUB if i in output_data.dtype.names]
-        save_csv_txt(filename=filename, data=output_data[subset_headers])
-        sub_filelist_t2.append(filename)
-
-        # save Tier 1 SUBSET CSV file
-        # no T1
-        if (first_t1 == 'none'):
-            log.info("No Tier 1 SUBSET (none), equivalent Tier 2 file: {f}".format(f=filename))
-        # T1 is the same (all)
-        elif (int(first_t1) == first_year and int(last_t1) == last_year):
-            log.info("Tier 1 SUBSET CSV same as Tier 2 (all), reusing file: {f}".format(f=filename))
-            sub_filelist_t1.append(filename)
-        # T1 differs, save new file
-        elif (int(first_t1) > first_year or int(last_t1) < last_year):
-            filename = prodfile_template.format(sd=sitedir, s=siteid, g=SUBSET_STR, r=output_resolution, fy=first_t1, ly=last_t1, vd=version_data, vp=version_processing)
-            first_idx, last_idx = get_subset_idx(data=output_data, first=first_t1, last=last_t1)
-            log.info("Saving Tier 1 SUBSET CSV file: {f}".format(f=filename))
-            save_csv_txt(filename=filename, data=output_data[subset_headers][first_idx:last_idx])
-            sub_filelist_t1.append(filename)
-        # UNK
-        else:
-            raise ONEFluxError("Unknown Tier 1 state: first_t1={f}, last_t1={l}".format(f=first_t1, l=last_t1))
 
     # save first/last year info
     prodfile_years = prodfile_years_template.format(s=siteid, sd=sitedir, vd=version_data, vp=version_processing)
     with open(prodfile_years, 'w') as f:
-        f.write("first_year_t2,last_year_t2,first_year_t1,last_year_t1\n")
-        f.write("{f},{l},{f1},{l1}\n".format(f=first_year, l=last_year, f1=first_t1, l1=last_t1))
+        f.write("first_year,last_year\n")
+        f.write("{f},{l}\n".format(f=first_year, l=last_year))
     log.debug("{s}: wrote years metadata file: {f}".format(s=siteid, f=prodfile_years))
 
     # generate aux and info files
     aux_file_list = run_site_aux(datadir=datadir, siteid=siteid, sitedir=sitedir, first_year=first_year, last_year=last_year, version_data=version_data, version_processing=version_processing, pipeline=pipeline, nt_skip=pipeline.nt_skip, dt_skip=pipeline.dt_skip)
-    if full_filelist_t1:
-        full_filelist_t1.extend(aux_file_list)
-        full_filelist_t1.extend(erai_filelist)
-    if full_filelist_t2:
-        full_filelist_t2.extend(aux_file_list)
-        full_filelist_t2.extend(erai_filelist)
-    if sub_filelist_t1: sub_filelist_t1.extend(aux_file_list)
-    if sub_filelist_t2: sub_filelist_t2.extend(aux_file_list)
+    if full_filelist:
+        full_filelist.extend(aux_file_list)
+        full_filelist.extend(era_filelist)
 
     # generate zip and csv outputs for manifests
     zip_manifest_entries = []
     csv_manifest_entries = []
 
-    # fullset T2
-    zip_entries, csv_entries = gen_stats_zip(filename_list=full_filelist_t2,
-                                             tier='tier2',
+    # fluxmet
+    zip_entries, csv_entries = gen_stats_zip(filename_list=full_filelist,
                                              zipfilename=zipfile_template.format(sd=sitedir, s=siteid, g=FULLSET_STR, fy=first_year, ly=last_year, vd=version_data, vp=version_processing))
     zip_manifest_entries.extend(zip_entries)
     csv_manifest_entries.extend(csv_entries)
-
-    # fullset T1
-    if (first_t1 != 'none'):
-        if (first_t1 == 'all') or (int(first_t1) == first_year and int(last_t1) == last_year):
-            # ZIP:  filename, fileSize, fileChecksum, fileCount, tier, processor, createDate
-            zip_entry = list(zip_entries[0])
-            zip_entry[4] = '"tier1"'
-            zip_entries = [zip_entry]
-            zip_manifest_entries.extend(zip_entries)
-        else:
-            zip_entries, csv_entries = gen_stats_zip(filename_list=full_filelist_t1,
-                                                     tier='tier1',
-                                                     zipfilename=zipfile_template.format(sd=sitedir, s=siteid, g=FULLSET_STR, fy=first_t1, ly=last_t1, vd=version_data, vp=version_processing))
-            zip_manifest_entries.extend(zip_entries)
-            csv_manifest_entries.extend(csv_entries)
-
-    # subset T2
-    zip_entries, csv_entries = gen_stats_zip(filename_list=sub_filelist_t2,
-                                             tier='tier2',
-                                             zipfilename=zipfile_template.format(sd=sitedir, s=siteid, g=SUBSET_STR, fy=first_year, ly=last_year, vd=version_data, vp=version_processing))
-    zip_manifest_entries.extend(zip_entries)
-    csv_manifest_entries.extend(csv_entries)
-
-    # subset T1
-    if (first_t1 != 'none'):
-        if (first_t1 == 'all') or (int(first_t1) == first_year and int(last_t1) == last_year):
-            # ZIP:  filename, fileSize, fileChecksum, fileCount, tier, processor, createDate
-            zip_entry = list(zip_entries[0])
-            zip_entry[4] = '"tier1"'
-            zip_entries = [zip_entry]
-            zip_manifest_entries.extend(zip_entries)
-        else:
-            zip_entries, csv_entries = gen_stats_zip(filename_list=sub_filelist_t1,
-                                                     tier='tier1',
-                                                     zipfilename=zipfile_template.format(sd=sitedir, s=siteid, g=SUBSET_STR, fy=first_t1, ly=last_t1, vd=version_data, vp=version_processing))
-            zip_manifest_entries.extend(zip_entries)
-            csv_manifest_entries.extend(csv_entries)
 
     return csv_manifest_entries, zip_manifest_entries
 

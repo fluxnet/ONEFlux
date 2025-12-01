@@ -20,14 +20,14 @@ import fnmatch
 
 from datetime import datetime
 
-from oneflux import add_file_log, ONEFluxError, log_trace
+from oneflux import add_file_log, ONEFluxError, log_trace, VERSION
 from oneflux.pipeline import CMD_SEP, COPY, DELETE, DELETE_DIR, HOMEDIR, DATA_DIR, TOOL_DIR, OUTPUT_LOG_TEMPLATE
 from oneflux.pipeline.site_data_product import run_site, get_headers_qc, _load_data, update_names_qc, save_csv_txt
 from oneflux.pipeline.variables_codes import QC_FULL_DIRECT_D
 from oneflux.pipeline.common import CSVMANIFEST_HEADER, ZIPMANIFEST_HEADER, ONEFluxPipelineError, \
                                      run_command, test_dir, test_file, test_file_list, test_file_list_or, \
                                      test_create_dir, create_replace_dir, create_and_empty_dir, test_pattern, \
-                                     check_headers_fluxnet2015, get_empty_array_year, copy_files_pattern,\
+                                     check_headers_fluxnet, get_empty_array_year, copy_files_pattern,\
                                      PRODFILE_TEMPLATE_F, PRODFILE_AUX_TEMPLATE_F, PRODFILE_YEARS_TEMPLATE_F, \
                                      PRODFILE_FIGURE_TEMPLATE_F, ZIPFILE_TEMPLATE_F, NEE_PERC_USTAR_VUT_PATTERN, \
                                      NEE_PERC_USTAR_CUT_PATTERN, UNC_INFO_F, UNC_INFO_ALT_F, NEE_PERC_NEE_F, \
@@ -65,10 +65,7 @@ class Pipeline(object):
         log.info("ONEFlux Pipeline: initialization started")
         self.run_id = socket.getfqdn() + '_run' + timestamp
 
-        if (MODE_ISSUER == 'FLX') and (MODE_PRODUCT == 'FLUXNET2015'):
-            FLUXNET_PRODUCT_CLASS = PipelineFLUXNET2015
-        else:
-            FLUXNET_PRODUCT_CLASS = PipelineFLUXNET
+        FLUXNET_PRODUCT_CLASS = PipelineFLUXNET
 
         ### basic checks
         # extra configs
@@ -136,11 +133,11 @@ class Pipeline(object):
         self.era_source_dir = self.configs.get('era_source_dir', os.path.join(ERA_SOURCE_DIRECTORY, self.siteid))
         log.debug("ONEFlux Pipeline: using ERA dir '{v}'".format(v=self.era_source_dir))
 
-        self.prodfile_template = os.path.join(self.data_dir, FLUXNET_PRODUCT_CLASS.FLUXNET2015_DIR, PRODFILE_TEMPLATE_F)
-        self.prodfile_aux_template = os.path.join(self.data_dir, FLUXNET_PRODUCT_CLASS.FLUXNET2015_DIR, PRODFILE_AUX_TEMPLATE_F)
-        self.prodfile_years_template = os.path.join(self.data_dir, FLUXNET_PRODUCT_CLASS.FLUXNET2015_DIR, PRODFILE_YEARS_TEMPLATE_F)
-        self.prodfile_figure_template = os.path.join(self.data_dir, FLUXNET_PRODUCT_CLASS.FLUXNET2015_DIR, PRODFILE_FIGURE_TEMPLATE_F)
-        self.zipfile_template = os.path.join(self.data_dir, FLUXNET_PRODUCT_CLASS.FLUXNET2015_DIR, ZIPFILE_TEMPLATE_F)
+        self.prodfile_template = os.path.join(self.data_dir, FLUXNET_PRODUCT_CLASS.FLUXNET_DIR, PRODFILE_TEMPLATE_F)
+        self.prodfile_aux_template = os.path.join(self.data_dir, FLUXNET_PRODUCT_CLASS.FLUXNET_DIR, PRODFILE_AUX_TEMPLATE_F)
+        self.prodfile_years_template = os.path.join(self.data_dir, FLUXNET_PRODUCT_CLASS.FLUXNET_DIR, PRODFILE_YEARS_TEMPLATE_F)
+        self.prodfile_figure_template = os.path.join(self.data_dir, FLUXNET_PRODUCT_CLASS.FLUXNET_DIR, PRODFILE_FIGURE_TEMPLATE_F)
+        self.zipfile_template = os.path.join(self.data_dir, FLUXNET_PRODUCT_CLASS.FLUXNET_DIR, ZIPFILE_TEMPLATE_F)
         self.nee_perc_ustar_vut = os.path.join(self.data_dir, PipelineNEEProc.NEE_PROC_DIR, NEE_PERC_USTAR_VUT_PATTERN)
         self.nee_perc_ustar_cut = os.path.join(self.data_dir, PipelineNEEProc.NEE_PROC_DIR, NEE_PERC_USTAR_CUT_PATTERN)
         self.nee_perc_nee = os.path.join(self.data_dir, PipelineNEEProc.NEE_PROC_DIR , NEE_PERC_NEE_F)
@@ -205,7 +202,7 @@ class Pipeline(object):
         self.nee_partition_dt = PipelineNEEPartitionDT(pipeline=self)
         self.prepare_ure = PipelinePrepareURE(pipeline=self)
         self.ure = PipelineURE(pipeline=self)
-        self.fluxnet2015 = FLUXNET_PRODUCT_CLASS(pipeline=self)
+        self.fluxnet = FLUXNET_PRODUCT_CLASS(pipeline=self)
 
         ### validation
         # list all steps
@@ -225,7 +222,7 @@ class Pipeline(object):
                         self.nee_partition_dt,
                         self.prepare_ure,
                         self.ure,
-                        self.fluxnet2015,
+                        self.fluxnet,
                        ]
 
         # pre-execution validation
@@ -2209,57 +2206,52 @@ class PipelineFLUXNET(object):
     '''
     Step to generate FLUXNET data product
     '''
-    FLUXNET2015_EXECUTE = True
-    FLUXNET2015_DIR = '99_fluxnet2015'
-    FLUXNET2015_SITE_PLOTS = True
-    FLUXNET2015_FIRST_T1 = None
-    FLUXNET2015_LAST_T1 = None
-    FLUXNET2015_FIRST_T2 = None
-    FLUXNET2015_LAST_T2 = None
-    FLUXNET2015_VERSION_PROCESSING = 3
-    FLUXNET2015_VERSION_DATA = 1
+    FLUXNET_EXECUTE = True
+    FLUXNET_DIR = '99_fluxnet2015'
+    FLUXNET_SITE_PLOTS = True
+    FLUXNET_FIRST = None
+    FLUXNET_LAST = None
+    FLUXNET_VERSION_PROCESSING = VERSION[:3]
+    FLUXNET_VERSION_DATA = 1
     _OUTPUT_FILE_PATTERNS = [
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_AUXMETEO_????-????_*-*.csv",
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_AUXNEE_????-????_*-*.csv",
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FULLSET_DD_????-????_*-*.csv",
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FULLSET_HH_????-????_*-*.csv",
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FULLSET_MM_????-????_*-*.csv",
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FULLSET_WW_????-????_*-*.csv",
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FULLSET_YY_????-????_*-*.csv",
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_SUBSET_DD_????-????_*-*.csv",
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_SUBSET_HH_????-????_*-*.csv",
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_SUBSET_MM_????-????_*-*.csv",
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_SUBSET_WW_????-????_*-*.csv",
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_SUBSET_YY_????-????_*-*.csv",
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FULLSET_????-????_*-*.zip",
-        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_SUBSET_????-????_*-*.zip",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_AUXMETEO_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_AUXNEE_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FLUXMET_DD_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FLUXMET_HH_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FLUXMET_MM_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FLUXMET_WW_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_FLUXMET_YY_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_ERA5_DD_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_ERA5_HH_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_ERA5_MM_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_ERA5_WW_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_ERA5_YY_????-????_*_*.csv",
+        MODE_ISSUER + "_{s}_" + MODE_PRODUCT + "_????-????_*_*.zip",
     ]
 
     def __init__(self, pipeline):
         '''
         Initializes parameters for execution of step to generate
-        FLUXNET2015 data product
+        FLUXNET data product
         
         :param pipeline: ONEFlux Pipeline object driving the execution
         :type pipeline: Pipeline
         '''
         self.pipeline = pipeline
-        self.execute = self.pipeline.configs.get('fluxnet2015_execute', self.FLUXNET2015_EXECUTE)
-        self.fluxnet2015_dir = self.pipeline.configs.get('fluxnet2015_dir', os.path.join(self.pipeline.data_dir, self.FLUXNET2015_DIR))
-        self.fluxnet2015_site_plots = self.pipeline.configs.get('fluxnet2015_site_plots', self.FLUXNET2015_SITE_PLOTS)
-        self.fluxnet2015_first_t1 = self.pipeline.configs.get('fluxnet2015_first_t1', self.FLUXNET2015_FIRST_T1)
-        self.fluxnet2015_last_t1 = self.pipeline.configs.get('fluxnet2015_last_t1', self.FLUXNET2015_LAST_T1)
-        self.fluxnet2015_first_t2 = self.pipeline.configs.get('fluxnet2015_first_t2', self.FLUXNET2015_FIRST_T2)
-        self.fluxnet2015_last_t2 = self.pipeline.configs.get('fluxnet2015_last_t2', self.FLUXNET2015_LAST_T2)
-        self.fluxnet2015_version_processing = self.pipeline.configs.get('fluxnet2015_version_processing', self.FLUXNET2015_VERSION_PROCESSING)
-        self.fluxnet2015_version_data = self.pipeline.configs.get('fluxnet2015_version_data', self.FLUXNET2015_VERSION_DATA)
+        self.execute = self.pipeline.configs.get('fluxnet_execute', self.FLUXNET_EXECUTE)
+        self.fluxnet_dir = self.pipeline.configs.get('fluxnet_dir', os.path.join(self.pipeline.data_dir, self.FLUXNET_DIR))
+        self.fluxnet_site_plots = self.pipeline.configs.get('fluxnet_site_plots', self.FLUXNET_SITE_PLOTS)
+        self.fluxnet_first = self.pipeline.configs.get('fluxnet_first', self.FLUXNET_FIRST)
+        self.fluxnet_last = self.pipeline.configs.get('fluxnet_last', self.FLUXNET_LAST)
+        self.fluxnet_version_processing = self.FLUXNET_VERSION_PROCESSING
+        self.fluxnet_version_data = self.pipeline.configs.get('fluxnet_version_data', self.FLUXNET_VERSION_DATA)
         self.output_file_patterns = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS]
         self.csv_manifest_entries = None
         self.zip_manifest_entries = None
         self.csv_manifest_lines = [CSVMANIFEST_HEADER, ]
         self.zip_manifest_lines = [ZIPMANIFEST_HEADER, ]
-        self.csv_manifest_file = os.path.join(self.fluxnet2015_dir, OUTPUT_LOG_TEMPLATE.format(t='CSV_' + self.pipeline.run_id)[:-4] + '.csv')
-        self.zip_manifest_file = os.path.join(self.fluxnet2015_dir, OUTPUT_LOG_TEMPLATE.format(t='ZIP_' + self.pipeline.run_id)[:-4] + '.csv')
+        self.csv_manifest_file = os.path.join(self.fluxnet_dir, OUTPUT_LOG_TEMPLATE.format(t='CSV_' + self.pipeline.run_id)[:-4] + '.csv')
+        self.zip_manifest_file = os.path.join(self.fluxnet_dir, OUTPUT_LOG_TEMPLATE.format(t='ZIP_' + self.pipeline.run_id)[:-4] + '.csv')
 
     def pre_validate(self):
         '''
@@ -2272,159 +2264,13 @@ class PipelineFLUXNET(object):
         self.pipeline.energy_proc.post_validate()
         self.pipeline.ure.post_validate()
 
-        # check minimal tier information
-        if self.fluxnet2015_first_t1 is None:
-            msg = "PipelineFLUXNET2015: First Tier1 site year not provided or invalid: '{v}'".format(v=self.fluxnet2015_first_t1)
+        # check minimal year information
+        if self.fluxnet_first is None:
+            msg = "PipelineFLUXNET: First site year not provided or invalid: '{v}'".format(v=self.fluxnet_first)
             log.critical(msg)
             raise ONEFluxPipelineError(msg)
-        if self.fluxnet2015_last_t1 is None:
-            msg = "PipelineFLUXNET2015: Last Tier1 site year not provided or invalid: '{v}'".format(v=self.fluxnet2015_last_t1)
-            log.critical(msg)
-            raise ONEFluxPipelineError(msg)
-
-    def post_validate(self):
-        '''
-        Validate post-execution results
-        '''
-        # check output directory
-        test_dir(tdir=self.fluxnet2015_dir, label='fluxnet2015.post_validate')
-
-        # check output files and result report (log)
-        test_file_list(file_list=self.output_file_patterns, tdir=self.fluxnet2015_dir, label='fluxnet2015.post_validate')
-
-        # check all variables present
-        log.info("Checking FLUXNET2015 FULLSET data product files for variables ({s})".format(s=self.pipeline.siteid))
-        all_present = True
-        for filename_pattern in self.output_file_patterns:
-            if ('FULLSET' in filename_pattern) and ('.zip' not in filename_pattern.lower()):
-                matches = fnmatch.filter(os.listdir(self.fluxnet2015_dir), filename_pattern)
-                matches_alt = fnmatch.filter(os.listdir(self.fluxnet2015_dir), filename_pattern.replace('_HH_', '_HR_'))
-                for filename in matches + matches_alt:
-                    all_present = check_headers_fluxnet2015(filename=os.path.join(self.fluxnet2015_dir, filename))
-        if not all_present:
-            log.critical("Missing variables in FLUXNET2015 FULLSET output for site {s}".format(s=self.pipeline.siteid))
-
-    def run(self):
-        '''
-        Executes fluxnet2015
-        '''
-
-        log.info("Pipeline fluxnet2015 execution started")
-        self.pre_validate()
-
-        create_replace_dir(tdir=self.fluxnet2015_dir, label='fluxnet2015.run', suffix=self.pipeline.run_id, simulation=self.pipeline.simulation)
-
-        log.info("Execution command oneflux.pipeline.site_data_product.run_site")
-        if self.pipeline.simulation:
-            log.info("Simulation only, fluxnet2015 execution command skipped")
-        else:
-            self.csv_manifest_entries, self.zip_manifest_entries = run_site(siteid=self.pipeline.siteid,
-                                                                            sitedir=os.path.basename(self.pipeline.data_dir),
-                                                                            first_t1=self.fluxnet2015_first_t1,
-                                                                            last_t1=self.fluxnet2015_last_t1,
-                                                                            version_processing=self.fluxnet2015_version_processing,
-                                                                            version_data=self.fluxnet2015_version_data,
-                                                                            pipeline=self.pipeline,
-                                                                            era_first_timestamp_start=self.pipeline.era_first_timestamp_start,
-                                                                            era_last_timestamp_start=self.pipeline.era_last_timestamp_start)
-            if self.fluxnet2015_site_plots:
-                gen_site_plots(siteid=self.pipeline.siteid,
-                               sitedir=os.path.basename(self.pipeline.data_dir),
-                               version_data=self.fluxnet2015_version_data,
-                               version_processing=self.fluxnet2015_version_processing,
-                               pipeline=self.pipeline)
-
-            # write manifest entries for site
-            for entry in self.csv_manifest_entries:
-                self.csv_manifest_lines.append(','.join(entry) + '\n')
-            for entry in self.zip_manifest_entries:
-                self.zip_manifest_lines.append(','.join(entry) + '\n')
-            log.debug("Pipeline fluxnet2015 writing site CSV manifest file: {f}".format(f=self.csv_manifest_file))
-            with open(self.csv_manifest_file, 'w') as f:
-                f.writelines(self.csv_manifest_lines)
-            log.debug("Pipeline fluxnet2015 writing site ZIP manifest file: {f}".format(f=self.zip_manifest_file))
-            with open(self.zip_manifest_file, 'w') as f:
-                f.writelines(self.zip_manifest_lines)
-
-            self.post_validate()
-
-        log.info("Pipeline fluxnet2015 execution finished")
-
-
-class PipelineFLUXNET2015(object):
-    '''
-    Step to generate FLUXNET2015 data product
-    '''
-    FLUXNET2015_EXECUTE = True
-    FLUXNET2015_DIR = '99_fluxnet2015'
-    FLUXNET2015_SITE_PLOTS = True
-    FLUXNET2015_FIRST_T1 = None
-    FLUXNET2015_LAST_T1 = None
-    FLUXNET2015_FIRST_T2 = None
-    FLUXNET2015_LAST_T2 = None
-    FLUXNET2015_VERSION_PROCESSING = 3
-    FLUXNET2015_VERSION_DATA = 1
-    _OUTPUT_FILE_PATTERNS = [
-        "FLX_{s}_FLUXNET2015_AUXMETEO_????-????_*-*.csv",
-        "FLX_{s}_FLUXNET2015_AUXNEE_????-????_*-*.csv",
-        "FLX_{s}_FLUXNET2015_FULLSET_DD_????-????_*-*.csv",
-        "FLX_{s}_FLUXNET2015_FULLSET_HH_????-????_*-*.csv",
-        "FLX_{s}_FLUXNET2015_FULLSET_MM_????-????_*-*.csv",
-        "FLX_{s}_FLUXNET2015_FULLSET_WW_????-????_*-*.csv",
-        "FLX_{s}_FLUXNET2015_FULLSET_YY_????-????_*-*.csv",
-        "FLX_{s}_FLUXNET2015_SUBSET_DD_????-????_*-*.csv",
-        "FLX_{s}_FLUXNET2015_SUBSET_HH_????-????_*-*.csv",
-        "FLX_{s}_FLUXNET2015_SUBSET_MM_????-????_*-*.csv",
-        "FLX_{s}_FLUXNET2015_SUBSET_WW_????-????_*-*.csv",
-        "FLX_{s}_FLUXNET2015_SUBSET_YY_????-????_*-*.csv",
-        "FLX_{s}_FLUXNET2015_FULLSET_????-????_*-*.zip",
-        "FLX_{s}_FLUXNET2015_SUBSET_????-????_*-*.zip",
-    ]
-
-    def __init__(self, pipeline):
-        '''
-        Initializes parameters for execution of step to generate
-        FLUXNET2015 data product
-        
-        :param pipeline: ONEFlux Pipeline object driving the execution
-        :type pipeline: Pipeline
-        '''
-        self.pipeline = pipeline
-        self.execute = self.pipeline.configs.get('fluxnet2015_execute', self.FLUXNET2015_EXECUTE)
-        self.fluxnet2015_dir = self.pipeline.configs.get('fluxnet2015_dir', os.path.join(self.pipeline.data_dir, self.FLUXNET2015_DIR))
-        self.fluxnet2015_site_plots = self.pipeline.configs.get('fluxnet2015_site_plots', self.FLUXNET2015_SITE_PLOTS)
-        self.fluxnet2015_first_t1 = self.pipeline.configs.get('fluxnet2015_first_t1', self.FLUXNET2015_FIRST_T1)
-        self.fluxnet2015_last_t1 = self.pipeline.configs.get('fluxnet2015_last_t1', self.FLUXNET2015_LAST_T1)
-        self.fluxnet2015_first_t2 = self.pipeline.configs.get('fluxnet2015_first_t2', self.FLUXNET2015_FIRST_T2)
-        self.fluxnet2015_last_t2 = self.pipeline.configs.get('fluxnet2015_last_t2', self.FLUXNET2015_LAST_T2)
-        self.fluxnet2015_version_processing = self.pipeline.configs.get('fluxnet2015_version_processing', self.FLUXNET2015_VERSION_PROCESSING)
-        self.fluxnet2015_version_data = self.pipeline.configs.get('fluxnet2015_version_data', self.FLUXNET2015_VERSION_DATA)
-        self.output_file_patterns = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS]
-        self.csv_manifest_entries = None
-        self.zip_manifest_entries = None
-        self.csv_manifest_lines = [CSVMANIFEST_HEADER, ]
-        self.zip_manifest_lines = [ZIPMANIFEST_HEADER, ]
-        self.csv_manifest_file = os.path.join(self.fluxnet2015_dir, OUTPUT_LOG_TEMPLATE.format(t='CSV_' + self.pipeline.run_id)[:-4] + '.csv')
-        self.zip_manifest_file = os.path.join(self.fluxnet2015_dir, OUTPUT_LOG_TEMPLATE.format(t='ZIP_' + self.pipeline.run_id)[:-4] + '.csv')
-
-    def pre_validate(self):
-        '''
-        Validate pre-execution requirements
-        '''
-        # check dependency steps
-        self.pipeline.qc_visual.post_validate()
-        self.pipeline.meteo_proc.post_validate()
-        self.pipeline.nee_proc.post_validate()
-        self.pipeline.energy_proc.post_validate()
-        self.pipeline.ure.post_validate()
-
-        # check minimal tier information
-        if self.fluxnet2015_first_t1 is None:
-            msg = "PipelineFLUXNET2015: First Tier1 site year not provided or invalid: '{v}'".format(v=self.fluxnet2015_first_t1)
-            log.critical(msg)
-            raise ONEFluxPipelineError(msg)
-        if self.fluxnet2015_last_t1 is None:
-            msg = "PipelineFLUXNET2015: Last Tier1 site year not provided or invalid: '{v}'".format(v=self.fluxnet2015_last_t1)
+        if self.fluxnet_last is None:
+            msg = "PipelineFLUXNET: Last site year not provided or invalid: '{v}'".format(v=self.fluxnet_last)
             log.critical(msg)
             raise ONEFluxPipelineError(msg)
 
@@ -2433,51 +2279,49 @@ class PipelineFLUXNET2015(object):
         Validate post-execution results
         '''
         # check output directory
-        test_dir(tdir=self.fluxnet2015_dir, label='fluxnet2015.post_validate')
+        test_dir(tdir=self.fluxnet_dir, label='fluxnet.post_validate')
 
         # check output files and result report (log)
-        test_file_list(file_list=self.output_file_patterns, tdir=self.fluxnet2015_dir, label='fluxnet2015.post_validate')
+        test_file_list(file_list=self.output_file_patterns, tdir=self.fluxnet_dir, label='fluxnet.post_validate')
 
         # check all variables present
-        log.info("Checking FLUXNET2015 FULLSET data product files for variables ({s})".format(s=self.pipeline.siteid))
+        log.info("Checking FLUXNET FLUXMET data product files for variables ({s})".format(s=self.pipeline.siteid))
         all_present = True
         for filename_pattern in self.output_file_patterns:
             if ('FULLSET' in filename_pattern) and ('.zip' not in filename_pattern.lower()):
-                matches = fnmatch.filter(os.listdir(self.fluxnet2015_dir), filename_pattern)
-                matches_alt = fnmatch.filter(os.listdir(self.fluxnet2015_dir), filename_pattern.replace('_HH_', '_HR_'))
+                matches = fnmatch.filter(os.listdir(self.fluxnet_dir), filename_pattern)
+                matches_alt = fnmatch.filter(os.listdir(self.fluxnet_dir), filename_pattern.replace('_HH_', '_HR_'))
                 for filename in matches + matches_alt:
-                    all_present = check_headers_fluxnet2015(filename=os.path.join(self.fluxnet2015_dir, filename))
+                    all_present = check_headers_fluxnet(filename=os.path.join(self.fluxnet_dir, filename))
         if not all_present:
-            log.critical("Missing variables in FLUXNET2015 FULLSET output for site {s}".format(s=self.pipeline.siteid))
+            log.critical("Missing variables in FLUXNET FLUXMET output for site {s}".format(s=self.pipeline.siteid))
 
     def run(self):
         '''
-        Executes fluxnet2015
+        Executes fluxnet
         '''
 
-        log.info("Pipeline fluxnet2015 execution started")
+        log.info("Pipeline fluxnet execution started")
         self.pre_validate()
 
-        create_replace_dir(tdir=self.fluxnet2015_dir, label='fluxnet2015.run', suffix=self.pipeline.run_id, simulation=self.pipeline.simulation)
+        create_replace_dir(tdir=self.fluxnet_dir, label='fluxnet.run', suffix=self.pipeline.run_id, simulation=self.pipeline.simulation)
 
         log.info("Execution command oneflux.pipeline.site_data_product.run_site")
         if self.pipeline.simulation:
-            log.info("Simulation only, fluxnet2015 execution command skipped")
+            log.info("Simulation only, fluxnet execution command skipped")
         else:
             self.csv_manifest_entries, self.zip_manifest_entries = run_site(siteid=self.pipeline.siteid,
                                                                             sitedir=os.path.basename(self.pipeline.data_dir),
-                                                                            first_t1=self.fluxnet2015_first_t1,
-                                                                            last_t1=self.fluxnet2015_last_t1,
-                                                                            version_processing=self.fluxnet2015_version_processing,
-                                                                            version_data=self.fluxnet2015_version_data,
+                                                                            version_processing=self.fluxnet_version_processing,
+                                                                            version_data=self.fluxnet_version_data,
                                                                             pipeline=self.pipeline,
                                                                             era_first_timestamp_start=self.pipeline.era_first_timestamp_start,
                                                                             era_last_timestamp_start=self.pipeline.era_last_timestamp_start)
-            if self.fluxnet2015_site_plots:
+            if self.fluxnet_site_plots:
                 gen_site_plots(siteid=self.pipeline.siteid,
                                sitedir=os.path.basename(self.pipeline.data_dir),
-                               version_data=self.fluxnet2015_version_data,
-                               version_processing=self.fluxnet2015_version_processing,
+                               version_data=self.fluxnet_version_data,
+                               version_processing=self.fluxnet_version_processing,
                                pipeline=self.pipeline)
 
             # write manifest entries for site
@@ -2485,13 +2329,13 @@ class PipelineFLUXNET2015(object):
                 self.csv_manifest_lines.append(','.join(entry) + '\n')
             for entry in self.zip_manifest_entries:
                 self.zip_manifest_lines.append(','.join(entry) + '\n')
-            log.debug("Pipeline fluxnet2015 writing site CSV manifest file: {f}".format(f=self.csv_manifest_file))
+            log.debug("Pipeline fluxnet writing site CSV manifest file: {f}".format(f=self.csv_manifest_file))
             with open(self.csv_manifest_file, 'w') as f:
                 f.writelines(self.csv_manifest_lines)
-            log.debug("Pipeline fluxnet2015 writing site ZIP manifest file: {f}".format(f=self.zip_manifest_file))
+            log.debug("Pipeline fluxnet writing site ZIP manifest file: {f}".format(f=self.zip_manifest_file))
             with open(self.zip_manifest_file, 'w') as f:
                 f.writelines(self.zip_manifest_lines)
 
             self.post_validate()
 
-        log.info("Pipeline fluxnet2015 execution finished")
+        log.info("Pipeline fluxnet execution finished")
