@@ -129,6 +129,9 @@ class Pipeline(object):
         self.data_dir = self.configs.get('data_dir', os.path.join(DATA_DIR, self.siteid)) # TODO: default should be self.site_dir?
         log.debug("ONEFlux Pipeline: using data dir '{v}'".format(v=self.data_dir))
 
+        self.report_log_filename = os.path.join(self.data_dir, DEFAULT_LOGGING_FILENAME.format(s=self.siteid))
+        self.logfile = self.configs.get('logfile', self.report_log_filename)
+
         # ERA pre-extracted, unit adjusted, data files for pixel(s) corresponding to site location
         self.era_source_dir = self.configs.get('era_source_dir', os.path.join(ERA_SOURCE_DIRECTORY, self.siteid))
         log.debug("ONEFlux Pipeline: using ERA dir '{v}'".format(v=self.era_source_dir))
@@ -185,6 +188,10 @@ class Pipeline(object):
         log.debug("ONEFlux Pipeline: Product string '{p}'".format(p=MODE_PRODUCT))
         log.debug("ONEFlux Pipeline: ERA string '{e}'".format(e=MODE_ERA))
         
+        # BIF metadata files
+        self.var_info_file = self.configs.get('var_info_file', None)
+        self.bif_other_file_list = self.configs.get('bif_other_file_list', None)
+
         ### create drivers for individual steps
         self.fp_creator = PipelineFPCreator(pipeline=self)
         self.qc_visual = PipelineQCVisual(pipeline=self)
@@ -268,7 +275,7 @@ class Pipeline(object):
 
         try:
             # start site pipeline log
-            logger_file, log_file_handler = add_file_log(filename=os.path.join(self.data_dir, DEFAULT_LOGGING_FILENAME.format(s=self.siteid)))
+            logger_file, log_file_handler = add_file_log(filename=self.report_log_filename)
             ts_begin = datetime.now()
 
             for driver in self.drivers:
@@ -2316,7 +2323,10 @@ class PipelineFLUXNET(object):
                                                                             version_data=self.fluxnet_version_data,
                                                                             pipeline=self.pipeline,
                                                                             era_first_timestamp_start=self.pipeline.era_first_timestamp_start,
-                                                                            era_last_timestamp_start=self.pipeline.era_last_timestamp_start)
+                                                                            era_last_timestamp_start=self.pipeline.era_last_timestamp_start,
+                                                                            var_info_file=self.pipeline.var_info_file,
+                                                                            bif_other_file_list=self.pipeline.bif_other_file_list,
+                                                                            )
             if self.fluxnet_site_plots:
                 gen_site_plots(siteid=self.pipeline.siteid,
                                sitedir=os.path.basename(self.pipeline.data_dir),

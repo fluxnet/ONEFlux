@@ -49,6 +49,8 @@ if __name__ == '__main__':
     parser.add_argument('--era-fy', help="ERA first year of data (default {y})".format(y=ERA_FIRST_YEAR), type=int, dest='erafy', default=int(ERA_FIRST_YEAR))
     parser.add_argument('--era-ly', help="ERA last year of data (default {y})".format(y=ERA_LAST_YEAR), type=int, dest='eraly', default=int(ERA_LAST_YEAR))
     parser.add_argument('--era-source', help="Absolute path to directory with ERA pre-extracted, unit adjusted, data files for pixel(s)", type=str, dest='erasource', default=None)
+    parser.add_argument('--var_info_file', help="Path to BIF VAR_INFO file", type=str, dest='var_info_file', default=None)
+    parser.add_argument('--bif_other_file_list', help="List of paths to other BIF files", type=str, dest='bif_other_file_list', nargs='*', default=None)
     args = parser.parse_args()
 
     # setup logging file and stdout
@@ -76,6 +78,8 @@ if __name__ == '__main__':
     msg += ", era-fy ({i})".format(i=args.erafy)
     msg += ", era-ly ({i})".format(i=args.eraly)
     msg += ", era-source ({i})".format(i=args.erasource)
+    msg += ", var_info_file ({i})".format(i=args.var_info_file)
+    msg += ", bif_other_file_list ({i})".format(i=args.bif_other_file_list)
     log.debug(msg)
 
     # start execution
@@ -92,7 +96,9 @@ if __name__ == '__main__':
             run_pipeline(datadir=args.datadir, siteid=args.siteid, sitedir=args.sitedir, firstyear=firstyear, lastyear=lastyear,
                          prod_to_compare=prod, perc_to_compare=perc, mcr_directory=args.mcr_directory, timestamp=args.timestamp,
                          record_interval=args.recint, version_data=args.versiond,
-                         era_first_year=args.erafy, era_last_year=args.eraly, era_source_dir=args.erasource)
+                         era_first_year=args.erafy, era_last_year=args.eraly, era_source_dir=args.erasource,
+                         var_info_file=args.var_info_file, bif_other_file_list=args.bif_other_file_list,
+                         logfile=args.logfile)
         elif args.command == 'partition_nt':
             run_partition_nt(datadir=args.datadir, siteid=args.siteid, sitedir=args.sitedir, years_to_compare=range(firstyear, lastyear + 1),
                              py_remove_old=args.forcepy, prod_to_compare=prod, perc_to_compare=perc)

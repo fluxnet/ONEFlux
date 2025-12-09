@@ -38,6 +38,8 @@ from oneflux.pipeline.common import QCDIR, METEODIR, NEEDIR, ENERGYDIR, UNCDIR, 
                                      NEW_METEO_VARS, NEW_ERA_VARS, test_pattern, get_headers, \
                                      TIMESTAMP_PRECISION_BY_RESOLUTION
 from oneflux.pipeline.common import ERA_FIRST_TIMESTAMP_START, ERA_LAST_TIMESTAMP_START
+from oneflux.metadata.bif import run_bif
+from oneflux.metadata import README_FILENAME, README, LICENSE_FILENAME, LICENSE
 
 log = logging.getLogger(__name__)
 
@@ -1232,7 +1234,9 @@ def run_site(siteid,
              version_data=1,
              pipeline=None,
              era_first_timestamp_start=ERA_FIRST_TIMESTAMP_START,
-             era_last_timestamp_start=ERA_LAST_TIMESTAMP_START):
+             era_last_timestamp_start=ERA_LAST_TIMESTAMP_START,
+             var_info_file=None,
+             bif_other_file_list=None):
     if pipeline is None: # TODO: remove this condition and add error handling, pipeline shoud not be None anymore
         datadir = WORKING_DIRECTORY
         meteo = METEODIR.format(sd=sitedir)
@@ -1267,6 +1271,7 @@ def run_site(siteid,
     qcdata_ww = None # NEW FOR APRIL2016
     qcdata_mm = None # NEW FOR APRIL2016
     qcdata_yy = None # NEW FOR APRIL2016
+    output_filelist_d = {}
     for resolution in RESOLUTION_LIST:
         log.debug("Processing '{r}' resolution".format(r=resolution))
         meteo_data = load_meteo(siteid=siteid, ddir=meteo, resolution=resolution)
@@ -1367,6 +1372,7 @@ def run_site(siteid,
         subset_headers_full = [i for i in VARIABLE_LIST_FULL if i in output_data.dtype.names]
         save_csv_txt(filename=filename, data=output_data[subset_headers_full])
         full_filelist.append(filename)
+        output_filelist_d[resolution] = filename
 
         # NEW FOR JULY2016: save full ERA output
         ts_precision = TIMESTAMP_PRECISION_BY_RESOLUTION[resolution]
@@ -1405,9 +1411,47 @@ def run_site(siteid,
 
     # generate aux and info files
     aux_file_list = run_site_aux(datadir=datadir, siteid=siteid, sitedir=sitedir, first_year=first_year, last_year=last_year, version_data=version_data, version_processing=version_processing, pipeline=pipeline, nt_skip=pipeline.nt_skip, dt_skip=pipeline.dt_skip)
+    ## Dec 2025: Removed AUX, content moved to BIF 
+    # if full_filelist:
+    #     full_filelist.extend(aux_file_list)
+    #     full_filelist.extend(era_filelist)
+
+    # generate metadata files
+    folder = os.path.dirname(output_filelist_d['hh'])
+    readme = os.path.join(folder, README_FILENAME)
+    with open(readme, 'w') as f:
+        f.write(README)
+    license = os.path.join(folder, LICENSE_FILENAME)
+    with open(license, 'w') as f:
+        f.write(LICENSE)
+    if var_info_file is not None:
+        run_bif(path_file_varinfo=var_info_file,
+                path_file_pipeline=pipeline.logfile,
+                path_00_fp=pipeline.qc_visual.qc_visual_dir_inner,
+                path_file_data_hh=output_filelist_d['hh'],
+                path_file_data_dd=output_filelist_d['dd'],
+                path_file_data_ww=output_filelist_d['ww'],
+                path_file_data_mm=output_filelist_d['mm'],
+                path_file_data_yy=output_filelist_d['yy'],
+                path_output_varinfo_hh=output_filelist_d['hh'].replace(FULLSET_STR, 'BIFVARINFO'),
+                path_output_varinfo_dd=output_filelist_d['dd'].replace(FULLSET_STR, 'BIFVARINFO'),
+                path_output_varinfo_ww=output_filelist_d['ww'].replace(FULLSET_STR, 'BIFVARINFO'),
+                path_output_varinfo_mm=output_filelist_d['mm'].replace(FULLSET_STR, 'BIFVARINFO'),
+                path_output_varinfo_yy=output_filelist_d['yy'].replace(FULLSET_STR, 'BIFVARINFO'),
+                path_aux_meteo=aux_file_list[0],
+                path_aux_nee=aux_file_list[1],
+                path_output_merge=output_filelist_d['dd'].replace(FULLSET_STR + '_DD', 'BIF'),
+                path_bif_other=bif_other_file_list,
+                )
     if full_filelist:
-        full_filelist.extend(aux_file_list)
-        full_filelist.extend(era_filelist)
+        full_filelist.append(output_filelist_d['dd'].replace(FULLSET_STR + '_DD', 'BIF'))
+        full_filelist.append(output_filelist_d['hh'].replace(FULLSET_STR, 'BIFVARINFO'))
+        full_filelist.append(output_filelist_d['dd'].replace(FULLSET_STR, 'BIFVARINFO'))
+        full_filelist.append(output_filelist_d['ww'].replace(FULLSET_STR, 'BIFVARINFO'))
+        full_filelist.append(output_filelist_d['mm'].replace(FULLSET_STR, 'BIFVARINFO'))
+        full_filelist.append(output_filelist_d['yy'].replace(FULLSET_STR, 'BIFVARINFO'))
+        full_filelist.append(readme)
+        full_filelist.append(license)
 
     # generate zip and csv outputs for manifests
     zip_manifest_entries = []
