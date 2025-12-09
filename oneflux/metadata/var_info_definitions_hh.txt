@@ -1,0 +1,154 @@
+Variable||Units||Description||Members
+TIMESTAMP_START||YYYYMMDDHHMM||ISO timestamp start of averaging period - short format||
+TIMESTAMP_END||YYYYMMDDHHMM||ISO timestamp end of averaging period - short format||
+TA_F_MDS||deg C||Air temperature, gapfilled using MDS method||TA
+TA_F_MDS_QC||adimensional||Quality flag for TA_F_MDS. 0 = measured; 1 = good quality gapfill; 2 = medium; 3 = poor||
+TA_ERA||deg C||Air temperature, downscaled from ERA, linearly regressed using measured only site data||TA
+TA_F||deg C||Air temperature, consolidated from TA_F_MDS and TA_ERA. TA_F_MDS used if TA_F_MDS_QC is 0 or 1||TA
+TA_F_QC||adimensional||Quality flag for TA_F. 0 = measured; 1 = good quality gapfill; 2 = downscaled from ERA||
+SW_IN_POT||W m-2||Shortwave radiation, incoming, potential (top of atmosphere)||
+SW_IN_F_MDS||W m-2||Shortwave radiation, incoming, gapfilled using MDS (negative values set to zero, e.g., negative values from instrumentation noise)||SW_IN
+SW_IN_F_MDS_QC||adimensional||Quality flag for SW_IN_F_MDS.  0 = measured; 1 = good quality gapfill; 2 = medium; 3 = poor||
+SW_IN_ERA||W m-2||Shortwave radiation, incoming, downscaled from ERA, linearly regressed using measured only site data (negative values set to zero)||SW_IN
+SW_IN_F||W m-2||Shortwave radiation, incoming consolidated from SW_IN_F_MDS and SW_IN_ERA (negative values set to zero). SW_IN_F_MDS used if SW_IN_F_MDS_QC is 0 or 1||SW_IN
+SW_IN_F_QC||adimensional||Quality flag for SW_IN_F. 0 = measured; 1 = good quality gapfill; 2 = downscaled from ERA||
+LW_IN_F_MDS||W m-2||Longwave radiation, incoming, gapfilled using MDS||LW_IN
+LW_IN_F_MDS_QC||adimensional||Quality flag for LW_IN_F_MDS. 0 = measured; 1 = good quality gapfill; 2 = medium; 3 = poor||
+LW_IN_ERA||W m-2||Longwave radiation, incoming, downscaled from ERA, linearly regressed using measured only site data||LW_IN
+LW_IN_F||W m-2||Longwave radiation, incoming, consolidated from LW_IN_F_MDS and LW_IN_ERA. LW_IN_F_MDS used if LW_IN_F_MDS_QC is 0 or 1||LW_IN
+LW_IN_F_QC||adimensional||Quality flag for LW_IN_F. 0 = measured; 1 = good quality gapfill; 2 = downscaled from ERA||
+LW_IN_JSB||W m-2||Longwave radiation, incoming, calculated from TA_F_MDS, SW_IN_F_MDS, VPD_F_MDS and SW_IN_POT using the JSBACH algorithm (Sonke Zaehle)||(TA, SW_IN,RH)(TA, SW_IN, VPD)
+LW_IN_JSB_QC||adimensional||Quality flag for LW_IN_JSB. Highest from TA_F_MDS_QC, SW_IN_F_MDS_QC, and VPD_F_MDS_QC, poorest quality prevails||
+LW_IN_JSB_ERA||W m-2||Longwave radiation, incoming, downscaled from ERA, linearly regressed using site level LW_IN_JSB calculated from measured only drivers||(TA, SW_IN,RH)(TA, SW_IN, VPD)
+LW_IN_JSB_F||W m-2||Longwave radiation, incoming, consolidated from LW_IN_JSB and LW_IN_JSB_ERA. LW_IN_JSB used if LW_IN_JSB_QC is 0 or 1||(TA, SW_IN,RH)(TA, SW_IN, VPD)
+LW_IN_JSB_F_QC||adimensional||Quality flag for LW_IN_JSB_F. 0 = measured; 1 = good quality gapfill; 2 = downscaled from ERA||
+VPD_F_MDS||hPa||Vapor Pressure Deficit, gapfilled using MDS||(TA, RH)(VPD)
+VPD_F_MDS_QC||adimensional||Quality flag for VPD_F_MDS. 0 = measured; 1 = good quality gapfill; 2 = medium; 3 = poor||
+VPD_ERA||hPa||Vapor Pressure Deficit, downscaled from ERA, linearly regressed using measured only site data||(TA, RH)(VPD)
+VPD_F||hPa||Vapor Pressure Deficit consolidated from VPD_F_MDS and VPD_ERA. VPD_F_MDS used if VPD_F_MDS_QC is 0 or 1||(TA, RH)(VPD)
+VPD_F_QC||adimensional||Quality flag for VPD_F. 0 = measured; 1 = good quality gapfill; 2 = downscaled from ERA||
+PA||kPa||Atmospheric pressure||PA
+PA_ERA||kPa||Atmospheric pressure, downscaled from ERA, linearly regressed using measured only site data||PA
+PA_F||kPa||Atmospheric pressure consolidated from PA and PA_ERA. PA used if measured||PA
+PA_F_QC||adimensional||Quality flag for PA_F. 0 = measured; 1 = good quality gapfill; 2 = downscaled from ERA||
+P||mm||Precipitation||P
+P_ERA||mm||Precipitation, downscaled from ERA, linearly regressed using measured only site data (mm per dataset resolution: either hour or half-hour)||P
+P_F||mm||Precipitation consolidated from P and P_ERA. P used if measured (mm per dataset resolution: either hour or half-hour)||P
+P_F_QC||adimensional||Quality flag for P_F. 0 = measured; 2 = downscaled from ERA||
+WS||m s-1||Wind speed||WS
+WS_ERA||m s-1||Wind speed, downscaled from ERA, linearly regressed using measured only site data||WS
+WS_F||m s-1||Wind speed, consolidated from WS and WS_ERA. WS used if measured||WS
+WS_F_QC||adimensional||Quality flag of WS_F. 0 = measured; 2 = downscaled from ERA||
+WD||Decimal degrees||Wind direction||WD
+RH||%||Relative humidity, range 0-100||RH
+USTAR||m s-1||Friction velocity||USTAR
+NETRAD||W m-2||Net radiation||NETRAD
+PPFD_IN||�molPhoton m-2 s-1||Photosynthetic photon flux density, incoming||PPFD_IN
+PPFD_DIF||�molPhoton m-2 s-1||Photosynthetic photon flux density, diffuse incoming||PPFD_DIF
+PPFD_OUT||�molPhoton m-2 s-1||Photosynthetic photon flux density, outgoing||PPFD_OUT
+SW_DIF||W m-2||Shortwave radiation, diffuse incoming||SW_DIF
+SW_OUT||W m-2||Shortwave radiation, outgoing||SW_OUT
+LW_OUT||W m-2||Longwave radiation, outgoing||LW_OUT
+CO2_F_MDS||�molCO2 mol-1||CO2 mole fraction, gapfilled with MDS||CO2
+CO2_F_MDS_QC||adimensional||Quality flag for CO2_F_MDS. 0 = measured; 1 = good quality gapfill; 2 = medium; 3 = poor||
+TS_F_MDS_#||deg C||Soil temperature, gapfilled with MDS (numeric index "#" increases with the depth, 1 is shallowest)||TS
+TS_F_MDS_#_QC||adimensional||Quality flag for TS_F_MDS_#. 0 = measured; 1 = good quality gapfill; 2 = medium; 3 = poor||
+SWC_F_MDS_#||%||Soil water content, gapfilled with MDS (numeric index "#" increases with the depth, 1 is shallowest)||SWC
+SWC_F_MDS_#_QC||adimensional||Quality flag for SWC_F_MDS_#. 0 = measured; 1 = good quality gapfill; 2 = medium; 3 = poor||
+G_F_MDS||W m-2||Soil heat flux||G
+G_F_MDS_QC||adimensional||Quality flag of G_F_MDS. 0 = measured; 1 = good quality gapfill; 2 = medium; 3 = poor||
+LE_F_MDS||W m-2||Latent heat flux, gapfilled using MDS method||LE
+LE_F_MDS_QC||adimensional||Quality flag for LE_F_MDS, LE_CORR, LE_CORR25, and LE_CORR75. 0 = measured; 1 = good quality gapfill; 2 = medium; 3 = poor||
+LE_CORR||W m-2||Latent heat flux, corrected LE_F_MDS by energy balance closure correction factor||LE
+LE_CORR_25||W m-2||Latent heat flux, corrected LE_F_MDS by energy balance closure correction factor, 25th percentile||LE
+LE_CORR_75||W m-2||Latent heat flux, corrected LE_F_MDS by energy balance closure correction factor, 75th percentile||LE
+LE_RANDUNC||W m-2||Random uncertainty of LE, from measured only data. Uses only data point where LE_F_MDS_QC is 0 and two hierarchical methods (see header and LE_RANDUNC_METHOD)||LE
+LE_RANDUNC_METHOD||adimensional||Method used to estimate the random uncertainty of LE. 1 = RANDUNC Method 1 (direct SD method), 2 = RANDUNC Method 2 (median SD method)||
+LE_RANDUNC_N||adimensional||Number of half-hour data points used to estimate the random uncertainty of LE||
+LE_CORR_JOINTUNC||W m-2||Joint uncertainty estimation for LE. [SQRT(LE_RANDUNC^2 + ((LE_CORR75 - LE_CORR25) / 1.349)^2)]||LE
+H_F_MDS||W m-2||Sensible heat flux, gapfilled using MDS method||H
+H_F_MDS_QC||adimensional||Quality flag for H_F_MDS, H_CORR, H_CORR25, and H_CORR75. 0 = measured; 1 = good quality gapfill; 2 = medium; 3 = poor||
+H_CORR||W m-2||Sensible heat flux, corrected H_F_MDS by energy balance closure correction factor||H
+H_CORR_25||W m-2||Sensible heat flux, corrected H_F_MDS by energy balance closure correction factor, 25th percentile||H
+H_CORR_75||W m-2||Sensible heat flux, corrected H_F_MDS by energy balance closure correction factor, 75th percentile||H
+H_RANDUNC||W m-2||Random uncertainty of H, from measured only data. Uses only data point where H_F_MDS_QC is 0 and two hierarchical methods (see header and H_RANDUNC_METHOD)||H
+H_RANDUNC_METHOD||adimensional||Method used to estimate the random uncertainty of H. 1 = RANDUNC Method 1 (direct SD method), 2 = RANDUNC Method 2 (median SD method)||
+H_RANDUNC_N||adimensional||Number of half-hour data points used to estimate the random uncertainty of H||
+H_CORR_JOINTUNC||W m-2||Joint uncertainty estimation for H. [SQRT(H_RANDUNC^2 + ((H_CORR75 - H_CORR25) / 1.349)^2)]||H
+EBC_CF_N||adimensional||Number of data points used to calculate energy closure balance correction factor. Driver data points within sliding window (ECB_CF Method 1, minimum 5, maximum 93) or number of ECB_CF data points (for ECB_CF Methods 2 and 3)||
+EBC_CF_METHOD||adimensional||Method used to calculate the energy balance closure correction factor. 1 = ECB_CF Method 1, 2 = ECB_CF Method 2, 3 = ECB_CF Method 3. See general description for details||
+NIGHT||adimensional||Flag indicating nighttime interval based on SW_IN_POT. 0 = daytime, 1 = nighttime||
+NEE_CUT_REF||�molCO2 m-2 s-1||Net Ecosystem Exchange of CO2, using Constant Ustar Threshold (CUT) across years, most representative realization across up to 40 NEE_CUT versions, selected on the basis of the model efficiency approach (MEF)||(FC)(NEE)
+NEE_VUT_REF||�molCO2 m-2 s-1||Net Ecosystem Exchange of CO2, using Variable Ustar Threshold (VUT) for each year, most representative realization across up to 40 NEE_VUT versions, selected on the basis of the model efficiency (MEF)||(FC)(NEE)
+NEE_CUT_REF_QC||adimensional||Quality flag for NEE_CUT_REF. 0 = measured; 1 = good quality gapfill; 2 = medium; 3 = poor||
+NEE_VUT_REF_QC||adimensional||Quality flag for NEE_VUT_REF. 0 = measured; 1 = good quality gapfill; 2 = medium; 3 = poor||
+NEE_CUT_REF_RANDUNC||�molCO2 m-2 s-1||Random uncertainty for NEE_CUT_REF, based only on data points where NEE_CUT_REF_QC is 0 and two hierarchical methods - see documentation and NEE_CUT_REF_RANDUNC_METHOD||(FC)(NEE)
+NEE_VUT_REF_RANDUNC||�molCO2 m-2 s-1||Random uncertainty for NEE_VUT_REF, based only on data points where NEE_VUT_REF_QC is 0 and two hierarchical methods - see documentation and NEE_VUT_REF_RANDUNC_METHOD||(FC)(NEE)
+NEE_CUT_REF_RANDUNC_METHOD||adimensional||Method used to estimate the random uncertainty of NEE_CUT_REF. 1 = RANDUNC Method 1 (direct SD method), 2 = RANDUNC Method 2 (median SD method)||
+NEE_VUT_REF_RANDUNC_METHOD||adimensional||Method used to estimate the random uncertainty of NEE_VUT_REF.1 = RANDUNC Method 1 (direct SD method), 2 = RANDUNC Method 2 (median SD method)||
+NEE_CUT_REF_RANDUNC_N||adimensional||Number of half-hourly data points used to estimate the random uncertainty of NEE_CUT_REF||
+NEE_VUT_REF_RANDUNC_N||adimensional||Number of half-hourly data points used to estimate the random uncertainty of NEE_VUT_REF||
+NEE_CUT_REF_JOINTUNC||�molCO2 m-2 s-1||Joint uncertainty estimation for NEE_CUT_REF, including random uncertainty and USTAR filtering uncertainty. [SQRT(NEE_CUT_REF_RANDUNC^2 + ((NEE_CUT_84 - NEE_CUT_16) / 2)^2)] for each half-hour||(FC)(NEE)
+NEE_VUT_REF_JOINTUNC||�molCO2 m-2 s-1||Joint uncertainty estimation for NEE_VUT_REF, including random uncertainty and USTAR filtering uncertainty. [SQRT(NEE_VUT_REF_RANDUNC^2 + ((NEE_VUT_84 - NEE_VUT_16) / 2)^2)] for each half-hour||(FC)(NEE)
+NEE_CUT_USTAR50||�molCO2 m-2 s-1||Net Ecosystem Exchange of CO2, using Constant Ustar Threshold (CUT) across years, obtained from the 50th percentile of USTAR thresholds||(FC)(NEE)
+NEE_VUT_USTAR50||�molCO2 m-2 s-1||Net Ecosystem Exchange of CO2, using Variable Ustar Threshold (VUT) for each year, obtained from the 50th percentile of USTAR thresholds||(FC)(NEE)
+NEE_CUT_USTAR50_QC||adimensional||Quality flag for NEE_CUT_USTAR50. 0 = measured; 1 = good quality gapfill; 2 = medium; 3 = poor||
+NEE_VUT_USTAR50_QC||adimensional||Quality flag for NEE_VUT_USTAR50. 0 = measured; 1 = good quality gapfill; 2 = medium; 3 = poor||
+NEE_CUT_USTAR50_RANDUNC||�molCO2 m-2 s-1||Random uncertainty for NEE_CUT_USTAR50, based only on data points where NEE_CUT_USTAR50_QC is 0 and two hierarchical methods - see header and NEE_CUT_USTAR50_RANDUNC_METHOD||(FC)(NEE)
+NEE_VUT_USTAR50_RANDUNC||�molCO2 m-2 s-1||Random uncertainty for NEE_VUT_USTAR50, based only on data points where NEE_VUT_USTAR50_QC is 0 and two hierarchical methods see header and NEE_VUT_USTAR50_RANDUNC_METHOD||(FC)(NEE)
+NEE_CUT_USTAR50_RANDUNC_METHOD||adimensional||Method used to estimate the random uncertainty of NEE_CUT_USTAR50. 1 = RANDUNC Method 1 (direct SD method), 2 = RANDUNC Method 2 (median SD method)||
+NEE_VUT_USTAR50_RANDUNC_METHOD||adimensional||Method used to estimate the random uncertainty of NEE_VUT_USTAR50. 1 = RANDUNC Method 1 (direct SD method), 2 = RANDUNC Method 2 (median SD method)||
+NEE_CUT_USTAR50_RANDUNC_N||adimensional||Number of half-hourly data points used to estimate the random uncertainty of NEE_CUT_USTAR50||
+NEE_VUT_USTAR50_RANDUNC_N||adimensional||Number of half-hourly data points used to estimate the random uncertainty of NEE_VUT_USTAR50||
+NEE_CUT_USTAR50_JOINTUNC||�molCO2 m-2 s-1||Joint uncertainty estimation for NEE_CUT_USTAR50, including random uncertainty and USTAR filtering uncertainty. [SQRT(NEE_CUT_USTAR50_RANDUNC^2 + ((NEE_CUT_84 - NEE_CUT_16) / 2)^2)] for each half-hour||(FC)(NEE)
+NEE_VUT_USTAR50_JOINTUNC||�molCO2 m-2 s-1||Joint uncertainty estimation for NEE_VUT_USTAR50, including random uncertainty and USTAR filtering uncertainty. [SQRT(NEE_VUT_USTAR50_RANDUNC^2 + ((NEE_VUT_84 - NEE_VUT_16) / 2)^2)] for each half-hour||(FC)(NEE)
+NEE_CUT_MEAN||�molCO2 m-2 s-1||Net Ecosystem Exchange of CO2, using Constant Ustar Threshold (CUT) across years, calculated as average of the up to 40 NEE_CUT versions||(FC)(NEE)
+NEE_VUT_MEAN||�molCO2 m-2 s-1||Net Ecosystem Exchange, using Variable Ustar Threshold (VUT) for each year, calculated as average of the up to 40 NEE_VUT versions||(FC)(NEE)
+NEE_CUT_MEAN_QC||adimensional||Quality flag for NEE_CUT_MEAN, fraction between 0-1 indicating percentage of good quality data from 40 half-hourly NEE_CUT used||
+NEE_VUT_MEAN_QC||adimensional||Quality flag for NEE_VUT_MEAN, fraction between 0-1 indicating percentage of good quality data from 40 half-hourly NEE_VUT used||
+NEE_CUT_SE||�molCO2 m-2 s-1||Standard Error for NEE_CUT, calculated as SD(NEE_CUT) / SQRT(40) using the up to 40 half-hourly NEE_CUT versions||(FC)(NEE)
+NEE_VUT_SE||�molCO2 m-2 s-1||Standard Error for NEE_VUT, calculated as SD(NEE_VUT) / SQRT(40) using the up to 40 half-hourlyNEE_VUT versions||(FC)(NEE)
+NEE_CUT_XX||�molCO2 m-2 s-1||XXth percentile from the up to 40 half-hourly NEE_CUT percentiles (approx. percentile indicated by XX, see doc.) -- XX = 05, 16, 25, 50, 75, 84, 95||(FC)(NEE)
+NEE_VUT_XX||�molCO2 m-2 s-1||XXth percentile from the up to 40 half-hourly NEE_VUT percentiles (approx. percentile indicated by XX, see doc.) -- XX = 05, 16, 25, 50, 75, 84, 95||(FC)(NEE)
+NEE_CUT_XX_QC||adimensional||Quality flag for NEE_CUT_XX -- XX = 05, 16, 25, 50, 75, 84, 95. 0 = measured; 1 = good quality gapfill; 2 = medium; 3 = poor||
+NEE_VUT_XX_QC||adimensional||Quality flag for NEE_VUT_XX -- XX = 05, 16, 25, 50, 75, 84, 95. 0 = measured; 1 = good quality gapfill; 2 = medium; 3 = poor||
+RECO_NT_VUT_REF||�molCO2 m-2 s-1||Ecosystem Respiration, from Nighttime partitioning method,most representative realization across up to 40 RECO_VUT versions using model efficiency approach (MEF).||(FC)(NEE)
+RECO_NT_VUT_USTAR50||�molCO2 m-2 s-1||Ecosystem Respiration, from Nighttime partitioning method, based on NEE_VUT_USTAR50.||(FC)(NEE)
+RECO_NT_VUT_MEAN||�molCO2 m-2 s-1||Ecosystem Respiration, from Nighttime partitioning method, average from up to 40 half-hourly RECO_NT_VUT versions, each from corresponding NEE_VUT version||(FC)(NEE)
+RECO_NT_VUT_SE||�molCO2 m-2 s-1||Standard Error for Ecosystem Respiration, calculated from up to 40 half-hourly RECO_NT_VUT versions as (SD(RECO_NT_VUT) / SQRT(40))||(FC)(NEE)
+RECO_NT_VUT_XX||�molCO2 m-2 s-1||XXth percentile from up to 40 half-hourly Ecosystem Respiration versions, from Nighttime partitioning method (RECO_NT_VUT) with XX = 05, 16, 25, 50, 75, 84, 95||(FC)(NEE)
+RECO_NT_CUT_REF||�molCO2 m-2 s-1||Ecosystem Respiration, from Nighttime partitioning method,most representative realization across up to 40 RECO_CUT versions using model efficiency approach (MEF).||(FC)(NEE)
+RECO_NT_CUT_USTAR50||�molCO2 m-2 s-1||Ecosystem Respiration, from Nighttime partitioning method, based on NEE_CUT_USTAR50||(FC)(NEE)
+RECO_NT_CUT_MEAN||�molCO2 m-2 s-1||Ecosystem Respiration, from Nighttime partitioning method, average from up to 40 half-hourly RECO_NT_CUT versions, each from corresponding NEE_CUT version||(FC)(NEE)
+RECO_NT_CUT_SE||�molCO2 m-2 s-1||Standard Error for Ecosystem Respiration, calculated from up to 40 half-hourly RECO_NT_CUT versions as (SD(RECO_NT_CUT) / SQRT(40))||(FC)(NEE)
+RECO_NT_CUT_XX||�molCO2 m-2 s-1||XXth percentile from up to 40 half-hourly Ecosystem Respiration versions, from Nighttime partitioning method (RECO_NT_CUT) with XX = 05, 16, 25, 50, 75, 84, 95||(FC)(NEE)
+GPP_NT_VUT_REF||�molCO2 m-2 s-1||Gross Primary Production, from Nighttime partitioning method,most representative realization across up to 40 GPP_VUT versions using model efficiency approach (MEF).||(FC)(NEE)
+GPP_NT_VUT_USTAR50||�molCO2 m-2 s-1||Gross Primary Production, from Nighttime partitioning method, based on NEE_VUT_USTAR50||(FC)(NEE)
+GPP_NT_VUT_MEAN||�molCO2 m-2 s-1||Gross Primary Production, from Nighttime partitioning method, average from up to 40 half-hourly GPP_NT_VUT versions, each from corresponding NEE_VUT version||(FC)(NEE)
+GPP_NT_VUT_SE||�molCO2 m-2 s-1||Standard Error for Gross Primary Production, calculated from up to 40 half-hourly GPP_NT_VUT versions as (SD(GPP_NT_VUT) / SQRT(40))||(FC)(NEE)
+GPP_NT_VUT_XX||�molCO2 m-2 s-1||XXth percentile from up to 40 half-hourly Gross Primary Production versions, from Nighttime partitioning method (GPP_NT_VUT) with XX = 05, 16, 25, 50, 75, 84, 95||(FC)(NEE)
+GPP_NT_CUT_REF||�molCO2 m-2 s-1||Gross Primary Production, from Nighttime partitioning method,most representative realization across up to 40 GPP_CUT versions using model efficiency approach (MEF).||(FC)(NEE)
+GPP_NT_CUT_USTAR50||�molCO2 m-2 s-1||Gross Primary Production, from Nighttime partitioning method, based on NEE_CUT_USTAR50||(FC)(NEE)
+GPP_NT_CUT_MEAN||�molCO2 m-2 s-1||Gross Primary Production, from Nighttime partitioning method, average from up to 40 half-hourly GPP_NT_CUT versions, each from corresponding NEE_CUT version||(FC)(NEE)
+GPP_NT_CUT_SE||�molCO2 m-2 s-1||Standard Error for Gross Primary Production, calculated from up to 40 half-hourly GPP_NT_CUT versions as (SD(GPP_NT_CUT) / SQRT(40))||(FC)(NEE)
+GPP_NT_CUT_XX||�molCO2 m-2 s-1||XXth percentile from up to 40 half-hourly Gross Primary Production versions, from Nighttime partitioning method (GPP_NT_CUT) with XX = 05, 16, 25, 50, 75, 84, 95||(FC)(NEE)
+RECO_DT_VUT_REF||�molCO2 m-2 s-1||Ecosystem Respiration, from Daytime partitioning method,most representative realization across up to 40 RECO_VUT versions using model efficiency approach (MEF).||(FC)(NEE)
+RECO_DT_VUT_USTAR50||�molCO2 m-2 s-1||Ecosystem Respiration, from Daytime partitioning method, based on NEE_VUT_USTAR50||(FC)(NEE)
+RECO_DT_VUT_MEAN||�molCO2 m-2 s-1||Ecosystem Respiration, from Daytime partitioning method, average from up to 40 half-hourly RECO_DT_VUT versions, each from corresponding NEE_VUT version||(FC)(NEE)
+RECO_DT_VUT_SE||�molCO2 m-2 s-1||Standard Error for Ecosystem Respiration, calculated from up to 40 half-hourly RECO_DT_VUT versions as (SD(RECO_DT_VUT) / SQRT(40))||(FC)(NEE)
+RECO_DT_VUT_XX||�molCO2 m-2 s-1||XXth percentile from up to 40 half-hourly Ecosystem Respiration versions, from Daytime partitioning method (RECO_DT_VUT) with XX = 05, 16, 25, 50, 75, 84, 95||(FC)(NEE)
+RECO_DT_CUT_REF||�molCO2 m-2 s-1||Ecosystem Respiration, from Daytime partitioning method,most representative realization across up to 40 RECO_CUT versions using model efficiency approach (MEF).||(FC)(NEE)
+RECO_DT_CUT_USTAR50||�molCO2 m-2 s-1||Ecosystem Respiration, from Daytime partitioning method, based on NEE_CUT_USTAR50||(FC)(NEE)
+RECO_DT_CUT_MEAN||�molCO2 m-2 s-1||Ecosystem Respiration, from Daytime partitioning method, average from up to 40 half-hourly RECO_DT_CUT versions, each from corresponding NEE_CUT version||(FC)(NEE)
+RECO_DT_CUT_SE||�molCO2 m-2 s-1||Standard Error for Ecosystem Respiration, calculated from up to 40 half-hourly RECO_DT_CUT versions as (SD(RECO_DT_CUT) / SQRT(40))||(FC)(NEE)
+RECO_DT_CUT_XX||�molCO2 m-2 s-1||XXth percentile from up to 40 half-hourly Ecosystem Respiration versions, from Daytime partitioning method (RECO_DT_CUT) with XX = 05, 16, 25, 50, 75, 84, 95||(FC)(NEE)
+GPP_DT_VUT_REF||�molCO2 m-2 s-1||Gross Primary Production, from Daytime partitioning method,most representative realization across up to 40 GPP_VUT versions using model efficiency approach (MEF).||(FC)(NEE)
+GPP_DT_VUT_USTAR50||�molCO2 m-2 s-1||Gross Primary Production, from Daytime partitioning method, based on NEE_VUT_USTAR50||(FC)(NEE)
+GPP_DT_VUT_MEAN||�molCO2 m-2 s-1||Gross Primary Production, from Daytime partitioning method, average from up to 40 half-hourly GPP_DT_VUT versions, each from corresponding NEE_VUT version||(FC)(NEE)
+GPP_DT_VUT_SE||�molCO2 m-2 s-1||Standard Error for Gross Primary Production, calculated from up to 40 half-hourly GPP_DT_VUT versions as (SD(GPP_DT_VUT) / SQRT(40))||(FC)(NEE)
+GPP_DT_VUT_XX||�molCO2 m-2 s-1||XXth percentile from up to 40 half-hourly Gross Primary Production versions, from Daytime partitioning method (GPP_DT_VUT) with XX = 05, 16, 25, 50, 75, 84, 95||(FC)(NEE)
+GPP_DT_CUT_REF||�molCO2 m-2 s-1||Gross Primary Production, from Daytime partitioning method,most representative realization across up to 40 GPP_CUT versions using model efficiency approach (MEF).||(FC)(NEE)
+GPP_DT_CUT_USTAR50||�molCO2 m-2 s-1||Gross Primary Production, from Daytime partitioning method, based on NEE_CUT_USTAR50||(FC)(NEE)
+GPP_DT_CUT_MEAN||�molCO2 m-2 s-1||Gross Primary Production, from Daytime partitioning method, average from up to 40 half-hourly GPP_DT_CUT versions, each from corresponding NEE_CUT version||(FC)(NEE)
+GPP_DT_CUT_SE||�molCO2 m-2 s-1||Standard Error for Gross Primary Production, calculated from up to 40 half-hourly GPP_DT_CUT versions as (SD(GPP_DT_CUT) / SQRT(40))||(FC)(NEE)
+GPP_DT_CUT_XX||�molCO2 m-2 s-1||XXth percentile from up to 40 half-hourly Gross Primary Production versions, from Daytime partitioning method (GPP_DT_CUT) with XX = 05, 16, 25, 50, 75, 84, 95||(FC)(NEE)

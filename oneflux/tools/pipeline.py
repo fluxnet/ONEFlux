@@ -42,6 +42,9 @@ def run_pipeline(datadir,
                  record_interval='hh',
                  era_first_year=ERA_FIRST_YEAR,
                  era_last_year=ERA_LAST_YEAR,
+                 var_info_file=None,
+                 bif_other_file_list=None,
+                 logfile=None,
                  steps={}):
 
     sitedir_full = os.path.abspath(os.path.join(datadir, sitedir))
@@ -86,6 +89,9 @@ def run_pipeline(datadir,
                     fluxnet_site_plots=steps.get('fluxnet_site_plots', True),
                     nt_skip=steps.get('nt_skip', Pipeline.NT_SKIP),
                     dt_skip=steps.get('dt_skip', Pipeline.DT_SKIP),
+                    var_info_file=var_info_file,
+                    bif_other_file_list=bif_other_file_list,
+                    logfile=logfile,
                     simulation=False)
         pipeline.run()
         #csv_manifest_entries, zip_manifest_entries = pipeline.fluxnet.csv_manifest_entries, pipeline.fluxnet.zip_manifest_entries
