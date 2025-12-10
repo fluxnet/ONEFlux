@@ -20,6 +20,9 @@ import datetime
 import logging
 import sys
 
+from oneflux.pipeline.common import MODE_ISSUER, MODE_PROCENTER
+from oneflux import VERSION
+
 log = logging.getLogger(__name__)
 
 SPECIAL_CASE_VAR_NAME = "FIRST"
@@ -413,13 +416,13 @@ def dict2ONEFluxPipelineLog(path_file_pipeline):
     return pipeline_infos
 
 
-def addGRP_ONEFLUX(pipeline_infos,cnt_grp,BIF):
+def addGRP_ONEFLUX(pipeline_infos, cnt_grp, BIF, zipfilename):
     
     BIF['SITE_ID'].append(pipeline_infos['sitecode'])
     BIF['GROUP_ID'].append(cnt_grp)
     BIF['VARIABLE_GROUP'].append('GRP_ONEFLUX')
     BIF['VARIABLE'].append('PRODUCT_SOURCE_NETWORK')
-    BIF['DATAVALUE'].append('TODO')
+    BIF['DATAVALUE'].append(MODE_ISSUER) # Valid entries: AMF, ASF, CNF, JPF, KOF, MXF, NEON, ICOS, EUF, OZF, TERN, SAEON, FLX
 
     BIF['SITE_ID'].append(pipeline_infos['sitecode'])
     BIF['GROUP_ID'].append(cnt_grp)
@@ -443,19 +446,19 @@ def addGRP_ONEFLUX(pipeline_infos,cnt_grp,BIF):
     BIF['GROUP_ID'].append(cnt_grp)
     BIF['VARIABLE_GROUP'].append('GRP_ONEFLUX')
     BIF['VARIABLE'].append('PRODUCT_NAME')
-    BIF['DATAVALUE'].append('TODO')
+    BIF['DATAVALUE'].append(zipfilename)
 
     BIF['SITE_ID'].append(pipeline_infos['sitecode'])
     BIF['GROUP_ID'].append(cnt_grp)
     BIF['VARIABLE_GROUP'].append('GRP_ONEFLUX')
     BIF['VARIABLE'].append('PRODUCT_ONEFLUX_VERSION')
-    BIF['DATAVALUE'].append('TODO')
+    BIF['DATAVALUE'].append(VERSION) # FULL VERSION OF ONEFLUX
 
     BIF['SITE_ID'].append(pipeline_infos['sitecode'])
     BIF['GROUP_ID'].append(cnt_grp)
     BIF['VARIABLE_GROUP'].append('GRP_ONEFLUX')
     BIF['VARIABLE'].append('PRODUCT_PROCESSING_CENTER')
-    BIF['DATAVALUE'].append('TODO')
+    BIF['DATAVALUE'].append(MODE_PROCENTER) # Valid entries: EUDB_ICOS, AMP, TERN
 
     BIF['SITE_ID'].append(pipeline_infos['sitecode'])
     BIF['GROUP_ID'].append(cnt_grp)
@@ -592,7 +595,7 @@ def calendarGROUP_ID(data_ts,df_varinfo,firstValid):
     return df_data_grp_id
 
 
-def run_var_info(path_file_varinfo=None, path_file_data=None, path_00_fp=None, path_file_definitions=None, path_file_pipeline=None, path_file_output=None):
+def run_var_info(zipfilename, path_file_varinfo=None, path_file_data=None, path_00_fp=None, path_file_definitions=None, path_file_pipeline=None, path_file_output=None):
     
     run_time = datetime.datetime.now()
     run_time_str = '%04d%02d%02d%02d%02d%02d' % (
@@ -604,13 +607,12 @@ def run_var_info(path_file_varinfo=None, path_file_data=None, path_00_fp=None, p
         run_time.second)
     
     log = logging.getLogger(__name__)
-    log.info('')
+    log.info('zipfilename:           %s' % zipfilename)
     log.info('path_file_varinfo:     %s' % path_file_varinfo)
     log.info('path_file_data:        %s' % path_file_data)
     log.info('path_file_definitions: %s' % path_file_definitions)
     log.info('path_file_pipeline:    %s' % path_file_pipeline)
     log.info('path_file_output:      %s' % path_file_output)
-    log.info('')
     
     # import file from 02_qc_auto and TIMESTAMP_START for the first date valuesfor each variable
     firstValid, data_ts = getFirstValidFrom00fp(path_00_fp)
@@ -687,7 +689,7 @@ def run_var_info(path_file_varinfo=None, path_file_data=None, path_00_fp=None, p
     cnt_grp = 0
     # ADD GRP_ONEFLUX
     cnt_grp = cnt_grp + 1
-    BIF = addGRP_ONEFLUX(pipeline_infos,cnt_grp,BIF)
+    BIF = addGRP_ONEFLUX(pipeline_infos, cnt_grp, BIF, zipfilename=zipfilename)
 
     for v_name in df_data.columns:
         if v_name.startswith('TIMESTAMP'):
@@ -946,6 +948,7 @@ def run_var_info(path_file_varinfo=None, path_file_data=None, path_00_fp=None, p
     #BIF = checkVarnameVarHeight(BIF,log)
     if not os.path.exists( os.path.dirname(path_file_output) ):
         os.makedirs( os.path.dirname(path_file_output),exist_ok=True)
+    BIF = BIF[['SITE_ID','GROUP_ID','VARIABLE_GROUP','VARIABLE','DATAVALUE']]
     BIF.to_csv(path_file_output,index=False)
     # log.info('')
     log.info('write file: %s' % path_file_output)
