@@ -1417,6 +1417,7 @@ def run_site(siteid,
     #     full_filelist.extend(era_filelist)
 
     # generate metadata files
+    zipfilename = zipfile_template.format(sd=sitedir, s=siteid, g=FULLSET_STR, fy=first_year, ly=last_year, vd=version_data, vp=version_processing)
     folder = os.path.dirname(output_filelist_d['hh'])
     readme = os.path.join(folder, README_FILENAME)
     with open(readme, 'w') as f:
@@ -1442,6 +1443,7 @@ def run_site(siteid,
                 path_aux_nee=aux_file_list[1],
                 path_output_merge=output_filelist_d['dd'].replace(FULLSET_STR + '_DD', 'BIF'),
                 path_bif_other=bif_other_file_list,
+                zipfilename=os.path.basename(zipfilename)
                 )
     if full_filelist:
         full_filelist.append(output_filelist_d['dd'].replace(FULLSET_STR + '_DD', 'BIF'))
@@ -1459,7 +1461,7 @@ def run_site(siteid,
 
     # fluxmet
     zip_entries, csv_entries = gen_stats_zip(filename_list=full_filelist,
-                                             zipfilename=zipfile_template.format(sd=sitedir, s=siteid, g=FULLSET_STR, fy=first_year, ly=last_year, vd=version_data, vp=version_processing))
+                                             zipfilename=zipfilename)
     zip_manifest_entries.extend(zip_entries)
     csv_manifest_entries.extend(csv_entries)
 

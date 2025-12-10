@@ -79,7 +79,7 @@ DEFINITION_YY = os.path.join(SCRIPT_DIR, 'var_info_definitions_yy.txt')
 def run_bif(path_file_varinfo, path_file_pipeline, path_00_fp,
             path_file_data_hh, path_file_data_dd, path_file_data_ww, path_file_data_mm, path_file_data_yy,
             path_output_varinfo_hh, path_output_varinfo_dd, path_output_varinfo_ww, path_output_varinfo_mm, path_output_varinfo_yy,
-            path_aux_meteo, path_aux_nee, path_output_merge, path_bif_other=None
+            path_aux_meteo, path_aux_nee, path_output_merge, zipfilename, path_bif_other=None
             ):
     
     log.info("Generating BIF VAR_INFO and AUX BIF files")
@@ -103,11 +103,11 @@ def run_bif(path_file_varinfo, path_file_pipeline, path_00_fp,
     msg += ", path_bif_other ({i})".format(i=path_bif_other)
     log.debug(msg)
 
-    run_var_info(path_file_varinfo=path_file_varinfo, path_file_data=path_file_data_hh, path_00_fp=path_00_fp, path_file_definitions=DEFINITION_HH, path_file_pipeline=path_file_pipeline, path_file_output=path_output_varinfo_hh)
-    run_var_info(path_file_varinfo=path_file_varinfo, path_file_data=path_file_data_dd, path_00_fp=path_00_fp, path_file_definitions=DEFINITION_DD, path_file_pipeline=path_file_pipeline, path_file_output=path_output_varinfo_dd)
-    run_var_info(path_file_varinfo=path_file_varinfo, path_file_data=path_file_data_ww, path_00_fp=path_00_fp, path_file_definitions=DEFINITION_WW, path_file_pipeline=path_file_pipeline, path_file_output=path_output_varinfo_ww)
-    run_var_info(path_file_varinfo=path_file_varinfo, path_file_data=path_file_data_mm, path_00_fp=path_00_fp, path_file_definitions=DEFINITION_MM, path_file_pipeline=path_file_pipeline, path_file_output=path_output_varinfo_mm)
-    run_var_info(path_file_varinfo=path_file_varinfo, path_file_data=path_file_data_yy, path_00_fp=path_00_fp, path_file_definitions=DEFINITION_YY, path_file_pipeline=path_file_pipeline, path_file_output=path_output_varinfo_yy)
+    run_var_info(path_file_varinfo=path_file_varinfo, path_file_data=path_file_data_hh, path_00_fp=path_00_fp, path_file_definitions=DEFINITION_HH, path_file_pipeline=path_file_pipeline, path_file_output=path_output_varinfo_hh, zipfilename=zipfilename)
+    run_var_info(path_file_varinfo=path_file_varinfo, path_file_data=path_file_data_dd, path_00_fp=path_00_fp, path_file_definitions=DEFINITION_DD, path_file_pipeline=path_file_pipeline, path_file_output=path_output_varinfo_dd, zipfilename=zipfilename)
+    run_var_info(path_file_varinfo=path_file_varinfo, path_file_data=path_file_data_ww, path_00_fp=path_00_fp, path_file_definitions=DEFINITION_WW, path_file_pipeline=path_file_pipeline, path_file_output=path_output_varinfo_ww, zipfilename=zipfilename)
+    run_var_info(path_file_varinfo=path_file_varinfo, path_file_data=path_file_data_mm, path_00_fp=path_00_fp, path_file_definitions=DEFINITION_MM, path_file_pipeline=path_file_pipeline, path_file_output=path_output_varinfo_mm, zipfilename=zipfilename)
+    run_var_info(path_file_varinfo=path_file_varinfo, path_file_data=path_file_data_yy, path_00_fp=path_00_fp, path_file_definitions=DEFINITION_YY, path_file_pipeline=path_file_pipeline, path_file_output=path_output_varinfo_yy, zipfilename=zipfilename)
     # run_var_info(args['path_file_varinfo'], args['path_file_data_dd'], args['path_00_fp'], args['path_file_definitions_dd'], args['path_file_pipeline'], args['path_output_varinfo_dd'])
     # run_var_info(args['path_file_varinfo'], args['path_file_data_hh'], args['path_00_fp'], args['path_file_definitions_hh'], args['path_file_pipeline'], args['path_output_varinfo_hh'])    
     # run_var_info(args['path_file_varinfo'], args['path_file_data_dd'], args['path_00_fp'], args['path_file_definitions_dd'], args['path_file_pipeline'], args['path_output_varinfo_dd'])    
@@ -115,7 +115,7 @@ def run_bif(path_file_varinfo, path_file_pipeline, path_00_fp,
     # run_var_info(args['path_file_varinfo'], args['path_file_data_mm'], args['path_00_fp'], args['path_file_definitions_mm'], args['path_file_pipeline'], args['path_output_varinfo_mm'])    
     # run_var_info(args['path_file_varinfo'], args['path_file_data_yy'], args['path_00_fp'], args['path_file_definitions_yy'], args['path_file_pipeline'], args['path_output_varinfo_yy'])
 
-    run_bif_aux(input_path_aux_meteo=path_aux_meteo, input_path_aux_nee=path_aux_nee, file_output_path=path_output_merge, path_file_pipeline=path_file_pipeline)
+    run_bif_aux(input_path_aux_meteo=path_aux_meteo, input_path_aux_nee=path_aux_nee, file_output_path=path_output_merge, path_file_pipeline=path_file_pipeline, zipfilename=zipfilename)
     # run_bif_aux(input_path_aux_meteo=args['path_AUXMETEO'], input_path_aux_nee=args['path_AUXNEE'], file_output_path=args['path_output_merge'], path_file_pipeline=args['path_file_pipeline'])
 
     # merge other to the path_output_merge file

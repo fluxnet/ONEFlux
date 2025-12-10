@@ -36,9 +36,10 @@ NOW_DATETIME = datetime.now()
 NOW_TS = NOW_DATETIME.strftime("%Y%m%dT%H%M%S")
 
 try:
-    from oneflux.local_settings import MODE_ISSUER, MODE_PRODUCT, MODE_ERA, ERA_FIRST_YEAR, ERA_LAST_YEAR
+    from oneflux.local_settings import MODE_ISSUER, MODE_PROCENTER, MODE_PRODUCT, MODE_ERA, ERA_FIRST_YEAR, ERA_LAST_YEAR
 except ImportError as e:
     MODE_ISSUER = 'FLX'
+    MODE_PROCENTER = 'FLX'
     MODE_PRODUCT = 'FLUXNET'
     MODE_ERA = 'ERA5'
     # most recent year available for ERA -- assuming new ERA year available after March each year
