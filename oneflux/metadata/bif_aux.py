@@ -21,6 +21,8 @@ import datetime
 import logging
 
 from oneflux.metadata.bif_var_info import dict2ONEFluxPipelineLog
+from oneflux.pipeline.common import MODE_ISSUER, MODE_PROCENTER
+from oneflux import VERSION
 
 log = logging.getLogger(__name__)
 
@@ -51,7 +53,7 @@ def recalculateIDs(df):
     
     return df
 
-def run_bif_aux(input_path_aux_meteo=None, input_path_aux_nee=None, file_output_path=None, path_file_pipeline=None):
+def run_bif_aux(zipfilename, input_path_aux_meteo=None, input_path_aux_nee=None, file_output_path=None, path_file_pipeline=None):
     
     file_list = [input_path_aux_meteo,input_path_aux_nee]
     """for root_d,dir_d,file_d in os.walk(input_path):
@@ -86,7 +88,7 @@ def run_bif_aux(input_path_aux_meteo=None, input_path_aux_nee=None, file_output_
                 BIF['GROUP_ID'].append(cnt_grp)
                 BIF['VARIABLE_GROUP'].append('GRP_ONEFLUX')
                 BIF['VARIABLE'].append('PRODUCT_SOURCE_NETWORK')
-                BIF['DATAVALUE'].append('TODO')
+                BIF['DATAVALUE'].append(MODE_ISSUER) # Valid entries: AMF, ASF, CNF, JPF, KOF, MXF, NEON, ICOS, EUF, OZF, TERN, SAEON, FLX
 
                 BIF['SITE_ID'].append(pipeline_infos['sitecode'])
                 BIF['GROUP_ID'].append(cnt_grp)
@@ -110,19 +112,19 @@ def run_bif_aux(input_path_aux_meteo=None, input_path_aux_nee=None, file_output_
                 BIF['GROUP_ID'].append(cnt_grp)
                 BIF['VARIABLE_GROUP'].append('GRP_ONEFLUX')
                 BIF['VARIABLE'].append('PRODUCT_NAME')
-                BIF['DATAVALUE'].append('TODO')
+                BIF['DATAVALUE'].append(zipfilename)
 
                 BIF['SITE_ID'].append(pipeline_infos['sitecode'])
                 BIF['GROUP_ID'].append(cnt_grp)
                 BIF['VARIABLE_GROUP'].append('GRP_ONEFLUX')
                 BIF['VARIABLE'].append('PRODUCT_ONEFLUX_VERSION')
-                BIF['DATAVALUE'].append('TODO')
+                BIF['DATAVALUE'].append(VERSION) # FULL VERSION OF ONEFLUX
 
                 BIF['SITE_ID'].append(pipeline_infos['sitecode'])
                 BIF['GROUP_ID'].append(cnt_grp)
                 BIF['VARIABLE_GROUP'].append('GRP_ONEFLUX')
                 BIF['VARIABLE'].append('PRODUCT_PROCESSING_CENTER')
-                BIF['DATAVALUE'].append('TODO')
+                BIF['DATAVALUE'].append(MODE_PROCENTER) # Valid entries: EUDB_ICOS, AMP, TERN
 
                 BIF['SITE_ID'].append(pipeline_infos['sitecode'])
                 BIF['GROUP_ID'].append(cnt_grp)
@@ -131,31 +133,31 @@ def run_bif_aux(input_path_aux_meteo=None, input_path_aux_nee=None, file_output_
                 PRODUCT_PROCESSING_DATE = datetime.datetime.now()
                 PRODUCT_PROCESSING_DATE = '%04d%02d%02d' % (PRODUCT_PROCESSING_DATE.year,PRODUCT_PROCESSING_DATE.month,PRODUCT_PROCESSING_DATE.day)
                 BIF['DATAVALUE'].append(PRODUCT_PROCESSING_DATE)
-                """
-                BIF['SITE_ID'].append(pipeline_infos['sitecode'])
-                BIF['GROUP_ID'].append(cnt_grp)
-                BIF['VARIABLE_GROUP'].append('GRP_ONEFLUX')
-                BIF['VARIABLE'].append('PRODUCT_RELEASE_NUMBER')
-                BIF['DATAVALUE'].append('TODO')
+                
+                # BIF['SITE_ID'].append(pipeline_infos['sitecode'])
+                # BIF['GROUP_ID'].append(cnt_grp)
+                # BIF['VARIABLE_GROUP'].append('GRP_ONEFLUX')
+                # BIF['VARIABLE'].append('PRODUCT_RELEASE_NUMBER')
+                # BIF['DATAVALUE'].append('TODO')
 
-                BIF['SITE_ID'].append(pipeline_infos['sitecode'])
-                BIF['GROUP_ID'].append(cnt_grp)
-                BIF['VARIABLE_GROUP'].append('GRP_ONEFLUX')
-                BIF['VARIABLE'].append('PRODUCT_RELEASE_NOTE')
-                BIF['DATAVALUE'].append('TODO')
+                # BIF['SITE_ID'].append(pipeline_infos['sitecode'])
+                # BIF['GROUP_ID'].append(cnt_grp)
+                # BIF['VARIABLE_GROUP'].append('GRP_ONEFLUX')
+                # BIF['VARIABLE'].append('PRODUCT_RELEASE_NOTE')
+                # BIF['DATAVALUE'].append('TODO')
 
-                BIF['SITE_ID'].append(pipeline_infos['sitecode'])
-                BIF['GROUP_ID'].append(cnt_grp)
-                BIF['VARIABLE_GROUP'].append('GRP_ONEFLUX')
-                BIF['VARIABLE'].append('PRODUCT_RELEASE_VARS_AFFECTED')
-                BIF['DATAVALUE'].append('TODO')
+                # BIF['SITE_ID'].append(pipeline_infos['sitecode'])
+                # BIF['GROUP_ID'].append(cnt_grp)
+                # BIF['VARIABLE_GROUP'].append('GRP_ONEFLUX')
+                # BIF['VARIABLE'].append('PRODUCT_RELEASE_VARS_AFFECTED')
+                # BIF['DATAVALUE'].append('TODO')
 
-                BIF['SITE_ID'].append(pipeline_infos['sitecode'])
-                BIF['GROUP_ID'].append(cnt_grp)
-                BIF['VARIABLE_GROUP'].append('GRP_ONEFLUX')
-                BIF['VARIABLE'].append('PRODUCT_DOWNLOAD_LINK')
-                BIF['DATAVALUE'].append('TODO')
-                """
+                # BIF['SITE_ID'].append(pipeline_infos['sitecode'])
+                # BIF['GROUP_ID'].append(cnt_grp)
+                # BIF['VARIABLE_GROUP'].append('GRP_ONEFLUX')
+                # BIF['VARIABLE'].append('PRODUCT_DOWNLOAD_LINK')
+                # BIF['DATAVALUE'].append('TODO')
+
             #end if cnt_grp == 0: # FILL GRP_ONEFLUX
             cnt_grp = cnt_grp + 1
             for mth in ['CP','MP']:
@@ -294,6 +296,7 @@ def run_bif_aux(input_path_aux_meteo=None, input_path_aux_nee=None, file_output_
                 )
                 
     BIF = pd.DataFrame.from_dict(BIF)
+    BIF = BIF[['SITE_ID','GROUP_ID','VARIABLE_GROUP','VARIABLE','DATAVALUE']]
 
     if not os.path.exists(os.path.dirname(file_output_path)):
         os.makedirs(os.path.dirname(file_output_path), exist_ok=True)

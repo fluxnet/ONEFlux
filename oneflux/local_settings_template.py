@@ -20,7 +20,25 @@ and is listed in .gitignore
 import sys
 
 ### Configs for ONEFlux runs
-# MODE_ISSUER: issuer of data product, 3-characters; examples include (FLX: FLUXNET, AMF: AmeriFlux, ETC: ICOS-ETC, EUF: European DB, OZF: OzFlux)
+# MODE_ISSUER: issuer of data product (source network), three or more characters; examples include:
+#              - AMF	AmeriFlux - https://ameriflux.lbl.gov/
+#              - ASF	AsiaFlux - https://www.asiaflux.net/
+#              - CNF	ChinaFlux - https://www.chinaflux.org/enn/
+#              - JPF	JapanFlux - https://www.japanflux.org/
+#              - KOF	KoFlux - South Korea flux network
+#              - MXF	MexFlux -  https://mexflux.gitlab.io/
+#              - NEON	National Ecological Observatory Network - https://www.neonscience.org/
+#              - ICOS	Integrated Carbon Observation System - https://www.icos-cp.eu/
+#              - EUF	European Flux database - https://www.europe-fluxdata.eu/
+#              - OZF	OzFlux - https://www.ozflux.org.au/
+#              - TERN	Australia's Ecosystem Observatory - https://www.tern.org.au/
+#              - SAEON	South African Environmental Observation Network - https://www.saeon.ac.za/
+#              - FLX	Sites or small networks not affiliated to any of the other listed
+# MODE_PROCENTER: data processing center issuing the product, three or more characters; examples include:
+#              - EUDB_ICOS	Processing done by EUDB and ICOS ETC
+#              - AMP	    Processing done by AmeriFlux Management Project
+#              - TERN	    Processing done by TERN
+#              - FLX        Processing done generically by FLUXNET (not affiliated to any specific network; avoid using whenever possible)
 # MODE_PRODUCT: data product being generated; currently supported only FLUXNET2015 (historical) and FLUXNET (current product)
 # MODE_ERA: ERA data product used for downscaling; currently supported only ERAI (ERA-Interim, used for FLUXNET2015) and ERA5 (ERA version 5)
 # ERA_FIRST_YEAR: default value for first year of ERA downscaled data; for ERAI use 1989, ERA5 use 1981
@@ -49,6 +67,7 @@ import sys
 
 # Configs for ONEFlux running for: FLUXNET sites, creating FLUXNET data product, using ERA-5 downscaling
 MODE_ISSUER = 'FLX'
+MODE_PROCENTER = 'FLX'
 MODE_PRODUCT = 'FLUXNET'
 MODE_ERA = 'ERA5'
 ERA_FIRST_YEAR = 1981
