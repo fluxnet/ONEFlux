@@ -1411,10 +1411,10 @@ def run_site(siteid,
 
     # generate aux and info files
     aux_file_list = run_site_aux(datadir=datadir, siteid=siteid, sitedir=sitedir, first_year=first_year, last_year=last_year, version_data=version_data, version_processing=version_processing, pipeline=pipeline, nt_skip=pipeline.nt_skip, dt_skip=pipeline.dt_skip)
-    ## Dec 2025: Removed AUX, content moved to BIF 
-    # if full_filelist:
+    ## Dec 2025: Removed AUX, content moved to BIF; keep ERA files in full_filelist
+    if full_filelist:
     #     full_filelist.extend(aux_file_list)
-    #     full_filelist.extend(era_filelist)
+        full_filelist.extend(era_filelist)
 
     # generate metadata files
     zipfilename = zipfile_template.format(sd=sitedir, s=siteid, g=FULLSET_STR, fy=first_year, ly=last_year, vd=version_data, vp=version_processing)
