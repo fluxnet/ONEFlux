@@ -72,21 +72,15 @@ def checkMultipleGROUP_ID(df):
     while len(uni_grp) > 0: 
         suby = df.loc[(df['GROUP_ID'] == uni_grp[0])]
         vname = suby.loc[(suby['VARIABLE'] == 'VAR_INFO_VARNAME'),'DATAVALUE'].unique().tolist()
-        if len(vname) == 1:
+        if (len(vname) == 1) or (len(vname) == 0):
             uni_grp.pop(0)
             continue
-        log.warning('GROUP_ID: %d with %d VAR_INFO_VARNAME (%s)' % ( idx,
-            len(vname),
-            '; '.join(vname))
-        )
+        log.warning('GROUP_ID: %d with %d VAR_INFO_VARNAME (%s)' % (uni_grp[0], len(vname), '; '.join(vname)))
         new_id = max(uni_grp) + 1
         while new_id in uni_grp:
             new_id = max(uni_grp) + 1
-        log.warning('VAR_INFO_VARNAME: %s; GROUP_ID: %d replaced as %d' % ( vname[0],new_id))
-        df.loc[(
-            (df['VAR_INFO_VARNAME'] == vname[0]) &
-            (df['GROUP_ID'] == uni_grp[0])),'GROUP_ID'] = new_id
-        raise
+        log.warning('VAR_INFO_VARNAME: %s; GROUP_ID: %d replaced as %d' % (vname[0], new_id))
+        df.loc[((df['VAR_INFO_VARNAME'] == vname[0]) & (df['GROUP_ID'] == uni_grp[0])),'GROUP_ID'] = new_id
     return df
     
 def fixLengthDate(date_or):
@@ -198,10 +192,14 @@ def getFirstValidFrom00fp(dir_00_fp):
 
 def fillVarInfoDate(df_varinfo,firstValid):
     to_add = []
-    missing_variable = []    
+    missing_variable = []
     for grp_id in df_varinfo['GROUP_ID'].unique():
         grp_x = df_varinfo.loc[(df_varinfo['GROUP_ID'] == grp_id)]
-        v_x = grp_x.loc[(grp_x['VARIABLE'] == 'VAR_INFO_VARNAME'),'DATAVALUE'].values[0]
+        v_x_list = grp_x.loc[(grp_x['VARIABLE'] == 'VAR_INFO_VARNAME'),'DATAVALUE'].values
+        if not v_x_list:
+            log.error('[FILL VAR_INFO_DATE] GROUP_ID: %d has no VAR_INFO_VARNAME' % grp_id)
+            continue
+        v_x = v_x_list[0]
         if sum(firstValid['variable'] == v_x) == 0:
             log.error('[FILL VAR_INFO_DATE] variable %s is missing in dataset but found in VAR_INFO' % v_x)
             continue
@@ -903,6 +901,10 @@ def run_var_info(zipfilename, path_file_varinfo=None, path_file_data=None, path_
                     else:
                         merge1.append('[%s] %s' % (col_XX,temp_df_varinfo_all.loc[idx_all,col_XX]))
                 temp_df_varinfo_all.loc[idx_all,'merge'] = '. '.join(merge1)
+
+            if 'VAR_AGG_VARNAME' in temp_df_varinfo_all.index:
+                log.warning('VAR_AGG_VARNAME found in VARINFO for variable %s, SKIPPED' % v_name)
+                continue
 
             cnt_grp = cnt_grp + 1
             BIF['SITE_ID'].append(pipeline_infos['sitecode'])
