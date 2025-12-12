@@ -76,6 +76,33 @@ DEFINITION_MM = os.path.join(SCRIPT_DIR, 'var_info_definitions_mm.txt')
 DEFINITION_YY = os.path.join(SCRIPT_DIR, 'var_info_definitions_yy.txt')
 
 
+def load_csv(filename):
+    '''
+    Load a CSV file into a pandas DataFrame
+    trying for single double quotes or dual double quotes
+    as escape characters.
+    
+    Parameters:
+    filename (str): Path to the CSV file.
+    
+    Returns:
+    pd.DataFrame: DataFrame containing the CSV data.
+    '''
+    try:
+        df = pd.read_csv(filename)
+    except pd.errors.ParserError as e:
+        log.warning("Failed to parse CSV file {filename} with single double quotes, error: {e}".format(filename=filename, e=e))
+        try:
+            with open(filename, 'r') as f:
+                log.warning("Loading file '{filename}', trying handle of dual double quotes".format(filename=filename))
+                content = f.read()
+                df = pd.read_csv(pd.compat.StringIO(content.replace('""', '"')))
+        except pd.errors.ParserError as e:
+            log.critical("Failed to parse CSV file {filename} with both escape characters.".format(filename=filename))
+            raise e
+    return df
+
+
 def run_bif(path_file_varinfo, path_file_pipeline, path_00_fp,
             path_file_data_hh, path_file_data_dd, path_file_data_ww, path_file_data_mm, path_file_data_yy,
             path_output_varinfo_hh, path_output_varinfo_dd, path_output_varinfo_ww, path_output_varinfo_mm, path_output_varinfo_yy,
@@ -120,10 +147,10 @@ def run_bif(path_file_varinfo, path_file_pipeline, path_00_fp,
 
     # merge other to the path_output_merge file
     if path_bif_other is not None:
-        to_merge = pd.read_csv(path_output_merge)
+        to_merge = load_csv(path_output_merge)
         for bif_other in path_bif_other:
             log.info('open file: %s' % bif_other)
-            df1 = pd.read_csv(bif_other)
+            df1 = load_csv(bif_other)
             log.info('original range GROUP_ID: %d %d' % (df1['GROUP_ID'].min(),df1['GROUP_ID'].max()))
             df1['GROUP_ID'] = df1['GROUP_ID'] + to_merge['GROUP_ID'].max()
             log.info('recalculated range GROUP_ID: %d %d' % (df1['GROUP_ID'].min(),df1['GROUP_ID'].max()))
@@ -181,7 +208,7 @@ def run_bif(path_file_varinfo, path_file_pipeline, path_00_fp,
     cnt_grp_id = 0
     cnt_f = 1
     for K_args in [path_output_varinfo_hh, path_output_varinfo_dd, path_output_varinfo_ww, path_output_varinfo_mm, path_output_varinfo_yy, path_output_merge]:
-        df_1 = pd.read_csv(K_args)
+        df_1 = load_csv(K_args)
         log.info('file [%d]: %s; min(GROUP_ID): %d; max(GROUP_ID): %d' % (cnt_f, K_args, df_1['GROUP_ID'].min(), df_1['GROUP_ID'].max()))
         if cnt_f == 1:
             log.info('for file 1 the GROUP_IDs are not recalculated')
