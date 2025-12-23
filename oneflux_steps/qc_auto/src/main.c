@@ -26,7 +26,7 @@
 #include "../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION			"v1.01"
+#define PROGRAM_VERSION			"v1.02"
 const int days_per_month[MONTHS] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
 /* enum */
@@ -1987,17 +1987,41 @@ static int save_energy_file(DATASET *const dataset) {
 	{
 		/* check H */
 		var = get_var_index(dataset, var_names[H_INPUT]);
+
+		/* v1.02 */
+	#if 0
 		if ( (-1 == var) || (dataset->rows_count == dataset->missings[var]) ) {
 			printf("%s missing. File will be not created.", var_names[H_INPUT]);
 			return 1;
 		}
+	#else
+		if ( -1 == var ) {
+			var = add_var_to_dataset(dataset, var_names[H_INPUT]);
+			if ( -1 == var ) {
+				printf("unable to add %s var\n\n", var_names[H_INPUT]);
+				return 0;
+			}
+		}
+	#endif
 
 		/* check LE */
 		var = get_var_index(dataset, var_names[LE_INPUT]);
+
+		/* v1.02 */
+	#if 0
 		if ( (-1 == var) || (dataset->rows_count == dataset->missings[var]) ) {
 			printf("%s missing. File will be not created.", var_names[LE_INPUT]);
 			return 1;
 		}
+	#else
+		if ( -1 == var ) {
+			var = add_var_to_dataset(dataset, var_names[LE_INPUT]);
+			if ( -1 == var ) {
+				printf("unable to add %s var\n\n", var_names[LE_INPUT]);
+				return 0;
+			}
+		}
+	#endif
 	}
 
 	/* check how many vars can be written */

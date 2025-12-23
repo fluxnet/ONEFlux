@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="qc_auto"
 	ProjectGUID="{A122D8D9-88F9-4060-B217-4069A9E57CB5}"
 	RootNamespace="qc_auto"
