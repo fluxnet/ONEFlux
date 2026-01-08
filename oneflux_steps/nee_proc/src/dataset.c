@@ -1066,16 +1066,17 @@ int get_reference(const DATASET *const dataset, const NEE_MATRIX_REF *const nee_
 		}
 	}
 
-	column = -1;
+	/* v1.021 */
+	column = 0;
 	sum = mess[0]; /* used as start point */
-	for ( i = 0; i < PERCENTILES_COUNT_2-1; i++ ) {
+	for ( i = 1; i < PERCENTILES_COUNT_2-1; i++ ) {
 		if ( mess[i] > sum ) {
 			sum = mess[i];
 			column = i;
 		}
 	}
 
-	if ( IS_INVALID_VALUE(sum) || (-1 == column) ) {
+	if ( IS_INVALID_VALUE(sum) ) {
 		puts("unable to get reference!");
 		free(mess);
 		free(mes);
