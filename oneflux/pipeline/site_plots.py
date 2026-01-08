@@ -334,10 +334,12 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
         prodfile_template = PRODFILE_TEMPLATE
         prodfile_figure_template = PRODFILE_FIGURE_TEMPLATE
         prodfile_years_template = PRODFILE_YEARS_TEMPLATE
+        (nt_skip, dt_skip) = (pipeline.nt_skip, pipeline.dt_skip)
     else:
         prodfile_template = pipeline.prodfile_template
         prodfile_figure_template = pipeline.prodfile_figure_template
         prodfile_years_template = pipeline.prodfile_years_template
+        (nt_skip, dt_skip) = False, False
 
     first_year, last_year = load_years(siteid=siteid, sitedir=sitedir, version_data=version_data, version_processing=version_processing, prodfile_years_template=prodfile_years_template)
     year_range = range(int(first_year), int(last_year) + 1)
@@ -462,7 +464,7 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
 
 
     ### RECO
-    if pipeline.nt_skip and pipeline.dt_skip:
+    if nt_skip and dt_skip:
         pass
     else:
         hh = {'ts': hh_timestamps,
@@ -472,13 +474,13 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
               'ranges2': [],
               'qc': {'label':'NEE_{u}_MEAN_QC'.format(u=uvar), 'data':hh_data['NEE_{u}_MEAN_QC'.format(u=uvar)], 'color':COLOR_QC, 'alpha':1}
         }
-        if not pipeline.nt_skip:
+        if not nt_skip:
             #hh['lines'].append({'label':'RECO_NT_VUT_U50', 'data':hh_data['RECO_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1})
             hh['lines'].append({'label':'RECO_NT_{u}_REF'.format(u=uvar), 'data':hh_data['RECO_NT_{u}_REF'.format(u=uvar)], 'color':COLOR_NT_REF, 'alpha':1})
             hh['ranges'].append({'label':'RECO_NT_{u}_05-95'.format(u=uvar), 'data1':hh_data['RECO_NT_{u}_05'.format(u=uvar)], 'data2':hh_data['RECO_NT_{u}_95'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
             hh['ranges'].append({'label':'RECO_NT_{u}_16-84'.format(u=uvar), 'data1':hh_data['RECO_NT_{u}_16'.format(u=uvar)], 'data2':hh_data['RECO_NT_{u}_84'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
             hh['ranges'].append({'label':'RECO_NT_{u}_25-75'.format(u=uvar), 'data1':hh_data['RECO_NT_{u}_25'.format(u=uvar)], 'data2':hh_data['RECO_NT_{u}_75'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
-        if not pipeline.dt_skip:
+        if not dt_skip:
             #hh['lines2'].append({'label':'RECO_DT_VUT_U50', 'data':hh_data['RECO_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1})
             hh['lines2'].append({'label':'RECO_DT_{u}_REF'.format(u=uvar), 'data':hh_data['RECO_DT_{u}_REF'.format(u=uvar)], 'color':COLOR_DT_REF, 'alpha':1})
             hh['ranges2'].append({'label':'RECO_DT_{u}_05-95'.format(u=uvar), 'data1':hh_data['RECO_DT_{u}_05'.format(u=uvar)], 'data2':hh_data['RECO_DT_{u}_95'.format(u=uvar)], 'color':COLOR_DT_RNG, 'alpha':0.40})
@@ -492,13 +494,13 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
               'ranges2': [],
               'qc': {'label':'NEE_{u}_MEAN_QC'.format(u=uvar), 'data':dd_data['NEE_{u}_MEAN_QC'.format(u=uvar)], 'color':COLOR_QC, 'alpha':1}
         }
-        if not pipeline.nt_skip:
+        if not nt_skip:
             #dd['lines'].append({'label':'RECO_NT_VUT_U50', 'data':dd_data['RECO_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1})
             dd['lines'].append({'label':'RECO_NT_{u}_REF'.format(u=uvar), 'data':dd_data['RECO_NT_{u}_REF'.format(u=uvar)], 'color':COLOR_NT_REF, 'alpha':1})
             dd['ranges'].append({'label':'RECO_NT_{u}_05-95'.format(u=uvar), 'data1':dd_data['RECO_NT_{u}_05'.format(u=uvar)], 'data2':dd_data['RECO_NT_{u}_95'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
             dd['ranges'].append({'label':'RECO_NT_{u}_16-84'.format(u=uvar), 'data1':dd_data['RECO_NT_{u}_16'.format(u=uvar)], 'data2':dd_data['RECO_NT_{u}_84'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
             dd['ranges'].append({'label':'RECO_NT_{u}_25-75'.format(u=uvar), 'data1':dd_data['RECO_NT_{u}_25'.format(u=uvar)], 'data2':dd_data['RECO_NT_{u}_75'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
-        if not pipeline.dt_skip:
+        if not dt_skip:
             #dd['lines2'].append({'label':'RECO_DT_VUT_U50', 'data':dd_data['RECO_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1})
             dd['lines2'].append({'label':'RECO_DT_{u}_REF'.format(u=uvar), 'data':dd_data['RECO_DT_{u}_REF'.format(u=uvar)], 'color':COLOR_DT_REF, 'alpha':1})
             dd['ranges2'].append({'label':'RECO_DT_{u}_05-95'.format(u=uvar), 'data1':dd_data['RECO_DT_{u}_05'.format(u=uvar)], 'data2':dd_data['RECO_DT_{u}_95'.format(u=uvar)], 'color':COLOR_DT_RNG, 'alpha':0.40})
@@ -512,13 +514,13 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
               'ranges2': [],
               'qc': {'label':'NEE_{u}_MEAN_QC'.format(u=uvar), 'data':ww_data['NEE_{u}_MEAN_QC'.format(u=uvar)], 'color':COLOR_QC, 'alpha':1}
         }
-        if not pipeline.nt_skip:
+        if not nt_skip:
             #ww['lines'].append({'label':'RECO_NT_VUT_U50', 'data':ww_data['RECO_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1})
             ww['lines'].append({'label':'RECO_NT_{u}_REF'.format(u=uvar), 'data':ww_data['RECO_NT_{u}_REF'.format(u=uvar)], 'color':COLOR_NT_REF, 'alpha':1})
             ww['ranges'].append({'label':'RECO_NT_{u}_05-95'.format(u=uvar), 'data1':ww_data['RECO_NT_{u}_05'.format(u=uvar)], 'data2':ww_data['RECO_NT_{u}_95'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
             ww['ranges'].append({'label':'RECO_NT_{u}_16-84'.format(u=uvar), 'data1':ww_data['RECO_NT_{u}_16'.format(u=uvar)], 'data2':ww_data['RECO_NT_{u}_84'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
             ww['ranges'].append({'label':'RECO_NT_{u}_25-75'.format(u=uvar), 'data1':ww_data['RECO_NT_{u}_25'.format(u=uvar)], 'data2':ww_data['RECO_NT_{u}_75'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
-        if not pipeline.dt_skip:
+        if not dt_skip:
             #ww['lines2'].append({'label':'RECO_DT_VUT_U50', 'data':ww_data['RECO_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1})
             ww['lines2'].append({'label':'RECO_DT_{u}_REF'.format(u=uvar), 'data':ww_data['RECO_DT_{u}_REF'.format(u=uvar)], 'color':COLOR_DT_REF, 'alpha':1})
             ww['ranges2'].append({'label':'RECO_DT_{u}_05-95'.format(u=uvar), 'data1':ww_data['RECO_DT_{u}_05'.format(u=uvar)], 'data2':ww_data['RECO_DT_{u}_95'.format(u=uvar)], 'color':COLOR_DT_RNG, 'alpha':0.40})
@@ -532,13 +534,13 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
               'ranges2': [],
               'qc': {'label':'NEE_{u}_MEAN_QC'.format(u=uvar), 'data':mm_data['NEE_{u}_MEAN_QC'.format(u=uvar)], 'color':COLOR_QC, 'alpha':1}
         }
-        if not pipeline.nt_skip:
+        if not nt_skip:
             #mm['lines'].append({'label':'RECO_NT_VUT_U50', 'data':mm_data['RECO_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1})
             mm['lines'].append({'label':'RECO_NT_{u}_REF'.format(u=uvar), 'data':mm_data['RECO_NT_{u}_REF'.format(u=uvar)], 'color':COLOR_NT_REF, 'alpha':1})
             mm['ranges'].append({'label':'RECO_NT_{u}_05-95'.format(u=uvar), 'data1':mm_data['RECO_NT_{u}_05'.format(u=uvar)], 'data2':mm_data['RECO_NT_{u}_95'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
             mm['ranges'].append({'label':'RECO_NT_{u}_16-84'.format(u=uvar), 'data1':mm_data['RECO_NT_{u}_16'.format(u=uvar)], 'data2':mm_data['RECO_NT_{u}_84'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
             mm['ranges'].append({'label':'RECO_NT_{u}_25-75'.format(u=uvar), 'data1':mm_data['RECO_NT_{u}_25'.format(u=uvar)], 'data2':mm_data['RECO_NT_{u}_75'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
-        if not pipeline.dt_skip:
+        if not dt_skip:
             #mm['lines2'].append({'label':'RECO_DT_VUT_U50', 'data':mm_data['RECO_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1})
             mm['lines2'].append({'label':'RECO_DT_{u}_REF'.format(u=uvar), 'data':mm_data['RECO_DT_{u}_REF'.format(u=uvar)], 'color':COLOR_DT_REF, 'alpha':1})
             mm['ranges2'].append({'label':'RECO_DT_{u}_05-95'.format(u=uvar), 'data1':mm_data['RECO_DT_{u}_05'.format(u=uvar)], 'data2':mm_data['RECO_DT_{u}_95'.format(u=uvar)], 'color':COLOR_DT_RNG, 'alpha':0.40})
@@ -552,13 +554,13 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
               'ranges2': [],
               'qc': {'label':'NEE_{u}_MEAN_QC'.format(u=uvar), 'data':yy_data['NEE_{u}_MEAN_QC'.format(u=uvar)], 'color':COLOR_QC, 'alpha':1}
         }
-        if not pipeline.nt_skip:
+        if not nt_skip:
             yy['lines'].append({'label':'RECO_NT_{u}_U50'.format(u=uvar), 'data':yy_data['RECO_NT_{u}_USTAR50'.format(u=uvar)], 'color':COLOR_NT_U50, 'alpha':1})
             yy['lines'].append({'label':'RECO_NT_{u}_REF'.format(u=uvar), 'data':yy_data['RECO_NT_{u}_REF'.format(u=uvar)], 'color':COLOR_NT_REF, 'alpha':1})
             yy['ranges'].append({'label':'RECO_NT_{u}_05-95'.format(u=uvar), 'data1':yy_data['RECO_NT_{u}_05'.format(u=uvar)], 'data2':yy_data['RECO_NT_{u}_95'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
             yy['ranges'].append({'label':'RECO_NT_{u}_16-84'.format(u=uvar), 'data1':yy_data['RECO_NT_{u}_16'.format(u=uvar)], 'data2':yy_data['RECO_NT_{u}_84'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
             yy['ranges'].append({'label':'RECO_NT_{u}_25-75'.format(u=uvar), 'data1':yy_data['RECO_NT_{u}_25'.format(u=uvar)], 'data2':yy_data['RECO_NT_{u}_75'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
-        if not pipeline.dt_skip:
+        if not dt_skip:
             yy['lines2'].append({'label':'RECO_DT_{u}_U50'.format(u=uvar), 'data':yy_data['RECO_DT_{u}_USTAR50'.format(u=uvar)], 'color':COLOR_DT_U50, 'alpha':1})
             yy['lines2'].append({'label':'RECO_DT_{u}_REF'.format(u=uvar), 'data':yy_data['RECO_DT_{u}_REF'.format(u=uvar)], 'color':COLOR_DT_REF, 'alpha':1})
             yy['ranges2'].append({'label':'RECO_DT_{u}_05-95'.format(u=uvar), 'data1':yy_data['RECO_DT_{u}_05'.format(u=uvar)], 'data2':yy_data['RECO_DT_{u}_95'.format(u=uvar)], 'color':COLOR_DT_RNG, 'alpha':0.40})
@@ -579,13 +581,13 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
               'ranges2': [],
               'qc': {'label':'NEE_{u}_MEAN_QC'.format(u=uvar), 'data':hh_data['NEE_{u}_MEAN_QC'.format(u=uvar)], 'color':COLOR_QC, 'alpha':1}
         }
-        if not pipeline.nt_skip:
+        if not nt_skip:
             #hh['lines'].append({'label':'GPP_NT_VUT_U50', 'data':hh_data['GPP_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1})
             hh['lines'].append({'label':'GPP_NT_{u}_REF'.format(u=uvar), 'data':hh_data['GPP_NT_{u}_REF'.format(u=uvar)], 'color':COLOR_NT_REF, 'alpha':1})
             hh['ranges'].append({'label':'GPP_NT_{u}_05-95'.format(u=uvar), 'data1':hh_data['GPP_NT_{u}_05'.format(u=uvar)], 'data2':hh_data['GPP_NT_{u}_95'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
             hh['ranges'].append({'label':'GPP_NT_{u}_16-84'.format(u=uvar), 'data1':hh_data['GPP_NT_{u}_16'.format(u=uvar)], 'data2':hh_data['GPP_NT_{u}_84'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
             hh['ranges'].append({'label':'GPP_NT_{u}_25-75'.format(u=uvar), 'data1':hh_data['GPP_NT_{u}_25'.format(u=uvar)], 'data2':hh_data['GPP_NT_{u}_75'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
-        if not pipeline.dt_skip:
+        if not dt_skip:
             #hh['lines2'].append({'label':'GPP_DT_VUT_U50', 'data':hh_data['GPP_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1})
             hh['lines2'].append({'label':'GPP_DT_{u}_REF'.format(u=uvar), 'data':hh_data['GPP_DT_{u}_REF'.format(u=uvar)], 'color':COLOR_DT_REF, 'alpha':1})
             hh['ranges2'].append({'label':'GPP_DT_{u}_05-95'.format(u=uvar), 'data1':hh_data['GPP_DT_{u}_05'.format(u=uvar)], 'data2':hh_data['GPP_DT_{u}_95'.format(u=uvar)], 'color':COLOR_DT_RNG, 'alpha':0.40})
@@ -599,13 +601,13 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
               'ranges2': [],
               'qc': {'label':'NEE_{u}_MEAN_QC'.format(u=uvar), 'data':dd_data['NEE_{u}_MEAN_QC'.format(u=uvar)], 'color':COLOR_QC, 'alpha':1}
         }
-        if not pipeline.nt_skip:
+        if not nt_skip:
             #dd['lines'].append({'label':'GPP_NT_VUT_U50', 'data':dd_data['GPP_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1})
             dd['lines'].append({'label':'GPP_NT_{u}_REF'.format(u=uvar), 'data':dd_data['GPP_NT_{u}_REF'.format(u=uvar)], 'color':COLOR_NT_REF, 'alpha':1})
             dd['ranges'].append({'label':'GPP_NT_{u}_05-95'.format(u=uvar), 'data1':dd_data['GPP_NT_{u}_05'.format(u=uvar)], 'data2':dd_data['GPP_NT_{u}_95'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
             dd['ranges'].append({'label':'GPP_NT_{u}_16-84'.format(u=uvar), 'data1':dd_data['GPP_NT_{u}_16'.format(u=uvar)], 'data2':dd_data['GPP_NT_{u}_84'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
             dd['ranges'].append({'label':'GPP_NT_{u}_25-75'.format(u=uvar), 'data1':dd_data['GPP_NT_{u}_25'.format(u=uvar)], 'data2':dd_data['GPP_NT_{u}_75'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
-        if not pipeline.dt_skip:
+        if not dt_skip:
             #dd['lines2'].append({'label':'GPP_DT_VUT_U50', 'data':dd_data['GPP_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1})
             dd['lines2'].append({'label':'GPP_DT_{u}_REF'.format(u=uvar), 'data':dd_data['GPP_DT_{u}_REF'.format(u=uvar)], 'color':COLOR_DT_REF, 'alpha':1})
             dd['ranges2'].append({'label':'GPP_DT_{u}_05-95'.format(u=uvar), 'data1':dd_data['GPP_DT_{u}_05'.format(u=uvar)], 'data2':dd_data['GPP_DT_{u}_95'.format(u=uvar)], 'color':COLOR_DT_RNG, 'alpha':0.40})
@@ -619,13 +621,13 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
               'ranges2': [],
               'qc': {'label':'NEE_{u}_MEAN_QC'.format(u=uvar), 'data':ww_data['NEE_{u}_MEAN_QC'.format(u=uvar)], 'color':COLOR_QC, 'alpha':1}
         }
-        if not pipeline.nt_skip:
+        if not nt_skip:
             #ww['lines'].append({'label':'GPP_NT_VUT_U50', 'data':ww_data['GPP_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1})
             ww['lines'].append({'label':'GPP_NT_{u}_REF'.format(u=uvar), 'data':ww_data['GPP_NT_{u}_REF'.format(u=uvar)], 'color':COLOR_NT_REF, 'alpha':1})
             ww['ranges'].append({'label':'GPP_NT_{u}_05-95'.format(u=uvar), 'data1':ww_data['GPP_NT_{u}_05'.format(u=uvar)], 'data2':ww_data['GPP_NT_{u}_95'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
             ww['ranges'].append({'label':'GPP_NT_{u}_16-84'.format(u=uvar), 'data1':ww_data['GPP_NT_{u}_16'.format(u=uvar)], 'data2':ww_data['GPP_NT_{u}_84'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
             ww['ranges'].append({'label':'GPP_NT_{u}_25-75'.format(u=uvar), 'data1':ww_data['GPP_NT_{u}_25'.format(u=uvar)], 'data2':ww_data['GPP_NT_{u}_75'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
-        if not pipeline.dt_skip:
+        if not dt_skip:
             #ww['lines2'].append({'label':'GPP_DT_VUT_U50', 'data':ww_data['GPP_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1})
             ww['lines2'].append({'label':'GPP_DT_{u}_REF'.format(u=uvar), 'data':ww_data['GPP_DT_{u}_REF'.format(u=uvar)], 'color':COLOR_DT_REF, 'alpha':1})
             ww['ranges2'].append({'label':'GPP_DT_{u}_05-95'.format(u=uvar), 'data1':ww_data['GPP_DT_{u}_05'.format(u=uvar)], 'data2':ww_data['GPP_DT_{u}_95'.format(u=uvar)], 'color':COLOR_DT_RNG, 'alpha':0.40})
@@ -639,13 +641,13 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
               'ranges2': [],
               'qc': {'label':'NEE_{u}_MEAN_QC'.format(u=uvar), 'data':mm_data['NEE_{u}_MEAN_QC'.format(u=uvar)], 'color':COLOR_QC, 'alpha':1}
         }
-        if not pipeline.nt_skip:
+        if not nt_skip:
             #mm['lines'].append({'label':'GPP_NT_VUT_U50', 'data':mm_data['GPP_NT_VUT_USTAR50'], 'color':COLOR_NT_U50, 'alpha':1})
             mm['lines'].append({'label':'GPP_NT_{u}_REF'.format(u=uvar), 'data':mm_data['GPP_NT_{u}_REF'.format(u=uvar)], 'color':COLOR_NT_REF, 'alpha':1})
             mm['ranges'].append({'label':'GPP_NT_{u}_05-95'.format(u=uvar), 'data1':mm_data['GPP_NT_{u}_05'.format(u=uvar)], 'data2':mm_data['GPP_NT_{u}_95'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
             mm['ranges'].append({'label':'GPP_NT_{u}_16-84'.format(u=uvar), 'data1':mm_data['GPP_NT_{u}_16'.format(u=uvar)], 'data2':mm_data['GPP_NT_{u}_84'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
             mm['ranges'].append({'label':'GPP_NT_{u}_25-75'.format(u=uvar), 'data1':mm_data['GPP_NT_{u}_25'.format(u=uvar)], 'data2':mm_data['GPP_NT_{u}_75'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
-        if not pipeline.dt_skip:
+        if not dt_skip:
             #mm['lines2'].append({'label':'GPP_DT_VUT_U50', 'data':mm_data['GPP_DT_VUT_USTAR50'], 'color':COLOR_DT_U50, 'alpha':1})
             mm['lines2'].append({'label':'GPP_DT_{u}_REF'.format(u=uvar), 'data':mm_data['GPP_DT_{u}_REF'.format(u=uvar)], 'color':COLOR_DT_REF, 'alpha':1})
             mm['ranges2'].append({'label':'GPP_DT_{u}_05-95'.format(u=uvar), 'data1':mm_data['GPP_DT_{u}_05'.format(u=uvar)], 'data2':mm_data['GPP_DT_{u}_95'.format(u=uvar)], 'color':COLOR_DT_RNG, 'alpha':0.40})
@@ -659,13 +661,13 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
               'ranges2': [],
               'qc': {'label':'NEE_{u}_MEAN_QC'.format(u=uvar), 'data':yy_data['NEE_{u}_MEAN_QC'.format(u=uvar)], 'color':COLOR_QC, 'alpha':1}
         }
-        if not pipeline.nt_skip:
+        if not nt_skip:
             yy['lines'].append({'label':'GPP_NT_{u}_U50'.format(u=uvar), 'data':yy_data['GPP_NT_{u}_USTAR50'.format(u=uvar)], 'color':COLOR_NT_U50, 'alpha':1})
             yy['lines'].append({'label':'GPP_NT_{u}_REF'.format(u=uvar), 'data':yy_data['GPP_NT_{u}_REF'.format(u=uvar)], 'color':COLOR_NT_REF, 'alpha':1})
             yy['ranges'].append({'label':'GPP_NT_{u}_05-95'.format(u=uvar), 'data1':yy_data['GPP_NT_{u}_05'.format(u=uvar)], 'data2':yy_data['GPP_NT_{u}_95'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
             yy['ranges'].append({'label':'GPP_NT_{u}_16-84'.format(u=uvar), 'data1':yy_data['GPP_NT_{u}_16'.format(u=uvar)], 'data2':yy_data['GPP_NT_{u}_84'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
             yy['ranges'].append({'label':'GPP_NT_{u}_25-75'.format(u=uvar), 'data1':yy_data['GPP_NT_{u}_25'.format(u=uvar)], 'data2':yy_data['GPP_NT_{u}_75'.format(u=uvar)], 'color':COLOR_NT_RNG, 'alpha':0.40})
-        if not pipeline.dt_skip:
+        if not dt_skip:
             yy['lines2'].append({'label':'GPP_DT_{u}_U50'.format(u=uvar), 'data':yy_data['GPP_DT_{u}_USTAR50'.format(u=uvar)], 'color':COLOR_DT_U50, 'alpha':1})
             yy['lines2'].append({'label':'GPP_DT_{u}_REF'.format(u=uvar), 'data':yy_data['GPP_DT_{u}_REF'.format(u=uvar)], 'color':COLOR_DT_REF, 'alpha':1})
             yy['ranges2'].append({'label':'GPP_DT_{u}_05-95'.format(u=uvar), 'data1':yy_data['GPP_DT_{u}_05'.format(u=uvar)], 'data2':yy_data['GPP_DT_{u}_95'.format(u=uvar)], 'color':COLOR_DT_RNG, 'alpha':0.40})
