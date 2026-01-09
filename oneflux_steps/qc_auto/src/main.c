@@ -26,7 +26,7 @@
 #include "../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION			"v1.02"
+#define PROGRAM_VERSION			"v1.03"
 const int days_per_month[MONTHS] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
 /* enum */
@@ -798,12 +798,12 @@ static void check_for_neg(DATASET *const dataset, const char *const var) {
 
 /* */
 static int set_swin_from_ppfd(DATASET *const dataset) {
-#define PPFD_TO_SWIN_CONV	0.52
-#define SLOPE_DEFAULT		(1./PPFD_TO_SWIN_CONV)
-#define SLOPE_TOL			0.2
-/* please note that + on MIN and - and MAX are rights! */
-#define SLOPE_MIN			(1./(PPFD_TO_SWIN_CONV+SLOPE_TOL))
-#define SLOPE_MAX			(1./(PPFD_TO_SWIN_CONV-SLOPE_TOL))
+#define PPFD_TO_SWIN_CONV 0.52
+/* v1.03 */
+#define BOTH_VALID_COUNT_MIN 1000
+#define SLOPE_DEFAULT (1./PPFD_TO_SWIN_CONV)
+#define SLOPE_MIN (1./0.56)
+#define SLOPE_MAX (1./0.48)
 
 	int i;
 	int SWIN;
@@ -812,6 +812,10 @@ static int set_swin_from_ppfd(DATASET *const dataset) {
 	int valid_swin;
 	int valid_ppfd;
 	int all_valids_count;
+
+	/* v1.03 */
+	int both_valid_count;
+
 	PREC sumx;
 	PREC sumy;
 	PREC sumx2;
@@ -840,12 +844,16 @@ static int set_swin_from_ppfd(DATASET *const dataset) {
 
 	/* check for PPFD var */
 	if ( -1 == PPFD ) {
+		/* v1.03 */
+		puts("\t- PPFD is missing, SW_IN from PPFD_IN not computed");
 		return 1;
 	}
 
 	/* get valid ppfd count */
 	valid_ppfd = dataset->rows_count - dataset->missings[PPFD];
 	if ( !valid_ppfd ) {
+		/* v1.03 */
+		puts("\t- PPFD is entirely invalid, SW_IN from PPFD_IN not computed");
 		return 1;
 	}
 
@@ -853,23 +861,49 @@ static int set_swin_from_ppfd(DATASET *const dataset) {
 	if ( -1 != SWIN ) {
 		valid_swin = dataset->rows_count - dataset->missings[SWIN];
 	}
-	if ( !valid_swin ) {
+
+	/* v1.03 */
+	/* we calculate the number of rows where both SWIN and PPFD are valid */
+	both_valid_count = 0;
+	if ( valid_swin ) {
+		for ( i = 0; i < dataset->rows_count; i++ ) {
+			if ( !IS_INVALID_VALUE(dataset->rows[i].value[SWIN]) && !IS_INVALID_VALUE(dataset->rows[i].value[PPFD]) ) {
+				++both_valid_count;
+			}
+		}
+	}
+
+	if ( !valid_swin || (both_valid_count < BOTH_VALID_COUNT_MIN) ) {
+		/* v1.03 */
+		if ( -1 == SWIN )
+			printf("\t- SW_IN is missing, computed from PPFD_IN using default value (%.2f)\n", PPFD_TO_SWIN_CONV);
+		else if ( ! valid_swin )
+			printf("\t- SW_IN is entirely invalid, computed from PPFD_IN using default value (%.2f)\n", PPFD_TO_SWIN_CONV);
+		else
+			printf(	"\t- Where missing SW_IN computed from PPFD_IN using default value "
+					"(%.2f, less than %d records with both SW_IN and PPFD_IN valid (%d))\n"
+						, PPFD_TO_SWIN_CONV
+						, BOTH_VALID_COUNT_MIN
+						, both_valid_count
+			);
 		if ( -1 == SWIN ) {
 			SWIN = add_var_to_dataset(dataset, var_names[SWIN_INPUT]);
 			if ( -1 == SWIN ) {
 				printf("unable to add %s var.\n", var_names[SWIN_INPUT]);
 				return 0;
-			}
+			}			
+		}
 
-			for ( i = 0; i < dataset->rows_count; i++ ) {
-				if ( !IS_INVALID_VALUE(dataset->rows[i].value[PPFD]) ) {
-					/* update value */
-					dataset->rows[i].value[SWIN] = dataset->rows[i].value[PPFD] * PPFD_TO_SWIN_CONV;
-					/* update flag */
-					dataset->flags[i].value[SWIN_FROM_PPFD] = 3;
-					/* update missings */
-					--dataset->missings[SWIN];
-				}
+		/* v1.03 */
+		/* we compute SWIN from PPFD even if it is all invalid */
+		for ( i = 0; i < dataset->rows_count; i++ ) {
+			if ( !IS_INVALID_VALUE(dataset->rows[i].value[PPFD]) ) {
+				/* update value */
+				dataset->rows[i].value[SWIN] = dataset->rows[i].value[PPFD] * PPFD_TO_SWIN_CONV;
+				/* update flag */
+				dataset->flags[i].value[SWIN_FROM_PPFD] = 3;
+				/* update missings */
+				--dataset->missings[SWIN];
 			}
 		}
 	} else {
@@ -916,11 +950,26 @@ static int set_swin_from_ppfd(DATASET *const dataset) {
 
 			/* check slope */
 			if ( (slope < SLOPE_MIN) || (slope > SLOPE_MAX) ) {
+				/* v1.03 */
+				/*
 				printf("unable to compute %s from %s: slope is %f\n\n", var_names[SWIN_INPUT], var_names[PPFD_INPUT], slope);
 				free(all_valids);
 
 				return 0;
+				*/
+				printf(	"\t- Where missing SW_IN computed from PPFD_IN using default value (%.2f) "
+						"because calculated slope between SW_IN and PPFD_IN was out of range (%.2f)\n"
+							, PPFD_TO_SWIN_CONV
+							, 1. / slope
+				);
+				slope = SLOPE_DEFAULT;				
 			}
+			/* v1.03 */
+			else
+				printf(	"\t- Where missing SW_IN computed from PPFD_IN using "
+						"site specific slope between the two variables (%.2f)\n"
+						, 1. / slope
+				);
 
 			/* x = (y - b) / a */
 			for ( i = 0; i < dataset->rows_count; i++ ) {
@@ -938,10 +987,12 @@ static int set_swin_from_ppfd(DATASET *const dataset) {
 
 	/* ok */
 	return 1;
+
+/* v1.03 */
+#undef BOTH_VALID_COUNT_MIN
+#undef SLOPE_DEFAULT
 #undef SLOPE_MAX
 #undef SLOPE_MIN
-#undef SLOPE_TOL
-#undef SLOPE_DEFAULT
 #undef PPFD_TO_SWIN_CONV
 }
 
