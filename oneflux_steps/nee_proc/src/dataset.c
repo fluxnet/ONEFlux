@@ -233,6 +233,10 @@ static const char model_efficiency_c[] = "NEE_ref_c = filtered using the ustar p
 static const char model_efficiency_y_one_year[] = "NEE_ref_y filtered using the ustar percentile %g (ustar value: %g)\n";
 static const char model_efficiency_y[] = "NEE_ref_y filtered on year %d using the ustar percentile %g (ustar value: %g)\n";
 
+/* v1.021 */
+static const char model_efficiency_c_not[] = "NEE_ref_c = not filtered!\n";
+static const char model_efficiency_y_not[] = "NEE_ref_y not filtered!\n";
+
 static const char *time_resolution[TRS] = { "hh", "dd", "ww", "mm", "yy" };
 
 /* todo : implement a better comparison for equality */
@@ -1027,7 +1031,7 @@ int get_reference(const DATASET *const dataset, const NEE_MATRIX_REF *const nee_
 		if ( square_count ) {
 			variance = square / square_count;
 		} else {
-			printf("unable to get variance for column %d\n", column);
+			printf("unable to compute variance for column %d\n", column);
 			free(mess);
 			free(mes);
 			return -1;
@@ -1066,16 +1070,17 @@ int get_reference(const DATASET *const dataset, const NEE_MATRIX_REF *const nee_
 		}
 	}
 
-	column = -1;
+	/* v1.021 */
+	column = 0;
 	sum = mess[0]; /* used as start point */
-	for ( i = 0; i < PERCENTILES_COUNT_2-1; i++ ) {
+	for ( i = 1; i < PERCENTILES_COUNT_2-1; i++ ) {
 		if ( mess[i] > sum ) {
 			sum = mess[i];
 			column = i;
 		}
 	}
 
-	if ( IS_INVALID_VALUE(sum) || (-1 == column) ) {
+	if ( IS_INVALID_VALUE(sum) ) {
 		puts("unable to get reference!");
 		free(mess);
 		free(mes);
@@ -1243,7 +1248,8 @@ P_MATRIX *process_nee_matrix(const DATASET *const dataset, const NEE_MATRIX *con
 	} else {
 		/* get references */
 		*ref = get_reference(dataset, nee_matrix_ref, rows_count, type);
-		if ( -1 == *ref ) {
+		/* v1.021 */
+		if ( (-1 == *ref) && ((type != YY_Y) && (type != YY_C)) ) {
 			free(p_matrix);
 			free(temp2);
 			free(temp);
@@ -2678,10 +2684,19 @@ int save_info(const DATASET *const dataset, const char *const path, const eTimeR
 		}
 		/* model efficiency */
 		fputs(info_model_efficiency, f);
-		fprintf(f, model_efficiency_c, percentiles_test_2[ref_c], percentiles_c[ref_c]);
+		/* v1.021 */
+		if ( ref_c != -1 )
+			fprintf(f, model_efficiency_c, percentiles_test_2[ref_c], percentiles_c[ref_c]);
+		else
+			fputs(model_efficiency_c_not, f);
 		if ( percentiles_y ) {
-			for ( i = 0; i < dataset->years_count; i++ ) {
-				fprintf(f, model_efficiency_y, dataset->years[i].year, percentiles_test_2[ref_y], percentiles_y[i].value[ref_y]);
+			/* v1.021 */
+			if ( ref_y != -1 ) {
+				for ( i = 0; i < dataset->years_count; i++ ) {
+					fprintf(f, model_efficiency_y, dataset->years[i].year, percentiles_test_2[ref_y], percentiles_y[i].value[ref_y]);
+				}
+			} else {
+				fputs(model_efficiency_y_not, f);
 			}
 		}
 	} else if ( percentiles_y ) {
@@ -2689,7 +2704,12 @@ int save_info(const DATASET *const dataset, const char *const path, const eTimeR
 		fprintf(f, ustar_threshold_y_one_year, percentiles_y[0].value[PERCENTILES_COUNT_2-1]);
 		/* model efficiency */
 		fputs(info_model_efficiency, f);
-		fprintf(f, model_efficiency_y_one_year, percentiles_test_2[ref_y], percentiles_y[0].value[ref_y]);
+		/* v1.021 */
+		if ( ref_y != -1 ) {
+			fprintf(f, model_efficiency_y_one_year, percentiles_test_2[ref_y], percentiles_y[0].value[ref_y]);
+		} else {
+			fputs(model_efficiency_y_not, f);
+		}
 	}
 	fputs("\n", f);
 
@@ -2713,11 +2733,13 @@ int save_info(const DATASET *const dataset, const char *const path, const eTimeR
 		}
 	}
 	if ( dataset->years_count >= 3 ) {
-		fprintf(f, "NEE_CUT_REF,-9999,%g,%g\n", percentiles_test_2[ref_c], percentiles_c[ref_c]);
+		/* v 1.021 */
+		fprintf(f, "NEE_CUT_REF,-9999,%g,%g\n", (ref_c != -1) ? percentiles_test_2[ref_c] : INVALID_VALUE, (ref_c != -1) ? percentiles_c[ref_c] : INVALID_VALUE);
 	}
 	if ( percentiles_y ) {
 		for ( i = 0; i < dataset->years_count; i++ ) {
-			fprintf(f, "NEE_VUT_REF,%d,%g,%g\n", dataset->years[i].year, percentiles_test_2[ref_y], percentiles_y[i].value[ref_y]);
+			/* v 1.021 */
+			fprintf(f, "NEE_VUT_REF,%d,%g,%g\n", dataset->years[i].year, (ref_y != -1) ? percentiles_test_2[ref_y] : INVALID_VALUE, (ref_y != -1) ? percentiles_y[i].value[ref_y] : INVALID_VALUE);
 		}
 	}
 	fclose(f);
@@ -2864,7 +2886,8 @@ static void update_ref(const DATASET *const dataset
 	rows_per_day = (HOURLY_TIMERES == dataset->details->timeres) ? 24 : 48;
 
 	/* night & day y */
-	if ( nee_matrix_y ) {
+	/* v1.021 */
+	if ( nee_matrix_y && (ref_y != -1) ) {
 		for ( row_daily = 0; row_daily < daily_rows_count; ++row_daily ) {
 			rows_night_daily[row_daily].night[NEE_REF_Y] = rows_night_daily[row_daily].night_columns_y[ref_y];
 			rows_night_daily[row_daily].night_qc[NEE_REF_Y] = rows_night_daily[row_daily].night_qc_columns_y[ref_y];
@@ -2904,7 +2927,8 @@ static void update_ref(const DATASET *const dataset
 	}
 
 	/* night & day c */
-	if ( dataset->years_count >= 3 ) {
+	/* v1.021 */
+	if ( (dataset->years_count >= 3) && (ref_c != -1) ) {
 		for ( row_daily = 0; row_daily < daily_rows_count; ++row_daily ) {
 			rows_night_daily[row_daily].night[NEE_REF_C] = rows_night_daily[row_daily].night_columns_c[ref_c];
 			rows_night_daily[row_daily].night_qc[NEE_REF_C] = rows_night_daily[row_daily].night_qc_columns_c[ref_c];
@@ -3462,16 +3486,22 @@ static int compute_rand_unc(const DATASET *const dataset
 		unc_rows[i].rand[NEE_UST50_C_UNC] = INVALID_VALUE;
 
 		if ( nee_matrix_y ) {
-			unc_rows[i].value[NEE_REF_Y_UNC] = nee_matrix_y[i].nee[ref_y];
-			unc_rows[i].qc[NEE_REF_Y_UNC] = nee_matrix_y[i].qc[ref_y];
+			/* v1.021 */
+			if ( ref_y != -1 ) {
+				unc_rows[i].value[NEE_REF_Y_UNC] = nee_matrix_y[i].nee[ref_y];
+				unc_rows[i].qc[NEE_REF_Y_UNC] = nee_matrix_y[i].qc[ref_y];
+			}
 
 			unc_rows[i].value[NEE_UST50_Y_UNC] = nee_matrix_y[i].nee[PERCENTILES_COUNT_2-1];
 			unc_rows[i].qc[NEE_UST50_Y_UNC] = nee_matrix_y[i].qc[PERCENTILES_COUNT_2-1];
 		}
 
 		if ( dataset->years_count >= 3 ) {
-			unc_rows[i].value[NEE_REF_C_UNC] = nee_matrix_c[i].nee[ref_c];
-			unc_rows[i].qc[NEE_REF_C_UNC] = nee_matrix_c[i].qc[ref_c];
+			/* v1.021 */
+			if ( ref_c != -1 ) {
+				unc_rows[i].value[NEE_REF_C_UNC] = nee_matrix_c[i].nee[ref_c];
+				unc_rows[i].qc[NEE_REF_C_UNC] = nee_matrix_c[i].qc[ref_c];
+			}
 
 			unc_rows[i].value[NEE_UST50_C_UNC] = nee_matrix_c[i].nee[PERCENTILES_COUNT_2-1];
 			unc_rows[i].qc[NEE_UST50_C_UNC] = nee_matrix_c[i].qc[PERCENTILES_COUNT_2-1];
@@ -3499,9 +3529,14 @@ static int compute_rand_unc(const DATASET *const dataset
 
 		/* set methods */
 		if ( nee_matrix_y ) {
-			unc_rows[i].method[NEE_REF_Y_UNC] = 1;
-			if ( unc_rows[i].qc[NEE_REF_Y_UNC] ) {
-				unc_rows[i].method[NEE_REF_Y_UNC] = 2;
+			/* v1.021 */
+			if ( ref_y != -1 ) {
+				unc_rows[i].method[NEE_REF_Y_UNC] = 1;
+				if ( unc_rows[i].qc[NEE_REF_Y_UNC] ) {
+					unc_rows[i].method[NEE_REF_Y_UNC] = 2;
+				}
+			} else {
+				unc_rows[i].method[NEE_REF_Y_UNC] = INVALID_VALUE;
 			}
 
 			unc_rows[i].method[NEE_UST50_Y_UNC] = 1;
@@ -3511,9 +3546,14 @@ static int compute_rand_unc(const DATASET *const dataset
 		}
 
 		if ( dataset->years_count >= 3 ) {
-			unc_rows[i].method[NEE_REF_C_UNC] = 1;
-			if ( unc_rows[i].qc[NEE_REF_C_UNC] ) {
-				unc_rows[i].method[NEE_REF_C_UNC] = 2;
+			/* v1.021 */
+			if ( ref_c != -1 ) {
+				unc_rows[i].method[NEE_REF_C_UNC] = 1;
+				if ( unc_rows[i].qc[NEE_REF_C_UNC] ) {
+					unc_rows[i].method[NEE_REF_C_UNC] = 2;
+				}
+			} else {
+				unc_rows[i].method[NEE_REF_C_UNC] = INVALID_VALUE;
 			}
 
 			unc_rows[i].method[NEE_UST50_C_UNC] = 1;
@@ -3524,7 +3564,8 @@ static int compute_rand_unc(const DATASET *const dataset
 	}
 	
 	/* compute random uncertainty */
-	if ( nee_matrix_y ) {
+	/* v1.021 */
+	if ( nee_matrix_y && (ref_y != -1) ) {
 		random_method_1(unc_rows, dataset->rows_count, NEE_REF_Y_UNC, HOURLY_TIMERES == dataset->details->timeres);
 		if ( ! random_method_2(unc_rows, dataset->rows_count, NEE_REF_Y_UNC, HOURLY_TIMERES == dataset->details->timeres) ) {
 			return 0;
@@ -3546,7 +3587,8 @@ static int compute_rand_unc(const DATASET *const dataset
 		}
 	}
 
-	if ( dataset->years_count >= 3 ) {
+	/* v1.021 */
+	if ( (dataset->years_count >= 3) && (ref_c != -1) ) {
 		/* update mask */
 		for ( i = 0; i < dataset->rows_count; i++ ) {
 			/* clear bit */
@@ -9426,6 +9468,11 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 							}
 							yy_y[index].nee[percentile] += nee_matrix_y_per_ref_daily[row+j].nee[percentile];
 						}
+
+						/* v1.021 */
+						if ( has_invalid_y ) {
+							yy_y[index].nee[percentile] = INVALID_VALUE;
+						}
 					}
 					/* c */
 					if ( datasets[dataset].years_count >= 3 ) {
@@ -9435,6 +9482,11 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 								break;
 							}
 							yy_c[index].nee[percentile] += nee_matrix_c_per_ref_daily[row+j].nee[percentile];
+						}
+
+						/* v1.021 */
+						if ( has_invalid_c ) {
+							yy_c[index].nee[percentile] = INVALID_VALUE;
 						}
 					}
 				}
@@ -9500,10 +9552,12 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 		/* ref changed ? */
 		if ( (ref_y_old != ref_y) || (ref_c_old != ref_c) ) {
 			/* revert back qcs */
-			if ( ! skip_y ) {
+			/* v1.021 */
+			if ( ! skip_y && (ref_y != -1) ) {
 				revert_qcs(nee_matrix_y, datasets[dataset].rows_count);
 			}
-			if ( datasets[dataset].years_count >= 3 ) {
+			/* v1.021 */
+			if ( (datasets[dataset].years_count >= 3) && (ref_c != -1) ) {
 				revert_qcs(nee_matrix_c, datasets[dataset].rows_count);
 			}
 
@@ -9525,10 +9579,12 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			}
 
 			/* change qcs */
-			if ( ! skip_y ) {
+			/* v1.021 */
+			if ( ! skip_y && (ref_y != -1)  ) {
 				change_qcs(nee_matrix_y, datasets[dataset].rows_count);
 			}
-			if ( datasets[dataset].years_count >= 3 ) {
+			/* v1.021 */
+			if ( (datasets[dataset].years_count >= 3) && (ref_c != -1) ) {
 				change_qcs(nee_matrix_c, datasets[dataset].rows_count);
 			}
 
@@ -9548,8 +9604,14 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				}
 				rand_unc_dd(unc_rows, unc_rows_aggr, datasets[dataset].rows_count, datasets[dataset].years_count, (HOURLY_TIMERES == datasets[dataset].details->timeres), skip_y);
 			}
-			ref_y_old = ref_y;
-			ref_c_old = ref_c;
+			/* v1.021 */
+			if ( ref_y != -1 ) {
+				ref_y_old = ref_y;
+			}
+			/* v1.021 */
+			if ( ref_c != -1 ) {
+				ref_c_old = ref_c;
+			}
 		}
 
 		/* aggr yy night */
@@ -9797,8 +9859,9 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				if ( no_rand_unc ) {
 					if ( exists ) {
 						fprintf(f, "%g,%g,%g,%g,%g,%g,%g,",
-														nee_matrix_y_yearly[i].nee[ref_y],
-														nee_matrix_y_yearly[i].qc[ref_y],
+														/* v1.021 */
+														(ref_y != -1) ? nee_matrix_y_yearly[i].nee[ref_y] : INVALID_VALUE,
+														(ref_y != -1) ? nee_matrix_y_yearly[i].qc[ref_y] : INVALID_VALUE,
 														nee_matrix_y_yearly[i].nee[PERCENTILES_COUNT_2-1],
 														nee_matrix_y_yearly[i].qc[PERCENTILES_COUNT_2-1],
 														p_matrix_y[i].mean,
@@ -9821,8 +9884,9 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 						nee_ref_joinUnc_y = compute_join(unc_rows_temp[i].rand[NEE_REF_Y_UNC], p_matrix_y[i].value[1], p_matrix_y[i].value[5]);
 						nee_ust50_joinUnc_y = compute_join(unc_rows_temp[i].rand[NEE_UST50_Y_UNC], p_matrix_y[i].value[1], p_matrix_y[i].value[5]);
 						fprintf(f, "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",
-														nee_matrix_y_yearly[i].nee[ref_y],
-														nee_matrix_y_yearly[i].qc[ref_y],
+														/* v1.021 */
+														(ref_y != -1) ? nee_matrix_y_yearly[i].nee[ref_y] : INVALID_VALUE,
+														(ref_y != -1) ? nee_matrix_y_yearly[i].qc[ref_y] : INVALID_VALUE,
 														unc_rows_temp[i].rand[NEE_REF_Y_UNC],
 														nee_ref_joinUnc_y,
 														nee_matrix_y_yearly[i].nee[PERCENTILES_COUNT_2-1],
@@ -9861,8 +9925,9 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				if ( no_rand_unc ) {
 					if ( exists ) {
 						fprintf(f, "%g,%g,%g,%g,%g,%g,%g,",
-															nee_matrix_c_yearly[i].nee[ref_c],
-															nee_matrix_c_yearly[i].qc[ref_c],
+															/* v1.021 */
+															(ref_c != -1) ? nee_matrix_c_yearly[i].nee[ref_c] : INVALID_VALUE,
+															(ref_c != -1) ? nee_matrix_c_yearly[i].qc[ref_c] : INVALID_VALUE,
 															nee_matrix_c_yearly[i].nee[PERCENTILES_COUNT_2-1],
 															nee_matrix_c_yearly[i].qc[PERCENTILES_COUNT_2-1],
 															p_matrix_c[i].mean,
@@ -9885,8 +9950,9 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 						nee_ref_joinUnc_c = compute_join(unc_rows_temp[i].rand[NEE_REF_C_UNC], p_matrix_c[i].value[1], p_matrix_c[i].value[5]);
 						nee_ust50_joinUnc_c = compute_join(unc_rows_temp[i].rand[NEE_UST50_C_UNC], p_matrix_c[i].value[1], p_matrix_c[i].value[5]);
 						fprintf(f, "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",
-															nee_matrix_c_yearly[i].nee[ref_c],
-															nee_matrix_c_yearly[i].qc[ref_c],
+															/* v1.021 */
+															(ref_c != -1) ? nee_matrix_c_yearly[i].nee[ref_c] : INVALID_VALUE,
+															(ref_c != -1) ? nee_matrix_c_yearly[i].qc[ref_c] : INVALID_VALUE,
 															unc_rows_temp[i].rand[NEE_REF_C_UNC],
 															nee_ref_joinUnc_c,
 															nee_matrix_c_yearly[i].nee[PERCENTILES_COUNT_2-1],

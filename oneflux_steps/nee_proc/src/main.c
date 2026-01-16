@@ -24,7 +24,7 @@
 #include "../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION			"v1.02"
+#define PROGRAM_VERSION			"v1.021"
 #define BUFFER_SIZE				1024
 #define QC_AUTO_PATH			"qc_auto"
 #define USTAR_MP_PATH			"ustar_mp"
