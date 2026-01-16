@@ -325,18 +325,25 @@ def generate_nee(datadir, siteid, sitedir, first_year, last_year, version_data, 
             # NEE REF VUT
             if line.strip().lower().startswith('nee_ref_y'):
                 year_extra = None
-                unsplit_year = line.strip().lower().split('on year')
-                if len(unsplit_year) == 2:
-                    year = int(unsplit_year[1].strip().split()[0].strip())
-                elif len(unsplit_year) == 1 and len(year_range) == 1:
-                    year = first_year
-                elif len(unsplit_year) == 1 and len(year_range) == 2:
-                    year = first_year
-                    year_extra = last_year
+                # NEE REF VUT could not be computed
+                if 'not filtered' in line.strip().lower():
+                    log.warning("{s}: NEE REF VUT could not be computed, 'not filtered' entry found in file:line: '{f}:{l}'".format(s=siteid, f=nee_info, l=line.strip()))
+                    threshold = '-9999'
+                    ustar = '-9999'
+                # NEE REF VUT computed, extract year(s), threshold, ustar
                 else:
-                    raise ONEFluxError("{s}: Unknown NEE VUT REF percentile/threshold entry in line: '{l}'".format(s=siteid, l=line.strip()))
-                threshold = line.strip().lower().split('ustar percentile')[1].strip().split()[0].strip()
-                ustar = nee_perc_ustar_vut_values[year][threshold]
+                    unsplit_year = line.strip().lower().split('on year')
+                    if len(unsplit_year) == 2:
+                        year = int(unsplit_year[1].strip().split()[0].strip())
+                    elif len(unsplit_year) == 1 and len(year_range) == 1:
+                        year = first_year
+                    elif len(unsplit_year) == 1 and len(year_range) == 2:
+                        year = first_year
+                        year_extra = last_year
+                    else:
+                        raise ONEFluxError("{s}: Unknown NEE VUT REF percentile/threshold entry in file:line: '{f}:{l}'".format(s=siteid, f=nee_info, l=line.strip()))
+                    threshold = line.strip().lower().split('ustar percentile')[1].strip().split()[0].strip()
+                    ustar = nee_perc_ustar_vut_values[year][threshold]
                 if nee_ref_ustar_perc[res].has_key(year):
                     raise ONEFluxError("{s} duplicated entry for NEE REF VUT USTAR: {f}".format(s=siteid, f=nee_info))
                 else:
@@ -347,16 +354,26 @@ def generate_nee(datadir, siteid, sitedir, first_year, last_year, version_data, 
                     else:
                         nee_ref_ustar_perc[res][year_extra] = (threshold, ustar)
                         year_extra = None
-#                print 'VUT', res, year, threshold, ustar
+
             # NEE REF CUT
             elif line.strip().lower().startswith('nee_ref_c'):
-                threshold = line.strip().lower().split('ustar percentile')[1].strip().split()[0].strip()
-                ustar = nee_perc_ustar_cut_values[threshold]
+                # NEE REF CUT could not be computed
+                if 'not filtered' in line.strip().lower():
+                    log.warning("{s}: NEE REF CUT could not be computed, 'not filtered' entry found in file:line: '{f}:{l}'".format(s=siteid, f=nee_info, l=line.strip()))
+                    threshold = '-9999'
+                    ustar = '-9999'
+                # NEE REF CUT computed, extract year(s), threshold, ustar
+                else:
+                    threshold = line.strip().lower().split('ustar percentile')[1].strip().split()[0].strip()
+                    if threshold == '-9999': # CUT execution failed
+                        ustar = '-9999'
+                    else:
+                        ustar = nee_perc_ustar_cut_values[threshold]
                 if nee_ref_ustar_perc[res].has_key('CUT'):
                     raise ONEFluxError("{s} duplicated entry for NEE REF CUT USTAR: {f}".format(s=siteid, f=nee_info))
                 else:
                     nee_ref_ustar_perc[res]['CUT'] = (threshold, ustar)
-#                print 'CUT', res, threshold, ustar
+
             # USTAR-method-not-working entries start
             elif ('year' in line.strip().lower()) and ('method not applied' in line.strip().lower()):
                 if method_line_num is not None:
@@ -406,21 +423,28 @@ def generate_nee(datadir, siteid, sitedir, first_year, last_year, version_data, 
                 # RECO/GPP REF VUT
                 if line.strip().lower().startswith('{v}_ref_y'.format(v=variable).lower()):
                     year_extra = None
-                    unsplit_year = line.strip().lower().split('on year')
-                    if len(unsplit_year) == 2:
-                        year = int(unsplit_year[1].strip().split()[0].strip())
-                    elif len(unsplit_year) == 1 and len(year_range) == 1:
-                        year = first_year
-                    elif len(unsplit_year) == 1 and len(year_range) == 2:
-                        year = first_year
-                        year_extra = last_year
-                    else:
-                        raise ONEFluxError("{s}: Unknown RECO/GPP VUT REF percentile/threshold entry in line: '{l}'".format(s=siteid, l=line.strip()))
-                    threshold = line.strip().lower().split('ustar percentile')[1].strip().split()[0].strip()
-                    if threshold == '-9999': # VUT execution failed
+                    # RECO/GPP REF VUT could not be computed
+                    if 'not filtered' in line.strip().lower():
+                        log.warning("{s}: RECO/GPP REF VUT could not be computed, 'not filtered' entry found in file:line: '{f}:{l}'".format(s=siteid, f=nee_info, l=line.strip()))
+                        threshold = '-9999'
                         ustar = '-9999'
+                    # RECO/GPP REF VUT computed, extract year(s), threshold, ustar
                     else:
-                        ustar = (nee_perc_ustar_vut_values[year][threshold] if nee_perc_ustar_vut_values.has_key(year) else -9999)
+                        unsplit_year = line.strip().lower().split('on year')
+                        if len(unsplit_year) == 2:
+                            year = int(unsplit_year[1].strip().split()[0].strip())
+                        elif len(unsplit_year) == 1 and len(year_range) == 1:
+                            year = first_year
+                        elif len(unsplit_year) == 1 and len(year_range) == 2:
+                            year = first_year
+                            year_extra = last_year
+                        else:
+                            raise ONEFluxError("{s}: Unknown RECO/GPP VUT REF percentile/threshold entry in file:line: '{f}:{l}'".format(s=siteid, f=unc_info, l=line.strip()))
+                        threshold = line.strip().lower().split('ustar percentile')[1].strip().split()[0].strip()
+                        if threshold == '-9999': # VUT execution failed
+                            ustar = '-9999'
+                        else:
+                            ustar = (nee_perc_ustar_vut_values[year][threshold] if nee_perc_ustar_vut_values.has_key(year) else -9999)
                     if unc_ref_ustar_perc[key][res].has_key(year):
                         raise ONEFluxError("{s} duplicated entry for {v} REF VUT USTAR: {f}".format(s=siteid, f=nee_info, v=variable))
                     else:
@@ -431,16 +455,25 @@ def generate_nee(datadir, siteid, sitedir, first_year, last_year, version_data, 
                         else:
                             unc_ref_ustar_perc[key][res][year_extra] = (threshold, ustar)
                             year_extra = None
-#                    print variable, method, 'VUT', res, year, threshold, ustar
+
                 # RECO/GPP REF CUT
                 elif line.strip().lower().startswith('{v}_ref_c'.format(v=variable).lower()):
-                    threshold = line.strip().lower().split('ustar percentile')[1].strip().split()[0].strip()
-                    ustar = nee_perc_ustar_cut_values[threshold]
+                    # RECO/GPP REF CUT could not be computed
+                    if 'not filtered' in line.strip().lower():
+                        log.warning("{s}: RECO/GPP REF CUT could not be computed, 'not filtered' entry found in file:line: '{f}:{l}'".format(s=siteid, f=nee_info, l=line.strip()))
+                        threshold = '-9999'
+                        ustar = '-9999'
+                    # RECO/GPP REF CUT computed, extract year(s), threshold, ustar
+                    else:
+                        threshold = line.strip().lower().split('ustar percentile')[1].strip().split()[0].strip()
+                        if threshold == '-9999': # CUT execution failed
+                            ustar = '-9999'
+                        else:
+                            ustar = nee_perc_ustar_cut_values[threshold]
                     if unc_ref_ustar_perc[key][res].has_key('CUT'):
                         raise ONEFluxError("{s} duplicated entry for {v} REF CUT USTAR: {f}".format(s=siteid, f=nee_info, v=variable))
                     else:
                         unc_ref_ustar_perc[key][res]['CUT'] = (threshold, ustar)
-#                    print variable, method, 'CUT', res, threshold, ustar
 
     output_lines = [','.join(AUX_HEADER) + '\n']
 
