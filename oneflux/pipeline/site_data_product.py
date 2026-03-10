@@ -1110,7 +1110,7 @@ def get_indices_to_filter(qcdata, qc_threshold=2, window_size=15*48, minimum_gap
     return mask
 
 
-def filter_long_gaps(data, qc_threshold=2, window_size=15*48, minimum_gap=5*48):
+def filter_long_gaps(data, qc_threshold=2, window_size=15*48, minimum_gap=5*48, nt_skip=False, dt_skip=False):
     '''
     Using dictionary of QC variable to be applied to each data variable,
     assigns -9999 to gapfilled values when QC flags are above threshold
@@ -1151,27 +1151,48 @@ def filter_long_gaps(data, qc_threshold=2, window_size=15*48, minimum_gap=5*48):
             #      _MEAN currently using _MEAN_QC which is an average of QC values, so no -9999 and _MEAN survives and needs to be handled separately
             #      N.B.: this needs to be implemented for all temporal resolutions, not only HH/HR
             log.debug('QC variable {q}, data variable {v}: assigning -9999'.format(q=qcv, v=var))
-            data[var][fmask] = -9999.9
-        
-        # restore "missing" to QC flags variables themselves
+
+            # if nt_/dt_skip is False, _NT/_DT variables should not be in data[] and should not be set to -9999,
+            # but if they are present, issue exception
+            if var in data.dtype.names:
+                if (('_NT' in var) and nt_skip) or (('_DT' in var) and dt_skip):
+                    raise ONEFluxError('Variable {v} not expected to be present for QC variable {q} but found'.format(v=var, q=qcv))
+                data[var][fmask] = -9999.9
+            else:
+                if ('_NT' in var) and nt_skip:
+                    log.warning('Variable {v} is _NT variable and NT_SKIP is True, skipping'.format(v=var))
+                elif ('_DT' in var) and dt_skip:
+                    log.warning('Variable {v} is _DT variable and DT_SKIP is True, skipping'.format(v=var))
+                else:
+                    raise ONEFluxError('Variable {v} expected to be present for QC variable {q} but not found'.format(v=var, q=qcv))
+ 
+        # restore "missing" to QC flags variables themselves;
+        # note that there are no _NT/_DT QC variables, so no need to check for nt_skip/dt_skip here
         # TODO: confirm this is not being set to -9999 prior to being needed/used in later
         log.debug('QC variable (flag) {q}: assigning -9999'.format(q=qcv))
         data[qcv][fmask] = -9999.9
     
+    # TODO: same logic for skip as above needs to be applied here as well =================================
     # apply combined masks for MEAN _CUT_REF and _VUT_REF variables
     if 'NEE_CUT_MEAN' in data.dtype.names:
         ftimestamp['NEE_CUT_MEAN_QC'] = data['TIMESTAMP_START'][ftimestamp_cut_mask]
-        log.debug('QC variable NEE_CUT_MEAN_QC has {n} records to be restored to gaps'.format(q=qcv, n=numpy.sum(ftimestamp_cut_mask)))
-        for qcv in VARIABLES_DONOT_GAPFILL_LONG['NEE_CUT_MEAN_QC']:
-            log.debug('QC variable NEE_CUT_MEAN_QC, data variable {v}: assigning -9999'.format(v=qcv))
-            data[qcv][ftimestamp_cut_mask] = -9999.9
+        log.debug('QC variable NEE_CUT_MEAN_QC has {n} records to be restored to gaps'.format(n=numpy.sum(ftimestamp_cut_mask)))
+        for var in VARIABLES_DONOT_GAPFILL_LONG['NEE_CUT_MEAN_QC']:
+            log.debug('QC variable NEE_CUT_MEAN_QC, data variable {v}: assigning -9999'.format(v=var))
+            if (('_NT' in var) and nt_skip) or (('_DT' in var) and dt_skip):
+                log.warning('CUT variable {v} is _NT/_DT variable and NT_SKIP/DT_SKIP is True, skipping'.format(v=var))
+            else:
+                data[var][ftimestamp_cut_mask] = -9999.9
 
     if 'NEE_VUT_MEAN' in data.dtype.names:
         ftimestamp['NEE_VUT_MEAN_QC'] = data['TIMESTAMP_START'][ftimestamp_vut_mask]
-        log.debug('QC variable NEE_VUT_MEAN_QC has {n} records to be restored to gaps'.format(q=qcv, n=numpy.sum(ftimestamp_vut_mask)))
-        for qcv in VARIABLES_DONOT_GAPFILL_LONG['NEE_VUT_MEAN_QC']:
-            log.debug('QC variable NEE_VUT_MEAN_QC, data variable {v}: assigning -9999'.format(v=qcv))
-            data[qcv][ftimestamp_vut_mask] = -9999.9
+        log.debug('QC variable NEE_VUT_MEAN_QC has {n} records to be restored to gaps'.format(n=numpy.sum(ftimestamp_vut_mask)))
+        for var in VARIABLES_DONOT_GAPFILL_LONG['NEE_VUT_MEAN_QC']:
+            log.debug('QC variable NEE_VUT_MEAN_QC, data variable {v}: assigning -9999'.format(v=var))
+            if (('_NT' in var) and nt_skip) or (('_DT' in var) and dt_skip):
+                log.warning('VUT variable {v} is _NT/_DT variable and NT_SKIP/DT_SKIP is True, skipping'.format(v=var))
+            else:
+                data[var][ftimestamp_vut_mask] = -9999.9
 
     return ftimestamp, data
 
@@ -1344,10 +1365,10 @@ def run_site(siteid,
         # TODO: change qc_threshold, window_size, and minimum_gap to parameters instead of hardcoded
         if output_resolution == 'HH':
             # compute windows and set gaps for window_size=48*15 (15 days)
-            ftimestamp, output_data = filter_long_gaps(data=output_data, qc_threshold=2, window_size=15*48, minimum_gap=5*48)
+            ftimestamp, output_data = filter_long_gaps(data=output_data, qc_threshold=2, window_size=15*48, minimum_gap=5*48, nt_skip=pipeline.nt_skip, dt_skip=pipeline.dt_skip)
         elif output_resolution == 'HR':
             # compute windows and set gaps for window_size=24*15 (15 days)
-            ftimestamp, output_data = filter_long_gaps(data=output_data, qc_threshold=2, window_size=15*24, minimum_gap=5*24)
+            ftimestamp, output_data = filter_long_gaps(data=output_data, qc_threshold=2, window_size=15*24, minimum_gap=5*24, nt_skip=pipeline.nt_skip, dt_skip=pipeline.dt_skip)
         # use list of YYYYMMDDHHMM timestamps to be filtered from HH/HR resolution to filter aggregated resolutions
         elif (output_resolution == 'DD') or (output_resolution == 'WW') or (output_resolution == 'MM') or (output_resolution == 'YY'):
             res_masks = generate_agg_timestamp_mask(ftimestamp=ftimestamp, data=output_data, resolution=resolution)

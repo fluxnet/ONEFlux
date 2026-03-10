@@ -1289,6 +1289,8 @@ class PipelineNEEProc(object):
         "{s}_NEE_percentiles_c_hh.csv", # not generated when fewer than 3 site-years
         "{s}_NEE_percentiles_c.csv", # not generated when fewer than 3 site-years
     ]
+    OUTPUT_FILE_MEF_PATTERN_C = "{s}_mef_filter_c.txt"
+    OUTPUT_FILE_MEF_PATTERN_Y = "{s}_mef_filter_y.txt"
 
     def __init__(self, pipeline):
         '''
@@ -1307,6 +1309,8 @@ class PipelineNEEProc(object):
         self.output_file_patterns_y_alt = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_Y_ALT]
         self.output_file_patterns_c = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_C]
         self.output_file_patterns_c_alt = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_C_ALT]
+        self.output_file_mef_pattern_y = self.OUTPUT_FILE_MEF_PATTERN_Y.format(s=self.pipeline.siteid)
+        self.output_file_mef_pattern_c = self.OUTPUT_FILE_MEF_PATTERN_C.format(s=self.pipeline.siteid)
         self.input_qc_auto_dir = '..' + os.sep + os.path.basename(self.pipeline.qc_auto.qc_auto_dir) + os.sep
         self.input_ustar_mp_dir = '..' + os.sep + os.path.basename(self.pipeline.ustar_mp.ustar_mp_dir) + os.sep
         self.input_ustar_cp_dir = '..' + os.sep + os.path.basename(self.pipeline.ustar_cp.ustar_cp_dir) + os.sep
@@ -1350,6 +1354,7 @@ class PipelineNEEProc(object):
         test_file_list_or(file_list=self.output_file_patterns_y_alt, tdir=self.nee_proc_dir, label='nee_proc.post_validate', log_only=True)
         test_file_list(file_list=self.output_file_patterns_c, tdir=self.nee_proc_dir, label='nee_proc.post_validate', log_only=True)
         test_file_list_or(file_list=self.output_file_patterns_c_alt, tdir=self.nee_proc_dir, label='nee_proc.post_validate', log_only=True)
+        test_file_list(file_list=[self.output_file_mef_pattern_y, self.output_file_mef_pattern_c], tdir=self.nee_proc_dir, label='nee_proc.post_validate', log_only=True)
 
     def run(self):
         '''
@@ -2159,9 +2164,13 @@ class PipelineURE(object):
         self.output_file_patterns_mef_nt = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_MEF_NT]
         self.output_file_patterns_mef_dt = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_MEF_DT]
         self.input_prepare_ure_dir = self.pipeline.prepare_ure.prepare_ure_dir_fmt
+        self.input_path_mef_pattern_c = os.path.join(self.pipeline.nee_proc.nee_proc_dir, self.pipeline.nee_proc.OUTPUT_FILE_MEF_PATTERN_Y.format(s=self.pipeline.siteid))
+        self.input_path_mef_pattern_y = os.path.join(self.pipeline.nee_proc.nee_proc_dir, self.pipeline.nee_proc.OUTPUT_FILE_MEF_PATTERN_C.format(s=self.pipeline.siteid))
+        self.input_prepare_mef_y = '-y_filter={f}'.format(f=self.input_path_mef_pattern_y) if os.path.isfile(self.input_path_mef_pattern_y) else ''
+        self.input_prepare_mef_c = '-c_filter={f}'.format(f=self.input_path_mef_pattern_c) if os.path.isfile(self.input_path_mef_pattern_c) else ''
         self.output_log = os.path.join(self.ure_dir, 'report_{t}.txt'.format(t=self.pipeline.run_id))
-        self.cmd_txt = 'cd "{o}" {cmd_sep} {c} -input_path={i} -output_path={o} > "{log}"'
-        self.cmd = self.cmd_txt.format(c=self.ure_ex, i=self.input_prepare_ure_dir, o=self.ure_dir_fmt, log=self.output_log, cmd_sep=CMD_SEP, cp=COPY)
+        self.cmd_txt = 'cd "{o}" {cmd_sep} {c} -input_path={i} -output_path={o} {mefy} {mefc}> "{log}"'
+        self.cmd = self.cmd_txt.format(c=self.ure_ex, i=self.input_prepare_ure_dir, o=self.ure_dir_fmt, mefy=self.input_prepare_mef_y, mefc=self.input_prepare_mef_c, log=self.output_log, cmd_sep=CMD_SEP, cp=COPY)
 
     def pre_validate(self):
         '''
@@ -2169,6 +2178,8 @@ class PipelineURE(object):
         '''
         # check executable
         test_file(tfile=self.ure_ex, label='ure.pre_validate')
+        test_file(tfile=self.input_path_mef_pattern_y, label='ure.pre_validate', log_only=True)
+        test_file(tfile=self.input_path_mef_pattern_c, label='ure.pre_validate', log_only=True)
 
         # check dependency steps
         self.pipeline.prepare_ure.post_validate()

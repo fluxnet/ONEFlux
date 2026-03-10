@@ -334,12 +334,12 @@ def gen_site_plots(siteid, sitedir, version_data, version_processing, pipeline=N
         prodfile_template = PRODFILE_TEMPLATE
         prodfile_figure_template = PRODFILE_FIGURE_TEMPLATE
         prodfile_years_template = PRODFILE_YEARS_TEMPLATE
-        (nt_skip, dt_skip) = (pipeline.nt_skip, pipeline.dt_skip)
+        (nt_skip, dt_skip) = False, False
     else:
         prodfile_template = pipeline.prodfile_template
         prodfile_figure_template = pipeline.prodfile_figure_template
         prodfile_years_template = pipeline.prodfile_years_template
-        (nt_skip, dt_skip) = False, False
+        (nt_skip, dt_skip) = (pipeline.nt_skip, pipeline.dt_skip)
 
     first_year, last_year = load_years(siteid=siteid, sitedir=sitedir, version_data=version_data, version_processing=version_processing, prodfile_years_template=prodfile_years_template)
     year_range = range(int(first_year), int(last_year) + 1)

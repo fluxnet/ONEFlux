@@ -51,6 +51,8 @@ if __name__ == '__main__':
     parser.add_argument('--era-source', help="Absolute path to directory with ERA pre-extracted, unit adjusted, data files for pixel(s)", type=str, dest='erasource', default=None)
     parser.add_argument('--var_info_file', help="Path to BIF VAR_INFO file", type=str, dest='var_info_file', default=None)
     parser.add_argument('--bif_other_file_list', help="List of paths to other BIF files", type=str, dest='bif_other_file_list', nargs='*', default=None)
+    parser.add_argument('--nt-skip', help="Skip NT partitioning", action='store_true', dest='nt_skip', default=False)
+    parser.add_argument('--dt-skip', help="Skip DT partitioning", action='store_true', dest='dt_skip', default=False)
     args = parser.parse_args()
 
     # setup logging file and stdout
@@ -80,6 +82,8 @@ if __name__ == '__main__':
     msg += ", era-source ({i})".format(i=args.erasource)
     msg += ", var_info_file ({i})".format(i=args.var_info_file)
     msg += ", bif_other_file_list ({i})".format(i=args.bif_other_file_list)
+    msg += ", nt_skip ({i})".format(i=args.nt_skip)
+    msg += ", dt_skip ({i})".format(i=args.dt_skip)
     log.debug(msg)
 
     # start execution
@@ -98,7 +102,7 @@ if __name__ == '__main__':
                          record_interval=args.recint, version_data=args.versiond,
                          era_first_year=args.erafy, era_last_year=args.eraly, era_source_dir=args.erasource,
                          var_info_file=args.var_info_file, bif_other_file_list=args.bif_other_file_list,
-                         logfile=args.logfile)
+                         logfile=args.logfile, steps={'nt_skip': args.nt_skip, 'dt_skip': args.dt_skip})
         elif args.command == 'partition_nt':
             run_partition_nt(datadir=args.datadir, siteid=args.siteid, sitedir=args.sitedir, years_to_compare=range(firstyear, lastyear + 1),
                              py_remove_old=args.forcepy, prod_to_compare=prod, perc_to_compare=perc)

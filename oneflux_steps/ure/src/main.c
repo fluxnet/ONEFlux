@@ -22,7 +22,7 @@
 #include "../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION					"v1.02"
+#define PROGRAM_VERSION					"v1.021"
 #define BUFFER_SIZE						1024
 
 /* v1.02 */
@@ -59,8 +59,10 @@
 char *g_program_path = NULL;						/* mandatory */
 char *g_input_path = NULL;							/* mandatory */
 char *g_output_path = NULL;							/* mandatory */
-/* v1.02 */
-char* g_filter_path = NULL;							/* mandatory */
+/* v1.021 */
+char* g_y_filter = NULL;							/* mandatory */
+char* g_c_filter = NULL;							/* mandatory */
+
 int g_debug = 0;									/* mandatory */
 int g_no_internal_buf = 0;							/* mandatory */
 int g_valid_data_count = VALID_DATA_COUNT_DEFAULT;	/* mandatory */
@@ -92,8 +94,10 @@ static char msg_usage[] =		"How to use: ure parameter\n\n"
 								"    -input_path=filename or path to be processed (optional)\n"
 								"    -output_path=path where result files are created (optional)\n"
 
-								/* v1.02 */
-								"    -filter_path=path where mef filter files are found (optional). default to input path\n" 
+								/* v1.021 */
+								"    -y_filter=filename for the Y MEF filter\n" 
+								"    -c_filter=filename for the C MEF filter\n" 
+
 								"    -valid_data_count=minimum amount of valid data in the 40 percentiles to be used in the MEF.\n"
 								"                        it is calculated respect to the percentile with the largest number of valid data,\n"
 								"                        if below the threshold the percentile is excluded. default is %d\n"
@@ -167,6 +171,10 @@ static int show_help(char *arg, char *param, void *p) {
 }
 
 static void clean_up(void) {
+	if ( g_c_filter )
+		free(g_c_filter);
+	if ( g_y_filter )
+		free(g_y_filter);
 	free(g_output_path);
 	free(g_input_path);
 	free(g_program_path);
@@ -184,8 +192,10 @@ int main(int argc, char *argv[]) {
 		{ "input_path", set_path, &g_input_path },
 		{ "output_path", set_path, &g_output_path },
 
-		/* v1.02 */
-		{ "filter_path", set_path, &g_filter_path },
+		/* v1.021 */
+		{ "y_filter", set_path, &g_y_filter },
+		{ "c_filter", set_path, &g_c_filter },
+
 		{ "valid_data_count", set_int_value, &g_valid_data_count },
 		{ "valid_perc_count", set_int_value, &g_valid_perc_count },
 		{ "min_7_perc_count", set_int_value, &g_min_7_perc_count },
@@ -245,20 +255,12 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	/* v1.02 */
-	if ( ! g_filter_path ) {
-		g_filter_path = string_copy(g_input_path);
-		if ( !g_filter_path ) {
-			puts(err_out_of_memory);
-			return 1;
-		}
-	}
-
 	/* show paths */
 	printf("input path = %s\n", g_input_path);
 	printf("output path = %s\n", g_output_path);
-	/* v1.02 */
-	printf("filter path = %s\n", g_filter_path);
+	/* v1.021 */
+	printf("y mef filter = %s\n", g_y_filter ? g_y_filter : "not specified");
+	printf("c mef filter = %s\n", g_c_filter ? g_c_filter : "not specified");
 
 	/* v1.02 */
 	printf("valid data count = %d%%", g_valid_data_count);

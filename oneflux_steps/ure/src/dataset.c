@@ -51,7 +51,8 @@ extern char *g_input_path;
 extern char *g_output_path;
 
 /* v1.02 */
-extern char *g_filter_path;
+extern char *g_y_filter;
+extern char *g_c_filter;
 extern int g_debug;
 extern int g_valid_data_count;
 extern int g_valid_perc_count;
@@ -1279,6 +1280,9 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 
 	TIMESTAMP *t;
 
+	/* v1.021 */
+	const char* mef_filters[] = { g_y_filter, g_c_filter };
+
 	const int columns_found_count = PERCENTILES_COUNT_2+PERCENTILES_COUNT_2;
 	
 	rows_per_day = dataset->hourly ? 24 : 48;
@@ -1484,48 +1488,51 @@ static int compute_dataset(DATASET *const dataset, const int author_index, const
 		row = 0;
 		ret = 1; /* ok */
 
-		sprintf(buffer, "%s%s_mef_filter_%c.txt", g_filter_path, dataset->details->site, i ? 'c' : 'y');
-		f = fopen(buffer, "r");
-		/* please note that if file is not found, is not an error! */
-		if ( ! f ) {
-			printf("- mef filter file for %c not found\n", i ? 'c' : 'y');
+		if ( ! mef_filters[i] ) {
+			printf("- mef filter file for %c not specified\n", i ? 'c' : 'y');
 		} else {
-			char buf2[BUFFER_SIZE] = { 0 };
-			char t1[16] = { 0 }; /* we use 16 for padding */
-			char t2[16] = { 0 }; /* we use 16 for padding */
-			while ( fgets(buf2, BUFFER_SIZE, f) ) {
-				/* skip comment and header */
-				if ( row > 1 ) {
-					if ( sscanf(buf2, "%12[^,],%12[^,],%d,%d", t1, t2, &start, &end) != 4 ) {
-						printf("- error: unable to parse \"%s\" at row %d for %s\n", buf2, row+1, buffer);
-						ret = 0;
-						break;
-					}
+			f = fopen(mef_filters[i], "r");
+			/* please note that if file is not found, is not an error! */
+			if ( ! f ) {
+				printf("- mef filter file for %c not found\n", i ? 'c' : 'y');
+			} else {
+				char buf2[BUFFER_SIZE] = { 0 };
+				char t1[16] = { 0 }; /* we use 16 for padding */
+				char t2[16] = { 0 }; /* we use 16 for padding */
+				while ( fgets(buf2, BUFFER_SIZE, f) ) {
+					/* skip comment and header */
+					if ( row > 1 ) {
+						if ( sscanf(buf2, "%12[^,],%12[^,],%d,%d", t1, t2, &start, &end) != 4 ) {
+							printf("- error: unable to parse \"%s\" at row %d for %s\n", buf2, row+1, buffer);
+							ret = 0;
+							break;
+						}
 
-					if ( (start < 0) || (start > dataset->rows_count) || (end < 0) || (end > dataset->rows_count) || (start > end) ) {
-						printf("- error: invalid range for filtering: %d, %d, rows count: %d for %s\n", start, end, dataset->rows_count, buffer); 
-						ret = 0;
-						break;
-					}
+						if ( (start < 0) || (start > dataset->rows_count) || (end < 0) || (end > dataset->rows_count) || (start > end) ) {
+							printf("- error: invalid range for filtering: %d, %d, rows count: %d for %s\n", start, end, dataset->rows_count, buffer); 
+							ret = 0;
+							break;
+						}
 
-					printf("- applying filter for %c from %s to %s (row: %d to %d)\n", i ? 'c' : 'y', t1, t2, start, end); 
+						printf("- applying filter for %c from %s to %s (row: %d to %d)\n", i ? 'c' : 'y', t1, t2, start, end); 
 
-					for ( z = start; z < end; z++ ) {
-						/* -1 'cause we keep 50 % out */
-						for ( j = 0; j < PERCENTILES_COUNT_2 - 1; ++j ) {
-							if ( i ) {
-								dataset->percentiles_c[z].value[j] = INVALID_VALUE;
-							} else {
-								dataset->percentiles_y[z].value[j] = INVALID_VALUE;
+						for ( z = start; z < end; z++ ) {
+							/* -1 'cause we keep 50 % out */
+							for ( j = 0; j < PERCENTILES_COUNT_2 - 1; ++j ) {
+								if ( i ) {
+									dataset->percentiles_c[z].value[j] = INVALID_VALUE;
+								} else {
+									dataset->percentiles_y[z].value[j] = INVALID_VALUE;
+								}
 							}
 						}
 					}
-				}
 
-				++row;
+					++row;
+				}
+				
+				fclose(f);
 			}
-			
-			fclose(f);
 
 			if ( ! ret ) {
 				return 0;
