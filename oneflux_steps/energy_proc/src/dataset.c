@@ -1860,6 +1860,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 													&no_gaps_filled_count,
 													0,
 													0,
+													NULL,
 													0,
 													NULL,
 													0);
@@ -1930,6 +1931,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 													&no_gaps_filled_count,
 													0,
 													0,
+													NULL,
 													0,
 													NULL,
 													0);
@@ -2000,6 +2002,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 																&no_gaps_filled_count,
 																0,
 																45,
+																NULL,
 																0,
 																NULL,
 																0);		

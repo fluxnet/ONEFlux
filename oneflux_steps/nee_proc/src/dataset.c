@@ -10,6 +10,11 @@
 */
 
 /* includes */
+#ifdef _WIN32
+#define STRICT
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -52,6 +57,9 @@ extern int qc_gf_threshold;
 extern int mef_qc;
 extern int mef_min_gap;
 extern int mef_max_gap;
+
+/* v1.0.3 */
+extern int indices_save;
 
 /* constants */
 #define QC_AUTO_FILENAME_LEN		23		/* including extension */
@@ -238,6 +246,26 @@ static const char model_efficiency_c_not[] = "NEE_ref_c = not filtered!\n";
 static const char model_efficiency_y_not[] = "NEE_ref_y not filtered!\n";
 
 static const char *time_resolution[TRS] = { "hh", "dd", "ww", "mm", "yy" };
+
+/* v1.0.3 */
+int rename_file(const char* src, const char* dst)
+{
+#ifdef _WIN32
+	return MoveFile(src, dst) ? 1 : 0;
+#else
+	return (-1 == rename(src, dst)) ? 0 : 1;
+#endif
+}
+
+/* v1.0.3 */
+int remove_file(const char* filename)
+{
+#ifdef _WIN32
+	return DeleteFile(filename) ? 1 : 0;	
+#else
+	return (0 == remove(filename));
+#endif
+}
 
 /* todo : implement a better comparison for equality */
 static int compare_value_qc(const void * a, const void * b) {
@@ -679,26 +707,6 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 									, int timeres
 									, const char* site)
 {
-	/* debug stuff - adding artificial missing data for test
-	{
-		int i;
-
-		for ( i = 0; i < 850; ++i )
-		{
-			nee_matrix[i].nee[39] = INVALID_VALUE;
-			nee_matrix[i].qc[39] = mef_qc + 1;
-			nee_matrix[i].qc_ori[39] = mef_qc + 1;
-		}
-
-		for ( i = rows_count - 2000; i < rows_count; ++i )
-		{
-			nee_matrix[i].nee[39] = INVALID_VALUE;
-			nee_matrix[i].qc[39] = mef_qc + 1;
-			nee_matrix[i].qc_ori[39] = mef_qc + 1;
-		}
-	}
-	*/
-
 	*nee_matrix_ref = malloc(rows_count*sizeof**nee_matrix_ref);
 	if ( ! *nee_matrix_ref ) {
 		puts(err_out_of_memory);
@@ -1495,6 +1503,73 @@ void free_datasets(DATASET *datasets, const int datasets_count) {
 		clear_dataset(&datasets[i]);
 	}
 	free(datasets);
+}
+
+/* v1.0.3 */
+int check_ustar_mp(DATASET* dataset)
+{
+	char buffer[BUFFER_SIZE]; /* should be enough */
+	int ret;
+	int i;
+	int year;
+	int error;
+	FILE* f;
+
+	ret = 0;
+	for ( year = 0; year < dataset->years_count; ++year ) {
+		sprintf(buffer, "%s%s_usmp_%d.txt", ustar_mp_files_path, dataset->details->site, dataset->years[year].year);
+
+		/* open file */
+		f = fopen(buffer, "r");
+		if ( f ) {
+			/*
+				PLEASE NOTE:
+				FOLLOWING CODE SKIP "USTAR_MP_SKIP" ROWS AND THEN CHECK FOR " forward mode 2" string!
+				MORE FAST BUT LESS ROBUST THAN THE DISABLED ONES!
+				ENABLED FOR CONSISTENCY!
+				Alessio - June 27, 2022
+			*/
+			for ( i = 0; i < USTAR_MP_SKIP; i++ ) {
+				if ( !fgets(buffer, BUFFER_SIZE, f) ) {
+					break;
+				}
+			}
+
+			if ( i == USTAR_MP_SKIP ) {
+				for ( i = 0; buffer[i]; i++ ) {
+					if ( ('\r' == buffer[i]) || ('\n' == buffer[i]) ) {
+						buffer[i] = '\0';
+						break;
+					}
+				}
+
+				if ( !string_compare_i(buffer, " forward mode 2") ) {
+					for ( i = 0; i < BOOTSTRAPPING_TIMES; i++ ) {
+						/* BUFFER_SIZE is big so no buffer overflow should occurs */
+						if ( EOF == fscanf(f, "%s", buffer) ){
+							break ;
+						} else {
+							convert_string_to_prec(buffer, &error);
+							if ( error )
+								break;
+						}
+					}
+
+					if ( i == BOOTSTRAPPING_TIMES ) {
+						ret = 1;
+					}
+				}
+			}
+
+			fclose(f);
+
+			if ( ret )
+				break;
+		}	
+	}
+
+	/* */
+	return ret;
 }
 
 /* */
@@ -3817,6 +3892,13 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 												((datasets[dataset].years_count > 1) ? "s" : "")
 		);
 
+		/* v1.0.3 */
+		if ( ! check_ustar_mp(&datasets[dataset]) ) {
+			puts("no ustar_mp files found!");
+			free(percentiles_y);
+			continue;
+		}
+
 		/* allocate memory */
 		nee_matrix_y = malloc(datasets[dataset].rows_count*sizeof*nee_matrix_y);
 		if ( !nee_matrix_y ) {
@@ -4383,6 +4465,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			continue;
 		}
 
+		/* debug purposes */
 		/*
 		{
 			FILE *f = fopen("dataset_dump.csv", "w");
@@ -4413,6 +4496,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			}
 		}
 
+		/* debug purposes */
 		/*
 		{
 			FILE *f = fopen("dataset_dump_w_meteo.csv", "w");
@@ -4473,10 +4557,12 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 								datasets[dataset].rows[index+row].value[NEE_VALUE] = INVALID_VALUE;
 								++element;
 							}
-							/* flag for the USTAR filtering (also in the else if below): flag=0  for data not filtered,
-							flag=1 for the first value of a period removed due to low USTAR, flag=2 for hh removed due to
-							low USTAR but with also the previous hh removed, flag=3 for hh of high ustar removed because at
-							the end of the low USTAR period*/
+							/*
+								flag for the USTAR filtering (also in the else if below): flag=0  for data not filtered,
+								flag=1 for the first value of a period removed due to low USTAR, flag=2 for hh removed due to
+								low USTAR but with also the previous hh removed, flag=3 for hh of high ustar removed because at
+								the end of the low USTAR period
+							*/
 							if ( compute_nee_flags ) {
 								nee_flags_y[index+row].value[percentile] = 1;	
 								if ( row && ((nee_flags_y[index+row-1].value[percentile] >= 1) && (nee_flags_y[index+row-1].value[percentile] < 3)) ) {
@@ -4497,8 +4583,11 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 					printf("%g NEE values removed.\n", (PREC)element/rows_count);
 				} else {
 					printf("%d -> filtering is not possible\n", datasets[dataset].years[year].year);
-					on_error = 1;
-					skip_y = 1;
+					/* v1.0.3 */
+					if ( datasets[dataset].years[year].exist ) {
+						on_error = 1;
+						skip_y = 1;
+					}
 					break;
 				}
 
@@ -4509,6 +4598,11 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			if ( on_error ) {
 				break;
 			}
+
+			/* v1.0.3 */
+			/* creating filename for saving indices */
+			if ( indices_save )
+				sprintf(buffer, "%s%s_indices_percentiles_%g_y.csv", output_files_path, datasets[dataset].details->site, percentiles_test_2[percentile]);
 
 			/* gapfilling */
 			printf("     -> gf...");
@@ -4540,6 +4634,10 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 												&no_gaps_filled_count,
 												0,
 												0,
+
+												/* v1.0.3 */
+												indices_save ? buffer : NULL,
+
 												0,
 												NULL,
 												0);
@@ -4768,6 +4866,11 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				}
 				printf("%g NEE values removed.", (PREC)element / datasets[dataset].rows_count);
 
+				/* v1.0.3 */
+				/* creating filename for saving indices */
+				if ( indices_save )
+					sprintf(buffer, "%s%s_indices_percentiles_%g_c.csv", output_files_path, datasets[dataset].details->site, percentiles_test_2[percentile]);
+
 				/* gapfilling */
 				printf(" gf...");
 				free(datasets[dataset].gf_rows);
@@ -4799,6 +4902,10 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 													&no_gaps_filled_count,
 													0,
 													0,
+
+													/* v1.0.3 */
+													indices_save ? buffer : NULL,
+
 													0,
 													NULL,
 													0);
@@ -4977,6 +5084,27 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			p_matrix_y = NULL;
 		}
 
+		/* v1.0.3 */
+		if ( indices_save ) {
+			if ( ! skip_y ) {
+				for ( i = 0; i < PERCENTILES_COUNT_2; ++i ) {
+					sprintf(buffer, "%s%s_indices_percentiles_%g_y.csv", output_files_path, datasets[dataset].details->site, percentiles_test_2[i]);
+					if ( i == ref_y ) {
+						/* rename */
+						sprintf(buffer2, "%s%s_indices_percentiles_ref_y.csv", output_files_path, datasets[dataset].details->site, percentiles_test_2[i]);
+						if ( ! rename_file(buffer, buffer2) ) {
+							printf("unable to rename %s in %s!\n", buffer, buffer2);
+						}
+					} else {
+						/* remove */
+						if ( ! remove_file(buffer) ) {
+							printf("unable to remove %s!\n", buffer);
+						}
+					}
+				}
+			}			
+		}
+
 		/* process nee_matrix c */
 		ref_c = -1;
 		ref_c_old = -1;
@@ -4999,6 +5127,25 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				free(nee_matrix_y);
 				free(nee_matrix_c);
 				continue;
+			}
+		}
+
+		/* v1.0.3 */
+		if ( indices_save ) {
+			for ( i = 0; i < PERCENTILES_COUNT_2; ++i ) {
+				sprintf(buffer, "%s%s_indices_percentiles_%g_c.csv", output_files_path, datasets[dataset].details->site, percentiles_test_2[i]);
+				if ( i == ref_c ) {
+					/* rename */
+					sprintf(buffer2, "%s%s_indices_percentiles_ref_c.csv", output_files_path, datasets[dataset].details->site, percentiles_test_2[i]);
+					if ( ! rename_file(buffer, buffer2) ) {
+						printf("unable to rename %s in %s!\n", buffer, buffer2);
+					}
+				} else {
+					/* remove */
+					if ( ! remove_file(buffer) ) {
+						printf("unable to remove %s!\n", buffer);
+					}
+				}
 			}
 		}
 

@@ -57,6 +57,8 @@ static const char dd_field_delimiter[] = ",\r\n";
 static const char *dds[DETAILS_SIZE] = { "site", "year", "lat", "lon", "timezone", "htower", "timeres", "sc_negl", "notes" };
 static const char *timeress[TIMERES_SIZE] = { "spot", "quaterhourly", "halfhourly", "hourly", "daily", "monthly" };
 static const char variadic[] = "variadic";
+/* for gf_mds v3.0.1 */
+static const char indices_header[] = "ZERO_BASED_INDEX,SAMPLES_COUNT,ZERO_BASED_INDICES\n";
 
 /* error strings */
 static const char err_unable_open_path[] = "unable to open path: %s\n\n";
@@ -68,6 +70,8 @@ static const char err_unknown_argument[] = "unknown argument: \"%s\"\n\n";
 static const char err_too_long_arg[] = "too long argument\n";
 static const char err_gf_too_less_values[] = "too few valid values to apply gapfilling\n";
 static const char err_wildcards_with_no_extension_used[] = "wildcards with no extension used\n";
+/* for gf_mds v3.0.1 */
+static const char err_unable_create_indices_file[] = "unable to create indices file!\n";
 
 /* external strings */
 const char err_out_of_memory[] = "out of memory";
@@ -332,7 +336,8 @@ FILES *get_files(const char *const program_path, char *string, int *const count,
 		/* no grouping */
 		if ( !plusses_count ) {
 			/* token is a path ? */
-			if ( token_by_comma[token_length-1] == FOLDER_DELIMITER ) {
+			/* we handle both backslashes \ and forward slashes / */
+			if ( (token_by_comma[token_length-1] == '\\') || (token_by_comma[token_length-1] == '/') ) {
 			#if defined (_WIN32)
 				/* add length of filter */
 				for ( i = 0; filter[i]; i++ );
@@ -408,10 +413,10 @@ FILES *get_files(const char *const program_path, char *string, int *const count,
 					/* copy token */
 					strcpy(p2, program_path);
 
-					#if defined (_WIN32)
-						/* add filter at end */
-						strcat(p2, token_by_comma);
-					#endif
+				#if defined (_WIN32)
+					/* add filter at end */
+					strcat(p2, token_by_comma);
+				#endif
 
 					/* scan path */
 					if ( !scan_path(p2) ) {
@@ -2010,7 +2015,7 @@ int check_timestamp(const TIMESTAMP* const p)
 	if ( (p->MM <= 0) || (p->MM > 12) ) return 0;
 	if ( p->DD <= 0 ) return 0;
 
-	if ( 2 == p->MM ) // check for february leap
+	if ( 2 == p->MM ) /* check for february leap */
 	{
 		if ( p->DD > days_per_month[p->MM-1]
 				+ IS_LEAP_YEAR(p->YYYY) )
@@ -2023,7 +2028,7 @@ int check_timestamp(const TIMESTAMP* const p)
 		return 0;
 	}
 
-	// fix 24 hh
+	/* fix 24 hh */
 	hour = p->hh;
 	if ( (hour < 0) || (hour > 23) ) return 0;
 	if ( (p->mm < 0) || (p->hh > 59) ) return 0;
@@ -2114,8 +2119,8 @@ TIMESTAMP *timestamp_get_by_row(int row, int yy, const int timeres, const int st
 
 	/* get hour */
 	if ( QUATERHOURLY_TIMERES == timeres ) {
-		// TODO
-		// CHECK THIS!
+		/* TODO */
+		/* CHECK THIS! */
 		t.hh = (row % rows_per_day) / 4;
 		t.mm = (row % 15) * 15;
 	} else if ( HALFHOURLY_TIMERES == timeres ) {
@@ -2363,7 +2368,7 @@ PREC gf_get_similiar_median(const GF_ROW *const gf_rows, const int rows_count, i
 	return result;
 }
 
-/* static function for gapfilling. This is the core gapfillign function called only internally */
+/* static function for gapfilling. This is the core gapfilling function called only internally */
 static int gapfill(	PREC *values,
 					const int struct_size,
 					GF_ROW *const gf_rows,
@@ -2386,6 +2391,10 @@ static int gapfill(	PREC *values,
 					const int value2_column,
 					const int value3_column,
 					const int sym_mean,
+
+					/* for gf_mds v3.0.1 */
+					FILE* indices_file,
+
 					const int debug,
 					const char* debug_file_name,
 					int debug_start_year) {
@@ -2631,6 +2640,17 @@ static int gapfill(	PREC *values,
 		}
 
 		if ( samples_count > 1 ) {
+			
+			/* for gf_mds v3.0.1 */
+			if ( indices_file ) {
+				int k;
+				fprintf(indices_file, "%d,%d", current_row, samples_count);
+				for ( k = 0; k < samples_count; ++k ) {
+					fprintf(indices_file, ",%d", gf_rows[k].index);
+				}
+				fputs("\n", indices_file);
+			}
+			
 			/* set mean */
 			gf_rows[current_row].filled = gf_get_similiar_mean(gf_rows, samples_count);
 
@@ -2731,16 +2751,28 @@ GF_ROW *gf_mds(	PREC *values,
 				int *no_gaps_filled_count,
 				int sym_mean,
 				int max_mdv_win,
+				
+				/* for gf_mds v3.0.1 */
+				const char* indices_file_name,
+
 				int debug,
 				const char* debug_file_name,
 				int debug_start_year) {
 	int i;
 	int c;
 	int valids_count;
+
+	/* for gf_mds v3.0.1 */
+	FILE* indices_file;
+	FILE* indices_file_tmp;
+
 	GF_ROW *gf_rows;
 
 	/* */
 	assert(values && rows_count && no_gaps_filled_count);
+	
+	/* for gf_mds v3.0.1 */
+	indices_file = NULL; /* required */
 
 	/* reset */
 	*no_gaps_filled_count = 0;
@@ -2752,11 +2784,26 @@ GF_ROW *gf_mds(	PREC *values,
 	} else if ( end_row > rows_count ) {
 		end_row = rows_count;
 	}
+	
+	/* for gf_mds v3.0.1 */
+	if ( indices_file_name ) {
+		indices_file = fopen(indices_file_name, "w");
+		if ( !indices_file ) {
+			puts(err_unable_create_indices_file);
+			return NULL;
+		} else {
+			fputs(indices_header, indices_file);
+		}
+	}
 
 	/* allocate memory */
 	gf_rows = malloc(rows_count*sizeof*gf_rows);
 	if ( !gf_rows ) {
 		puts(err_out_of_memory);
+		
+		/* for gf_mds v3.0.1 */
+		fclose(indices_file);
+
 		return NULL;
 	}
 
@@ -2835,6 +2882,10 @@ GF_ROW *gf_mds(	PREC *values,
 
 	if ( valids_count < values_min ) {
 		puts(err_gf_too_less_values);
+		
+		/* for gf_mds v3.0.1 */
+		fclose(indices_file);
+		
 		free(gf_rows);
 		return NULL;
 	}
@@ -2871,17 +2922,23 @@ GF_ROW *gf_mds(	PREC *values,
 			continue;
 		}
 
+		/* for gf_mds v3.0.1 */
+		/* for HAT we do not need indices! */
+		indices_file_tmp = indices_file;
+		if ( !IS_INVALID_VALUE(gf_rows[i].filled) )
+			indices_file_tmp = NULL;
+
 		/*	fill gaps. If a values is impossible to fill it remains -9999 with QC also -9999 */
-		if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 7, 14, 7, GF_ALL_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, debug, debug_file_name, debug_start_year) ) {
-			if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 7, 7, 7, GF_VALUE1_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, debug, debug_file_name, debug_start_year) ) {
-				if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 0, 2, 1, GF_TOFILL_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, debug, debug_file_name, debug_start_year) ) {
-					if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 21, 77, 7, GF_ALL_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, debug, debug_file_name, debug_start_year) ) {
-						if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 14, 77, 7, GF_VALUE1_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, debug, debug_file_name, debug_start_year) ) {
+		if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 7, 14, 7, GF_ALL_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, indices_file_tmp, debug, debug_file_name, debug_start_year) ) {
+			if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 7, 7, 7, GF_VALUE1_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, indices_file_tmp, debug, debug_file_name, debug_start_year) ) {
+				if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 0, 2, 1, GF_TOFILL_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, indices_file_tmp, debug, debug_file_name, debug_start_year) ) {
+					if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 21, 77, 7, GF_ALL_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, indices_file_tmp, debug, debug_file_name, debug_start_year) ) {
+						if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 14, 77, 7, GF_VALUE1_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, indices_file_tmp, debug, debug_file_name, debug_start_year) ) {
 							int max_win = end_row + 1;
 							if ( (max_mdv_win > 0) && ((max_mdv_win * 2) + 1 < end_row + 1) ) {
 								max_win = (max_mdv_win * 2) + 1;
 							}
-							if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 3, max_win, 3, GF_TOFILL_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, debug, debug_file_name, debug_start_year) ) {
+							if ( !gapfill(values, struct_size, gf_rows, start_row, end_row, i, 3, max_win, 3, GF_TOFILL_METHOD, timeres, value1_tolerance_min, value1_tolerance_max, value2_tolerance_min, value2_tolerance_max, value3_tolerance_min, value3_tolerance_max, tofill_column, value1_column, value2_column, value3_column, sym_mean, indices_file_tmp, debug, debug_file_name, debug_start_year) ) {
 								++*no_gaps_filled_count;
 								continue;
 							}
@@ -2895,6 +2952,11 @@ GF_ROW *gf_mds(	PREC *values,
 		gf_rows[i].quality =	(gf_rows[i].method > 0) +
 								((gf_rows[i].method == 1 && gf_rows[i].time_window > 14) || (gf_rows[i].method == 2 && gf_rows[i].time_window > 14) || (gf_rows[i].method == 3 && gf_rows[i].time_window > 1)) +
 								((gf_rows[i].method == 1 && gf_rows[i].time_window > 56) || (gf_rows[i].method == 2 && gf_rows[i].time_window > 28) || (gf_rows[i].method == 3 && gf_rows[i].time_window > 5));
+	}
+
+	/* for gf_mds v3.0.1 */
+	if ( indices_file ) {
+		fclose(indices_file);
 	}
 
 	/* ok */
@@ -4272,14 +4334,14 @@ PREC *get_rpot(DD *const details) {
 
 void check_memory_leak(void) {
 #ifdef _DEBUG
-#if _WIN32
+#ifdef _WIN32
 	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
 	_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
 	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
 	_CrtDumpMemoryLeaks();
-//#else /* _WIN32 */
-	//	no memory leak checker available for this platform!
-#endif
+#else
+	assert(0 && "no memory leak checker available for this platform!");
+#endif /* _WIN32 */
 #endif /* _DEBUG */
 }
 

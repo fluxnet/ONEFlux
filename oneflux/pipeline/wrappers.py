@@ -39,7 +39,7 @@ from oneflux.partition.library import PARTITIONING_DT_ERROR_FILE, EXTRA_FILENAME
 from oneflux.downscaling.rundownscaling import run as run_downscaling
 from oneflux.partition.auxiliary import nan, nan_ext, NAN, NAN_TEST
 from oneflux.partition.daytime import ONEFluxPartitionBrokenOptError
-from oneflux.pipeline.site_plots import gen_site_plots
+from oneflux.pipeline.site_plots import gen_site_plots, get_dtype
 from oneflux.tools.partition_nt import run_partition_nt, PROD_TO_COMPARE, PERC_TO_COMPARE
 from oneflux.tools.partition_dt import run_partition_dt
 
@@ -75,8 +75,9 @@ class Pipeline(object):
         self.configs = kwargs
 
         # check valid config attribute labels from defaults from classes
-        self.driver_classes = [PipelineFPCreator,
+        self.driver_classes = [
                         PipelineQCVisual,
+                        PipelineCheckInput,
                         PipelineQCAuto,
                         PipelineQCAutoConvert,
                         PipelineQCVisualCross,
@@ -193,8 +194,8 @@ class Pipeline(object):
         self.bif_other_file_list = self.configs.get('bif_other_file_list', None)
 
         ### create drivers for individual steps
-        self.fp_creator = PipelineFPCreator(pipeline=self)
         self.qc_visual = PipelineQCVisual(pipeline=self)
+        self.check_input = PipelineCheckInput(pipeline=self)
         self.qc_auto = PipelineQCAuto(pipeline=self)
         self.qc_auto_convert = PipelineQCAutoConvert(pipeline=self)
         self.qc_visual_cross = PipelineQCVisualCross(pipeline=self)
@@ -213,8 +214,9 @@ class Pipeline(object):
 
         ### validation
         # list all steps
-        self.drivers = [self.fp_creator,
+        self.drivers = [
                         self.qc_visual,
+                        self.check_input,
                         self.qc_auto,
                         self.qc_auto_convert,
                         self.qc_visual_cross,
@@ -302,82 +304,6 @@ class Pipeline(object):
         log.info("{s} Pipeline: execution finished".format(s=self.siteid))
 
 
-class PipelineFPCreator(object):
-    '''
-    Class to control execution of fp_creator step
-    '''
-    FP_CREATOR_EXECUTE = False # TODO: change default when method implemented
-    ORIGINAL_DATASET_DIR = "00_original_dataset"
-    FP_DATASET_DIR = "00_fp_dataset"
-
-    def __init__(self, pipeline):
-        '''
-        Initializes parameters for execution of fp_creator step
-        
-        :param pipeline: ONEFlux Pipeline object driving the execution
-        :type pipeline: Pipeline
-        '''
-        self.pipeline = pipeline
-        self.execute = self.pipeline.configs.get('fp_creator_execute', self.FP_CREATOR_EXECUTE)
-        self.execute = self.FP_CREATOR_EXECUTE # TODO: remove when method implemented
-        self.original_dataset_dir = self.pipeline.configs.get('original_dataset_dir', os.path.join(self.pipeline.data_dir, self.ORIGINAL_DATASET_DIR))
-        self.fp_dataset_dir = self.pipeline.configs.get('fp_dataset_dir', os.path.join(self.pipeline.data_dir, self.FP_DATASET_DIR))
-
-    def pre_validate(self):
-        '''
-        Validate pre-execution requirements
-        '''
-        test_dir(tdir=self.original_dataset_dir, label='original_dataset')
-
-    def post_validate(self):
-        '''
-        Validate post-execution results
-        '''
-        pass
-
-    def run(self):
-        '''
-        Executes fp_creator
-        '''
-
-        log.info("Pipeline fp_creator execution started")
-        self.pre_validate()
-
-        test_create_dir(tdir=self.fp_dataset_dir, label='fp_dataset')
-
-        # TODO: run
-
-        self.post_validate()
-        log.info("Pipeline fp_creator execution finished")
-
-    def fp_creator(self):
-        '''
-        Converts from AmeriFlux standard format to FPFile format
-        '''
-        # TODO: finish implementation
-
-        p = re.compile("\d{4,}")
-        input_filenames = [ os.path.join(i[0], j) for i in os.walk(self.original_dataset) for j in i[2] ]
-        input_filenames = [ i for i in input_filenames if (('AMF' in i) and ((self.pipeline.siteid in i) or (self.pipeline.siteid_short in i)) and (p.search(i) is not None)) ]
-# TODO: finish implementation
-#        fpfile_list = []
-#        for filename in input_filenames[:2]:
-#            log.debug("File '{f}' will be converted from AmeriFlux format into FPFile format".format(f=filename))
-#            # fpfile = # TODO: load data file
-#            # fpfile_list.append(fpfile)
-#
-#        fpp_data = FPPData(fpfile_list)
-#
-#        key = variable_key(format_name='fpp', variable_name='irga_height', variable_count=1)
-#        heights = fpp_data.data[key][~numpy.isnan(fpp_data.data[key])]
-#        print numpy.all(heights == heights[0])
-#        print len(heights), len(fpp_data.data)
-#
-#        filename_template = os.path.join(self.fp_dataset_dir, "{f}.csv".format(f=self.pipeline.siteid_short))
-#        fpp_data.save_csv(filename=filename_template, format_name="fpfile_v2", yearly=True)
-
-
-
 class PipelineQCVisual(object):
     '''
     Class to control execution of qc_visual step
@@ -403,7 +329,7 @@ class PipelineQCVisual(object):
         self.execute = self.pipeline.configs.get('qv_visual_execute', self.QC_VISUAL_EXECUTE)
         self.execute = self.QC_VISUAL_EXECUTE # TODO: remove when method implemented
         self.qc_visual_dir = self.pipeline.configs.get('qc_visual_dir', os.path.join(self.pipeline.data_dir, self.QC_VISUAL_DIR))
-        self.qc_visual_dir_inner = self.pipeline.configs.get('qc_visual_files_dir', os.path.join(self.qc_visual_dir, self.QC_VISUAL_DIR_INNER))
+        self.qc_visual_dir_inner = self.pipeline.configs.get('qc_visual_dir_inner', os.path.join(self.qc_visual_dir, self.QC_VISUAL_DIR_INNER))
         self.output_file_pattern = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS]
         self.output_file_patterns_inner = [i.format(s=self.pipeline.siteid) for i in self._OUTPUT_FILE_PATTERNS_INNER]
 
@@ -440,6 +366,112 @@ class PipelineQCVisual(object):
 
         self.post_validate()
         log.info("Pipeline qc_visual execution finished")
+
+
+class PipelineCheckInput(object):
+    '''
+    Class to control execution of check_input step
+    '''
+    CHECK_INPUT_EXECUTE = True
+    _INPUT_FILE_PATTERN = '{s}_qcv_????.csv'
+
+    def __init__(self, pipeline):
+        '''
+        Initializes parameters for execution of check_input step
+
+        :param pipeline: ONEFlux Pipeline object driving the execution
+        :type pipeline: Pipeline
+        '''
+        self.pipeline = pipeline
+        self.label = 'check_input'
+        self.execute = self.pipeline.configs.get('check_input_execute', self.CHECK_INPUT_EXECUTE)
+        self.original_dataset_dir = self.pipeline.qc_visual.qc_visual_dir_inner
+        self.input_file_pattern = self._INPUT_FILE_PATTERN.format(s=self.pipeline.siteid)
+        self.updated_dataset_files = set()
+        self.empty_variables = set()
+
+    @property
+    def updated_dataset(self):
+        '''Returns True if any empty variables have been identified.'''
+        return bool(self.empty_variables)
+
+    def pre_validate(self):
+        '''
+        Validate pre-execution requirements
+        '''
+        test_file_list(file_list=[self.input_file_pattern,], tdir=self.original_dataset_dir, label='{s}.pre_validate'.format(s=self.label))
+
+    def post_validate(self):
+        '''
+        Validate post-execution results
+        '''
+        # check output files and result report (log)
+        test_file_list(file_list=[self.input_file_pattern,], tdir=self.original_dataset_dir, label='{s}.post_validate'.format(s=self.label))
+        if self.updated_dataset:
+            test_file_list(file_list=sorted(self.updated_dataset_files), tdir=self.original_dataset_dir, label='{s}.post_validate'.format(s=self.label))
+
+    def run(self):
+        '''
+        Executes check_input
+        '''
+
+        log.info("Pipeline {s} execution started".format(s=self.label))
+        self.pre_validate()
+
+        input_filenames = test_pattern(tdir=self.original_dataset_dir, tpattern=self.input_file_pattern, label=self.label)
+
+        # check if each variable is not completely empty in a each individual file
+        log.debug("Pipeline {s}.run, checking input files: {f}".format(s=self.label, f=input_filenames))
+        empty_entries = {}
+        all_variables = set()
+        for fname in sorted(input_filenames):
+            fullpath = os.path.join(self.original_dataset_dir, fname)
+            headers, first_numeric_line, timestamp_format, headers_line, first_lines = get_headers_qc(filename=fullpath)
+            data = _load_data(filename=fullpath, resolution=self.pipeline.record_interval, headers=headers, skip_header=first_numeric_line - 1)
+            num_records = len(data)
+            empty_entries[fname] = {'data': data, 'headers': headers, 'first_lines': first_lines}
+            for h in headers:
+                # exclude TIMESTAMP variables from checks
+                if get_dtype(variable=h, resolution=self.pipeline.record_interval) != 'a25':
+                    all_variables.add(h)
+                    empty = (numpy.sum(data[h] < NAN_TEST) == num_records)
+                    empty_entries[fname][h] = empty
+                    if empty:
+                        log.debug('Variable {h} in file {fname} is completely empty'.format(h=h, fname=fname))
+        
+        # for variables completely empty in all files,
+        # log error and remove variable from all files
+        for var in sorted(all_variables):
+            # if file does not contain variable, consider the variable empty for purposes of check and removal
+            if all([empty_entries[fname].get(var, True) for fname in input_filenames]):
+                log.error('Variable {v} is completely empty in all input files'.format(v=var))
+                self.empty_variables.add(var)
+
+        # create new input directory, save new version of input files without empty variable(s), and
+        # add all input files to self.updated_dataset_files
+        if self.updated_dataset:
+            create_replace_dir(tdir=self.original_dataset_dir, label='{s}.run'.format(s=self.label), suffix=self.pipeline.run_id, simulation=self.pipeline.simulation)
+            for var in self.empty_variables:
+                for fname in sorted(input_filenames):
+                    if var in empty_entries[fname]['headers']:
+                        log.debug('Removing variable {v} from file {f}'.format(v=var, f=fname))
+                        empty_entries[fname]['headers'].remove(var)
+                        self.updated_dataset_files.add(fname)
+                    else:
+                        log.debug('Variable {v} not in file {f}, skipping removal'.format(v=var, f=fname))
+            
+            # save new files without empty variables to new input directory
+            for fname in sorted(input_filenames):
+                fullpath = os.path.join(self.original_dataset_dir, fname)
+                headers = empty_entries[fname]['headers']
+                data = empty_entries[fname]['data']
+                note = 'notes,{t} dataset removed empty variables [{v}]'.format(v=', '.join(self.empty_variables), t=datetime.now().strftime("%Y%m%d%H%M%S"))
+                header = '\n'.join(empty_entries[fname]['first_lines']) + '\n' + note + '\n' + ','.join(headers)
+                log.debug('Saving updated version of file {f} without empty variables: {v}'.format(f=fname, v=self.empty_variables))
+                save_csv_txt(filename=fullpath, data=data[headers], header=header)
+
+        self.post_validate()
+        log.info("Pipeline {s} execution finished".format(s=self.label))
 
 
 class PipelineQCAuto(object):
@@ -611,7 +643,6 @@ class PipelineQCAutoConvert(object):
 
         self.post_validate()
         log.info("Pipeline qc_auto_convert execution finished")
-
 
 
 class PipelineQCVisualCross(object):
@@ -1158,7 +1189,6 @@ class PipelineMeteoMDS(object):
             os.system(del_tool)
 
 
-
 class PipelineMeteoProc(object):
     '''
     Class to control execution of meteo_proc step.
@@ -1469,7 +1499,6 @@ class PipelineEnergyProc(object):
             self.post_validate()
 
         log.info("Pipeline energy_proc execution finished")
-
 
 
 class PipelineNEEPartitionNT(object):

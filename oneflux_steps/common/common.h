@@ -381,6 +381,10 @@ GF_ROW *gf_mds(PREC *values,
 	int *no_gaps_filled_count,
 	int sym_mean,
 	int max_mdv_win,
+	
+	/* for gf_mds v3.0.1 */
+	const char* indices_file_name,
+
 	int debug,
 	const char* debug_file_name,
 	int debug_start_year

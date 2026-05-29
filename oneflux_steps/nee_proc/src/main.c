@@ -24,7 +24,7 @@
 #include "../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION			"v1.021"
+#define PROGRAM_VERSION			"v1.0.3"
 #define BUFFER_SIZE				1024
 #define QC_AUTO_PATH			"qc_auto"
 #define USTAR_MP_PATH			"ustar_mp"
@@ -44,6 +44,10 @@ int compute_nee_flags = 0;					/* default if off */
 int use_met_gf = 0;							/* default is off */
 int mef_save = 0;							/* default is off */
 int percentiles_save = 0;					/* default is off */
+
+/* v1.0.3 */
+int indices_save = 0;						/* default is off */
+
 int qc_gf_threshold = QC_GF_THRESHOLD;		/* see types.h */
 int mef_qc = 2;
 int mef_min_gap = 5 * 48;
@@ -88,6 +92,10 @@ static char msg_usage[] =	"How to use: nee_proc parameter\n\n"
 							"             that can be created (i.e. if shorted than mef_min_gap the data will not be removed)\n"
 							"             ( default is %d )\n\n"
 							"    -percentiles -> save percentiles for DD,WW,MM,YY time resolution\n\n"
+
+							/* v1.0.3 */
+							"    -indices -> save the index of each sample used in the gf for ref y and ref c\n\n"
+
 							"    -h -> show this help\n\n";
 
 /* */
@@ -227,6 +235,10 @@ int main(int argc, char *argv[]) {
 		{ "mef_min_gap", set_int_value, &mef_min_gap },
 		{ "mef_max_gap", set_int_value, &mef_max_gap },
 		{ "percentiles", set_flag, &percentiles_save },
+
+		/* v1.0.3 */
+		{ "indices", set_flag, &indices_save },
+
 		{ "qc_gf_thrs", set_int_value, &qc_gf_threshold },
 		{ "h", show_help, NULL },
 		{ "help", show_help, NULL },
@@ -352,6 +364,10 @@ int main(int argc, char *argv[]) {
 	if ( 3 == mef_qc ) {
 		puts("warning: mef not filtered.\n");
 	}
+
+	/* v1.0.3 */
+	if ( indices_save )
+		printf("saving ref gf sample indices enabled!\n\n");
 
 	/* show qc gf threshold */
 	if ( use_met_gf ) {

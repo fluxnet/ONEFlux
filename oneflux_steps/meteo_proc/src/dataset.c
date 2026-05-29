@@ -1332,27 +1332,19 @@ static int import_meteo_values(DATASET *const dataset, MDS_VARS* mds_vars) {
 				}
 				/* check for user mds vars */
 				if ( mds_vars ) {
-					///* check if token is defs */
-					//for ( y = 0; y < DEF_VARS_COUNT; ++y ) {
-					//	if ( !string_compare_i(token, sz_defs[y]) ) {
-					//		break;
-					//	}
-					//}
-					//if ( DEF_VARS_COUNT == i ) {
-						for ( y = 0; y < mds_vars->count; ++y ) {
-							int z;
+					for ( y = 0; y < mds_vars->count; ++y ) {
+						int z;
 
-							/* we loop for each vars name of mds vars */
-							/* we skip MDS_VAR_TO_FILL, it is mandatory! */
-							for ( z = MDS_VAR_DRIVER_1; z < MDS_VARS_COUNT; ++z ) {
-								if ( mds_vars->vars[y].columns[z] >= USER_DRIVERS_BEGIN ) {
-									if ( !string_compare_i(token, mds_vars->vars[y].name[z]) ) {
-										columns_index[MET_VALUES + (z-1) + (y*3)] = i;
-									}
+						/* we loop for each vars name of mds vars */
+						/* we skip MDS_VAR_TO_FILL, it is mandatory! */
+						for ( z = MDS_VAR_DRIVER_1; z < MDS_VARS_COUNT; ++z ) {
+							if ( mds_vars->vars[y].columns[z] >= USER_DRIVERS_BEGIN ) {
+								if ( !string_compare_i(token, mds_vars->vars[y].name[z]) ) {
+									columns_index[MET_VALUES + (z-1) + (y*3)] = i;
 								}
 							}
 						}
-					//}
+					}
 				}
 
 				/* check for TS */
@@ -1588,7 +1580,7 @@ static int import_meteo_values(DATASET *const dataset, MDS_VARS* mds_vars) {
 												value = INVALID_VALUE;
 											}
 										}
-									#endif // 0
+									#endif
 									} else {
 										if ( !IS_INVALID_VALUE(value) && !IS_INVALID_VALUE(mds_vars->vars[index / 3].oors[index % 3][MDS_VAR_OOR_MIN]) ) {
 											if (	(value < mds_vars->vars[index / 3].oors[index % 3][MDS_VAR_OOR_MIN])
@@ -4324,8 +4316,6 @@ int check_met_files(DATASET *const dataset) {
 
 /* */
 int compute_datasets(DATASET *const datasets, const int datasets_count, MDS_VARS* mds_vars) {
-	//USER_DRIVER* uds = NULL;	/* mandatory */
-	//int uds_count = 0;		/* mandatory */
 	int ret = 0; /* defaults to err */
 	int i;
 	int j;
@@ -4578,6 +4568,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count, MDS_VARS
 										&not_gf_count,
 										0,
 										0,
+										NULL,
 										0,
 										NULL,
 										0
@@ -4685,6 +4676,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count, MDS_VARS
 									&not_gf_count,
 									0,
 									0,
+									NULL,
 									0,
 									NULL,
 									0
@@ -4788,6 +4780,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count, MDS_VARS
 									&not_gf_count,
 									0,
 									0,
+									NULL,
 									0,
 									NULL,
 									0

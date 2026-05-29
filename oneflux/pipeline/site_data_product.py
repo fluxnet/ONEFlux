@@ -163,7 +163,7 @@ def save_csv_txt(filename, data, delimiter=',', newline='\n', header=None):
         for i, row in enumerate(data):
             if i % 1000 == 0:
                 log.debug("Writing {f}: line {l}".format(f=filename, l=i))
-            line = delimiter.join("-9999" if (value == -9999.0 or value == -9999.9)  else str(value) for value in row)
+            line = delimiter.join("-9999" if (value == -9999.0 or value == -9999.9) else str(value) for value in row)
             f.write(line + newline)
 
 

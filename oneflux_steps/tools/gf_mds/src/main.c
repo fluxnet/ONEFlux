@@ -21,7 +21,7 @@
 #include "../../../compiler.h"
 	
 /* constants */
-#define PROGRAM_VERSION "3.0"
+#define PROGRAM_VERSION "3.0.1"
 const char def_tokens[GF_TOKENS][GF_TOKEN_LENGTH_MAX+1] =
 {
 	"NEE"
@@ -45,6 +45,9 @@ static int driver2b_qc_col = -1;
 static PREC driver1_qc_thrs = INVALID_VALUE;
 static PREC driver2a_qc_thrs = INVALID_VALUE;
 static PREC driver2b_qc_thrs = INVALID_VALUE;
+
+/* v3.0.1 */
+static int save_indices = 0;
 
 /* global variables */
 char *program_path = NULL;										/* required */
@@ -81,6 +84,9 @@ static const char gap_format[] = "%s,%g,%g,%d,%g,%d,%g,%d,%d,%d\n";
 /* v2.04b */
 static const char gap_header_sym_mean[] = "%s,%s,FILLED,QC,HAT,DT,DT_MA,DT_MA_SAMPLE,DT_MB,DT_MB_SAMPLE,SAMPLE,STDDEV,METHOD,QC_HAT,TIMEWINDOW\n";
 static const char gap_format_sym_mean[] = "%s,%g,%g,%d,%g,%g,%g,%d,%g,%d,%d,%g,%d,%d,%d\n";
+
+/* v3.0.1 */
+static const char gap_indices_file[] = "%s%smds_indices.csv";
 
 /* messages */
 static const char msg_dataset_not_specified[] =
@@ -153,6 +159,10 @@ static const char msg_usage[] =	"This code applies the gapfilling Marginal Distr
 								"    even if not missing, enabled by default)\n\n"
 								"  -sym_mean -> enable symmetric mean method\n\n"
 								"  -max_mdv_win=value -> set max window to be used when MDV is applied as last option\n\n"
+								
+								/* v3.0.1 */
+								"  -indices -> save the index of each sample used in the gf analysis\n\n"
+
 								"  -debug -> save used values to compute gf to file\n\n"
 								"  -h -> show this help\n\n"
 ;
@@ -186,9 +196,6 @@ static void clean_up(void) {
 	if ( program_path ) {
 		free(program_path);
 	}
-#if defined (_WIN32) && defined (_DEBUG) 
-	dump_memory_leaks();
-#endif
 }
 
 /* */
@@ -515,6 +522,9 @@ int main(int argc, char *argv[]) {
 		{ "driver1_qc_thrs", set_prec_value, &driver1_qc_thrs },
 		{ "driver2a_qc_thrs", set_prec_value, &driver2a_qc_thrs },
 		{ "driver2b_qc_thrs", set_prec_value, &driver2b_qc_thrs },
+		
+		/* v3.0.1 */
+		{ "indices", reverse_flag, &save_indices },
 
 		{ "h", show_help, NULL },
 		{ "?", show_help, NULL },
@@ -563,7 +573,10 @@ int main(int argc, char *argv[]) {
 	/* output path specified ? */
 	if ( output_path ) {
 		/* check if last char is a FOLDER_DELIMITER */
-		if ( output_path[strlen(output_path)-1] != FOLDER_DELIMITER ) {
+		
+		/* v3.0.1 */
+		/* we handle both backslashes \ and forward slashes / */
+		if ( (output_path[strlen(output_path)-1] != '\\') && (output_path[strlen(output_path)-1] != '/' ) ) {
 			printf(err_output_path_no_delimiter, FOLDER_DELIMITER);
 			return 1;
 		}
@@ -691,6 +704,11 @@ int main(int argc, char *argv[]) {
 			}
 			sprintf(debug_name, "%.*s", len, files[z].list->name);
 		}
+		
+		/* v3.0.1 */
+		if ( save_indices ) {
+			sprintf(buffer, gap_indices_file, output_path, filename);
+		}
 
 		/* gf */
 		gf_rows = gf_mds(	rows->value,
@@ -721,6 +739,10 @@ int main(int argc, char *argv[]) {
 							&no_gaps_filled_count,
 							sym_mean,
 							max_mdv_win,
+							
+							/* v3.0.1 */
+							save_indices ? buffer : NULL,
+
 							debug,
 							debug_name,
 							years[z]
