@@ -241,10 +241,14 @@ static int set_height(DATASET *const dataset) {
 	/* TODO - check for date range */
 	/* finally after many years! 20250805 */
 	if (  1 == dataset->details->htower_count ) {
-		for ( i = 0; i < dataset->rows_count; i++ ) {
-			dataset->rows[i].value[HEIGHT] = dataset->details->htower[0].h;
+		if ( dataset->details->htower[0].timestamp.YYYY != dataset->details->year ) {
+			puts("The YYYY component of the htower timestamp must match the value specified in the year field");
+		} else {
+			for ( i = 0; i < dataset->rows_count; i++ ) {
+				dataset->rows[i].value[HEIGHT] = dataset->details->htower[0].h;
+			}
+			ret = 1;
 		}
-		ret = 1;
 	} else {
 		if ( (dataset->details->timeres != HALFHOURLY_TIMERES) && (dataset->details->timeres != HOURLY_TIMERES) ) {
 			puts("To correctly set the height, timeres must be half-hourly or hourly");
@@ -259,15 +263,18 @@ static int set_height(DATASET *const dataset) {
 
 			/* compute ranges */
 			/* check for first timestamp that MUST BE YYYY01010030 for hh or YYYY01010100 for h */
-			if (	(dataset->details->htower[0].timestamp.MM != 1)
+			if (	(dataset->details->htower[0].timestamp.YYYY != dataset->details->year)
+					|| (dataset->details->htower[0].timestamp.MM != 1)
 					|| (dataset->details->htower[0].timestamp.DD != 1)
 					|| (dataset->details->htower[0].timestamp.hh != hh)
 					|| (dataset->details->htower[0].timestamp.mm != mm) ) {
+				printf("the first timestamp for height must be in the format ");
 				if ( HOURLY_TIMERES == dataset->details->timeres ) {
-					puts("the first timestamp for height must be in the format YYYY01010100");
+					printf("YYYY01010100");
 				} else {
-					puts("the first timestamp for height must be in the format YYYY01010030");
+					printf("YYYY01010030");
 				}
+				puts(", where YYYY must match the year specified in the year field");
 			} else {
 				int *row_index = malloc(dataset->details->htower_count*sizeof*row_index);
 				if ( !row_index ) {
