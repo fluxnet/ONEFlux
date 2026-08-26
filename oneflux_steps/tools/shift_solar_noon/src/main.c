@@ -26,7 +26,7 @@
 #include "../../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION			"v1.01"
+#define PROGRAM_VERSION			"v1.0.2"
 const int days_per_month[MONTHS] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
 /* enum */
@@ -96,7 +96,7 @@ int spike_check_3_return = SPIKE_CHECK_3_RETURN;					/* see common.h */
 PREC spike_threshold_nee = SPIKE_THRESHOLD_NEE;						/* see common.h */
 PREC spike_threshold_le = SPIKE_THRESHOLD_LE;						/* see common.h */
 PREC spike_threshold_h = SPIKE_THRESHOLD_H;							/* see common.h */
-int files_founded_count;
+int files_found_count;
 PREC height;
 static int doy;
 static int qc2_filter;												/* default is off */
@@ -112,7 +112,7 @@ static int sr_output;												/* default is off */
 static int solar_output = 1;										/* default is on */
 
 /* static global variables */
-static FILES *files_founded;
+static FILES *files_found;
 
 /* strings */
 static const char banner[] =	"\nshift_solar_noon "PROGRAM_VERSION"\n"
@@ -136,7 +136,7 @@ static const char msg_dataset_path[] = "dataset path = %s\n";
 static const char msg_output_path[] = "output path = %s\n\n";
 static const char msg_processing[] = "	- found %s, %d...ok\n";
 static const char msg_ok[] = "ok";
-static const char msg_summary[] = "\n%d file%s founded: %d processed, %d skipped.\n\n";
+static const char msg_summary[] = "\n%d file%s found: %d processed, %d skipped.\n\n";
 static const char msg_usage[] =	"usage: shift_solar_noon parameters\n\n"
 								"parameters:\n\n"
 								"-input_path=filename or path to be processed (optional)\n"
@@ -158,6 +158,8 @@ static const char err_unable_convert_value_arg[] = "unable to convert value \"%s
 static const char err_no_output_specified[] = "no output specified.";
 static const char err_buffer_too_small[]= "buffer too small for notes!";
 static const char err_negative_doy[] = "custom doy can't be negative: %d.\n";
+/* v1.0.2 */
+static const char err_no_concatenation[] = "It is not possible to use concatenated datasets.";
 
 /* */
 static int set_flag(char *arg, char *param, void *p) {
@@ -200,8 +202,8 @@ static void clean_up(void) {
 	if ( program_path ) {
 		free(program_path);
 	}
-	if ( files_founded ) {
-		free_files(files_founded, files_founded_count);
+	if ( files_found ) {
+		free_files(files_found, files_found_count);
 	}
 	check_memory_leak();
 }
@@ -2458,6 +2460,7 @@ int main(int argc, char *argv[]) {
 	int H;		/* for spikes */
 	int LE;		/* for spikes */
 	int z;
+	int i;		/* v1.0.2 */
 	int error;
 	int files_processed_count;
 	int files_not_processed_count;
@@ -2559,24 +2562,32 @@ int main(int argc, char *argv[]) {
 	printf(msg_output_path, output_path);
 
 	/* get files */
-	files_founded = get_files(program_path, input_path, &files_founded_count, &error);
+	files_found = get_files(program_path, input_path, &files_found_count, &error);
 	if ( error ) {
 		return 1;
 	}
 
+	/* v1.0.2 */
+	/* check for concatenated datasets */
+	for ( i = 0; i < files_found_count; i ++ ) {
+		if ( files_found[i].count > 1 ) {
+			puts(err_no_concatenation);
+			return 1;
+		}
+	}
 	/* reset */
 	files_processed_count = 0;
 	files_not_processed_count = 0;
 	total_files_count = 0;
 
 	/* loop for searching file */
-	for ( z = 0; z < files_founded_count; z++) {
+	for ( z = 0; z < files_found_count; z++) {
 		/* inc */
 		++total_files_count;
 
 		/* import dataset */
-		printf("processing %s...", files_founded[z].list[0].name);
-		dataset = import_dataset(files_founded[z].list[0].fullpath);
+		printf("processing %s...", files_found[z].list[0].name);
+		dataset = import_dataset(files_found[z].list[0].fullpath);
 		if ( !dataset ) {
 			puts("nothing found.");
 			++files_not_processed_count;
