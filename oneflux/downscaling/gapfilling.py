@@ -122,14 +122,12 @@ def gap_fill_func(weather,clim,diff_clim_weather,weather_period,climato_period,j
       weather_clim_period_nogap.append([])
       clim_nogap.append([])
       for t in range(len(weather_clim_period[k])):
-         if(weather_clim_period[k][t] != -9999):
+         if((weather_clim_period[k][t] != -9999)and(clim[k][t] != -9999)) :
             weather_clim_period_nogap[k].append(weather_clim_period[k][t])
             clim_nogap[k].append(clim[k][t])
 
-
       weather_clim_period_nogap[k]=N.array(weather_clim_period_nogap[k],float)
       clim_nogap[k]=N.array(clim_nogap[k],float)
-
 
 
       # Evaluate the correlation
@@ -187,7 +185,8 @@ def gap_fill_func(weather,clim,diff_clim_weather,weather_period,climato_period,j
 
       weather_clim_period_all_gapfill.append([])
       weather_clim_period_all_gapfill[k]=slope*clim[k]+intercept
-
+      weather_clim_period_all_gapfill[k]=N.where(clim[k]==-9999, -9999, weather_clim_period_all_gapfill[k])
+      
       weather_all_gapfill.append([])
       clim_weather_period.append([])
  

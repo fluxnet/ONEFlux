@@ -90,13 +90,14 @@ def gapfilling(file_config):
                                        #lon_d = 0,lat_d=0,
                                        #dataset_name=''):
     clim = clim_dict['clim']
-    log.debug('clim: {s}'.format(s=clim))
+    #log.debug('clim: {s}'.format(s=clim))
     climato_period = clim_dict['climato_period']
     avg = clim_dict['avg']
     climatoshift = clim_dict['climatoshift']
     
     for k in range(len(clim)):
        clim[k]=N.array(clim[k],float)
+       
     # Time frequency of clim data (in hours)
     #   climato_period is set when calling read_climatology function
     diff_clim_weather=(int)(climato_period/dict_config['timeres'])
@@ -150,7 +151,29 @@ def gapfilling(file_config):
     
     write_stat_30min(weather,weather_all_gapfill,dict_config['UTCtime'],dict_config['timeres'],dict_config['name_path_out'],dict_config['Site'])
     write_stat_30min(weather,clim_weather_period,dict_config['UTCtime'],dict_config['timeres'],dict_config['name_path_out'],dict_config['Site']+'_nocorr')
-    
+    log.debug("CHECK MISSING VALUE IN clim dataset")
+    # remove all values after the last clim[k] value
+    for k in range(len(clim)):
+       # first missing value in clim[k]
+       indices = N.where(clim[k] == -9999)[0]
+       if indices.size > 0:
+           log.debug("first missing value in clim[%d] dataset at: %d" % (k,indices[0]))
+       else:
+           log.debug("no missing values in clim[%d] dataset" % k)
+           continue
+       idx_to_use = indices[0] * len(weather_all_gapfill[k]) / len(clim[k])
+       log.debug("first index to replace original values with -9999 in weather_all_gapfill[%d] dataset at: %d" % (k,idx_to_use))
+       log.debug('len(weather_all_gapfill): %d' % (len(weather_all_gapfill)))
+       log.debug('len(clim_weather_period): %d' % (len(clim_weather_period)))
+       log.debug('len(weather_all_gapfill): %d' % (len(weather_all_gapfill[k])))
+       log.debug('len(clim_weather_period): %d' % (len(clim_weather_period[k])))
+       log.debug('type(weather_all_gapfill): %s' % (type(weather_all_gapfill[k])))
+       log.debug('type(clim_weather_period): %s' % (type(clim_weather_period[k])))
+
+       length_to_replace = len(weather_all_gapfill[k]) - idx_to_use
+       weather_all_gapfill[k][idx_to_use:] = [-9999] * length_to_replace
+       clim_weather_period[k][idx_to_use:] = [-9999] * length_to_replace
+
     write_csv(weather_all_gapfill,dict_config['FirstY'],dict_config['LastY'],dict_config['timeres'],dict_config['Site'],dict_config['name_path_out'])
     
     write_csv(clim_weather_period,dict_config['FirstY'],dict_config['LastY'],dict_config['timeres'],dict_config['Site']+'_nocorr',dict_config['name_path_out'])
