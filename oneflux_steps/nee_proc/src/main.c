@@ -24,7 +24,7 @@
 #include "../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION			"v1.0.41"
+#define PROGRAM_VERSION			"v1.0.42"
 #define BUFFER_SIZE				1024
 #define QC_AUTO_PATH			"qc_auto"
 #define USTAR_MP_PATH			"ustar_mp"
@@ -49,8 +49,9 @@ int use_met_gf = 0;							/* default is off */
 int mef_save = 0;							/* default is off */
 int percentiles_save = 0;					/* default is off */
 
-/* v1.0.3 */
-int indices_save = 0;						/* default is off */
+/* v1.0.3 - default is off */
+/* v1.0.42 */
+int indices_save = 1;						/* default is on */
 
 int qc_gf_threshold = QC_GF_THRESHOLD;		/* see types.h */
 int mef_qc = 2;
@@ -102,7 +103,9 @@ static char msg_usage[] =	"How to use: nee_proc parameter\n\n"
 							"    -percentiles -> save percentiles for DD,WW,MM,YY time resolution\n\n"
 
 							/* v1.0.3 */
-							"    -indices -> save the index of each sample used in the gf for ref y and ref c\n\n"
+							/* "    -indices -> save the index of each sample used in the gf for ref y and ref c\n\n" */
+							/* v1.0.42 */
+							"    -no_indices -> disable saving the index of each sample used in the gf for ref y and ref c\n\n"
 
 							"    -h -> show this help\n\n";
 
@@ -170,6 +173,20 @@ static int set_flag(char *arg, char *param, void *p) {
 
 	/* enable */
 	*(int *)p = 1;
+
+	/* ok */
+	return 1;
+}
+
+/* v1.0.42 */
+static int unset_flag(char *arg, char *param, void *p) {
+	if ( param ) {
+		printf(err_arg_no_needs_param, arg);
+		return 0;
+	}
+
+	/* disable */
+	*(int *)p = 0;
 
 	/* ok */
 	return 1;
@@ -259,7 +276,9 @@ int main(int argc, char *argv[]) {
 		{ "percentiles", set_flag, &percentiles_save },
 
 		/* v1.0.3 */
-		{ "indices", set_flag, &indices_save },
+		/* { "indices", set_flag, &indices_save }, */
+		/* v1.0.42 */
+		{ "no_indices", unset_flag, &indices_save },
 
 		{ "qc_gf_thrs", set_int_value, &qc_gf_threshold },
 		{ "h", show_help, NULL },
@@ -398,8 +417,13 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* v1.0.3 */
+	/*
 	if ( indices_save )
 		printf("saving ref gf sample indices enabled!\n\n");
+	*/
+	/* v1.0.42 */
+	if ( ! indices_save )
+		printf("saving ref gf sample indices disabled!\n\n");
 
 	/* show qc gf threshold */
 	if ( use_met_gf ) {
