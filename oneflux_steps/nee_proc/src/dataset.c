@@ -30,6 +30,10 @@
 #include "info_utem.h"
 #include "info_model_efficiency.h"
 
+/* v1.0.4 */
+#define USTAR_RANGE_MIN 0
+#define USTAR_RANGE_MAX 5
+
 /* enum */
 typedef enum {
 	HH_TR = 0,
@@ -46,6 +50,10 @@ typedef enum {
 extern char *qc_auto_files_path;
 extern char *ustar_mp_files_path;
 extern char *ustar_cp_files_path;
+
+/* v1.0.4 */
+extern char *ustar_md_files_path;
+
 extern char *meteo_files_path;
 extern char *output_files_path;
 extern int no_rand_unc;
@@ -248,22 +256,26 @@ static const char model_efficiency_y_not[] = "NEE_ref_y not filtered!\n";
 static const char *time_resolution[TRS] = { "hh", "dd", "ww", "mm", "yy" };
 
 /* v1.0.3 */
-int rename_file(const char* src, const char* dst)
-{
-#ifdef _WIN32
-	return MoveFile(src, dst) ? 1 : 0;
-#else
-	return (-1 == rename(src, dst)) ? 0 : 1;
-#endif
-}
-
-/* v1.0.3 */
 int remove_file(const char* filename)
 {
 #ifdef _WIN32
 	return DeleteFile(filename) ? 1 : 0;	
 #else
 	return (0 == remove(filename));
+#endif
+}
+
+/* v1.0.3 */
+int rename_file(const char* src, const char* dst)
+{
+#ifdef _WIN32
+	return MoveFileEx(src, dst, MOVEFILE_REPLACE_EXISTING) ? 1 : 0;
+#else
+	/* v1.0.4 */
+	if ( file_exists(dst) ) {
+		remove_file(dst);
+	}
+	return (-1 == rename(src, dst)) ? 0 : 1;
 #endif
 }
 
@@ -828,7 +840,7 @@ static int create_nee_matrix_for_ref(NEE_MATRIX *const nee_matrix
 			TIMESTAMP t_end = t;
 
 			/*
-				we check if  oth fwd and bkw values meet the condition to be greater than mef_max_gap. 
+				we check if both fwd and bkw values meet the condition to be greater than mef_max_gap. 
 				in this case there is a gap larger than mef_max_gap on boths side
 			*/
 			for ( i = 0; i < rows_count; ++i ) {
@@ -1505,8 +1517,8 @@ void free_datasets(DATASET *datasets, const int datasets_count) {
 	free(datasets);
 }
 
-/* v1.0.3 */
-int check_ustar_mp(DATASET* dataset)
+/* v1.0.41 */
+int check_ustar_mp_cp(DATASET* dataset)
 {
 	char buffer[BUFFER_SIZE]; /* should be enough */
 	int ret;
@@ -1519,9 +1531,13 @@ int check_ustar_mp(DATASET* dataset)
 	for ( year = 0; year < dataset->years_count; ++year ) {
 		sprintf(buffer, "%s%s_usmp_%d.txt", ustar_mp_files_path, dataset->details->site, dataset->years[year].year);
 
+		printf("### checking %d USTAR mp thresholds...", dataset->years[year].year);
+
 		/* open file */
 		f = fopen(buffer, "r");
-		if ( f ) {
+		if ( !f ) {
+			puts("not found!");
+		} else {
 			/*
 				PLEASE NOTE:
 				FOLLOWING CODE SKIP "USTAR_MP_SKIP" ROWS AND THEN CHECK FOR " forward mode 2" string!
@@ -1551,21 +1567,158 @@ int check_ustar_mp(DATASET* dataset)
 						} else {
 							convert_string_to_prec(buffer, &error);
 							if ( error )
+							{
+								puts("bad format!");
 								break;
+							}
 						}
 					}
 
 					if ( i == BOOTSTRAPPING_TIMES ) {
+						puts("ok!");
 						ret = 1;
 					}
 				}
 			}
 
 			fclose(f);
-
-			if ( ret )
-				break;
 		}	
+	}
+
+	for ( year = 0; year < dataset->years_count; ++year ) {
+		sprintf(buffer, "%s%s_uscp_%d.txt", ustar_mp_files_path, dataset->details->site, dataset->years[year].year);
+
+		printf("### checking %d USTAR cp thresholds...", dataset->years[year].year);
+
+		/* open file */
+		f = fopen(buffer, "r");
+		if ( !f ) {
+			puts("not found!");
+		} else {
+			for ( i = 0; i < BOOTSTRAPPING_TIMES; i++ ) {
+				/* BUFFER_SIZE is big so no buffer overflow should occurs */
+				if ( EOF == fscanf(f, "%s", buffer) ) {
+					puts("bad format!");
+					break;
+				} else if ( !string_compare_i(buffer, "nan") ) {
+					convert_string_to_prec(buffer, &error);
+					if ( error ) {
+						puts("bad format!");
+						break;
+					}
+				}
+			}
+			if ( i == BOOTSTRAPPING_TIMES ) {
+				puts("ok!");
+			}
+		}
+	}
+
+	/* */
+	return ret;
+}
+
+/* v1.0.4 */
+int check_ustar_md(DATASET* dataset)
+{
+	char buffer[BUFFER_SIZE]; /* should be enough */
+	int ret;
+	int i;
+	int year;
+	int error;
+	double v;
+	FILE* f;
+
+	/* check for y */
+	ret = 0;
+	for ( year = 0; year < dataset->years_count; ++year ) {
+		sprintf(buffer, "%s%s_usmd_%d.txt", ustar_md_files_path, dataset->details->site, dataset->years[year].year);
+
+		printf("### checking %d USTAR md thresholds...", dataset->years[year].year);
+
+		/* open file */
+		f = fopen(buffer, "r");
+		if ( ! f ) {
+			/* v1.0.41 */
+			puts("not found!");
+		} else {
+			for ( i = 0; i < PERCENTILES_COUNT_2; i++ ) {
+				/* BUFFER_SIZE is big so no buffer overflow should occurs */
+				if ( EOF == fscanf(f, "%s", buffer) ) {
+					puts("bad format!");
+					break;
+				} else {
+					v = convert_string_to_prec(buffer, &error);
+					if ( error ) {
+						puts("bad format!");
+						break;
+					} else {
+						if ( (v < USTAR_RANGE_MIN) || (v > USTAR_RANGE_MAX) ) {
+							puts("bad format!");
+							break;
+						}
+					}
+				}
+			}
+
+			ret = (PERCENTILES_COUNT_2 == i);
+
+			fclose(f);
+
+			if ( ret ) {
+				puts("ok!");
+				/* v0.1.41 */
+				/*break;*/
+			}
+		}	
+	}
+
+	if ( ! ret ) {
+		/* v1.0.41 */
+		/*puts("no usmd files for y found!");*/
+	} else {
+		/* check for c */
+		ret = 0;
+
+		sprintf(buffer, "%s%s_usmd_all.txt", ustar_md_files_path, dataset->details->site);
+
+		printf("### checking USTAR md all thresholds...");
+
+		/* open file */
+		f = fopen(buffer, "r");
+		/* v1.0.41 */
+		if ( !f ) {
+			puts("not found!");
+		} else {
+			for ( i = 0; i < PERCENTILES_COUNT_2; i++ ) {
+				/* BUFFER_SIZE is big so no buffer overflow should occurs */
+				if ( EOF == fscanf(f, "%s", buffer) ) {
+					puts("bad format!");
+					break;
+				} else {
+					v = convert_string_to_prec(buffer, &error);
+					if ( error ) {
+						puts("bad format!");
+						break;
+					} else {
+						if ( (v < USTAR_RANGE_MIN) || (v > USTAR_RANGE_MAX) ) {
+							puts("bad format!");
+							break;
+						}
+					}
+				}
+			}
+
+			ret = (PERCENTILES_COUNT_2 == i);
+
+			fclose(f);
+
+			if ( ! ret ) {
+				/*puts("no usmd file for c found!");*/
+			} else {
+				puts("ok!");
+			}
+		}
 	}
 
 	/* */
@@ -1590,28 +1743,89 @@ int get_uts_c(const char *const site, const YEAR *const years, const int years_c
 		return 0;
 	}
 
-	/* */
-	*uts_count = 0;
-	for ( year = 0; year < years_count; year++ ) {
-		/* */
-		if ( years[year].exist ) {
-			/* get ustar_mp u* thresholds  */
-			sprintf(buffer, "%s%s_usmp_%d.txt", ustar_mp_files_path, site, years[year].year);
-			i = import_uts(buffer, uts, USTAR_MP, *uts_count, &err);
-			if ( ! i ) {
-				printf("%d -> unable to get ustar_mp u* thresholds: %s\n", years[year].year, err);
+	/* v1.0.4 */
+	if ( !ustar_md_files_path ) {
+		*uts_count = 0;
+		for ( year = 0; year < years_count; year++ ) {
+			/* */
+			if ( years[year].exist ) {
+				/* get ustar_mp u* thresholds  */
+				sprintf(buffer, "%s%s_usmp_%d.txt", ustar_mp_files_path, site, years[year].year);
+				i = import_uts(buffer, uts, USTAR_MP, *uts_count, &err);
+				/* v0.1.41 */
+				/*
+				if ( ! i ) {
+					printf("CUT - %d -> unable to get ustar_mp u* thresholds: %s\n", years[year].year, err);
+				} else {
+					*uts_count += BOOTSTRAPPING_TIMES;
+				}
+				*/
+				if ( i ) {
+					*uts_count += BOOTSTRAPPING_TIMES;
+				}
+			}
+			/* get ustar_cp u* thresholds  */
+			sprintf(buffer, "%s%s_uscp_%d.txt", ustar_cp_files_path, site, years[year].year);
+			i = import_uts(buffer, uts, USTAR_CP, *uts_count, &err);
+			/* v0.1.41 */
+			/*
+			if ( i ) {
+				*uts_count += BOOTSTRAPPING_TIMES;
 			} else {
+				printf("CUT - %d -> unable to get ustar_cp u* thresholds: %s\n", years[year].year, err);
+			}
+			*/
+			if ( i ) {
 				*uts_count += BOOTSTRAPPING_TIMES;
 			}
 		}
-		/* get ustar_cp u* thresholds  */
-		sprintf(buffer, "%s%s_uscp_%d.txt", ustar_cp_files_path, site, years[year].year);
-		i = import_uts(buffer, uts, USTAR_CP, *uts_count, &err);
-		if ( i ) {
-			*uts_count += BOOTSTRAPPING_TIMES;
+	} else {
+		int error;
+		double v;
+		FILE* f;
+
+		sprintf(buffer, "%s%s_usmd_all.txt", ustar_md_files_path, site);
+
+		/* open file */
+		f = fopen(buffer, "r");
+		if ( !f ) {
+			err = "unable to open file!";
 		} else {
-			printf("%d -> unable to get ustar_cp u* thresholds: %s\n", years[year].year, err);
+			for ( i = 0; i < PERCENTILES_COUNT_2; i++ ) {
+				/* BUFFER_SIZE is big so no buffer overflow should occurs */
+				if ( EOF == fscanf(f, "%s", buffer) ) {
+					err = "eof occurs!";
+					break;
+				} else {
+					v = convert_string_to_prec(buffer, &error);
+					if ( error ) {
+						err = "unable to convert value!";
+						break;
+					} else {
+						if ( (v < USTAR_RANGE_MIN) || (v > USTAR_RANGE_MAX) ) {
+							err = "out of range!";
+							break;
+						}
+						uts[i] = v;
+					}
+				}
+			}
+
+			if  (i != PERCENTILES_COUNT_2) {
+				*uts_count = 0;
+			} else {
+				*uts_count = i;
+			}
+
+			fclose(f);
 		}
+
+		/* v.1.0.41 */
+		/*
+		if ( ! *uts_count ) {
+			printf("CUT - %d -> unable to get ustar_md percentiles: %s\n", years[0].year, err);
+		}
+		*/
 	}
 
 	/* ok */
@@ -1668,84 +1882,58 @@ int get_uts_y(DATASET *const dataset, const int year, PREC *uts, int *const uts_
 		}
 	}
 	if ( -1 == index ) {
-		printf("unable to get thresholds: year %d has not been imported!\n", year);
+		printf("VUT - unable to get thresholds: year %d has not been imported!\n", year);
 		return 0;
 	}
-
+	
 	/* reset */
 	*uts_count = 0;
 
-	/* get previous year */
-	if ( index-1 >= 0 ) {
-		/* */
-		if ( dataset->years[index-1].exist ) {
-			/* get ustar_mp u* thresholds for year before */
-			sprintf(buffer, "%s%s_usmp_%d.txt", ustar_mp_files_path, dataset->details->site, year-1); 
+	/* v1.0.4 */
+	if ( !ustar_md_files_path ) {
+		/* get previous year */
+		if ( index-1 >= 0 ) {
 			/* */
-			i = import_uts(buffer, uts, USTAR_MP, *uts_count, &err);
-			if ( ! i ) {
-				printf("%d -> unable to get ustar_mp u* thresholds: %s\n", year-1, err);
-				if ( ! add_umna(dataset, dataset->years[index-1].year, USTAR_MP_METHOD) ) {
+			if ( dataset->years[index-1].exist ) {
+				/* get ustar_mp u* thresholds for year before */
+				sprintf(buffer, "%s%s_usmp_%d.txt", ustar_mp_files_path, dataset->details->site, year-1); 
+				/* */
+				i = import_uts(buffer, uts, USTAR_MP, *uts_count, &err);
+				if ( ! i ) {
+					/* v1.0.41 */
+					/* printf("VUT - %d -> unable to get ustar_mp u* thresholds: %s\n", year-1, err); */
+					if ( ! add_umna(dataset, dataset->years[index-1].year, USTAR_MP_METHOD) ) {
+						puts(err_out_of_memory);
+						return 0;
+					}
+				} else {
+					*uts_count += BOOTSTRAPPING_TIMES;
+				}
+			}
+			/* get ustar_cp u* thresholds for year before */
+			sprintf(buffer, "%s%s_uscp_%d.txt", ustar_cp_files_path, dataset->details->site, year-1);
+			i = import_uts(buffer, uts, USTAR_CP, *uts_count, &err);
+			if ( i ) {
+				*uts_count += BOOTSTRAPPING_TIMES;
+			} else {
+				/* v1.0.41 */
+				/* printf("VUT - %d -> unable to get ustar_cp u* thresholds: %s\n", year-1, err); */
+				if ( ! add_umna(dataset, dataset->years[index-1].year, USTAR_CP_METHOD) ) {
 					puts(err_out_of_memory);
 					return 0;
 				}
-			} else {
-				*uts_count += BOOTSTRAPPING_TIMES;
 			}
 		}
-		/* get ustar_cp u* thresholds for year before */
-		sprintf(buffer, "%s%s_uscp_%d.txt", ustar_cp_files_path, dataset->details->site, year-1);
-		i = import_uts(buffer, uts, USTAR_CP, *uts_count, &err);
-		if ( i ) {
-			*uts_count += BOOTSTRAPPING_TIMES;
-		} else {
-			printf("%d -> unable to get ustar_cp u* thresholds: %s\n", year-1, err);
-			if ( ! add_umna(dataset, dataset->years[index-1].year, USTAR_CP_METHOD) ) {
-				puts(err_out_of_memory);
-				return 0;
-			}
-		}
-	}
 
-	/* */
-	if ( dataset->years[index].exist ) {
-		/* get ustar_mp u* thresholds for year */
-		sprintf(buffer, "%s%s_usmp_%d.txt", ustar_mp_files_path, dataset->details->site, year); 
-		i = import_uts(buffer, uts, USTAR_MP, *uts_count, &err);
-		if ( !i ) {
-			printf("%d -> unable to get ustar_mp u* thresholds: %s\n", year, err);
-			if ( ! add_umna(dataset, dataset->years[index].year, USTAR_MP_METHOD) ) {
-				puts(err_out_of_memory);
-				return 0;
-			}
-		} else {
-			*uts_count += BOOTSTRAPPING_TIMES;
-		}
-	}
-	/* get ustar_cp u* thresholds for year */
-	sprintf(buffer, "%s%s_uscp_%d.txt", ustar_cp_files_path, dataset->details->site, year);
-	i = import_uts(buffer, uts, USTAR_CP, *uts_count, &err);
-	if ( i ) {
-		*uts_count += BOOTSTRAPPING_TIMES;
-	} else {
-		printf("%d -> unable to get ustar_cp u* thresholds: %s\n", year, err);
-		if ( ! add_umna(dataset, dataset->years[index].year, USTAR_CP_METHOD) ) {
-			puts(err_out_of_memory);
-			return 0;
-		}
-	}
-
-	/* get year after */
-	if ( index+1 < dataset->years_count ) {
 		/* */
-		if ( dataset->years[index+1].exist ) {
-			/* get ustar_mp u* thresholds for year after*/
-			sprintf(buffer, "%s%s_usmp_%d.txt", ustar_mp_files_path, dataset->details->site, year+1); 
+		if ( dataset->years[index].exist ) {
+			/* get ustar_mp u* thresholds for year */
+			sprintf(buffer, "%s%s_usmp_%d.txt", ustar_mp_files_path, dataset->details->site, year); 
 			i = import_uts(buffer, uts, USTAR_MP, *uts_count, &err);
-			/* */
 			if ( !i ) {
-				printf("%d -> unable to get ustar_mp u* thresholds: %s\n", year+1, err);
-				if ( ! add_umna(dataset, dataset->years[index+1].year, USTAR_MP_METHOD) ) {
+				/* v1.0.41 */
+				/* printf("VUT - %d -> unable to get ustar_mp u* thresholds: %s\n", year, err); */
+				if ( ! add_umna(dataset, dataset->years[index].year, USTAR_MP_METHOD) ) {
 					puts(err_out_of_memory);
 					return 0;
 				}
@@ -1753,14 +1941,98 @@ int get_uts_y(DATASET *const dataset, const int year, PREC *uts, int *const uts_
 				*uts_count += BOOTSTRAPPING_TIMES;
 			}
 		}
-		/* get ustar_cp u* thresholds for year after */
-		sprintf(buffer, "%s%s_uscp_%d.txt", ustar_cp_files_path, dataset->details->site, year+1);
+		/* get ustar_cp u* thresholds for year */
+		sprintf(buffer, "%s%s_uscp_%d.txt", ustar_cp_files_path, dataset->details->site, year);
 		i = import_uts(buffer, uts, USTAR_CP, *uts_count, &err);
 		if ( i ) {
 			*uts_count += BOOTSTRAPPING_TIMES;
 		} else {
-			printf("%d -> unable to get ustar_cp u* thresholds: %s\n", year+1, err);
-			if ( ! add_umna(dataset, dataset->years[index+1].year, USTAR_CP_METHOD) ) {
+			/* v1.0.41 */
+			/* printf("VUT - %d -> unable to get ustar_cp u* thresholds: %s\n", year, err); */
+			if ( ! add_umna(dataset, dataset->years[index].year, USTAR_CP_METHOD) ) {
+				puts(err_out_of_memory);
+				return 0;
+			}
+		}
+
+		/* get year after */
+		if ( index+1 < dataset->years_count ) {
+			/* */
+			if ( dataset->years[index+1].exist ) {
+				/* get ustar_mp u* thresholds for year after*/
+				sprintf(buffer, "%s%s_usmp_%d.txt", ustar_mp_files_path, dataset->details->site, year+1); 
+				i = import_uts(buffer, uts, USTAR_MP, *uts_count, &err);
+				/* */
+				if ( !i ) {
+					/* v1.0.41 */
+					/* printf("VUT - %d -> unable to get ustar_mp u* thresholds: %s\n", year+1, err); */
+					if ( ! add_umna(dataset, dataset->years[index+1].year, USTAR_MP_METHOD) ) {
+						puts(err_out_of_memory);
+						return 0;
+					}
+				} else {
+					*uts_count += BOOTSTRAPPING_TIMES;
+				}
+			}
+			/* get ustar_cp u* thresholds for year after */
+			sprintf(buffer, "%s%s_uscp_%d.txt", ustar_cp_files_path, dataset->details->site, year+1);
+			i = import_uts(buffer, uts, USTAR_CP, *uts_count, &err);
+			if ( i ) {
+				*uts_count += BOOTSTRAPPING_TIMES;
+			} else {
+				/* v1.0.41 */
+				/* printf("VUT - %d -> unable to get ustar_cp u* thresholds: %s\n", year+1, err); */
+				if ( ! add_umna(dataset, dataset->years[index+1].year, USTAR_CP_METHOD) ) {
+					puts(err_out_of_memory);
+					return 0;
+				}
+			}
+		}
+	} else {
+		int error;
+		double v;
+		FILE* f;
+
+		sprintf(buffer, "%s%s_usmd_%d.txt", ustar_md_files_path, dataset->details->site, year);
+
+		/* open file */
+		f = fopen(buffer, "r");
+		if ( !f ) {
+			err = "unable to open file!";
+		} else {
+			for ( i = 0; i < PERCENTILES_COUNT_2; i++ ) {
+				/* BUFFER_SIZE is big so no buffer overflow should occurs */
+				if ( EOF == fscanf(f, "%s", buffer) ) {
+					err = "eof occurs!";
+					break;
+				} else {
+					v = convert_string_to_prec(buffer, &error);
+					if ( error ) {
+						err = "unable to convert value!";
+						break;
+					} else {
+						if ( (v < USTAR_RANGE_MIN) || (v > USTAR_RANGE_MAX) ) {
+							err = "out of range!";
+							break;
+						}
+						uts[i] = v;
+					}
+				}
+			}
+
+			if  (i != PERCENTILES_COUNT_2) {
+				*uts_count = 0;
+			} else {
+				*uts_count = i;
+			}
+
+			fclose(f);
+		}
+
+		if ( ! *uts_count ) {
+			/* v1.0.41 */
+			/* printf("VUT - %d -> unable to get ustar_md percentiles: %s\n", year, err); */
+			if ( ! add_umna(dataset, dataset->years[index].year, USTAR_MD_METHOD) ) {
 				puts(err_out_of_memory);
 				return 0;
 			}
@@ -2741,6 +3013,10 @@ int save_info(const DATASET *const dataset, const char *const path, const eTimeR
 				fputs("MP\n", f);
 			} else if ( USTAR_CP_METHOD == dataset->umna[i].method ) {
 				fputs("CP\n", f);
+
+			/* v1.0.4 */
+			} else if ( USTAR_MD_METHOD == dataset->umna[i].method ) {
+				fputs("MD\n", f);
 			} else {
 				fputs("MP+CP\n", f);
 			}
@@ -2754,7 +3030,10 @@ int save_info(const DATASET *const dataset, const char *const path, const eTimeR
 		fprintf(f, ustar_threshold_c, percentiles_c[PERCENTILES_COUNT_2-1]);
 		if ( percentiles_y ) {
 			for ( i = 0; i < dataset->years_count; i++ ) {
-				fprintf(f, ustar_threshold_y, dataset->years[i].year, percentiles_y[i].value[PERCENTILES_COUNT_2-1]);
+				/* v1.0.41 */
+				if ( dataset->years[i].exist ) {
+					fprintf(f, ustar_threshold_y, dataset->years[i].year, percentiles_y[i].value[PERCENTILES_COUNT_2-1]);
+				}
 			}
 		}
 		/* model efficiency */
@@ -3892,12 +4171,25 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 												((datasets[dataset].years_count > 1) ? "s" : "")
 		);
 
-		/* v1.0.3 */
-		if ( ! check_ustar_mp(&datasets[dataset]) ) {
-			puts("no ustar_mp files found!");
-			free(percentiles_y);
-			continue;
+		/* v1.0.41 */
+		puts("### checking USTAR thresholds");
+
+		/* v1.0.4 */
+		if ( ! ustar_md_files_path ) {
+			/* v1.0.3 */
+			if ( ! check_ustar_mp_cp(&datasets[dataset]) ) {
+				free(percentiles_y);
+				continue;
+			}
+		} else {
+			if ( ! check_ustar_md(&datasets[dataset]) ) {
+				free(percentiles_y);
+				continue;
+			}
 		}
+
+		/* v1.0.41 */
+		puts("");
 
 		/* allocate memory */
 		nee_matrix_y = malloc(datasets[dataset].rows_count*sizeof*nee_matrix_y);
@@ -4105,7 +4397,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 					}
 				}
 				/* alert */
-				puts("ok (nothing found, null year added)");
+				puts("not found. null year added.");
 			} else {
 				/* build-up filename */
 				sprintf(buffer, "%s%s_qca_nee_%d.csv", qc_auto_files_path, datasets[dataset].details->site, datasets[dataset].years[year].year);
@@ -4480,6 +4772,9 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			}
 		}
 		*/
+
+		/* v1.0.41 */
+		puts("");
 		
 		/* get meteos */
 		if ( use_met_gf ) {
@@ -4487,6 +4782,9 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			if ( !get_meteo(&datasets[dataset]) ) {
 				continue;
 			}
+			
+			/* v1.0.41 */
+			puts("");
 		}
 
 		/* update rows copy */
@@ -4537,14 +4835,23 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 				percentiles_y[year].value[percentile] = INVALID_VALUE;
 				if ( get_uts_y(&datasets[dataset], datasets[dataset].years[year].year, uts, &uts_count) ) {
 					/* get percentile */
-					percentiles_y[year].value[percentile] = get_percentile(uts, uts_count, percentiles_test_2[percentile], &error);
-					if ( error ) {
-						printf("unable to get percentile for %d in y method.\n", datasets[dataset].years[year].year);
-						on_error = 1;
-						skip_y = 1;
-						break;
+					/* v1.0.4 */
+					if ( !ustar_md_files_path ) {
+						percentiles_y[year].value[percentile] = get_percentile(uts, uts_count, percentiles_test_2[percentile], &error);
+						if ( error ) {
+							printf("unable to get percentile for %d in y method.\n", datasets[dataset].years[year].year);
+							on_error = 1;
+							skip_y = 1;
+							break;
+						}
+					} else {
+						percentiles_y[year].value[percentile] = uts[percentile];
 					}
-					printf("%d -> filtering for %g (%g%%)...", datasets[dataset].years[year].year, percentiles_y[year].value[percentile], percentiles_test_2[percentile]);
+
+					/* v1.0.41 */
+					if ( datasets[dataset].years[year].exist ) {
+						printf("VUT - %d -> filtering for USTAR %g (%g%%)...", datasets[dataset].years[year].year, percentiles_y[year].value[percentile], percentiles_test_2[percentile]);
+					}
 
 					/* apply percentile */
 					element = 0;
@@ -4580,15 +4887,31 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 							nee_flags_y[index+row].value[percentile] = 3;
 						}
 					}
-					printf("%g NEE values removed.\n", (PREC)element/rows_count);
+					/* v1.0.41 */
+					if ( datasets[dataset].years[year].exist ) {
+						if ( element ) {
+							printf("%.2f%% NEE values removed.\n", ((PREC)element/rows_count)*100.0);
+						} else {
+							printf("no NEE values removed.\n");
+						}
+					}
 				} else {
-					printf("%d -> filtering is not possible\n", datasets[dataset].years[year].year);
 					/* v1.0.3 */
 					if ( datasets[dataset].years[year].exist ) {
+						printf("VUT - %d -> filtering is not possible\n", datasets[dataset].years[year].year);
+						/* v1.0.4 */
+						for ( i = 0; i < datasets[dataset].rows_count; i++ ) {
+							for ( y = 0; y < DATASET_VALUES; y++ ) {
+								datasets[dataset].rows[i].value[y] = rows_copy[i].row.value[y];
+							}
+						}
+
 						on_error = 1;
 						skip_y = 1;
+
+						/* v1.0.4 */
+						break;
 					}
-					break;
 				}
 
 				/* update */
@@ -4799,25 +5122,30 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 
 			/* get percentiles */
 			for ( i = 0; i < PERCENTILES_COUNT_2; i++ ) {
-				percentiles_c[i] = get_percentile(uts, uts_count, percentiles_test_2[i], &error);
-				if ( error ) {
-					puts("unable to get percentile");
-					if ( compute_nee_flags ) {
-						if ( datasets[dataset].years_count >= 3 ) {
-							free(nee_flags_c);
+				/* v1.0.4 */
+				if ( !ustar_md_files_path ) {
+					percentiles_c[i] = get_percentile(uts, uts_count, percentiles_test_2[i], &error);
+					if ( error ) {
+						puts("unable to get percentile");
+						if ( compute_nee_flags ) {
+							if ( datasets[dataset].years_count >= 3 ) {
+								free(nee_flags_c);
+							}
+							free(nee_flags_y);
 						}
-						free(nee_flags_y);
+						free(unc_rows_temp);
+						free(unc_rows_aggr);
+						free(unc_rows);
+						free(nee_matrix_y);
+						free(nee_matrix_c);
+						free(percentiles_y);
+						free(uts);
+						free(rows_copy);
+						on_error = 1;
+						break;
 					}
-					free(unc_rows_temp);
-					free(unc_rows_aggr);
-					free(unc_rows);
-					free(nee_matrix_y);
-					free(nee_matrix_c);
-					free(percentiles_y);
-					free(uts);
-					free(rows_copy);
-					on_error = 1;
-					break;
+				} else {
+					percentiles_c[i] = uts[i];
 				}
 			}
 
@@ -4828,7 +5156,7 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 			/* get percentiles */
 			for ( percentile = 0; percentile < PERCENTILES_COUNT_2; percentile++ ) {	
 				/* show info */		
-				printf("filtering for %g (%g%%)...", percentiles_c[percentile], percentiles_test_2[percentile]);
+				printf("CUT - filtering for USTAR %g (%g%%)...", percentiles_c[percentile], percentiles_test_2[percentile]);
 				/* apply threshold */
 				element = 0;
 				/* */
@@ -4864,7 +5192,12 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 						nee_flags_c[row].value[percentile] = 3;
 					}
 				}
-				printf("%g NEE values removed.", (PREC)element / datasets[dataset].rows_count);
+				/* v1.0.41 */
+				if ( element ) {
+					printf("%.2f%% NEE values removed.\n", ((PREC)element / datasets[dataset].rows_count)*100.0);
+				} else {
+					printf("no NEE values removed.\n");
+				}
 
 				/* v1.0.3 */
 				/* creating filename for saving indices */
@@ -5097,8 +5430,11 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 						}
 					} else {
 						/* remove */
-						if ( ! remove_file(buffer) ) {
-							printf("unable to remove %s!\n", buffer);
+						/* v1.0.4 */
+						if ( file_exists(buffer) ) {
+							if ( ! remove_file(buffer) ) {
+								printf("unable to remove %s!\n", buffer);
+							}
 						}
 					}
 				}
@@ -5142,8 +5478,11 @@ int compute_datasets(DATASET *const datasets, const int datasets_count) {
 					}
 				} else {
 					/* remove */
-					if ( ! remove_file(buffer) ) {
-						printf("unable to remove %s!\n", buffer);
+					/* v1.0.4 */
+					if ( file_exists(buffer) ) {
+						if ( ! remove_file(buffer) ) {
+							printf("unable to remove %s!\n", buffer);
+						}
 					}
 				}
 			}

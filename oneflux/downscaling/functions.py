@@ -443,7 +443,7 @@ def read_ERA5_da_clusterFR(sitecode,year_start=1981,year_end=2022,dir_input_era5
 
 #-------------------------------------------------------------------------------------------
 # function write_csv
-def write_csv(weather_gapfill,year_start,year_end,weather_period,name,path):
+def write_csv(weather_gapfill,year_start,year_end,weather_period,name,path,idx_to_use):
    weather_out=copy.deepcopy(weather_gapfill)
 
    for k in range(len(weather_out)):
@@ -457,7 +457,14 @@ def write_csv(weather_gapfill,year_start,year_end,weather_period,name,path):
    weather_out[id_tair]= weather_out[id_tair]-273.15
    # Conversion from "kg m-2 s-1" to "mm per timestep"
    weather_out[id_precip]= weather_out[id_precip]*weather_period*60*60
-
+   
+   for k in range(len(weather_out)):
+       if idx_to_use[k] is None:
+           continue
+       print("weather_all_gapfill[k][idx_to_use:idx_to_use + 10]",weather_out[k][idx_to_use[k]:idx_to_use[k] + 10] )
+       weather_out[k][idx_to_use[k]:] = -9999
+       print("weather_all_gapfill[k][idx_to_use:idx_to_use + 10]",weather_out[k][idx_to_use[k]:idx_to_use[k] + 10] )
+       
    line_end=os.linesep
    ind=0
 #   print 'dans write_csv'

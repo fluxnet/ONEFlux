@@ -20,6 +20,9 @@ enum {
 	USTAR_NO_METHOD = 0,		/* 0 */
 	USTAR_MP_METHOD = 1 << 0,	/* 1 */
 	USTAR_CP_METHOD = 1 << 1,	/* 2 */
+
+	/* v1.0.4 */
+	USTAR_MD_METHOD = 1 << 2,	/* 4 */
 };
 
 /* structures */

@@ -26,7 +26,7 @@
 #include "../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION			"v1.03"
+#define PROGRAM_VERSION			"v1.0.4"
 const int days_per_month[MONTHS] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
 /* enum */
@@ -182,6 +182,8 @@ static const char err_unable_convert_value_arg[] = "unable to convert value \"%s
 static const char err_no_output_specified[] = "no output specified.";
 static const char err_buffer_too_small[]= "buffer too small for notes!";
 static const char err_negative_doy[] = "custom doy can't be negative: %d.\n";
+/* v1.0.4 */
+static const char err_no_concatenation[] = "It is not possible to use concatenated datasets.";
 
 /* */
 static int set_flag(char *arg, char *param, void *p) {
@@ -3388,6 +3390,7 @@ int main(int argc, char *argv[]) {
 	int LE;		/* for spikes */
 	int z;
 	int error;
+	int i;		/* v1.0.4 */
 	int files_processed_count;
 	int files_not_processed_count;
 	int total_files_count;
@@ -3521,6 +3524,15 @@ int main(int argc, char *argv[]) {
 	files_found = get_files(program_path, input_path, &files_found_count, &error);
 	if ( error ) {
 		return 1;
+	}
+
+	/* v1.0.4 */
+	/* check for concatenated datasets */
+	for ( i = 0; i < files_found_count; i ++ ) {
+		if ( files_found[i].count > 1 ) {
+			puts(err_no_concatenation);
+			return 1;
+		}
 	}
 
 	/* reset */

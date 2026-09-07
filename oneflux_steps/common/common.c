@@ -590,7 +590,7 @@ FILES *get_files(const char *const program_path, char *string, int *const count,
 					fclose(f);
 
 					/* check length */
-					if ( token_length >= PATH_SIZE ) {
+					if ( i >= PATH_SIZE ) {
 						printf(err_path_too_big, token_by_plus);
 						*error = 1;
 						free_files(files, *count);
@@ -611,7 +611,7 @@ FILES *get_files(const char *const program_path, char *string, int *const count,
 					files[*count-1].list = list_no_leak;
 
 					/* check if token has a FOLDER_DELIMITER */
-					p3 = strrchr(token_by_comma, FOLDER_DELIMITER);
+					p3 = strrchr(token_by_plus, FOLDER_DELIMITER);
 					if ( p3 ) {
 						/* skip FOLDER_DELIMITER */
 						++p3;
@@ -629,7 +629,7 @@ FILES *get_files(const char *const program_path, char *string, int *const count,
 
 						/* assign values */
 						strncpy(files[*count-1].list[files[*count-1].count-1].name, p3, y);
-						files[*count-1].list->name[y] = '\0';
+						files[*count-1].list[files[*count-1].count-1].name[y] = '\0';
 
 						strcpy(files[*count-1].list[files[*count-1].count-1].fullpath, token_by_plus);
 						*p3 = '\0';

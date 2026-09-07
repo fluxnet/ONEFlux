@@ -24,7 +24,7 @@
 #include "../../compiler.h"
 
 /* constants */
-#define PROGRAM_VERSION			"v1.0.3"
+#define PROGRAM_VERSION			"v1.0.42"
 #define BUFFER_SIZE				1024
 #define QC_AUTO_PATH			"qc_auto"
 #define USTAR_MP_PATH			"ustar_mp"
@@ -36,6 +36,10 @@ char *program_path = NULL;
 char *qc_auto_files_path = NULL;			/* mandatory */
 char *ustar_mp_files_path = NULL;			/* mandatory */
 char *ustar_cp_files_path = NULL;			/* mandatory */
+
+/* v1.0.4 */
+char *ustar_md_files_path = NULL;			/* mandatory */
+
 char *meteo_files_path = NULL;				/* mandatory */
 char *output_files_path = NULL;				/* mandatory */
 char folder_delimiter_str[2];               /* used to get folder delimiter string from FOLDER_DELIMITER char in common.h*/
@@ -45,8 +49,9 @@ int use_met_gf = 0;							/* default is off */
 int mef_save = 0;							/* default is off */
 int percentiles_save = 0;					/* default is off */
 
-/* v1.0.3 */
-int indices_save = 0;						/* default is off */
+/* v1.0.3 - default is off */
+/* v1.0.42 */
+int indices_save = 1;						/* default is on */
 
 int qc_gf_threshold = QC_GF_THRESHOLD;		/* see types.h */
 int mef_qc = 2;
@@ -75,6 +80,10 @@ static char msg_usage[] =	"How to use: nee_proc parameter\n\n"
 							"             if not specified, files will be searched into \"%s\" folder\n\n"
 							"    -ustar_cp_path=ustar_cp_files_folder -> set ustar cp files folder\n"
 							"             if not specified, files will be searched into \"%s\" folder\n\n"
+
+							/* v1.0.4 */
+							"    -ustar_md_path=ustar_md_files_folder -> set ustar md files folder\n"
+
 							"    -meteo_path=meteo_files_folder -> set meteo files folder\n"
 							"             if not specified, files will be searched into \"%s\" folder\n\n"
 							"    -output_path=output_files_folder -> set output files folder\n"
@@ -94,7 +103,9 @@ static char msg_usage[] =	"How to use: nee_proc parameter\n\n"
 							"    -percentiles -> save percentiles for DD,WW,MM,YY time resolution\n\n"
 
 							/* v1.0.3 */
-							"    -indices -> save the index of each sample used in the gf for ref y and ref c\n\n"
+							/* "    -indices -> save the index of each sample used in the gf for ref y and ref c\n\n" */
+							/* v1.0.42 */
+							"    -no_indices -> disable saving the index of each sample used in the gf for ref y and ref c\n\n"
 
 							"    -h -> show this help\n\n";
 
@@ -167,6 +178,20 @@ static int set_flag(char *arg, char *param, void *p) {
 	return 1;
 }
 
+/* v1.0.42 */
+static int unset_flag(char *arg, char *param, void *p) {
+	if ( param ) {
+		printf(err_arg_no_needs_param, arg);
+		return 0;
+	}
+
+	/* disable */
+	*(int *)p = 0;
+
+	/* ok */
+	return 1;
+}
+
 /* */
 int set_int_value(char *arg, char *param, void *p) {
 	int error;
@@ -208,8 +233,18 @@ static int show_help(char *arg, char *param, void *p) {
 static void clean_up(void) {
 	free(output_files_path);
 	free(qc_auto_files_path);
-	free(ustar_mp_files_path);
-	free(ustar_cp_files_path);
+
+	/*v 1.0.4 */
+	if ( ustar_md_files_path ) {
+		free(ustar_md_files_path);
+	}
+	if ( ustar_mp_files_path ) {
+		free(ustar_mp_files_path);
+	}
+	if ( ustar_cp_files_path ) {
+		free(ustar_cp_files_path);
+	}
+
 	free(meteo_files_path);
 	free(program_path);
 
@@ -225,6 +260,10 @@ int main(int argc, char *argv[]) {
 		{ "qc_auto_path", set_path, &qc_auto_files_path },
 		{ "ustar_mp_path", set_path, &ustar_mp_files_path },
 		{ "ustar_cp_path", set_path, &ustar_cp_files_path },
+
+		/* v1.0.4 */
+		{ "ustar_md_path", set_path, &ustar_md_files_path },
+
 		{ "meteo_path", set_path, &meteo_files_path },
 		{ "output_path", set_path, &output_files_path },
 		{ "use_met_gf", set_flag, &use_met_gf },
@@ -237,7 +276,9 @@ int main(int argc, char *argv[]) {
 		{ "percentiles", set_flag, &percentiles_save },
 
 		/* v1.0.3 */
-		{ "indices", set_flag, &indices_save },
+		/* { "indices", set_flag, &indices_save }, */
+		/* v1.0.42 */
+		{ "no_indices", unset_flag, &indices_save },
 
 		{ "qc_gf_thrs", set_int_value, &qc_gf_threshold },
 		{ "h", show_help, NULL },
@@ -298,26 +339,29 @@ int main(int argc, char *argv[]) {
 		sprintf(qc_auto_files_path, "%s%c", QC_AUTO_PATH, FOLDER_DELIMITER);
 	}
 
-	/* get ustar mp path */
-	if ( !ustar_mp_files_path ) {
-		for ( i = 0; USTAR_MP_PATH[i]; i++ ); i += 2;
-		ustar_mp_files_path = malloc(i*sizeof*ustar_mp_files_path);
+	/* v1.0.4 */
+	if ( !ustar_md_files_path ) {
+		/* get ustar mp path */
 		if ( !ustar_mp_files_path ) {
-			puts(err_out_of_memory);
-			return 1;
+			for ( i = 0; USTAR_MP_PATH[i]; i++ ); i += 2;
+			ustar_mp_files_path = malloc(i*sizeof*ustar_mp_files_path);
+			if ( !ustar_mp_files_path ) {
+				puts(err_out_of_memory);
+				return 1;
+			}
+			sprintf(ustar_mp_files_path, "%s%c", USTAR_MP_PATH, FOLDER_DELIMITER);
 		}
-		sprintf(ustar_mp_files_path, "%s%c", USTAR_MP_PATH, FOLDER_DELIMITER);
-	}
 
-	/* get ustar cp path */
-	if ( ! ustar_cp_files_path ) {
-		for ( i = 0; USTAR_CP_PATH[i]; i++ ); i += 2;
-		ustar_cp_files_path = malloc(i*sizeof*ustar_cp_files_path);
-		if ( !ustar_cp_files_path ) {
-			puts(err_out_of_memory);
-			return 1;
+		/* get ustar cp path */
+		if ( ! ustar_cp_files_path ) {
+			for ( i = 0; USTAR_CP_PATH[i]; i++ ); i += 2;
+			ustar_cp_files_path = malloc(i*sizeof*ustar_cp_files_path);
+			if ( !ustar_cp_files_path ) {
+				puts(err_out_of_memory);
+				return 1;
+			}
+			sprintf(ustar_cp_files_path, "%s%c", USTAR_CP_PATH, FOLDER_DELIMITER);
 		}
-		sprintf(ustar_cp_files_path, "%s%c", USTAR_CP_PATH, FOLDER_DELIMITER);
 	}
 
 	/* get meteo path */
@@ -350,8 +394,15 @@ int main(int argc, char *argv[]) {
 
 	/* show paths */
 	printf("qc_auto files path = %s\n", qc_auto_files_path);
-	printf("ustar_mp files path = %s\n", ustar_mp_files_path);
-	printf("ustar_cp files path = %s\n", ustar_cp_files_path);
+
+	/* v1.0.4 */
+	if ( !ustar_md_files_path ) {
+		printf("ustar_mp files path = %s\n", ustar_mp_files_path);
+		printf("ustar_cp files path = %s\n", ustar_cp_files_path);
+	} else {
+		printf("ustar_md files path = %s\n", ustar_md_files_path);
+	}
+
 	if ( use_met_gf ) {
 		printf("meteo files path = %s\n\n", meteo_files_path);
 	} else {
@@ -366,8 +417,13 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* v1.0.3 */
+	/*
 	if ( indices_save )
 		printf("saving ref gf sample indices enabled!\n\n");
+	*/
+	/* v1.0.42 */
+	if ( ! indices_save )
+		printf("saving ref gf sample indices disabled!\n\n");
 
 	/* show qc gf threshold */
 	if ( use_met_gf ) {
