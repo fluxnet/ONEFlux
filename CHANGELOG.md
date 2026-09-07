@@ -1,6 +1,13 @@
 # Changelog
 Changes to ONEFlux
 
+## v1.3.7-rc - 2026-09-06
+- Added filtering with ustar md method by @ARibecaJob in #141
+- Improve NEE proc output formatting by @ARibecaJob in #143
+- Fix concatenated dataset handling by @ARibecaJob in #146
+- Gapfilling indices in nee_proc for ref y and ref c are now created by default by @ARibecaJob in #149
+- Changes to allow partial current year for ERA input data for downscaling by @trotca in #151
+
 ## v1.3.6-rc - 2026-05-29
 - adding gf indexes for gf_mds and nee_proc by @ARibecaJob in #137
 - Add check inputs function to remove empty variables by @gilbertozp in #139
