@@ -153,6 +153,7 @@ def gapfilling(file_config):
     write_stat_30min(weather,clim_weather_period,dict_config['UTCtime'],dict_config['timeres'],dict_config['name_path_out'],dict_config['Site']+'_nocorr')
     log.debug("CHECK MISSING VALUE IN clim dataset")
     # remove all values after the last clim[k] value
+    idx_to_use = []
     for k in range(len(clim)):
        # first missing value in clim[k]
        indices = N.where(clim[k] == -9999)[0]
@@ -160,23 +161,14 @@ def gapfilling(file_config):
            log.debug("first missing value in clim[%d] dataset at: %d" % (k,indices[0]))
        else:
            log.debug("no missing values in clim[%d] dataset" % k)
+           idx_to_use.append(None)
            continue
-       idx_to_use = indices[0] * len(weather_all_gapfill[k]) / len(clim[k])
-       log.debug("first index to replace original values with -9999 in weather_all_gapfill[%d] dataset at: %d" % (k,idx_to_use))
-       log.debug('len(weather_all_gapfill): %d' % (len(weather_all_gapfill)))
-       log.debug('len(clim_weather_period): %d' % (len(clim_weather_period)))
-       log.debug('len(weather_all_gapfill): %d' % (len(weather_all_gapfill[k])))
-       log.debug('len(clim_weather_period): %d' % (len(clim_weather_period[k])))
-       log.debug('type(weather_all_gapfill): %s' % (type(weather_all_gapfill[k])))
-       log.debug('type(clim_weather_period): %s' % (type(clim_weather_period[k])))
+       idx_to_use.append(indices[0] * len(weather_all_gapfill[k]) / len(clim[k]))
+       log.debug("first index to replace original values with -9999 in variable %d dataset at: %d" % (k,idx_to_use[-1]))
 
-       length_to_replace = len(weather_all_gapfill[k]) - idx_to_use
-       weather_all_gapfill[k][idx_to_use:] = [-9999] * length_to_replace
-       clim_weather_period[k][idx_to_use:] = [-9999] * length_to_replace
-
-    write_csv(weather_all_gapfill,dict_config['FirstY'],dict_config['LastY'],dict_config['timeres'],dict_config['Site'],dict_config['name_path_out'])
+    write_csv(weather_all_gapfill,dict_config['FirstY'],dict_config['LastY'],dict_config['timeres'],dict_config['Site'],dict_config['name_path_out'],idx_to_use)
     
-    write_csv(clim_weather_period,dict_config['FirstY'],dict_config['LastY'],dict_config['timeres'],dict_config['Site']+'_nocorr',dict_config['name_path_out'])
+    write_csv(clim_weather_period,dict_config['FirstY'],dict_config['LastY'],dict_config['timeres'],dict_config['Site']+'_nocorr',dict_config['name_path_out'],idx_to_use)
 
     log.debug(dict_config['name_path_out'])
 
